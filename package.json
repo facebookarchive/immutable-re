@@ -1,0 +1,55 @@
+{
+  "name": "Immutable.re",
+  "version": "0.0.1",
+  "description": "Persistent immutable collections for Reason",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebookincubator/immutable-re.git"
+  },
+  "author": "facebook",
+  "license": "BSD",
+  "homepage": "https://github.com/facebookincubator/immutable-re.git",
+  "keywords": [
+    "reason",
+    "immutable"
+  ],
+
+  "scripts": {
+    "rebuild": "eval $(dependencyEnv) && nopam && rebuild",
+    "buildHelp": "eval $(dependencyEnv) && nopam && rebuild --help",
+
+    "build-test": "eval $(dependencyEnv) && nopam && rebuild -cflag -g -Is immutable/src,immutable/src/collection,immutable/src/core,immutable/src/extra,immutable/src/indexed,immutable/src/keyed,immutable/src/utils,reUnit/src,immutable/test/Testers,immutable/test ./immutable/test/ImmutableTest.byte",
+    "run-test": "eval $(dependencyEnv) && ./_build/immutable/test/ImmutableTest.byte",
+    "test": "npm run clean && npm run build-test && npm run run-test",
+
+    "build-perf": "eval $(dependencyEnv) && nopam && rebuild -Is immutable/src/collection,immutable/src/core,immutable/src/extra,immutable/src/indexed,immutable/src/keyed,immutable/src/utils,immutable/src,reUnit/src,immutable/perf -ocamlopt \"ocamlopt -p -inline 100 -unsafe -noassert -nodynlink\" ./immutable/perf/PerfTest.native 2>&1 | berror.native --path-to-refmttype refmttype",
+    "run-perf": "eval $(dependencyEnv) && ./_build/immutable/perf/PerfTest.native",
+    "perf": "npm run clean && npm run build-perf && npm run run-perf",
+
+    "clean": "rm -rf ./_build",
+    "top": "eval $(dependencyEnv) && rtop",
+    "env": "eval $(dependencyEnv) && env",
+    "editor": "eval $(dependencyEnv) && eval $EDITOR",
+    "whereisocamlmerlin": "eval $(dependencyEnv) && which ocamlmerlin-reason"
+  },
+  "devDependencies": {
+      "@opam-alpha/merlin": "^ 2.5.0"
+    },
+  "dependencies": {
+    "ocamlBetterErrors": "0.1.0",
+    "reason": "^ 1.6.0",
+    "@opam-alpha/ocaml": "4.2.3",
+    "dependency-env": "^0.1.1",
+    "nopam": "^0.1.0"
+  },
+  "engines" : {
+    "npm" : ">=3.10.0"
+  },
+  "exportedEnvVars": {
+    "OCAMLRUNPARAM": {
+      "global": true,
+      "globalCollisionBehavior": "fail",
+      "val": "b"
+    }
+  }
+}
