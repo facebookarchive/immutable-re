@@ -19,6 +19,12 @@ and seq 'a = unit => iterator 'a;
 
 let empty: (seq 'a) = fun () => Completed;
 
+let rec ofList (list: list 'a): (seq 'a) => fun () => switch list {
+  | [value] => Next value empty
+  | [value, ...tail] => Next value (ofList tail)
+  | [] => Completed
+};
+
 let return (value: 'a): seq ('a) => fun () =>
   Next value empty;
 
@@ -32,7 +38,7 @@ let module Stream = Stream.Make {
       | Completed => continuation () |> flattenIter
     }
 
-    and flattenIter (iter: iterator (seq 'a)): (iterator 'a) => switch (iter) {
+    and flattenIter (iter: iterator (seq 'a)): (iterator 'a) => switch iter {
       | Next value next => value () |> continuedWith next
       | Completed => Completed
     };
@@ -45,7 +51,7 @@ let module Stream = Stream.Make {
   let empty = empty;
 
   let filter (f: 'a => bool) (seq: seq 'a): (seq 'a) => {
-    let rec filterIter (iter: iterator 'a): iterator 'b => switch (iter) {
+    let rec filterIter (iter: iterator 'a): iterator 'b => switch iter {
       | Next value next => f value
          ? Next value (next >> filterIter)
          : next () |> filterIter
@@ -82,7 +88,7 @@ let module Stream = Stream.Make {
   };
 
   let map (f: 'a => 'b) (seq: seq 'a): (seq 'b) =>{
-    let rec mapIter (iter: iterator 'a): (iterator 'b) => switch (iter) {
+    let rec mapIter (iter: iterator 'a): (iterator 'b) => switch iter {
       | Next value next =>
           Next (f value) (fun () => next () |> mapIter)
       | Completed => Completed
@@ -91,11 +97,7 @@ let module Stream = Stream.Make {
     fun () => seq () |> mapIter;
   };
 
-  let rec ofList (list: list 'a): (seq 'a) => fun () => switch (list) {
-    | [value] => Next value empty
-    | [value, ...tail] => Next value (ofList tail)
-    | [] => Completed
-  };
+  let ofList = ofList;
 
   let rec repeat (value: 'a) (count: option int): (seq 'a) => switch count {
     | Some count when count > 0 => fun () => Next value (repeat value (Some (count - 1)))
@@ -165,11 +167,6 @@ let mapWithIndex (f: int => 'a => 'b) (seq: seq 'a): (seq 'b) => seq
   |> Stream.scan (fun (i, _) v => (i, Some v)) (0, None)
   |> Stream.map (fun (i, v) => f i (Option.get v));
 
-let doOnNextWithIndex (onNext: int => 'a => unit) (seq: seq 'a): (seq 'a) => seq
-  |> mapWithIndex Pair.create
-  |> Stream.doOnNext (fun (i, v) => onNext i v)
-  |> Stream.map snd;
-
 let rec every (f: 'a => bool) (seq: seq 'a): bool => switch ( seq () ) {
   | Next value next => f value ? every f next : false
   | Completed => true
@@ -203,9 +200,6 @@ let flatMap = Stream.flatMap;
 
 let flatten = Stream.flatten;
 
-let rec flatMapWithIndex (f: int => 'a => seq 'b) (seq: seq 'a): (seq 'b) =>
-  seq |> mapWithIndex f |> flatten;
-
 let inRange = Stream.inRange;
 
 let map = Stream.map;
@@ -217,17 +211,12 @@ let rec none (f: 'a => bool) (seq: seq 'a): bool => switch ( seq () ) {
   | Completed => true
 };
 
-let ofList = Stream.ofList;
-
-let ofOption = Stream.ofOption;
+let ofOption (opt: option 'a): (seq 'a) => switch opt {
+  | Some a => return a
+  | None => empty
+};
 
 let scan = Stream.scan;
-
-let rec scanWithIndex (reducer: 'acc => int => 'a => 'acc) (acc: 'acc) (seq: seq 'a): (seq 'acc) => seq
-  |> mapWithIndex Pair.create
-  |> Stream.scan
-    (fun acc (index, next) => reducer acc index next)
-    acc;
 
 let repeat = Stream.repeat;
 
@@ -267,14 +256,8 @@ let tryLast (seq: seq 'a) => seq |> Stream.last |> tryFirst;
 let rec forEach (onNext: 'a => unit) (seq: seq 'a) =>
   seq |> Stream.doOnNext onNext |> tryLast |> ignore;
 
-let rec forEachWithIndex (onNext: int => 'a => unit) (seq: seq 'a) =>
-  seq |> doOnNextWithIndex onNext |> tryLast |> ignore;
-
 let reduce (reducer: 'acc => 'a => 'acc) (initialValue: 'acc) (seq: seq 'a): 'acc =>
   seq |> Stream.reduce reducer initialValue |> tryFirst |? initialValue;
-
-let reduceWithIndex (reducer: 'acc => int => 'a => 'acc) (initialValue: 'acc) (seq: seq 'a): 'acc =>
-  seq |> scanWithIndex reducer initialValue |> tryLast |? initialValue;
 
 let count (seq: seq 'a): int => seq |> reduce
   (fun acc _ => succ acc)

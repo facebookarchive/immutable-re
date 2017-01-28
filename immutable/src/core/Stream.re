@@ -48,8 +48,6 @@ module type Stream = {
   let inRange: int => (option int) => int => (stream int);
   let last: (stream 'a) => (stream 'a);
   let map: ('a => 'b) => (stream 'a) => (stream 'b);
-  let ofList: (list 'a) => (stream 'a);
-  let ofOption: (option 'a) => (stream 'a);
   let reduce: ('acc => 'a => 'acc) => 'acc => (stream 'a) => (stream 'acc);
   let repeat: 'a => (option int) => (stream 'a);
   let return: 'a => (stream 'a);
@@ -146,14 +144,7 @@ let module Make = fun (X: StreamBase) => {
 
   let map = X.map;
 
-  let ofList = X.ofList;
-
   let return (value: 'a): stream 'a => [ value ] |> X.ofList;
-
-  let ofOption (opt: option 'a): (stream 'a) => switch (opt) {
-    | Some v => return v
-    | None => empty
-  };
 
   let reduce
       (reducer: 'acc => 'a => 'acc)
