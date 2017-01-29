@@ -66,7 +66,8 @@ let fromSeq (length: int) (defaultValue: 'a) (seq: seq 'a): (array 'a) => {
 
 let get (index: int) (arr: copyOnWriteArray 'a): 'a => arr.(index);
 
-let last (arr: copyOnWriteArray 'a): 'a => arr.(count arr - 1);
+let lastIndex (arr: copyOnWriteArray 'a): int => count arr - 1;
+let last (arr: copyOnWriteArray 'a): 'a => arr.(lastIndex arr);
 
 let init = Array.init;
 
@@ -81,6 +82,10 @@ let insertAt (index: int) (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArr
 
   retval;
 };
+
+let isEmpty (arr: array 'a): bool => (count arr) == 0;
+
+let isNotEmpty (arr: array 'a): bool => (count arr) != 0;
 
 let ofUnsafe (arr: array 'a): (copyOnWriteArray 'a) => arr;
 
