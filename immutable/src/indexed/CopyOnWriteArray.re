@@ -35,7 +35,7 @@ let concat (arrays: list (array 'a)): (array 'a) => {
   let newCount = arrays |> ImmList.reduce (fun acc i => acc + count i) 0;
 
   newCount == 0 ? [||] : {
-    let retval = Array.make newCount (ImmList.last arrays).(0);
+    let retval = Array.make newCount (ImmList.first arrays).(0);
 
     ImmList.reduce (fun index next => {
       let countNext = count next;
@@ -48,6 +48,16 @@ let concat (arrays: list (array 'a)): (array 'a) => {
 };
 
 let empty: (copyOnWriteArray 'a) = [||];
+
+let every (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
+  let arrCount = count arr;
+  let rec loop i =>
+    i >= arrCount ? true :
+    (f arr.(i)) ? loop (i + 1) :
+    false;
+
+  loop 0;
+};
 
 let first (arr: copyOnWriteArray 'a): 'a => arr.(0);
 
@@ -83,9 +93,19 @@ let insertAt (index: int) (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArr
   retval;
 };
 
-let isEmpty (arr: array 'a): bool => (count arr) == 0;
+let isEmpty (arr: copyOnWriteArray 'a): bool => (count arr) == 0;
 
-let isNotEmpty (arr: array 'a): bool => (count arr) != 0;
+let isNotEmpty (arr: copyOnWriteArray 'a): bool => (count arr) != 0;
+
+let none (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
+  let arrCount = count arr;
+  let rec loop i =>
+    i >= arrCount ? true :
+    (f arr.(i)) ? false :
+    loop (i + 1);
+
+  loop 0;
+};
 
 let ofUnsafe (arr: array 'a): (copyOnWriteArray 'a) => arr;
 
@@ -104,6 +124,22 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc 
 
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc =>
   Array.fold_right (flip f) arr acc;
+
+let map (f: 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNotEmpty arr
+  ? {
+    let initialValue = f arr.(0);
+    let retval = Array.make (count arr) initialValue;
+    arr |> reduce (fun acc next => { retval.(acc) = f next; acc + 1 }) 0 |> ignore;
+    retval;
+  }: [||];
+
+let mapReverse (f: 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNotEmpty arr
+  ? {
+    let initialValue = f arr.(0);
+    let retval = Array.make (count arr) initialValue;
+    arr |> reduceRight (fun acc next => { retval.(acc) = f next; acc + 1 }) 0 |> ignore;
+    retval;
+  }: [||];
 
 let removeAll (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => empty;
 
@@ -141,6 +177,16 @@ let reverse (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
 let skip (startIndex: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   let newCount = (count arr) - startIndex;
   Array.sub arr startIndex newCount;
+};
+
+let some (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
+  let arrCount = count arr;
+  let rec loop i =>
+    i >= arrCount ? false :
+    (f arr.(i)) ? true :
+    loop (i + 1);
+
+  loop 0;
 };
 
 let take (newCount: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>

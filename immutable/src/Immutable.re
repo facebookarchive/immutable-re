@@ -10,6 +10,7 @@ open HashMap;
 open HashMultiset;
 open HashSet;
 open IntMap;
+open Vector;
 
 let isEmpty (count: 'collection => 'int) (collection: 'collection): bool =>
   (count collection) == 0;
@@ -225,6 +226,7 @@ let module CopyOnWriteArray = {
   let concat = CopyOnWriteArray.concat;
   let count = CopyOnWriteArray.count;
   let empty = CopyOnWriteArray.empty;
+  let every = CopyOnWriteArray.every;
   let first = CopyOnWriteArray.first;
   let fromSeq = CopyOnWriteArray.fromSeq;
   let get = CopyOnWriteArray.get;
@@ -233,6 +235,9 @@ let module CopyOnWriteArray = {
   let isEmpty = CopyOnWriteArray.isEmpty;
   let isNotEmpty = CopyOnWriteArray.isNotEmpty;
   let last = CopyOnWriteArray.last;
+  let map = CopyOnWriteArray.map;
+  let mapReverse = CopyOnWriteArray.mapReverse;
+  let none = CopyOnWriteArray.none;
   let ofUnsafe = CopyOnWriteArray.ofUnsafe;
   let range = CopyOnWriteArray.range;
   let reduce = CopyOnWriteArray.reduce;
@@ -243,6 +248,7 @@ let module CopyOnWriteArray = {
   let removeLast = CopyOnWriteArray.removeLast;
   let reverse = CopyOnWriteArray.reverse;
   let skip = CopyOnWriteArray.skip;
+  let some = CopyOnWriteArray.some;
   let split = CopyOnWriteArray.split;
   let take = CopyOnWriteArray.take;
   let toIndexed = CopyOnWriteArray.toIndexed;
@@ -263,25 +269,26 @@ let module Deque = {
   let addLast = Deque.addLast;
   let count = Deque.count;
   let empty = Deque.empty;
+  let every = Deque.every;
   let first = Deque.first;
-  let get = Deque.get;
   let isEmpty deque => isEmpty count deque;
   let isNotEmpty deque => isNotEmpty count deque;
   let last = Deque.last;
+  let map = Deque.map;
+  let mapReverse = Deque.mapReverse;
   let mutate = Deque.mutate;
+  let none = Deque.none;
   let reduce = Deque.reduce;
   let reduceRight = Deque.reduceRight;
   let removeAll = Deque.removeAll;
   let removeFirst = Deque.removeFirst;
   let removeLast = Deque.removeLast;
   let reverse = Deque.reverse;
-  let toIndexed = Deque.toIndexed;
+  let some = Deque.some;
   let toSeq = Deque.toSeq;
   let toSeqReversed = Deque.toSeqReversed;
   let tryFirst = Deque.tryFirst;
-  let tryGet = Deque.tryGet;
   let tryLast = Deque.tryLast;
-  let update = Deque.update;
 };
 
 let module TransientDeque = {
@@ -291,8 +298,8 @@ let module TransientDeque = {
   let addFirst = TransientDeque.addFirst;
   let addLast = TransientDeque.addLast;
   let count = TransientDeque.count;
+  let empty = TransientDeque.empty;
   let first = TransientDeque.first;
-  let get = TransientDeque.get;
   let isEmpty transient => isEmpty count transient;
   let isNotEmpty transient => isNotEmpty count transient;
   let last = TransientDeque.last;
@@ -302,9 +309,7 @@ let module TransientDeque = {
   let removeLast = TransientDeque.removeLast;
   let reverse = TransientDeque.reverse;
   let tryFirst = TransientDeque.tryFirst;
-  let tryGet = TransientDeque.tryGet;
   let tryLast = TransientDeque.tryLast;
-  let update = TransientDeque.update;
 };
 
 let module HashMap = {
@@ -483,19 +488,23 @@ let module List = {
   type t 'a = list 'a;
 
   let add = ImmList.add;
+  let addFirst = ImmList.addFirst;
   let empty = ImmList.empty;
+  let every = ImmList.every;
+  let first = ImmList.first;
   let fromSeq = SeqInternal.toReversedList;
   let isEmpty = ImmList.isEmpty;
   let isNotEmpty = ImmList.isNotEmpty;
-  let last = ImmList.last;
   let mapReverse = ImmList.mapReverse;
+  let none = ImmList.none;
   let reduce = ImmList.reduce;
-  let removeLast = ImmList.removeLast;
+  let removeAll = ImmList.removeAll;
+  let removeFirst = ImmList.removeFirst;
   let reverse = ImmList.reverse;
   let some = ImmList.some;
   let toSeq = SeqInternal.ofList;
   let tryFind = ImmList.tryFind;
-  let tryLast = ImmList.tryLast;
+  let tryFirst = ImmList.tryFirst;
 };
 
 let module Option = {
@@ -573,18 +582,25 @@ let module Stack ={
 
   let add = Stack.add;
   let addAll = Stack.addAll;
+  let addFirst = Stack.addFirst;
   let count = Stack.count;
   let empty = Stack.empty;
+  let every = Stack.every;
+  let first = Stack.first;
   let fromList = Stack.fromList;
   let fromSeq = Stack.fromSeq;
   let isEmpty stack => isEmpty count stack;
   let isNotEmpty stack => isNotEmpty count stack;
+  let mapReverse = Stack.mapReverse;
+  let none = Stack.none;
   let reduce = Stack.reduce;
-  let removeLast = Stack.removeLast;
+  let removeAll = Stack.removeAll;
+  let removeFirst = Stack.removeFirst;
   let reverse = Stack.reverse;
+  let some = Stack.some;
   let toList = Stack.toList;
   let toSeq = Stack.toSeq;
-  let tryLast = Stack.tryLast;
+  let tryFirst = Stack.tryFirst;
 };
 
 let module StackMultimap = {
@@ -622,4 +638,67 @@ let module Table = {
   let toKeyed = Table.toKeyed;
   let toSeq = Table.toSeq;
   let tryGet = Table.tryGet;
+};
+
+let module Vector = {
+  type t 'a = Vector.vector 'a;
+
+  let add = Vector.add;
+  let addFirst = Vector.addFirst;
+  let addLast = Vector.addLast;
+  /*let concat: (list (t 'a)) => (t 'a);*/
+  let count = Vector.count;
+  let every = Vector.every;
+  let get = Vector.get;
+  let empty = Vector.empty;
+  let first = Vector.first;
+  let get = Vector.get;
+  /*let insertAt: int => 'a => (t 'a) => (t 'a);*/
+  let isEmpty = Vector.isEmpty;
+  let isNotEmpty = Vector.isNotEmpty;
+  let last = Vector.last;
+  let map = Vector.map;
+  let mapReverse = Vector.mapReverse;
+  let mutate = Vector.mutate;
+  let none = Vector.none;
+  let reduce = Vector.reduce;
+  let reduceRight = Vector.reduceRight;
+  /*let removeAt: int => (t 'a) => (t 'a);*/
+  let removeAll = Vector.removeAll;
+  let removeFirst = Vector.removeFirst;
+  let removeLast = Vector.removeLast;
+  let reverse = Vector.reverse;
+  /*let splitAt: int => (t 'a) => ((t 'a), (t 'a));*/
+  let some = Vector.some;
+  let toIndexed = Vector.toIndexed;
+  let toSeq = Vector.toSeq;
+  let toSeqReversed = Vector.toSeqReversed;
+  let tryFirst = Vector.tryFirst;
+  let tryGet = Vector.tryGet;
+  let tryLast = Vector.tryLast;
+  let update = Vector.update;
+};
+
+let module TransientVector = {
+  type t 'a = transientVector 'a;
+
+  let add = TransientVector.add;
+  let addFirst = TransientVector.addFirst;
+  let addLast = TransientVector.addLast;
+  let count = TransientVector.count;
+  let empty = TransientVector.empty;
+  let first = TransientVector.first;
+  let get = TransientVector.get;
+  let isEmpty transient => isEmpty count transient;
+  let isNotEmpty transient => isNotEmpty count transient;
+  let last = TransientVector.last;
+  let persist = TransientVector.persist;
+  let removeAll = TransientVector.removeAll;
+  let removeFirst = TransientVector.removeFirst;
+  let removeLast = TransientVector.removeLast;
+  let reverse = TransientVector.reverse;
+  let tryFirst = TransientVector.tryFirst;
+  let tryGet = TransientVector.tryGet;
+  let tryLast = TransientVector.tryLast;
+  let update = TransientVector.update;
 };

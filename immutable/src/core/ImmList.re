@@ -1,5 +1,7 @@
-let add (value: 'a) (list: list 'a): (list 'a) =>
+let addFirst (value: 'a) (list: list 'a): (list 'a) =>
   [value, ...list];
+
+let add = addFirst;
 
 let rec countImpl (list: list 'a) (count: int): int => switch list {
   | [head, ...tail] => countImpl tail (count + 1)
@@ -14,6 +16,11 @@ let count (list: list 'a): int => countImpl list 0;
 
 let empty: (list 'a) = [];
 
+let rec every (f: 'a => bool) (list: list 'a): bool => switch list {
+  | [head, ...tail] => f head ? every f tail : false
+  | [] => true
+};
+
 let isEmpty (list: list 'a): bool => switch list {
   | [] => true
   | _ => false;
@@ -24,7 +31,7 @@ let isNotEmpty (list: list 'a): bool => switch list {
   | _ => true;
 };
 
-let last (list: list 'a): 'a => switch list {
+let first (list: list 'a): 'a => switch list {
   | [head, ...tail] => head
   | [] => failwith "empty"
 };
@@ -37,6 +44,11 @@ let rec mapReverseImpl (f: 'a => 'b) (src: list 'a) (dst: list 'b): (list 'b) =>
 let mapReverse (f: 'a => 'b) (list: list 'a): (list 'b) =>
   mapReverseImpl f list [];
 
+let rec none (f: 'a => bool) (list: list 'a): bool => switch list {
+  | [head, ...tail] => f head ? false : none f tail
+  | [] => true
+};
+
 let rec reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) (list: list 'a): 'acc => switch list {
   | [head, ...tail] =>
       let acc = f acc head;
@@ -44,7 +56,9 @@ let rec reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) (list: list 'a): 'acc => swi
   | [] => acc
 };
 
-let removeLast (value: 'a) (list: list 'a): (list 'a) => switch list {
+let removeAll (list: list 'a): (list 'a) => [];
+
+let removeFirst (list: list 'a): (list 'a) => switch list {
   | [head, ...tail] => tail
   | [] => failwith "List is empty"
 };
@@ -67,7 +81,7 @@ let rec tryFind (f: 'a => bool) (list: list 'a): (option 'a) => switch list {
   | [] => None
 };
 
-let tryLast (list: list 'a): (option 'a) => switch list {
+let tryFirst (list: list 'a): (option 'a) => switch list {
   | [head, ...tail] => Some head
   | [] => None
 };

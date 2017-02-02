@@ -22,7 +22,27 @@ let module Trie = {
     | Level _ count _ _ => !count;
   };
 
+  let rec every (f: 'a => bool) (trie: trie 'a): bool => switch trie {
+    | Empty => true
+    | Leaf _ values =>
+        values |> CopyOnWriteArray.every f
+    | Level _ _ _ nodes =>
+        nodes |> CopyOnWriteArray.every (fun node => every f trie);
+  };
+
+  let none (f: 'a => bool) (trie: trie 'a): bool =>
+    not (every f trie);
+
+  let rec some (f: 'a => bool) (trie: trie 'a): bool => switch trie {
+    | Empty => false
+    | Leaf _ values =>
+        values |> CopyOnWriteArray.some f
+    | Level _ _ _ nodes =>
+        nodes |> CopyOnWriteArray.some (fun node => some f trie);
+  };
+
   let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: trie 'a): 'acc => switch trie {
+    | Empty => acc
     | Leaf _ values => values |> CopyOnWriteArray.reduce f acc
     | Level _ _ _ nodes =>
         let reducer acc node => node |> reduce f acc;
@@ -30,6 +50,7 @@ let module Trie = {
   };
 
   let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: trie 'a): 'acc => switch trie {
+    | Empty => acc
     | Leaf _ values => values |> CopyOnWriteArray.reduceRight f acc
     | Level _ _ _ nodes =>
         let reducer acc node => node |> reduceRight f acc;
@@ -37,11 +58,13 @@ let module Trie = {
   };
 
   let rec toSeq (trie: trie 'a): (seq 'a) => switch trie {
+    | Empty => Seq.empty
     | Leaf _ values => values |> CopyOnWriteArray.toSeq
     | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
   };
 
   let rec toSeqReversed (trie: trie 'a): (seq 'a) => switch trie {
+    | Empty => Seq.empty
     | Leaf _ values => values |> CopyOnWriteArray.toSeqReversed
     | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeqReversed |> Seq.flatMap toSeqReversed
   };
@@ -323,6 +346,7 @@ let module VectorImpl = {
     let addFirst: (option owner) => 'a => (t 'a) => (t 'a);
     let addLast: (option owner) => 'a => (t 'a) => (t 'a);
     let count: (t 'a) => int;
+    let empty: (t 'a);
     let getUnsafe: int => (t 'a) => 'a;
     let removeFirst: (option owner) => (t 'a) => (t 'a);
     let removeLast: (option owner) => (t 'a) => (t 'a);
@@ -337,11 +361,13 @@ let module VectorImpl = {
     let addFirst: (option owner) => 'a => (t 'a) => (t 'a);
     let addLast: (option owner) => 'a => (t 'a) => (t 'a);
     let count: (t 'a) => int;
+    let empty: (t 'a);
     let first: (t 'a) => 'a;
     let get: int => (t 'a) => 'a;
     let isEmpty: (t 'a) => bool;
     let isNotEmpty: (t 'a) => bool;
     let last: (t 'a) => 'a;
+    let removeAll: (t 'a) => (t 'a);
     let removeFirst: (option owner) => (t 'a) => (t 'a);
     let removeLast: (option owner) => (t 'a) => (t 'a);
     let tryFirst: (t 'a) => (option 'a);
@@ -367,6 +393,8 @@ let module VectorImpl = {
       X.getUnsafe index vector;
     };
 
+    let empty: (t 'a) = X.empty;
+
     let first (vector: t 'a): 'a => get 0 vector;
 
     let isEmpty (vector: t 'a): bool =>
@@ -376,6 +404,8 @@ let module VectorImpl = {
       (X.count vector) != 0;
 
     let last (vector: t 'a): 'a => get ((X.count vector) - 1) vector;
+
+    let removeAll (vector: t 'a): (t 'a) => X.empty;
 
     let removeFirst = X.removeFirst;
 
@@ -403,12 +433,6 @@ type vector 'a = {
   left: array 'a,
 };
 
-let empty = {
-  left: [||],
-  middle: Trie.empty,
-  right: [||],
-};
-
 let module PersistentVector = VectorImpl.Make {
   type t 'a = vector 'a;
 
@@ -421,6 +445,12 @@ let module PersistentVector = VectorImpl.Make {
     let leftCount = CopyOnWriteArray.count left;
 
     leftCount + middleCount + rightCount;
+  };
+
+  let empty = {
+    left: [||],
+    middle: Trie.empty,
+    right: [||],
   };
 
   let updateLevel
@@ -622,6 +652,14 @@ let module TransientVectorImpl = VectorImpl.Make {
   let count ({ leftCount, middle, rightCount }: transientVectorImpl 'a): int => {
     let middleCount = Trie.count middle;
     leftCount + middleCount + rightCount;
+  };
+
+  let empty = {
+    left: [||],
+    leftCount: 0,
+    middle: Trie.empty,
+    right: [||],
+    rightCount: 0,
   };
 
   let updateLevel
@@ -881,11 +919,13 @@ let add value => PersistentVector.add None value;
 let addFirst value => PersistentVector.addFirst None value;
 let addLast value => PersistentVector.addLast None value;
 let count = PersistentVector.count;
+let empty = PersistentVector.empty;
 let first = PersistentVector.first;
 let get = PersistentVector.get;
 let isEmpty = PersistentVector.isEmpty;
 let isNotEmpty = PersistentVector.isNotEmpty;
 let last = PersistentVector.last;
+let removeAll = PersistentVector.removeAll;
 let removeFirst vector => PersistentVector.removeFirst None vector;
 let removeLast vector => PersistentVector.removeLast None vector;
 let tryFirst = PersistentVector.tryFirst;
@@ -917,6 +957,8 @@ module TransientVector = {
 
   let count (transient: transientVector 'a): int =>
     transient |> Transient.get |> TransientVectorImpl.count;
+
+  let empty () => empty |> mutate;
 
   let isEmpty (transient: transientVector 'a): bool =>
     transient |> Transient.get |> TransientVectorImpl.isEmpty;
@@ -952,17 +994,7 @@ module TransientVector = {
   };
 
   let removeAll (transient: transientVector 'a): (transientVector 'a) =>
-      transient |> Transient.update (fun owner vector => {
-        let {
-          right,
-          rightCount,
-          middle,
-          left,
-          leftCount,
-        } = vector;
-
-        { right, rightCount: 0, middle: Trie.empty, left, leftCount: 0 };
-      });
+      transient |> Transient.update (fun owner => TransientVectorImpl.removeAll);
 
   let removeFirst (transient: transientVector 'a): (transientVector 'a) =>
     transient |> Transient.update (fun owner => TransientVectorImpl.removeFirst (Some owner));
@@ -978,6 +1010,23 @@ module TransientVector = {
 
   let last (transient: transientVector 'a): 'a =>
     transient |> Transient.get |> TransientVectorImpl.last;
+
+  let reverse (transient: transientVector 'a): (transientVector 'a) =>
+    transient |> Transient.update (fun owner vector => {
+      let count = TransientVectorImpl.count vector;
+      let lastIndex = count - 1;
+
+      let rec loop indexFirst indexLast => indexFirst < indexLast ? {
+        let first = vector |> TransientVectorImpl.get indexFirst;
+        let last = vector |> TransientVectorImpl.get indexLast;
+
+        vector
+          |> TransientVectorImpl.update (Some owner) indexFirst first
+          |> TransientVectorImpl.update (Some owner) indexLast last;
+      }: vector;
+
+      loop 0 lastIndex;
+    });
 
   let tryGet (index: int) (transient: transientVector 'a): (option 'a) =>
     transient |> Transient.get |> TransientVectorImpl.tryGet index;
@@ -997,31 +1046,64 @@ let addAll (seq: seq 'a) (trie: vector 'a): (vector 'a) => trie
   |> TransientVector.addAll seq
   |> TransientVector.persist;
 
+let every (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
+  (CopyOnWriteArray.every f right) && (Trie.every f middle) && (CopyOnWriteArray.every f left);
+
+let none (f: 'a => bool) (vec: vector 'a): bool =>
+  not (every f vec);
+
+let some (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
+  (CopyOnWriteArray.some f right) || (Trie.some f middle) || (CopyOnWriteArray.some f left);
+
 let fromSeq (seq: seq 'a): (vector 'a) =>
   empty |> addAll seq;
 
-let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ right, middle, left }: vector 'a): 'acc => {
+let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ right, middle, left }: vector 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduce f acc;
   let acc = middle |> Trie.reduce f acc;
   let acc = left |> CopyOnWriteArray.reduce f acc;
   acc;
 };
 
-let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ right, middle, left }: vector 'a): 'acc => {
+let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ right, middle, left }: vector 'a): 'acc => {
   let acc = left |> CopyOnWriteArray.reduceRight f acc;
   let acc = middle |> Trie.reduceRight f acc;
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
   acc;
 };
 
-let rec toSeq ({ right, middle, left }: vector 'a): (seq 'a) => Seq.concat [
+let map (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
+  |> reduce
+    (fun acc next => acc |> TransientVector.add @@ f @@ next)
+    (mutate empty)
+  |> TransientVector.persist;
+
+let mapReverse (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
+  |> reduceRight
+    (fun acc next => acc |> TransientVector.add @@ f @@ next)
+    (mutate empty)
+  |> TransientVector.persist;
+
+let reverse (vector: vector 'a): (vector 'a) => vector
+  |> reduceRight
+    (fun acc next => acc |> TransientVector.add next)
+    (mutate empty)
+  |> TransientVector.persist;
+
+let toSeq ({ right, middle, left }: vector 'a): (seq 'a) => Seq.concat [
   CopyOnWriteArray.toSeq right,
   Trie.toSeq middle,
   CopyOnWriteArray.toSeq left,
 ];
 
-let rec toSeqReversed ({ right, middle, left }: vector 'a): (seq 'a) => Seq.concat [
+let toSeqReversed ({ right, middle, left }: vector 'a): (seq 'a) => Seq.concat [
   CopyOnWriteArray.toSeqReversed left,
   Trie.toSeqReversed middle,
   CopyOnWriteArray.toSeqReversed right,
 ];
+
+let toIndexed (vector: vector 'a): (indexed 'a) => Indexed.create
+  count::(count vector)
+  rseq::(toSeqReversed vector)
+  seq::(toSeq vector)
+  tryGet::(fun i => vector |> tryGet i);

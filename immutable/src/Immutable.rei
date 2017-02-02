@@ -210,6 +210,7 @@ let module CopyOnWriteArray: {
   let concat: (list (t 'a)) => (t 'a);
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let every: ('a => bool) => (t 'a) => bool;
   let first: (t 'a) => 'a;
   let fromSeq: int => 'a => (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
@@ -218,6 +219,9 @@ let module CopyOnWriteArray: {
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  let none: ('a => bool) => (t 'a) => bool;
   let ofUnsafe: (array 'a) => (t 'a);
   let range: int => (option int) => (t 'a) => (t 'a);
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
@@ -228,6 +232,7 @@ let module CopyOnWriteArray: {
   let removeLast: (t 'a) => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let skip: int => (t 'a) => (t 'a);
+  let some: ('a => bool) => (t 'a) => bool;
   let split: int => (t 'a) => (t 'a, t 'a);
   let take: int => (t 'a) => (t 'a);
   let toIndexed: (t 'a) => (Indexed.t 'a);
@@ -248,25 +253,26 @@ let module rec Deque: {
   let addLast: 'a => (t 'a) => (t 'a);
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let every: ('a => bool) => (t 'a) => bool;
   let first: (t 'a) => 'a;
-  let get: int => (t 'a) => 'a;
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
   let last: (t 'a) => 'a;
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
   let mutate: (t 'a) => (TransientDeque.t 'a);
+  let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
   let reverse: (t 'a) => (t 'a);
-  let toIndexed: (t 'a) => (Indexed.t 'a);
+  let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
   let tryFirst: (t 'a) => option 'a;
-  let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
-  let update: int => 'a => (t 'a) => (t 'a);
 }
 
 and TransientDeque: {
@@ -276,8 +282,8 @@ and TransientDeque: {
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
   let count: (t 'a) => int;
+  let empty: unit => (t 'a);
   let first: (t 'a) => 'a;
-  let get: int => (t 'a) => 'a;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
@@ -286,9 +292,7 @@ and TransientDeque: {
   let removeLast: (t 'a) => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let tryFirst: (t 'a) => option 'a;
-  let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
-  let update: int => 'a => (t 'a) => (t 'a);
 };
 
 let module rec HashMap: {
@@ -467,19 +471,25 @@ let module List: {
   type t 'a = list 'a;
 
   let add: 'a => (t 'a) => (t 'a);
+  /*let addAll: (Seq.t 'a) => (t 'a) => (t 'a);*/
+
+  let addFirst: 'a => (t 'a) => (t 'a);
   let empty: (t 'a);
+  let every: ('a => bool) => (t 'a) => bool;
+  let first: (t 'a) => 'a;
   let fromSeq: (Seq.t 'a) => (list 'a);
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
-  let last: (t 'a) => 'a;
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc ) => 'acc => (t 'a) => 'acc;
-  let removeLast: 'a => (t 'a) => (t 'a);
+  let removeAll: (t 'a) => (t 'a);
+  let removeFirst: (t 'a) => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
-  let tryLast: (t 'a) => (option 'a);
+  let tryFirst: (t 'a) => (option 'a);
 };
 
 let module Option: {
@@ -557,18 +567,25 @@ let module Stack: {
 
   let add: 'a => (t 'a) => (t 'a);
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  let addFirst: 'a => (t 'a) => (t 'a);
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let every: ('a => bool) => (t 'a) => bool;
+  let first: (t 'a) => 'a;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let fromList: (list 'a) => (t 'a);
   let fromSeq: (Seq.t 'a) => (t 'a);
+  let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  let removeLast: 'a => (t 'a) => (t 'a);
+  let removeAll: (t 'a) => (t 'a);
+  let removeFirst: (t 'a) => (t 'a);
   let reverse: (t 'a) => (t 'a);
+  let some: ('a => bool) => (t 'a) => bool;
   let toList: (t 'a) => (list 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
-  let tryLast: (t 'a) => (option 'a);
+  let tryFirst: (t 'a) => (option 'a);
 };
 
 let module StackMultimap: {
@@ -606,4 +623,68 @@ let module Table: {
   let toKeyed: (t 'row 'column 'value) => (Keyed.t 'row (Keyed.t 'column 'value));
   let toSeq: (t 'row 'column 'value) => (Seq.t ('row, 'column, 'value));
   let tryGet: 'row => 'column => (t 'row 'column 'value) => (option 'value);
+};
+
+let module rec Vector: {
+  type t 'a;
+
+  let add: 'a => (t 'a) => (t 'a);
+  let addFirst: 'a => (t 'a) => (t 'a);
+  let addLast: 'a => (t 'a) => (t 'a);
+  /*let concat: (list (t 'a)) => (t 'a);*/
+  let count: (t 'a) => int;
+  let empty: (t 'a);
+  let every: ('a => bool) => (t 'a) => bool;
+  let first: (t 'a) => 'a;
+  let get: int => (t 'a) => 'a;
+  /*let insertAt: int => 'a => (t 'a) => (t 'a);*/
+  let isEmpty: t 'a => bool;
+  let isNotEmpty: t 'a => bool;
+  let last: (t 'a) => 'a;
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  let mutate: (t 'a) => (TransientVector.t 'a);
+  let none: ('a => bool) => (t 'a) => bool;
+  let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /*let removeAt: int => (t 'a) => (t 'a);*/
+  let removeAll: (t 'a) => (t 'a);
+  let removeFirst: (t 'a) => (t 'a);
+  let removeLast: (t 'a) => (t 'a);
+  let reverse: (t 'a) => (t 'a);
+  /*let splitAt: int => (t 'a) => ((t 'a), (t 'a));*/
+  let some: ('a => bool) => (t 'a) => bool;
+  let toIndexed: (t 'a) => (Indexed.t 'a);
+  let toSeq: (t 'a) => (Seq.t 'a);
+  let toSeqReversed: (t 'a) => (Seq.t 'a);
+  let tryFirst: (t 'a) => option 'a;
+  let tryGet: int => (t 'a) => (option 'a);
+  let tryLast: (t 'a) => option 'a;
+  let update: int => 'a => (t 'a) => (t 'a);
+}
+
+and TransientVector: {
+  type t 'a;
+
+  let add: 'a => (t 'a) => (t 'a);
+  let addFirst: 'a => (t 'a) => (t 'a);
+  let addLast: 'a => (t 'a) => (t 'a);
+  let count: (t 'a) => int;
+  let empty: unit => (t 'a);
+  let first: (t 'a) => 'a;
+  let get: int => (t 'a) => 'a;
+  /*let insertAt: int => 'a => (t 'a) => (t 'a);*/
+  let isEmpty: t 'a => bool;
+  let isNotEmpty: t 'a => bool;
+  let last: (t 'a) => 'a;
+  let persist: (t 'a) => (Vector.t 'a);
+  /*let removeAt: int => (t 'a) => (t 'a);*/
+  let removeAll: (t 'a) => (t 'a);
+  let removeFirst: (t 'a) => (t 'a);
+  let removeLast: (t 'a) => (t 'a);
+  let reverse: (t 'a) => (t 'a);
+  let tryFirst: (t 'a) => option 'a;
+  let tryGet: int => (t 'a) => (option 'a);
+  let tryLast: (t 'a) => option 'a;
+  let update: int => 'a => (t 'a) => (t 'a);
 };

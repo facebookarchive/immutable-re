@@ -5,10 +5,12 @@ type stack 'a = {
   list: list 'a,
 };
 
-let add (value: 'a) ({ count, list }: stack 'a): (stack 'a) => ({
+let addFirst (value: 'a) ({ count, list }: stack 'a): (stack 'a) => ({
   count: count + 1,
   list: [value, ...list],
 });
+
+let add = addFirst;
 
 let addAll (values: seq 'a) ({ count, list }: stack 'a): (stack 'a) => {
   let newCount = ref count;
@@ -30,15 +32,30 @@ let empty: stack 'a = {
   list: [],
 };
 
+let every (f: 'a => bool) ({ list }: stack 'a): bool =>
+  list |> ImmList.every f;
+
+let first ({ list }: stack 'a): 'a => list |> ImmList.first;
+
 let fromList (list: list 'a): (stack 'a) =>
   { count: list |> ImmList.count, list };
 
 let fromSeq (values: seq 'a): (stack 'a) => empty |> addAll values;
 
+let mapReverse (f: 'a => 'b) ({ count, list }: stack 'a): (stack 'b) => {
+  count,
+  list: list |> ImmList.mapReverse f,
+};
+
+let none (f: 'a => bool) ({ list }: stack 'a): bool =>
+  list |> ImmList.none f;
+
 let reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) ({ list }: stack 'a): 'acc =>
   list |> ImmList.reduce f acc;
 
-let removeLast (value: 'a) ({ count, list }: stack 'a): (stack 'a) => ({
+let removeAll (stack: stack 'a): (stack 'a) => empty;
+
+let removeFirst ({ count, list }: stack 'a): (stack 'a) => ({
   count: count - 1,
   list: switch list {
     | [_, ...tail] => tail
@@ -51,11 +68,11 @@ let reverse ({ count, list }: stack 'a): (stack 'a) => {
   list: list |> ImmList.reverse,
 };
 
+let some (f: 'a => bool) ({ list }: stack 'a): bool =>
+  list |> ImmList.some f;
+
 let toList ({ list }: stack 'a): (list 'a) => list;
 
 let toSeq ({ list }: stack 'a): (seq 'a) => Seq.ofList list;
 
-let tryLast ({ list }: stack 'a): (option 'a) => switch list {
-  | [head, ...tail] => Some head
-  | [] => None
-};
+let tryFirst ({ list }: stack 'a): (option 'a) => list |> ImmList.tryFirst;

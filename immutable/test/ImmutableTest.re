@@ -24,7 +24,9 @@ ReUnit.run (describe "Immutable.re" [
   SeqTest.test,
   SortedMapTest.test,
   SortedSetTest.test,
+  StackTest.test,
   StackMultimapTest.test,
   TableTest.test,
   TransientTest.test,
+  VectorTest.test,
 ]);
