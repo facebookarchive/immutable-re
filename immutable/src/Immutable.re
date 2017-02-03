@@ -253,7 +253,6 @@ let module CopyOnWriteArray = {
   let take = CopyOnWriteArray.take;
   let toIndexed = CopyOnWriteArray.toIndexed;
   let toSeq = CopyOnWriteArray.toSeq;
-  let toSeqInRange = CopyOnWriteArray.toSeqInRange;
   let toSeqReversed = CopyOnWriteArray.toSeqReversed;
   let tryFirst = CopyOnWriteArray.tryFirst;
   let tryGet = CopyOnWriteArray.tryGet;

@@ -27,18 +27,23 @@ let module Trie = {
     | Leaf _ values =>
         values |> CopyOnWriteArray.every f
     | Level _ _ _ nodes =>
-        nodes |> CopyOnWriteArray.every (fun node => every f trie);
+        nodes |> CopyOnWriteArray.every (every f);
   };
 
-  let none (f: 'a => bool) (trie: trie 'a): bool =>
-    not (every f trie);
+  let rec none (f: 'a => bool) (trie: trie 'a): bool => switch trie {
+    | Empty => true
+    | Leaf _ values =>
+        values |> CopyOnWriteArray.none f
+    | Level _ _ _ nodes =>
+        nodes |> CopyOnWriteArray.every (none f);
+  };
 
   let rec some (f: 'a => bool) (trie: trie 'a): bool => switch trie {
     | Empty => false
     | Leaf _ values =>
         values |> CopyOnWriteArray.some f
     | Level _ _ _ nodes =>
-        nodes |> CopyOnWriteArray.some (fun node => some f trie);
+        nodes |> CopyOnWriteArray.some (some f);
   };
 
   let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: trie 'a): 'acc => switch trie {
@@ -527,6 +532,8 @@ let module PersistentVector = VectorImpl.Make {
       left: [||],
     } :
 
+    rightCount == 1 ? empty :
+
     failwith "vector is empty";
   };
 
@@ -544,6 +551,12 @@ let module PersistentVector = VectorImpl.Make {
     middleCount > 0 ? {
       let (Leaf _ left, middle) = Trie.removeLastLeafWithMutator updateLevel None middle;
       { right, middle, left };
+    } :
+
+    leftCount == 1 ? {
+      right,
+      middle,
+      left: [||]
     } :
 
     rightCount > 0 ? {
@@ -630,14 +643,24 @@ let module TransientVectorImpl = VectorImpl.Make {
       ? Array.make Trie.width value
       : arr;
 
-    let rec loop index => index > 0 ? () : {
+    let rec loop index => index > 0 ? {
       arr.(index) = arr.(index - 1);
       loop (index - 1);
-    };
+    } : ();
 
     loop (CopyOnWriteArray.lastIndex arr);
     arr.(0) = value;
     arr;
+  };
+
+  let tailRemoveFirst (arr: array 'a): (array 'a) => {
+    let countArr = CopyOnWriteArray.count arr;
+    let rec loop index => index < countArr ? {
+      arr.(index - 1) = arr.(index);
+      loop (index + 1);
+    } : arr;
+
+    loop 1;
   };
 
   let tailUpdate (index: int) (value: 'a) (arr: array 'a): (array 'a) => {
@@ -769,7 +792,7 @@ let module TransientVectorImpl = VectorImpl.Make {
         leftCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) =>
     rightCount > 1 ? {
-      right,
+      right: tailRemoveFirst right,
       rightCount: rightCount - 1,
       middle,
       left,
@@ -804,6 +827,14 @@ let module TransientVectorImpl = VectorImpl.Make {
       leftCount: 0,
     } :
 
+    rightCount == 1 ? {
+      right,
+      rightCount: 0,
+      middle,
+      left,
+      leftCount,
+    } :
+
     failwith "vector is empty";
 
   let removeLast
@@ -835,6 +866,14 @@ let module TransientVectorImpl = VectorImpl.Make {
       };
 
       { right, rightCount, middle, left, leftCount };
+    } :
+
+    leftCount == 1 ? {
+      right,
+      rightCount,
+      middle,
+      left,
+      leftCount: 0,
     } :
 
     rightCount > 0 ? {
@@ -1049,8 +1088,8 @@ let addAll (seq: seq 'a) (trie: vector 'a): (vector 'a) => trie
 let every (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
   (CopyOnWriteArray.every f right) && (Trie.every f middle) && (CopyOnWriteArray.every f left);
 
-let none (f: 'a => bool) (vec: vector 'a): bool =>
-  not (every f vec);
+let none (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
+  (CopyOnWriteArray.none f right) && (Trie.none f middle) && (CopyOnWriteArray.none f left);
 
 let some (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
   (CopyOnWriteArray.some f right) || (Trie.some f middle) || (CopyOnWriteArray.some f left);

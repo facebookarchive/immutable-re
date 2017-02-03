@@ -36,12 +36,6 @@ let module Deque = {
 };
 
 let test = describe "Deque" (List.fromSeq @@ Seq.concat @@ [
-  (DequeTester.test 10 (module Deque)) |> List.toSeq,
-  (DequeTester.test 48 (module Deque)) |> List.toSeq,
-  (DequeTester.test 90 (module Deque)) |> List.toSeq,
-  describe "TransientDeque" (List.fromSeq @@ Seq.concat @@ [
-    (TransientDequeTester.test 10 (module TransientDeque)) |> List.toSeq,
-    (TransientDequeTester.test 48 (module TransientDeque)) |> List.toSeq,
-    (TransientDequeTester.test 90 (module TransientDeque)) |> List.toSeq,
-  ]) |> Seq.return,
+  (DequeTester.test 1000 (module Deque)) |> List.toSeq,
+  describe "TransientDeque" (TransientDequeTester.test 1000 (module TransientDeque)) |> Seq.return,
 ]);

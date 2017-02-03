@@ -181,6 +181,7 @@ let skip (startIndex: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => 
 
 let some (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   let arrCount = count arr;
+
   let rec loop i =>
     i >= arrCount ? false :
     (f arr.(i)) ? true :
@@ -195,39 +196,20 @@ let take (newCount: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
 let split (index: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a, copyOnWriteArray 'a) =>
   (take index arr, skip index arr);
 
-let toSeqDecrementing (startIndex: int) (endIndex: int) (arr: copyOnWriteArray 'a): (seq 'a) => {
-  let rec toSeqAtIndex (index: int) => fun () => index > endIndex
-    ? Next arr.(index) (toSeqAtIndex (index - 1))
+let toSeqReversed (arr: copyOnWriteArray 'a): (seq 'a) => {
+  let rec loop index => fun () => index < 0
+    ? Completed
+    : Next arr.(index) (loop (index - 1));
+  loop (count arr - 1);
+};
+
+let toSeq (arr: copyOnWriteArray 'a): (seq 'a) => {
+  let arrCount = count arr;
+  let rec loop index => fun () => index < arrCount
+    ? Next arr.(index) (loop (index + 1))
     : Completed;
-
-  toSeqAtIndex startIndex
+  loop 0;
 };
-
-let toSeqIncrementing (startIndex: int) (endIndex: int) (arr: copyOnWriteArray 'a): (seq 'a) => {
-  let rec toSeqAtIndex (index: int) => fun () => index < endIndex
-    ? Next arr.(index) (toSeqAtIndex (index + 1))
-    : Completed;
-
-  toSeqAtIndex startIndex
-};
-
-let toSeqInRange (startIndex: int) (endIndex: int) (arr: copyOnWriteArray 'a): seq 'a => {
-  let count = count arr;
-
-  (startIndex <= endIndex) && (endIndex <= count) && (startIndex >= 0) ?
-    arr |> toSeqIncrementing startIndex endIndex :
-
-  (startIndex > endIndex) && (startIndex < count) && (endIndex >= -1) ?
-    arr |> toSeqDecrementing startIndex endIndex :
-
-  failwith "Index out of bounds";
-};
-
-let toSeqReversed (arr: copyOnWriteArray 'a): (seq 'a) =>
-  toSeqInRange ((count arr) - 1) (-1) arr;
-
-let toSeq (arr: copyOnWriteArray 'a): (seq 'a) =>
-  toSeqInRange 0 (count arr) arr;
 
 let toIndexed (arr: copyOnWriteArray 'a): indexed 'a => ({
   count: count arr,

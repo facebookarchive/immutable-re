@@ -236,8 +236,11 @@ let mapReverse (f: 'a => 'b) (deque: deque 'a): (deque 'b) => switch deque {
   | Descending vector => Descending (Vector.mapReverse f vector)
 };
 
-let none (f: 'a => bool) (deque: deque 'a): bool =>
-  not (every f deque);
+let none (f: 'a => bool) (deque: deque 'a): bool => switch deque {
+  | Ascending vector
+  | Descending vector =>
+      Vector.none f vector
+};
 
 let some (f: 'a => bool) (deque: deque 'a): bool => switch deque {
   | Ascending vector

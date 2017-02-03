@@ -237,7 +237,6 @@ let module CopyOnWriteArray: {
   let take: int => (t 'a) => (t 'a);
   let toIndexed: (t 'a) => (Indexed.t 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
-  let toSeqInRange: int => int => (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
   let tryFirst: (t 'a) => option 'a;
   let tryGet: int => (t 'a) => (option 'a);

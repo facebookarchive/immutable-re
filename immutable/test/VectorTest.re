@@ -42,9 +42,15 @@ let test = describe "Vector" (List.fromSeq @@ Seq.concat @@ [
   (VectorTester.test 10 (module Vector)) |> List.toSeq,
   (VectorTester.test 48 (module Vector)) |> List.toSeq,
   (VectorTester.test 90 (module Vector)) |> List.toSeq,
+  (VectorTester.test 500 (module Vector)) |> List.toSeq,
+  (VectorTester.test 5000 (module Vector)) |> List.toSeq,
+  (VectorTester.test 50000 (module Vector)) |> List.toSeq,
   describe "TransientVector" (List.fromSeq @@ Seq.concat @@ [
     (TransientVectorTester.test 10 (module TransientVector)) |> List.toSeq,
     (TransientVectorTester.test 48 (module TransientVector)) |> List.toSeq,
     (TransientVectorTester.test 90 (module TransientVector)) |> List.toSeq,
+    (TransientVectorTester.test 500 (module TransientVector)) |> List.toSeq,
+    (TransientVectorTester.test 5000 (module TransientVector)) |> List.toSeq,
+    (TransientVectorTester.test 50000 (module TransientVector)) |> List.toSeq,
   ]) |> Seq.return,
 ]);
