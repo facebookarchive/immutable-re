@@ -75,6 +75,7 @@ let module Trie = {
   };
 
   let depth (trie: trie 'a): int => switch trie {
+    | Empty => failwith "invalid state"
     | Leaf _ values => 0
     | Level depth _ _ _ => depth
   };
@@ -236,23 +237,23 @@ let module Trie = {
       (updateLevel: int => int => (trie 'a) => (trie 'a) => (trie 'a))
       (owner: option owner)
       (trie: trie 'a): (trie 'a, trie 'a) => switch trie {
-    | Leaf _ _ => (trie, Empty);
+    | Leaf _ _ => (Empty, trie);
     | Level levelDepth levelCount _ tries when levelDepth > 1 =>
         let triesWidth = CopyOnWriteArray.count tries;
         let lastChildIndex = tries |> CopyOnWriteArray.lastIndex;
         let lastChild = tries |> CopyOnWriteArray.last;
-        let (lastLeaf, newLastChild) = lastChild |> removeLastLeafWithMutator updateLevel owner;
+        let (newLastChild, lastLeaf) = lastChild |> removeLastLeafWithMutator updateLevel owner;
 
         switch newLastChild {
           | Empty when triesWidth > 2 =>
               let newLevelCount = !levelCount - (count lastLeaf);
               let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries);
-              (lastLeaf, newTrie)
+              (newTrie, lastLeaf)
           | Empty =>
-              (lastLeaf, CopyOnWriteArray.first tries)
+              (CopyOnWriteArray.first tries, lastLeaf)
           | _ =>
               let newLevelCount = !levelCount - (count lastLeaf);
-              (lastLeaf, updateLevel newLevelCount lastChildIndex newLastChild trie)
+              (updateLevel newLevelCount lastChildIndex newLastChild trie, lastLeaf)
         };
     | Level 1 levelCount _ tries =>
         let triesWidth = CopyOnWriteArray.count tries;
@@ -260,9 +261,9 @@ let module Trie = {
 
         triesWidth > 2 ? {
           let newLevelCount = !levelCount - (count lastChild);
-          (lastChild, Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries))
+          (Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries), lastChild)
         } : {
-          (lastChild, CopyOnWriteArray.first tries)
+          (CopyOnWriteArray.first tries, lastChild)
         };
     | _ => failwith "invalid state"
   };
@@ -274,7 +275,7 @@ let module Trie = {
   };
 
   let canRadixSearch (trie: trie 'a): bool => switch trie {
-    | Empty => false
+    | Empty => failwith "invalid state"
     | Leaf _ _ => true
     | Level depth count _ tries =>
         let childCapacity = depthCapacity (depth - 1);
@@ -604,9 +605,9 @@ let module VectorImpl = {
 };
 
 type vector 'a = {
-  right: array 'a,
-  middle: trie 'a,
   left: array 'a,
+  middle: trie 'a,
+  right: array 'a,
 };
 
 let updateLevelPersistent
@@ -622,10 +623,10 @@ let module PersistentVector = VectorImpl.Make {
   let tailIsFull (arr: array 'a): bool => (CopyOnWriteArray.count arr) == Trie.width;
   let tailIsNotFull (arr: array 'a): bool => (CopyOnWriteArray.count arr) != Trie.width;
 
-  let count ({ right, middle, left }: vector 'a): int => {
-    let rightCount = CopyOnWriteArray.count right;
-    let middleCount = Trie.count middle;
+  let count ({ left, middle, right }: vector 'a): int => {
     let leftCount = CopyOnWriteArray.count left;
+    let middleCount = Trie.count middle;
+    let rightCount = CopyOnWriteArray.count right;
 
     leftCount + middleCount + rightCount;
   };
@@ -642,65 +643,65 @@ let module PersistentVector = VectorImpl.Make {
       (Leaf _ values: trie 'a): (trie 'a) =>
     Leaf None (values |> CopyOnWriteArray.update index value);
 
-  let addFirst (owner: option owner) (value: 'a) ({ right, middle, left }: vector 'a): (vector 'a) =>
+  let addFirst (owner: option owner) (value: 'a) ({ left, middle, right }: vector 'a): (vector 'a) =>
     (tailIsFull right) && (CopyOnWriteArray.isNotEmpty left) ? {
-      right: [| value |],
-      middle: Trie.addFirstLeafWithMutator updateLevelPersistent None right middle,
       left,
+      middle: Trie.addFirstLeafWithMutator updateLevelPersistent None right middle,
+      right: [| value |],
     } :
 
     (tailIsFull right) && (CopyOnWriteArray.isEmpty left) ? {
-      right: [| value |],
+      left: right,
       middle,
-      left: right
+      right: [| value |],
     } :
 
     {
-      right: right |> CopyOnWriteArray.addFirst value,
-      middle,
       left,
+      middle,
+      right: right |> CopyOnWriteArray.addFirst value,
     };
 
-  let addLast (owner: option owner) (value: 'a) ({ right, middle, left }: vector 'a): (vector 'a) =>
+  let addLast (owner: option owner) (value: 'a) ({ left, middle, right }: vector 'a): (vector 'a) =>
     /* If left is empty, then middle is also empty */
     (tailIsNotFull right) && (CopyOnWriteArray.isEmpty left) ? {
-      right: right |> CopyOnWriteArray.addLast value,
-      middle,
       left,
+      middle,
+      right: right |> CopyOnWriteArray.addLast value,
     } :
 
     (tailIsNotFull left) ? {
-      right,
-      middle,
       left: left |> CopyOnWriteArray.addLast value,
+      middle,
+      right,
     } :
 
     {
-      right,
+      left: [| value |],
       middle: Trie.addLastLeafWithMutator updateLevelPersistent None left middle,
-      left: [| value |]
+      right,
     };
 
-  let removeFirst (owner: option owner) ({ right, middle, left }: vector 'a): (vector 'a) => {
+  let removeFirst (owner: option owner) ({ left, middle, right }: vector 'a): (vector 'a) => {
     let leftCount = CopyOnWriteArray.count left;
     let middleCount = Trie.count middle;
     let rightCount = CopyOnWriteArray.count right;
 
     rightCount > 1 ? {
-      right: CopyOnWriteArray.removeFirst right,
-      middle,
       left,
+      middle,
+      right: CopyOnWriteArray.removeFirst right,
     } :
 
     middleCount > 0 ? {
       let (Leaf _ right, middle) = Trie.removeFirstLeafWithMutator updateLevelPersistent None middle;
-      { right, middle, left };
+      { left, middle, right };
     } :
 
     leftCount > 0 ? {
-      right: left,
-      middle,
       left: [||],
+      middle,
+      right: left,
     } :
 
     rightCount == 1 ? empty :
@@ -708,45 +709,44 @@ let module PersistentVector = VectorImpl.Make {
     failwith "vector is empty";
   };
 
-  let removeLast (owner: option owner) ({ right, middle, left }: vector 'a): (vector 'a) => {
+  let removeLast (owner: option owner) ({ left, middle, right }: vector 'a): (vector 'a) => {
     let leftCount = CopyOnWriteArray.count left;
     let middleCount = Trie.count middle;
     let rightCount = CopyOnWriteArray.count right;
 
     leftCount > 1 ? {
-      right,
-      middle,
       left: CopyOnWriteArray.removeLast left,
+      middle,
+      right,
     } :
 
     middleCount > 0 ? {
-      let (Leaf _ left, middle) = Trie.removeLastLeafWithMutator updateLevelPersistent None middle;
-      { right, middle, left };
+      let (middle, Leaf _ left) = Trie.removeLastLeafWithMutator updateLevelPersistent None middle;
+      { left, middle, right };
     } :
 
     leftCount == 1 ? {
-      right,
+      left: [||],
       middle,
-      left: [||]
+      right,
     } :
 
     rightCount > 0 ? {
-      right: CopyOnWriteArray.removeLast right,
-      middle,
       left,
+      middle,
+      right: CopyOnWriteArray.removeLast right,
     } :
 
     failwith "vector is empty";
   };
 
-  let getUnsafe (index: int) ({ right, middle, left }: vector 'a): 'a => {
-    let rightCount = CopyOnWriteArray.count right;
+  let getUnsafe (index: int) ({ left, middle, right }: vector 'a): 'a => {
     let middleCount = Trie.count middle;
+    let rightCount = CopyOnWriteArray.count right;
 
     let leftIndex = index - middleCount - rightCount;
 
     index < rightCount ? right.(index) :
-
     leftIndex >= 0 ? left.(leftIndex) :
     {
       let index = index - rightCount;
@@ -758,40 +758,40 @@ let module PersistentVector = VectorImpl.Make {
       (owner: option owner)
       (index: int)
       (value: 'a)
-      ({ right, middle, left } as vector: vector 'a): (vector 'a) => {
+      ({ left, middle, right } as vector: vector 'a): (vector 'a) => {
     Preconditions.failIfOutOfRange (count vector) index;
 
-    let rightCount = CopyOnWriteArray.count right;
     let middleCount = Trie.count middle;
+    let rightCount = CopyOnWriteArray.count right;
 
     let leftIndex = index - middleCount - rightCount;
 
     index < rightCount ? {
-      right: right |> CopyOnWriteArray.update index value,
-      middle,
       left,
+      middle,
+      right: right |> CopyOnWriteArray.update index value,
     } :
 
     leftIndex >= 0 ? {
-      right,
-      middle,
       left: left |> CopyOnWriteArray.update leftIndex value,
+      middle,
+      right,
     } :
 
     {
       let index = (index - rightCount);
       let middle = middle |> Trie.updateWithMutator updateLevelPersistent updateLeaf index value;
-      { right, middle, left }
+      { left, middle, right }
     };
   };
 };
 
 type transientVectorImpl 'a = {
-  right: array 'a,
-  rightCount: int,
-  middle: trie 'a,
   left: array 'a,
   leftCount: int,
+  middle: trie 'a,
+  right: array 'a,
+  rightCount: int,
 };
 
 let tailCopyAndExpand (arr: array 'a): (array 'a) => {
@@ -868,7 +868,7 @@ let module TransientVectorImpl = VectorImpl.Make {
         trie
     | Level depth _ _ tries =>
         Level depth (ref count) (Some owner) (CopyOnWriteArray.update index child tries)
-    | Leaf _ _ => failwith "Invalid state"
+    | _ => failwith "Invalid state"
   };
 
   let updateLeaf
@@ -888,86 +888,86 @@ let module TransientVectorImpl = VectorImpl.Make {
       (owner: option owner)
       (value: 'a)
       ({
-        right,
-        rightCount,
-        middle,
         left,
         leftCount,
+        middle,
+        right,
+        rightCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) =>
     (tailIsFull rightCount) && (tailIsNotEmpty leftCount) ? {
-      right: Array.make Trie.width value,
-      rightCount: 1,
-      middle: Trie.addFirstLeafWithMutator (updateLevel @@ Option.get @@ owner) owner right middle,
       left,
       leftCount,
+      middle: Trie.addFirstLeafWithMutator (updateLevel @@ Option.get @@ owner) owner right middle,
+      right: Array.make Trie.width value,
+      rightCount: 1,
     } :
 
     (tailIsFull rightCount) && (tailIsEmpty leftCount) ? {
-      right: Array.make Trie.width value,
-      rightCount: 1,
-      middle,
       left: right,
       leftCount: rightCount,
+      middle,
+      right: Array.make Trie.width value,
+      rightCount: 1,
     } :
 
     {
-      right: right |> tailAddFirst value,
-      rightCount: rightCount + 1,
-      middle,
       left,
       leftCount,
+      middle,
+      right: right |> tailAddFirst value,
+      rightCount: rightCount + 1,
     };
 
   let addLast
       (owner: option owner)
       (value: 'a)
       ({
-        right,
-        rightCount,
-        middle,
         left,
         leftCount,
+        middle,
+        right,
+        rightCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) =>
     /* If left is empty, then middle is also empty */
     (tailIsNotFull rightCount) && (tailIsEmpty leftCount) ? {
-      right: right |> tailUpdate rightCount value,
-      rightCount: rightCount + 1,
-      middle,
       left,
       leftCount,
+      middle,
+      right: right |> tailUpdate rightCount value,
+      rightCount: rightCount + 1,
     } :
 
     (tailIsNotFull leftCount) ? {
-      right,
-      rightCount,
-      middle,
       left: left |> tailUpdate leftCount value,
       leftCount: leftCount + 1,
+      middle,
+      right,
+      rightCount,
     } :
 
     {
-      right,
-      rightCount,
-      middle: Trie.addLastLeafWithMutator (updateLevel @@ Option.get @@ owner) owner left middle,
       left: Array.make Trie.width value,
       leftCount: 1,
+      middle: Trie.addLastLeafWithMutator (updateLevel @@ Option.get @@ owner) owner left middle,
+      right,
+      rightCount,
     };
 
   let removeFirst
       (owner: option owner)
       ({
-        right,
-        rightCount,
-        middle,
         left,
         leftCount,
+        middle,
+        right,
+        rightCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) =>
     rightCount > 1 ? {
-      right: tailRemoveFirst right,
-      rightCount: rightCount - 1,
-      middle,
       left,
       leftCount,
+      middle,
+      right: tailRemoveFirst right,
+      rightCount: rightCount - 1,
     } :
 
     (Trie.count middle) > 0 ? {
@@ -982,28 +982,28 @@ let module TransientVectorImpl = VectorImpl.Make {
       };
 
       {
-        right,
-        rightCount,
-        middle,
         left,
         leftCount,
+        middle,
+        right,
+        rightCount,
       };
     } :
 
     leftCount > 0 ? {
-      right: left,
-      rightCount: leftCount,
-      middle,
       left: Array.make Trie.width left.(0),
       leftCount: 0,
+      middle,
+      right: left,
+      rightCount: leftCount,
     } :
 
     rightCount == 1 ? {
-      right,
-      rightCount: 0,
-      middle,
       left,
       leftCount,
+      middle,
+      right,
+      rightCount: 0,
     } :
 
     failwith "vector is empty";
@@ -1011,22 +1011,22 @@ let module TransientVectorImpl = VectorImpl.Make {
   let removeLast
       (owner: option owner)
       ({
-        right,
-        rightCount,
-        middle,
         left,
         leftCount,
+        middle,
+        right,
+        rightCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) =>
     leftCount > 1 ? {
-      right,
-      rightCount,
-      middle,
       left,
       leftCount: leftCount - 1,
+      middle,
+      right,
+      rightCount,
     } :
 
     (Trie.count middle) > 0 ? {
-      let (Leaf leftOwner left, middle) = middle
+      let (middle, Leaf leftOwner left) = middle
         |> Trie.removeLastLeafWithMutator (updateLevel @@ Option.get @@ owner) owner;
       let leftCount = CopyOnWriteArray.count left;
 
@@ -1036,23 +1036,23 @@ let module TransientVectorImpl = VectorImpl.Make {
         | _ => tailCopyAndExpand left
       };
 
-      { right, rightCount, middle, left, leftCount };
+      { left, leftCount, middle, right, rightCount };
     } :
 
     leftCount == 1 ? {
-      right,
-      rightCount,
-      middle,
       left,
       leftCount: 0,
+      middle,
+      right,
+      rightCount,
     } :
 
     rightCount > 0 ? {
-      right,
-      rightCount: rightCount - 1,
-      middle,
       left,
       leftCount,
+      middle,
+      right,
+      rightCount: rightCount - 1,
     } :
 
     failwith "vector is empty";
@@ -1060,11 +1060,11 @@ let module TransientVectorImpl = VectorImpl.Make {
   let getUnsafe
       (index: int)
       ({
-        right,
-        rightCount,
-        middle,
         left,
         leftCount,
+        middle,
+        right,
+        rightCount,
       }: transientVectorImpl 'a): 'a => {
     let middleCount = Trie.count middle;
     let leftIndex = index - middleCount - rightCount;
@@ -1084,11 +1084,11 @@ let module TransientVectorImpl = VectorImpl.Make {
       (index: int)
       (value: 'a)
       ({
-        right,
-        rightCount,
-        middle,
         left,
         leftCount,
+        middle,
+        right,
+        rightCount,
       } as vector: transientVectorImpl 'a): (transientVectorImpl 'a) => {
     Preconditions.failIfOutOfRange (count vector) index;
 
@@ -1097,19 +1097,19 @@ let module TransientVectorImpl = VectorImpl.Make {
     let leftIndex = index - middleCount - rightCount;
 
     index < rightCount ? {
-      right: right |> tailUpdate index value,
-      rightCount,
-      middle,
       left,
       leftCount,
+      middle,
+      right: right |> tailUpdate index value,
+      rightCount,
     } :
 
     leftIndex >= 0 ? {
-      right,
-      rightCount,
-      middle,
       left: left |> tailUpdate leftIndex value,
       leftCount,
+      middle,
+      right,
+      rightCount,
     } :
 
     {
@@ -1120,7 +1120,7 @@ let module TransientVectorImpl = VectorImpl.Make {
         index
         value;
 
-      { right, rightCount, middle, left, leftCount }
+      { left, leftCount, middle, right, rightCount }
     };
   };
 };
@@ -1145,12 +1145,12 @@ let update index => PersistentVector.update None index;
 
 type transientVector 'a = transient (transientVectorImpl 'a);
 
-let mutate ({ right, middle, left }: vector 'a): (transientVector 'a) => Transient.create {
-  right: (CopyOnWriteArray.count right > 0) ? tailCopyAndExpand right : [||],
-  rightCount: CopyOnWriteArray.count right,
-  middle,
+let mutate ({ left, middle, right }: vector 'a): (transientVector 'a) => Transient.create {
   left: (CopyOnWriteArray.count left > 0) ? tailCopyAndExpand left : [||],
   leftCount: CopyOnWriteArray.count left,
+  middle,
+  right: (CopyOnWriteArray.count right > 0) ? tailCopyAndExpand right : [||],
+  rightCount: CopyOnWriteArray.count right,
 };
 
 module TransientVector = {
@@ -1189,17 +1189,17 @@ module TransientVector = {
 
   let persist (transient: transientVector 'a): (vector 'a) => {
     let {
-      right,
-      rightCount,
-      middle,
       left,
       leftCount,
+      middle,
+      right,
+      rightCount,
     } = transient |> Transient.persist;
 
     {
-      right: right |> tailCompress rightCount,
-      middle,
       left: left |> tailCompress leftCount,
+      middle,
+      right: right |> tailCompress rightCount,
     }
   };
 
@@ -1256,26 +1256,26 @@ let addAll (seq: seq 'a) (trie: vector 'a): (vector 'a) => trie
   |> TransientVector.addAll seq
   |> TransientVector.persist;
 
-let every (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
+let every (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.every f right) && (Trie.every f middle) && (CopyOnWriteArray.every f left);
 
-let none (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
+let none (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.none f right) && (Trie.none f middle) && (CopyOnWriteArray.none f left);
 
-let some (f: 'a => bool) ({ right, middle, left }: vector 'a): bool =>
+let some (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.some f right) || (Trie.some f middle) || (CopyOnWriteArray.some f left);
 
 let fromSeq (seq: seq 'a): (vector 'a) =>
   empty |> addAll seq;
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ right, middle, left }: vector 'a): 'acc => {
+let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: vector 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduce f acc;
   let acc = middle |> Trie.reduce f acc;
   let acc = left |> CopyOnWriteArray.reduce f acc;
   acc;
 };
 
-let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ right, middle, left }: vector 'a): 'acc => {
+let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: vector 'a): 'acc => {
   let acc = left |> CopyOnWriteArray.reduceRight f acc;
   let acc = middle |> Trie.reduceRight f acc;
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
@@ -1300,7 +1300,7 @@ let reverse (vector: vector 'a): (vector 'a) => vector
     (mutate empty)
   |> TransientVector.persist;
 
-let skip (skipCount: int) ({ right, middle, left } as vec: vector 'a): (vector 'a) => {
+let skip (skipCount: int) ({ left, middle, right } as vec: vector 'a): (vector 'a) => {
   let vectorCount = count vec;
   let rightCount = CopyOnWriteArray.count right;
   let middleCount = Trie.count middle;
@@ -1308,68 +1308,68 @@ let skip (skipCount: int) ({ right, middle, left } as vec: vector 'a): (vector '
   skipCount >= vectorCount ? empty :
 
   skipCount < rightCount ? {
-    right: right |> CopyOnWriteArray.skip skipCount,
-    middle,
     left,
+    middle,
+    right: right |> CopyOnWriteArray.skip skipCount,
   } :
 
   skipCount == rightCount ? {
     let (Leaf _ right, middle) = Trie.removeFirstLeafWithMutator updateLevelPersistent None middle;
-    { right, middle, left }
+    { left, middle, right }
   } :
 
   skipCount - rightCount < middleCount ? {
     let skipCount = skipCount - rightCount;
     let (right, middle) = Trie.skip None skipCount middle;
-    { right, middle, left }
+    { left, middle, right }
   } :
 
   {
     let skipCount = skipCount - rightCount - middleCount;
     {
-      right: left |> CopyOnWriteArray.skip skipCount,
-      middle: Trie.empty,
       left: [||],
+      middle: Trie.empty,
+      right: left |> CopyOnWriteArray.skip skipCount,
     }
   }
 };
 
-let take (takeCount: int) ({ right, middle, left } as vec: vector 'a): (vector 'a) => {
+let take (takeCount: int) ({ left, middle, right } as vec: vector 'a): (vector 'a) => {
   let vectorCount = count vec;
-  let rightCount = CopyOnWriteArray.count right;
   let middleCount = Trie.count middle;
+  let rightCount = CopyOnWriteArray.count right;
 
   takeCount >= vectorCount ? vec :
   takeCount <= rightCount ? {
-    right: right |> CopyOnWriteArray.take takeCount,
-    middle: Trie.empty,
     left: [||],
+    middle: Trie.empty,
+    right: right |> CopyOnWriteArray.take takeCount,
   } :
 
   takeCount - rightCount < middleCount ? {
     let takeCount = takeCount - rightCount;
     let (middle, left) = Trie.take None takeCount middle;
-    { right, middle, left }
+    { left, middle, right }
   } :
 
   takeCount - rightCount == middleCount ? {
-    let (Leaf _ left, middle) = Trie.removeLastLeafWithMutator updateLevelPersistent None middle;
-    { right, middle, left }
+    let (middle, Leaf _ left) = Trie.removeLastLeafWithMutator updateLevelPersistent None middle;
+    { left, middle, right }
   } :
 
   {
     let takeCount = takeCount - rightCount - middleCount;
-    { right, middle, left: left |> CopyOnWriteArray.take takeCount }
+    { left: left |> CopyOnWriteArray.take takeCount, middle, right }
   }
 };
 
-let toSeq ({ right, middle, left }: vector 'a): (seq 'a) => Seq.concat [
+let toSeq ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
   CopyOnWriteArray.toSeq right,
   Trie.toSeq middle,
   CopyOnWriteArray.toSeq left,
 ];
 
-let toSeqReversed ({ right, middle, left }: vector 'a): (seq 'a) => Seq.concat [
+let toSeqReversed ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
   CopyOnWriteArray.toSeqReversed left,
   Trie.toSeqReversed middle,
   CopyOnWriteArray.toSeqReversed right,
