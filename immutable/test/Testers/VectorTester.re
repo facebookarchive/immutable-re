@@ -31,12 +31,14 @@ module type Vector = {
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
   let reverse: (t 'a) => (t 'a);
+  let skip: int => (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
   let tryFirst: (t 'a) => (option 'a);
   let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
+  let take: int => (t 'a) => (t 'a);
   let update: int => 'a => (t 'a) => (t 'a);
 };
 
@@ -90,6 +92,40 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
       });
     }),
 
+    it (sprintf "take with %i elements" count) (fun () => {
+      let vector = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i =>
+        acc |> Vector.addLast i
+      ) Vector.empty;
+
+      let taken = vector |> Vector.take 1;
+      let seqsEquality = Seq.equals (Vector.toSeq taken) (Seq.return 0);
+      expect seqsEquality |> toBeEqualToTrue;
+
+      let taken = vector |> Vector.take (count / 2);
+      let seqsEquality = Seq.equals (Vector.toSeq taken) (Seq.inRange 0 (Some (count / 2)) 1);
+      expect seqsEquality |> toBeEqualToTrue;
+
+      let taken = vector |> Vector.take (count - 1);
+      let seqsEquality = Seq.equals (Vector.toSeq taken) (Seq.inRange 0 (Some (count - 1)) 1);
+      expect seqsEquality |> toBeEqualToTrue;
+    }),
+    it (sprintf "skip with %i elements" count) (fun () => {
+      let vector = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i =>
+        acc |> Vector.addLast i
+      ) Vector.empty;
+
+      let skipped = vector |> Vector.skip 1;
+      let seqsEquality = Seq.equals (Vector.toSeq skipped) (Seq.inRange 1 (Some (count - 1)) 1);
+      expect seqsEquality |> toBeEqualToTrue;
+
+      let skipped = vector |> Vector.skip (count / 2);
+      let seqsEquality = Seq.equals (Vector.toSeq skipped) (Seq.inRange (count / 2) (Some (count / 2)) 1);
+      expect seqsEquality |> toBeEqualToTrue;
+
+      let skipped = vector |> Vector.skip (count - 1);
+      let seqsEquality = Seq.equals (Vector.toSeq skipped) (Seq.return (count - 1));
+      expect seqsEquality |> toBeEqualToTrue;
+    }),
     ...dequeTests
   ]
 };

@@ -6,8 +6,6 @@
 open ReUnit;
 open ReUnit.Test;
 
-open Vector;
-
 ReUnit.run (describe "Immutable.re" [
   BiMapTest.test,
   CollectionTest.test,

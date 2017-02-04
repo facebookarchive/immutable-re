@@ -667,8 +667,10 @@ let module Vector = {
   let removeFirst = Vector.removeFirst;
   let removeLast = Vector.removeLast;
   let reverse = Vector.reverse;
+  let skip = Vector.skip;
   /*let splitAt: int => (t 'a) => ((t 'a), (t 'a));*/
   let some = Vector.some;
+  let take = Vector.take;
   let toIndexed = Vector.toIndexed;
   let toSeq = Vector.toSeq;
   let toSeqReversed = Vector.toSeqReversed;

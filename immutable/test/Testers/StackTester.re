@@ -66,85 +66,83 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     expect seqsEquality |> toBeEqualToTrue;
   }),
 
-  describe "predicates" [
-    it (sprintf "every with %i elements" count) (fun () => {
-      Seq.concat [Seq.return false, Seq.repeat true (Some (count - 1))]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.every (fun v => v)
-        |> expect |> toBeEqualToFalse;
+  it (sprintf "every with %i elements" count) (fun () => {
+    Seq.concat [Seq.return false, Seq.repeat true (Some (count - 1))]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.every (fun v => v)
+      |> expect |> toBeEqualToFalse;
 
-      Seq.concat [Seq.repeat true (Some (count - 1)), Seq.return false]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.every (fun v => v)
-        |> expect |> toBeEqualToFalse;
+    Seq.concat [Seq.repeat true (Some (count - 1)), Seq.return false]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.every (fun v => v)
+      |> expect |> toBeEqualToFalse;
 
-      Seq.concat [
-        Seq.repeat true (Some (count / 2 - 1)),
-        Seq.return false,
-        Seq.repeat true (Some (count / 2 - 1)),
-      ]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.every (fun v => v)
-        |> expect |> toBeEqualToFalse;
+    Seq.concat [
+      Seq.repeat true (Some (count / 2 - 1)),
+      Seq.return false,
+      Seq.repeat true (Some (count / 2 - 1)),
+    ]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.every (fun v => v)
+      |> expect |> toBeEqualToFalse;
 
-      Seq.repeat true (Some count)
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.every (fun v => v)
-        |> expect |> toBeEqualToTrue;
-    }),
+    Seq.repeat true (Some count)
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.every (fun v => v)
+      |> expect |> toBeEqualToTrue;
+  }),
 
-    it (sprintf "none with %i elements" count) (fun () => {
-      Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.none (fun v => v)
-        |> expect |> toBeEqualToFalse;
+  it (sprintf "none with %i elements" count) (fun () => {
+    Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.none (fun v => v)
+      |> expect |> toBeEqualToFalse;
 
-      Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.none (fun v => v)
-        |> expect |> toBeEqualToFalse;
+    Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.none (fun v => v)
+      |> expect |> toBeEqualToFalse;
 
-      Seq.concat [
-        Seq.repeat false (Some (count / 2 - 1)),
-        Seq.return true,
-        Seq.repeat false (Some (count / 2 - 1)),
-      ]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.none (fun v => v)
-        |> expect |> toBeEqualToFalse;
+    Seq.concat [
+      Seq.repeat false (Some (count / 2 - 1)),
+      Seq.return true,
+      Seq.repeat false (Some (count / 2 - 1)),
+    ]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.none (fun v => v)
+      |> expect |> toBeEqualToFalse;
 
-      Seq.repeat false (Some count)
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.none (fun v => v)
-        |> expect |> toBeEqualToTrue;
-    }),
+    Seq.repeat false (Some count)
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.none (fun v => v)
+      |> expect |> toBeEqualToTrue;
+  }),
 
-    it (sprintf "some with %i elements" count) (fun () => {
-      Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.some (fun v => v)
-        |> expect |> toBeEqualToTrue;
+  it (sprintf "some with %i elements" count) (fun () => {
+    Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.some (fun v => v)
+      |> expect |> toBeEqualToTrue;
 
-      Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.some (fun v => v)
-        |> expect |> toBeEqualToTrue;
+    Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.some (fun v => v)
+      |> expect |> toBeEqualToTrue;
 
-      Seq.concat [
-        Seq.repeat false (Some (count / 2 - 1)),
-        Seq.return true,
-        Seq.repeat false (Some (count / 2 - 1)),
-      ]
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.some (fun v => v)
-        |> expect |> toBeEqualToTrue;
+    Seq.concat [
+      Seq.repeat false (Some (count / 2 - 1)),
+      Seq.return true,
+      Seq.repeat false (Some (count / 2 - 1)),
+    ]
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.some (fun v => v)
+      |> expect |> toBeEqualToTrue;
 
-      Seq.repeat false (Some count)
-        |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
-        |> Stack.some (fun v => v)
-        |> expect |> toBeEqualToFalse;
-    }),
-  ],
+    Seq.repeat false (Some count)
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Stack.some (fun v => v)
+      |> expect |> toBeEqualToFalse;
+  }),
 
   it (sprintf "mapReverse %i elements" count) (fun () => {
     Seq.inRange 0 (Some count) 1
