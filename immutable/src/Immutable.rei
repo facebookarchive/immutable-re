@@ -233,7 +233,6 @@ let module CopyOnWriteArray: {
   let reverse: (t 'a) => (t 'a);
   let skip: int => (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
-  let split: int => (t 'a) => (t 'a, t 'a);
   let take: int => (t 'a) => (t 'a);
   let toIndexed: (t 'a) => (Indexed.t 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
@@ -652,7 +651,6 @@ let module rec Vector: {
   let removeLast: (t 'a) => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let skip: int => (t 'a) => (t 'a);
-  /*let splitAt: int => (t 'a) => ((t 'a), (t 'a));*/
   let some: ('a => bool) => (t 'a) => bool;
   let take: int => (t 'a) => (t 'a);
   let toIndexed: (t 'a) => (Indexed.t 'a);

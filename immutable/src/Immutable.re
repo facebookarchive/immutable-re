@@ -249,7 +249,6 @@ let module CopyOnWriteArray = {
   let reverse = CopyOnWriteArray.reverse;
   let skip = CopyOnWriteArray.skip;
   let some = CopyOnWriteArray.some;
-  let split = CopyOnWriteArray.split;
   let take = CopyOnWriteArray.take;
   let toIndexed = CopyOnWriteArray.toIndexed;
   let toSeq = CopyOnWriteArray.toSeq;
@@ -668,7 +667,6 @@ let module Vector = {
   let removeLast = Vector.removeLast;
   let reverse = Vector.reverse;
   let skip = Vector.skip;
-  /*let splitAt: int => (t 'a) => ((t 'a), (t 'a));*/
   let some = Vector.some;
   let take = Vector.take;
   let toIndexed = Vector.toIndexed;

@@ -193,9 +193,6 @@ let some (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
 let take (newCount: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
   Array.sub arr 0 newCount;
 
-let split (index: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a, copyOnWriteArray 'a) =>
-  (take index arr, skip index arr);
-
 let toSeqReversed (arr: copyOnWriteArray 'a): (seq 'a) => {
   let rec loop index => fun () => index < 0
     ? Completed
