@@ -31,6 +31,11 @@ let isNotEmpty (list: list 'a): bool => switch list {
   | _ => true;
 };
 
+let rec find (f: 'a => bool) (list: list 'a): 'a => switch list {
+  | [head, ...tail] => f head ? head : find f tail
+  | [] => failwith "not found"
+};
+
 let first (list: list 'a): 'a => switch list {
   | [head, ...tail] => head
   | [] => failwith "empty"

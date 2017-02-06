@@ -8,6 +8,7 @@ let test = describe "Stack" (StackTester.test 10 (module {
   let count = Stack.count;
   let empty = Stack.empty;
   let every = Stack.every;
+  let find = Stack.find;
   let first = Stack.first;
   let isEmpty = Stack.isEmpty;
   let isNotEmpty = Stack.isNotEmpty;
@@ -19,5 +20,6 @@ let test = describe "Stack" (StackTester.test 10 (module {
   let reverse = Stack.reverse;
   let some = Stack.some;
   let toSeq = Stack.toSeq;
+  let tryFind = Stack.tryFind;
   let tryFirst = Stack.tryFirst;
 }));

@@ -59,6 +59,17 @@ let every (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   loop 0;
 };
 
+let find (f: 'a => bool) (arr: copyOnWriteArray 'a): 'a => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f v ? v : loop (index + 1)
+  } : failwith "not found";
+
+  loop 0;
+};
+
 let first (arr: copyOnWriteArray 'a): 'a => arr.(0);
 
 let fromSeq (length: int) (defaultValue: 'a) (seq: seq 'a): (array 'a) => {
@@ -219,6 +230,17 @@ let toIndexed (arr: copyOnWriteArray 'a): indexed 'a => ({
 
 let tryGet (index: int) (arr: copyOnWriteArray 'a): (option 'a) =>
   Preconditions.noneIfIndexOutOfRange (count arr) index (flip get arr);
+
+let tryFind (f: 'a => bool) (arr: copyOnWriteArray 'a): (option 'a) => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f v ? Some v : loop (index + 1)
+  } : None;
+
+  loop 0;
+};
 
 let tryFirst (arr: copyOnWriteArray 'a): (option 'a) => tryGet 0 arr;
 

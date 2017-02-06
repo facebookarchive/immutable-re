@@ -74,6 +74,21 @@ let module Trie = {
     | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeqReversed |> Seq.flatMap toSeqReversed
   };
 
+  let rec tryFind (f: 'a => bool) (trie: trie 'a): (option 'a) => switch trie {
+    | Empty => None
+    | Leaf _ values =>
+        values |> CopyOnWriteArray.tryFind f
+    | Level _ _ _ nodes =>
+        let nodesCount = CopyOnWriteArray.count nodes;
+        let rec loop index => index < nodesCount
+          ? switch (tryFind f nodes.(index)) {
+              | Some _ as result => result
+              | _ => loop (index + 1)
+            }
+          : None;
+        loop 0
+  };
+
   let depth (trie: trie 'a): int => switch trie {
     | Empty => failwith "invalid state"
     | Leaf _ values => 0
@@ -1259,6 +1274,16 @@ let addAll (seq: seq 'a) (trie: vector 'a): (vector 'a) => trie
 let every (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.every f left) && (Trie.every f middle) && (CopyOnWriteArray.every f right);
 
+let find (f: 'a => bool) ({ left, middle, right }: vector 'a): 'a =>
+  /* FIXME: Add an operator to Option for this use case */
+  switch (left |> CopyOnWriteArray.tryFind f) {
+    | Some v => v
+    | _ => switch (middle |> Trie.tryFind f) {
+      | Some v => v
+      | _ => right |> CopyOnWriteArray.find f
+    }
+  };
+
 let none (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.none f left) && (Trie.none f middle) && (CopyOnWriteArray.none f right);
 
@@ -1380,3 +1405,13 @@ let toIndexed (vector: vector 'a): (indexed 'a) => Indexed.create
   rseq::(toSeqReversed vector)
   seq::(toSeq vector)
   tryGet::(fun i => vector |> tryGet i);
+
+let tryFind (f: 'a => bool) ({ left, middle, right }: vector 'a): (option 'a) =>
+  /* FIXME: Add an operator to Option for this use case */
+  switch (left |> CopyOnWriteArray.tryFind f) {
+    | Some _ as v => v
+    | _ => switch (middle |> Trie.tryFind f) {
+      | Some _ as v => v
+      | _ => right |> CopyOnWriteArray.tryFind f
+    }
+  };

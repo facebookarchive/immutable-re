@@ -35,6 +35,9 @@ let empty: stack 'a = {
 let every (f: 'a => bool) ({ list }: stack 'a): bool =>
   list |> ImmList.every f;
 
+let find (f: 'a => bool) ({ list }: stack 'a): 'a =>
+  list |> ImmList.find f;
+
 let first ({ list }: stack 'a): 'a => list |> ImmList.first;
 
 let fromList (list: list 'a): (stack 'a) =>
@@ -74,5 +77,8 @@ let some (f: 'a => bool) ({ list }: stack 'a): bool =>
 let toList ({ list }: stack 'a): (list 'a) => list;
 
 let toSeq ({ list }: stack 'a): (seq 'a) => Seq.ofList list;
+
+let tryFind (f: 'a => bool) ({ list }: stack 'a): (option 'a) =>
+  list |> ImmList.tryFind f;
 
 let tryFirst ({ list }: stack 'a): (option 'a) => list |> ImmList.tryFirst;

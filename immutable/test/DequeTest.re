@@ -15,6 +15,7 @@ let module Deque = {
   let count = Deque.count;
   let empty = Deque.empty;
   let every = Deque.every;
+  let find = Deque.find;
   let first = Deque.first;
   let isEmpty = Deque.isEmpty;
   let isNotEmpty = Deque.isNotEmpty;
@@ -31,6 +32,7 @@ let module Deque = {
   let some = Deque.some;
   let toSeq = Deque.toSeq;
   let toSeqReversed = Deque.toSeqReversed;
+  let tryFind = Deque.tryFind;
   let tryFirst = Deque.tryFirst;
   let tryLast = Deque.tryLast;
 };

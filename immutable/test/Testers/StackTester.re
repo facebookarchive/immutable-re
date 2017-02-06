@@ -11,6 +11,7 @@ module type Stack = {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
@@ -22,6 +23,7 @@ module type Stack = {
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => (option 'a);
 };
 
@@ -192,5 +194,25 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
       |> Stack.reduce (fun acc i => acc + i) 0
       |> expect
       |> toBeEqualToInt count;
+  }),
+
+  it (sprintf "find and tryFind in %i elements" count) (fun () => {
+    let stack = Seq.inRange 0 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let find0 i => i == 0;
+    let findCountMinusOne i => i == (count - 1);
+    let findCountDividedByTwo i => i == (count / 2);
+
+    expect (Stack.find find0 stack) |> toBeEqualToInt 0;
+    expect (Stack.find findCountMinusOne stack) |> toBeEqualToInt (count - 1);
+    expect (Stack.find findCountDividedByTwo stack) |> toBeEqualToInt (count / 2);
+
+    expect (Stack.tryFind find0 stack) |> toBeEqualToSomeOfInt 0;
+    expect (Stack.tryFind findCountMinusOne stack) |> toBeEqualToSomeOfInt (count - 1);
+    expect (Stack.tryFind findCountDividedByTwo stack) |> toBeEqualToSomeOfInt (count / 2);
+
+    defer (fun () => Stack.find Functions.alwaysFalse stack) |> throws;
+    expect (Stack.tryFind Functions.alwaysFalse stack) |> toBeEqualToNoneOfInt;
   }),
 ];

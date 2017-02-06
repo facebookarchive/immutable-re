@@ -53,6 +53,11 @@ let count (deque: deque 'a): int => switch deque {
   | Descending vector => Vector.count vector
 };
 
+let find (f: 'a => bool) (deque: deque 'a): 'a => switch deque {
+  | Ascending vector
+  | Descending vector => Vector.find f vector
+};
+
 let first (deque: deque 'a): 'a => switch deque {
   | Ascending vector => Vector.first vector
   | Descending vector => Vector.last vector
@@ -80,6 +85,11 @@ let removeLast (deque: deque 'a): (deque 'a) => switch deque {
 let reverse (deque: deque 'a): (deque 'a) => switch deque {
   | Ascending vector => Descending vector
   | Descending vector => Ascending vector
+};
+
+let tryFind (f: 'a => bool) (deque: deque 'a): (option 'a) => switch deque {
+  | Ascending vector
+  | Descending vector => Vector.tryFind f vector
 };
 
 let tryFirst (deque: deque 'a): (option 'a) => switch deque {

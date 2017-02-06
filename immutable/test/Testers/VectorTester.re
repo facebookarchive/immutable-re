@@ -17,6 +17,7 @@ module type Vector = {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let get: int => (t 'a) => 'a;
   let isEmpty: t 'a => bool;
@@ -35,6 +36,7 @@ module type Vector = {
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => (option 'a);
   let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
@@ -51,6 +53,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     let count = Vector.count;
     let empty = Vector.empty;
     let every = Vector.every;
+    let find = Vector.find;
     let first = Vector.first;
     let isEmpty = Vector.isEmpty;
     let isNotEmpty = Vector.isNotEmpty;
@@ -67,6 +70,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     let some = Vector.some;
     let toSeq = Vector.toSeq;
     let toSeqReversed = Vector.toSeqReversed;
+    let tryFind = Vector.tryFind;
     let tryFirst = Vector.tryFirst;
     let tryLast = Vector.tryLast;
   });

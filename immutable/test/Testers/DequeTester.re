@@ -12,6 +12,7 @@ module type Deque = {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
@@ -28,6 +29,7 @@ module type Deque = {
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
 };
@@ -40,6 +42,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     let count = Deque.count;
     let empty = Deque.empty;
     let every = Deque.every;
+    let find = Deque.find;
     let first = Deque.first;
     let isEmpty = Deque.isEmpty;
     let isNotEmpty = Deque.isNotEmpty;
@@ -51,6 +54,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     let reverse = Deque.reverse;
     let some = Deque.some;
     let toSeq = Deque.toSeq;
+    let tryFind = Deque.tryFind;
     let tryFirst = Deque.tryFirst;
   });
 

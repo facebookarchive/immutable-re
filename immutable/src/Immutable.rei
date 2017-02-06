@@ -62,6 +62,8 @@ let module Seq: {
   let equalsWith: (Equality.t 'a) => (t 'a) => (t 'a) => bool;
   let every: ('a => bool) => (t 'a) => bool;
   let filter: ('a => bool) => (t 'a) => (t 'a);
+  let find: ('a => bool) => (t 'a) => 'a;
+  let first: (t 'a) => 'a;
   let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
   let flatten: (t (t 'a)) => (t 'a);
   let forEach: ('a => unit) => (t 'a) => unit;
@@ -69,6 +71,7 @@ let module Seq: {
   let inRange: int => (option int) => int => (t int);
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
+  let last: (t 'a) => 'a;
   let map: ('a => 'b) => (t 'a) => (t 'b);
   let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
@@ -211,6 +214,7 @@ let module CopyOnWriteArray: {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let fromSeq: int => 'a => (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
@@ -237,6 +241,7 @@ let module CopyOnWriteArray: {
   let toIndexed: (t 'a) => (Indexed.t 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => option 'a;
   let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
@@ -252,6 +257,7 @@ let module rec Deque: {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
@@ -269,6 +275,7 @@ let module rec Deque: {
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => option 'a;
   let tryLast: (t 'a) => option 'a;
 }
@@ -475,6 +482,7 @@ let module List: {
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
   let first: (t 'a) => 'a;
+  let find: ('a => bool) => (t 'a) => 'a;
   let fromSeq: (Seq.t 'a) => (list 'a);
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
@@ -569,6 +577,7 @@ let module Stack: {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
@@ -583,6 +592,7 @@ let module Stack: {
   let some: ('a => bool) => (t 'a) => bool;
   let toList: (t 'a) => (list 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => (option 'a);
 };
 
@@ -633,6 +643,7 @@ let module rec Vector: {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let get: int => (t 'a) => 'a;
   /*let insertAt: int => 'a => (t 'a) => (t 'a);*/
@@ -656,6 +667,7 @@ let module rec Vector: {
   let toIndexed: (t 'a) => (Indexed.t 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => option 'a;
   let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;

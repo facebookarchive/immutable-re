@@ -196,11 +196,22 @@ let isNotEmpty (seq: seq 'a): bool => switch (seq ()) {
 
 let filter = Stream.filter;
 
+let first (seq: seq 'a): 'a => switch (seq ()) {
+  | Next value _ => value
+  | Completed => failwith "Seq is empty"
+};
+
+let find (predicate: 'a => bool) (seq: seq 'a): 'a =>
+  seq |> Stream.tryFind predicate |> first;
+
 let flatMap = Stream.flatMap;
 
 let flatten = Stream.flatten;
 
 let inRange = Stream.inRange;
+
+let last (seq: seq 'a): 'a =>
+  seq |> Stream.last |> first;
 
 let map = Stream.map;
 
