@@ -1300,11 +1300,35 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: vector 
   acc;
 };
 
+let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector 'a): 'acc => {
+  /* kinda a hack, but a lot less code to write */
+  let index = ref 0;
+  let reducer acc next => {
+    let acc = f acc !index next;
+    index := !index + 1;
+    acc
+  };
+
+  reduce reducer acc vec;
+};
+
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: vector 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
   let acc = middle |> Trie.reduceRight f acc;
   let acc = left |> CopyOnWriteArray.reduceRight f acc;
   acc;
+};
+
+let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector 'a): 'acc => {
+  /* kinda a hack, but a lot less code to write */
+  let index = ref (count vec - 1);
+  let reducer acc next => {
+    let acc = f acc !index next;
+    index := !index - 1;
+    acc
+  };
+
+  reduceRight reducer acc vec;
 };
 
 let map (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
@@ -1313,9 +1337,21 @@ let map (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
     (mutate empty)
   |> TransientVector.persist;
 
+let mapWithIndex (f: int => 'a => 'b) (vector: vector 'a): (vector 'b) => vector
+  |> reduceWithIndex
+    (fun acc index next => acc |> TransientVector.add @@ f index @@ next)
+    (mutate empty)
+  |> TransientVector.persist;
+
 let mapReverse (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
   |> reduceRight
     (fun acc next => acc |> TransientVector.add @@ f @@ next)
+    (mutate empty)
+  |> TransientVector.persist;
+
+let mapReverseWithIndex (f: int => 'a => 'b) (vector: vector 'a): (vector 'b) => vector
+  |> reduceWithIndex
+    (fun acc index next => acc |> TransientVector.addFirst @@ f index @@ next)
     (mutate empty)
   |> TransientVector.persist;
 

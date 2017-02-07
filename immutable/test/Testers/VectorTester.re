@@ -24,10 +24,14 @@ module type Vector = {
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
@@ -94,6 +98,46 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect (updated |> Vector.get i) |> toBeEqualToInt (i + 1);
         expect (updated |> Vector.tryGet i) |> toBeEqualToSomeOfInt (i + 1);
       });
+    }),
+
+    it (sprintf "mapWithIndex %i elements" count) (fun () => {
+      Seq.inRange 0 (Some count) 1
+        |> Seq.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
+        |> Vector.mapWithIndex (fun i v => i + 1)
+        |> Vector.toSeq
+        |> expect
+        |> toBeEqualToSeq string_of_int (Seq.inRange 1 (Some count) 1);
+    }),
+
+    it (sprintf "mapReverseWithIndex %i elements" count) (fun () => {
+      Seq.inRange 0 (Some count) 1
+        |> Seq.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
+        |> Vector.mapReverseWithIndex (fun i v => i + 1)
+        |> Vector.toSeq
+        |> expect
+        |> toBeEqualToSeq string_of_int (Seq.inRange count (Some count) (-1));
+    }),
+
+    it (sprintf "reduceWithIndex with %i elements" count) (fun () => {
+      let result = Seq.repeat 1 (Some count)
+        |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
+        |> Vector.reduceWithIndex (fun acc i v => acc + i) 0;
+
+      let expected = Seq.inRange 0 (Some count) 1
+        |> Seq.reduce (fun acc i => acc + i) 0;
+
+      expect result |> toBeEqualToInt expected;
+    }),
+
+    it (sprintf "reduceRightWithIndex %i elements" count) (fun () => {
+      let result = Seq.repeat 1 (Some count)
+        |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
+        |> Vector.reduceRightWithIndex (fun acc i v => acc + i) 0;
+
+      let expected = Seq.inRange (count - 1) (Some count) (-1)
+        |> Seq.reduce (fun acc i => acc + i) 0;
+
+      expect result |> toBeEqualToInt expected;
     }),
 
     it (sprintf "take with %i elements" count) (fun () => {

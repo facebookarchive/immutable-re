@@ -140,16 +140,33 @@ let module Indexed: {
   let empty: (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
   let equalsWith: (Equality.t 'a) => (t 'a) => (t 'a) => bool;
+/*
+  let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
+  let first: (t 'a) => 'a;
+  let get: int => (t 'a) => 'a;
+*/
   let hash: (Hash.t 'a) => (t 'a) => int;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
+/*
+  let last: (t 'a) => 'a;
+*/
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  /*let mapReverse: ('a => 'b) => (t 'a) => (t 'b);*/
   let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
-  let range: int => (option int) => (t 'a) => (t 'a);
+  /*let none: ('a => bool) => (t 'a) => bool;
+  let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;*/
   let reverse: (t 'a) => (t 'a);
+/*
+  let skip: int => (t 'a) => (t 'a);
+  let some: ('a => bool) => (t 'a) => bool;
+  let take: int => (t 'a) => (t 'a);*/
   let toKeyed: (t 'a) => (Keyed.t int 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  /*let tryFind: ('a => bool) => (t 'a) => (option 'a); */
   let tryFirst: (t 'a) => option 'a;
   let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
@@ -224,12 +241,16 @@ let module CopyOnWriteArray: {
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let none: ('a => bool) => (t 'a) => bool;
   let ofUnsafe: (array 'a) => (t 'a);
   let range: int => (option int) => (t 'a) => (t 'a);
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let removeAt: int => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
@@ -651,11 +672,15 @@ let module rec Vector: {
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let mutate: (t 'a) => (TransientVector.t 'a);
   let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   /*let removeAt: int => (t 'a) => (t 'a);*/
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);

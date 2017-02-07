@@ -31,22 +31,6 @@ let addLast (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
 
 let add = addLast;
 
-let concat (arrays: list (array 'a)): (array 'a) => {
-  let newCount = arrays |> ImmList.reduce (fun acc i => acc + count i) 0;
-
-  newCount == 0 ? [||] : {
-    let retval = Array.make newCount (ImmList.first arrays).(0);
-
-    ImmList.reduce (fun index next => {
-      let countNext = count next;
-      Array.blit next 0 retval index countNext;
-      index + countNext;
-    }) 0 |> ignore;
-
-    retval;
-  };
-};
-
 let empty: (copyOnWriteArray 'a) = [||];
 
 let every (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
@@ -108,6 +92,22 @@ let isEmpty (arr: copyOnWriteArray 'a): bool => (count arr) == 0;
 
 let isNotEmpty (arr: copyOnWriteArray 'a): bool => (count arr) != 0;
 
+let concat (arrays: list (array 'a)): (array 'a) => {
+  let newCount = arrays |> ImmList.reduce (fun acc i => acc + count i) 0;
+
+  newCount == 0 ? [||] : {
+    let retval = Array.make newCount (ImmList.find isNotEmpty arrays).(0);
+
+    ImmList.reduce (fun index next => {
+      let countNext = count next;
+      Array.blit next 0 retval index countNext;
+      index + countNext;
+    }) 0 |> ignore;
+
+    retval;
+  };
+};
+
 let none (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   let arrCount = count arr;
   let rec loop i =>
@@ -133,8 +133,28 @@ let range
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc =>
   Array.fold_left f acc arr;
 
+let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc => {
+  let arrCount = count arr;
+  let rec loop acc index => index < arrCount ? {
+    let acc = f acc index arr.(index);
+    loop acc (index + 1);
+  } : acc;
+
+  loop acc 0;
+};
+
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc =>
   Array.fold_right (flip f) arr acc;
+
+let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc => {
+  let arrLastIndex = lastIndex arr;
+  let rec loop acc index => index >= 0 ? {
+    let acc = f acc index arr.(index);
+    loop acc (index - 1);
+  } : acc;
+
+  loop acc arrLastIndex;
+};
 
 let map (f: 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNotEmpty arr
   ? {
@@ -144,11 +164,28 @@ let map (f: 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNot
     retval;
   }: [||];
 
+let mapWithIndex (f: int => 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNotEmpty arr
+  ? {
+    let initialValue = f 0 arr.(0);
+    let retval = Array.make (count arr) initialValue;
+    arr |> reduce (fun acc next => { retval.(acc) = f acc next; acc + 1 }) 0 |> ignore;
+    retval;
+  }: [||];
+
 let mapReverse (f: 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNotEmpty arr
   ? {
     let initialValue = f arr.(0);
     let retval = Array.make (count arr) initialValue;
     arr |> reduceRight (fun acc next => { retval.(acc) = f next; acc + 1 }) 0 |> ignore;
+    retval;
+  }: [||];
+
+let mapReverseWithIndex (f: int => 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNotEmpty arr
+  ? {
+    let arrCount = count arr;
+    let initialValue = f 0 arr.(0);
+    let retval = Array.make arrCount initialValue;
+    arr |> reduce (fun acc next => { retval.(arrCount - acc - 1) = f acc next; acc + 1 }) 0 |> ignore;
     retval;
   }: [||];
 
