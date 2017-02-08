@@ -32,6 +32,7 @@ let module Vector = {
   let mapReverse = CopyOnWriteArray.mapReverse;
   let mapReverseWithIndex = CopyOnWriteArray.mapReverseWithIndex;
   let none = CopyOnWriteArray.none;
+  let range = CopyOnWriteArray.range;
   let reduce = CopyOnWriteArray.reduce;
   let reduceWithIndex = CopyOnWriteArray.reduceWithIndex;
   let reduceRight = CopyOnWriteArray.reduceRight;
@@ -54,4 +55,5 @@ let module Vector = {
 
 let test = describe "CopyOnWriteArray" (List.fromSeq @@ Seq.concat @@ [
   (VectorTester.test 10 (module Vector)) |> List.toSeq,
+  (VectorTester.test 5000 (module Vector)) |> List.toSeq,
 ]);

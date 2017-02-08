@@ -1449,6 +1449,10 @@ let take (takeCount: int) ({ left, middle, right } as vec: vector 'a): (vector '
   }
 };
 
+/* FIXME: Likely could be made more efficient with a custom implementation */
+let range (startIndex: int) (takeCount: option int) (vec: vector 'a): (vector 'a) =>
+   vec |> skip startIndex |> take (takeCount |? (count vec));
+
 let toSeq ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
   CopyOnWriteArray.toSeq left,
   Trie.toSeq middle,

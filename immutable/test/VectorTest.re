@@ -32,6 +32,7 @@ let module Vector = {
   let mapReverse = Vector.mapReverse;
   let mapReverseWithIndex = Vector.mapReverseWithIndex;
   let none = Vector.none;
+  let range = Vector.range;
   let reduce = Vector.reduce;
   let reduceWithIndex = Vector.reduceWithIndex;
   let reduceRight = Vector.reduceRight;

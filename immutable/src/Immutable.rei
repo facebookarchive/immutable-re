@@ -713,6 +713,7 @@ let module rec Vector: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let fromSeq: (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -726,6 +727,7 @@ let module rec Vector: {
   let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let mutate: (t 'a) => (TransientVector.t 'a);
   let none: ('a => bool) => (t 'a) => bool;
+  let range: int => (option int) => (t 'a) => (t 'a);
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;

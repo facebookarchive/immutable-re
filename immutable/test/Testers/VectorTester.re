@@ -34,6 +34,7 @@ module type Vector = {
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
   let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   let none: ('a => bool) => (t 'a) => bool;
+  let range: int => (option int) => (t 'a) => (t 'a);
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
@@ -184,6 +185,19 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
       let skipped = vector |> Vector.skip (count - 1);
       let seqsEquality = Seq.equals (Vector.toSeq skipped) (Seq.return (count - 1));
+      expect seqsEquality |> toBeEqualToTrue;
+    }),
+    it (sprintf "range with %i elements" count) (fun () => {
+      let vector = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i =>
+        acc |> Vector.addLast i
+      ) Vector.empty;
+
+      let rangeOneToCountMinusTwo = vector |> Vector.range 1 (count - 2 |> Option.return);
+
+      let seqsEquality = Seq.equals
+        (Vector.toSeq rangeOneToCountMinusTwo)
+        (Seq.inRange 1 (count - 2 |> Option.return) 1);
+
       expect seqsEquality |> toBeEqualToTrue;
     }),
     ...dequeTests
