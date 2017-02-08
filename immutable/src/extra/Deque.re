@@ -1,17 +1,20 @@
-
 /*
  * vim: set ft=rust:
  * vim: set ft=reason:
  */
 
+open Comparator;
 open CopyOnWriteArray;
+open Equality;
 open Functions;
+open Hash;
 open Indexed;
-open Vector;
 open Option.Operators;
+open Ordering;
 open Preconditions;
 open Seq;
 open Transient;
+open Vector;
 
 type deque 'a =
   | Ascending (vector 'a)
@@ -53,6 +56,21 @@ let count (deque: deque 'a): int => switch deque {
   | Descending vector => Vector.count vector
 };
 
+let equalsWith (valueEquals: equality 'a) (this: deque 'a) (that: deque 'a): bool =>
+  this === that ? true :
+  (count this) != (count that) ? false :
+  switch (this, that) {
+    | (Ascending this, Ascending that)
+    | (Descending this, Descending that) =>
+        Vector.equalsWith valueEquals this that
+    | (Ascending this, Descending that)
+    | (Descending this, Ascending that) =>
+        Seq.equalsWith valueEquals (Vector.toSeq this) (Vector.toSeqReversed that)
+  };
+
+let equals (this: deque 'a) (that: deque 'a): bool =>
+  equalsWith Equality.structural this that;
+
 let find (f: 'a => bool) (deque: deque 'a): 'a => switch deque {
   | Ascending vector
   | Descending vector => Vector.find f vector
@@ -61,6 +79,16 @@ let find (f: 'a => bool) (deque: deque 'a): 'a => switch deque {
 let first (deque: deque 'a): 'a => switch deque {
   | Ascending vector => Vector.first vector
   | Descending vector => Vector.last vector
+};
+
+let hashWith (hash: hash 'a) (deque: deque 'a): int => switch deque {
+  | Ascending vector
+  | Descending vector => Vector.hashWith hash vector
+};
+
+let hash (deque: deque 'a): int => switch deque {
+  | Ascending vector
+  | Descending vector => Vector.hash vector
 };
 
 let last (deque: deque 'a): 'a => switch deque {
@@ -123,6 +151,12 @@ let toSeqReversed (deque: deque 'a): (seq 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSeqReversed
   | Descending vector => vector |> Vector.toSeq;
 };
+
+let compareWith (valueCompare: comparator 'a) (this: deque 'a) (that: deque 'a): ordering =>
+  this === that ? Ordering.equal : Seq.compareWith valueCompare (toSeq this) (toSeq that);
+
+let compare (this: deque 'a) (that: deque 'a): ordering =>
+  compareWith Comparator.structural this that;
 
 let module TransientDeque = {
   let addFirst

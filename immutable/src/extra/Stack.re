@@ -1,3 +1,7 @@
+open Comparator;
+open Equality;
+open Hash;
+open Ordering;
 open Seq;
 
 type stack 'a = {
@@ -25,12 +29,40 @@ let addAll (values: seq 'a) ({ count, list }: stack 'a): (stack 'a) => {
   { count: !newCount, list: newList }
 };
 
+let compare
+    ({ list: thisList } as this: stack 'a)
+    ({ list: thatList } as that: stack 'a): ordering => this === that
+  ? Ordering.equal
+  : ImmList.compare thisList thatList;
+
+let compareWith
+    (valueCompare: comparator 'a)
+    ({ list: thisList } as this: stack 'a)
+    ({ list: thatList } as that: stack 'a): ordering => this === that
+  ? Ordering.equal
+  : ImmList.compareWith valueCompare thisList thatList;
+
 let count ({ count, list }: stack 'a): int => count;
 
 let empty: stack 'a = {
   count: 0,
   list: [],
 };
+
+let equals
+    ({ count: thisCount, list: thisList } as this: stack 'a)
+    ({ count: thatCount, list: thatList } as that: stack 'a): bool =>
+  this === that ? true :
+  thisCount != thatCount ? false :
+  ImmList.equals thisList thatList;
+
+let equalsWith
+    (valueEquals: equality 'a)
+    ({ count: thisCount, list: thisList } as this: stack 'a)
+    ({ count: thatCount, list: thatList } as that: stack 'a): bool =>
+  this === that ? true :
+  thisCount != thatCount ? false :
+  ImmList.equalsWith valueEquals thisList thatList;
 
 let every (f: 'a => bool) ({ list }: stack 'a): bool =>
   list |> ImmList.every f;
@@ -44,6 +76,12 @@ let fromList (list: list 'a): (stack 'a) =>
   { count: list |> ImmList.count, list };
 
 let fromSeq (values: seq 'a): (stack 'a) => empty |> addAll values;
+
+let hash ({ list }: stack 'a): int =>
+  ImmList.hash list;
+
+let hashWith (valueHash: hash 'a) ({ list }: stack 'a): int =>
+  ImmList.hashWith valueHash list;
 
 let mapReverse (f: 'a => 'b) ({ count, list }: stack 'a): (stack 'b) => {
   count,

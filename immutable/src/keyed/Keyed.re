@@ -88,8 +88,11 @@ let equalsWith (valueEquality: equality 'v) (that: keyed 'k 'v) (this: keyed 'k 
 let equals (that: keyed 'k 'v) (this: keyed 'k 'v): bool =>
   equalsWith Equality.structural that this;
 
-let hash (keyHash: hash 'k) (valueHash: hash 'v) ({ seq }: keyed 'k 'v): int =>
-  seq |> Seq.hash (KeyedEntry.hash keyHash valueHash);
+let hashWith (keyHash: hash 'k) (valueHash: hash 'v) ({ seq }: keyed 'k 'v): int =>
+  seq |> Seq.hashWith (KeyedEntry.hash keyHash valueHash);
+
+let hash (keyed: keyed 'k 'v): int =>
+  hashWith Hash.structural Hash.structural keyed;
 
 let keys ({ count, seq } as keyed: keyed 'k 'v): (collection 'k) => Collection.create
   contains::(fun key => keyed |> containsKey key)

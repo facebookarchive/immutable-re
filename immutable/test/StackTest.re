@@ -5,11 +5,17 @@ let test = describe "Stack" (StackTester.test 10 (module {
   type t 'a = Stack.t 'a;
 
   let addFirst = Stack.addFirst;
+  let compare = Stack.compare;
+  let compareWith = Stack.compareWith;
   let count = Stack.count;
   let empty = Stack.empty;
+  let equals = Stack.equals;
+  let equalsWith = Stack.equalsWith;
   let every = Stack.every;
   let find = Stack.find;
   let first = Stack.first;
+  let hash = Stack.hash;
+  let hashWith = Stack.hashWith;
   let isEmpty = Stack.isEmpty;
   let isNotEmpty = Stack.isNotEmpty;
   let mapReverse = Stack.mapReverse;

@@ -3,9 +3,13 @@
  * vim: set ft=reason:
  */
 
+open Comparator;
+open Equality;
 open Functions;
+open Hash;
 open Indexed;
 open Option.Operators;
+open Ordering;
 open Preconditions;
 open Seq;
 
@@ -31,7 +35,51 @@ let addLast (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
 
 let add = addLast;
 
+let rec compareWith
+    (valueCompare: comparator 'a)
+    (this: copyOnWriteArray 'a)
+    (that: copyOnWriteArray 'a): ordering => {
+  let thisCount = count this;
+  let thatCount = count that;
+
+  let loopCount = min thisCount thatCount;
+
+  let rec loop index =>
+    index < loopCount ? switch (valueCompare this.(index) that.(index)) {
+      | Equal => loop (index + 1)
+      | x => x
+    } :
+    index < thisCount ? Ordering.greaterThan :
+    index < thatCount ? Ordering.lessThan :
+    Ordering.equal;
+  loop 0;
+};
+
+let compare (this: copyOnWriteArray 'a) (that: copyOnWriteArray 'a): ordering =>
+  compareWith Comparator.structural this that;
+
 let empty: (copyOnWriteArray 'a) = [||];
+
+let rec equalsWith
+    (valueEquals: equality 'a)
+    (this: copyOnWriteArray 'a)
+    (that: copyOnWriteArray 'a): bool => {
+  let thisCount = count this;
+  let thatCount = count that;
+
+  let loopCount = min thisCount thatCount;
+
+  let rec loop index => index < loopCount
+    ? (valueEquals this.(index) that.(index) ? loop (index + 1) : false)
+    : true;
+
+  this === that ? true :
+  thisCount != thatCount ? false :
+  loop 0;
+};
+
+let equals (this: copyOnWriteArray 'a) (that: copyOnWriteArray 'a): bool =>
+  equalsWith Equality.structural this that;
 
 let every (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   let arrCount = count arr;
@@ -72,6 +120,7 @@ let fromSeq (length: int) (defaultValue: 'a) (seq: seq 'a): (array 'a) => {
 let get (index: int) (arr: copyOnWriteArray 'a): 'a => arr.(index);
 
 let lastIndex (arr: copyOnWriteArray 'a): int => count arr - 1;
+
 let last (arr: copyOnWriteArray 'a): 'a => arr.(lastIndex arr);
 
 let init = Array.init;
@@ -155,6 +204,12 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOn
 
   loop acc arrLastIndex;
 };
+
+let hashWith (hash: hash 'a) (arr: copyOnWriteArray 'a): int =>
+  arr |> reduce (Hash.reducer hash) Hash.initialValue;
+
+let hash (arr: copyOnWriteArray 'a): int =>
+  hashWith Hash.structural arr;
 
 let map (f: 'a => 'b) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'b) => isNotEmpty arr
   ? {

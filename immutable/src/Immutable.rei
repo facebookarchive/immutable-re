@@ -6,7 +6,17 @@
 let module Hash: {
   type t 'a = 'a => int;
 
+  /*
+  let bytes: t bytes;
+  let char: t char;
+  let int32: t int32;
+  let int64: t int64;
+  let nativeInt: t nativeint;
+  let string: t string;
+  */
+
   let random: unit => t 'a;
+  let structural: t 'a;
 };
 
 let module Equality: {
@@ -49,6 +59,8 @@ let module Seq: {
   type t 'a;
 
   let buffer: int => int => (t 'a) => (t (list 'a));
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let concat: (list (t 'a)) => (t 'a);
   let concatAll: (t (t 'a)) => (t 'a);
   let concatMap: ('a => (t 'b)) => (t 'a) => (t 'b);
@@ -58,8 +70,8 @@ let module Seq: {
   let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
   let doOnNext: ('a => unit) => (t 'a) => (t 'a);
   let empty: t 'a;
-  let equals: (t 'a) => (t 'a) => bool;
-  let equalsWith: (Equality.t 'a) => (t 'a) => (t 'a) => bool;
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let filter: ('a => bool) => (t 'a) => (t 'a);
   let find: ('a => bool) => (t 'a) => 'a;
@@ -67,7 +79,8 @@ let module Seq: {
   let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
   let flatten: (t (t 'a)) => (t 'a);
   let forEach: ('a => unit) => (t 'a) => unit;
-  let hash: (Hash.t 'a) => (t 'a) => int;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let inRange: int => (option int) => int => (t int);
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
@@ -103,7 +116,8 @@ let module Collection: {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
-  let hash: (Hash.t 'a) => (t 'a) => int;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let intersect: (t 'a) => (t 'a) => (Seq.t 'a);
@@ -121,7 +135,8 @@ let module Keyed: {
   let empty: (t 'k 'v);
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
-  let hash: (Hash.t 'k) => (Hash.t 'v) => (t 'k 'v) => int;
+  let hash: (Hash.t (t 'k 'v));
+  let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
   let isEmpty: t 'k 'v => bool;
   let isNotEmpty: t 'k 'v => bool;
   let keys: (t 'k 'v) => (Collection.t 'k);
@@ -146,7 +161,8 @@ let module Indexed: {
   let first: (t 'a) => 'a;
   let get: int => (t 'a) => 'a;
 */
-  let hash: (Hash.t 'a) => (t 'a) => int;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
 /*
@@ -227,14 +243,20 @@ let module CopyOnWriteArray: {
   let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let concat: (list (t 'a)) => (t 'a);
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let fromSeq: int => 'a => (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let init: int => (int => 'a) => (t 'a);
   let insertAt: int => 'a => (t 'a) => (t 'a);
   let isEmpty: t 'a => bool;
@@ -275,11 +297,17 @@ let module rec Deque: {
   let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
   let last: (t 'a) => 'a;
@@ -500,11 +528,18 @@ let module List: {
   /*let addAll: (Seq.t 'a) => (t 'a) => (t 'a);*/
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let first: (t 'a) => 'a;
   let find: ('a => bool) => (t 'a) => 'a;
   let fromSeq: (Seq.t 'a) => (list 'a);
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
@@ -595,11 +630,17 @@ let module Stack: {
   let add: 'a => (t 'a) => (t 'a);
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let fromList: (list 'a) => (t 'a);
@@ -660,13 +701,21 @@ let module rec Vector: {
   let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  /* let alter: int => ('a => 'a) => (t 'a) => (t 'a);*/
+  /* let alterAll: (int => 'a => 'a) => (t 'a) => (t 'a);*/
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   /*let concat: (list (t 'a)) => (t 'a);*/
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let get: int => (t 'a) => 'a;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   /*let insertAt: int => 'a => (t 'a) => (t 'a);*/
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;

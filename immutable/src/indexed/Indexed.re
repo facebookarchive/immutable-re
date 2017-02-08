@@ -41,8 +41,10 @@ let equalsWith (valueEquality: equality 'v) (that: indexed 'a) (this: indexed 'a
 let equals (that: indexed 'a) (this: indexed 'a): bool =>
   equalsWith Equality.structural that this;
 
-let hash (hash: (hash 'a)) ({ seq }: indexed 'a): int =>
-  seq |> Seq.hash hash;
+let hashWith (hash: (hash 'a)) ({ seq }: indexed 'a): int =>
+  seq |> Seq.hashWith hash;
+
+let hash ({ seq }: indexed 'a): int => seq |> Seq.hash;
 
 let map (f: 'a => 'b) ({ count, rseq, seq, tryGet }: indexed 'a): (indexed 'b) => create
   count::count

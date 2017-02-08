@@ -1,20 +1,49 @@
+open Comparator;
+open Equality;
+open Hash;
+open Ordering;
+
 let addFirst (value: 'a) (list: list 'a): (list 'a) =>
   [value, ...list];
 
 let add = addFirst;
+
+let rec compareWith
+    (valueCompare: comparator 'a)
+    (this: list 'a)
+    (that: list 'a): ordering =>
+  this === that ? Ordering.equal : switch (this, that) {
+    | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => switch (valueCompare thisHead thatHead) {
+        | Equal => compareWith valueCompare thisTail thatTail
+        | x => x
+      }
+    | ([], []) => Ordering.equal
+    | (_, []) => Ordering.greaterThan
+    | ([], _) => Ordering.lessThan
+  };
+
+let compare (this: list 'a) (that: list 'a): ordering =>
+  compareWith Comparator.structural this that;
 
 let rec countImpl (list: list 'a) (count: int): int => switch list {
   | [head, ...tail] => countImpl tail (count + 1)
   | [] => count
 };
 
-/* Not exposing in the public API for now. I'm somewhat of the opinion,
- * that you if you need the list length, you should use a Stack.
- * This function exists so that module can compute the length of a list.
- */
 let count (list: list 'a): int => countImpl list 0;
 
 let empty: (list 'a) = [];
+
+let rec equalsWith (valueEquals: equality 'a) (this: list 'a) (that: list 'a) => switch (this, that) {
+  | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => valueEquals thisHead thatHead
+    ? equalsWith valueEquals thisTail thatTail
+    : false;
+  | ([], []) => true
+  | _ => false
+};
+
+let equals (this: list 'a) (that: list 'a) =>
+  equalsWith Equality.structural this that;
 
 let rec every (f: 'a => bool) (list: list 'a): bool => switch list {
   | [head, ...tail] => f head ? every f tail : false
@@ -60,6 +89,11 @@ let rec reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) (list: list 'a): 'acc => swi
       reduce f acc tail
   | [] => acc
 };
+
+let hashWith (hash: hash 'a) (list: list 'a): int =>
+  list |> reduce (Hash.reducer hash) Hash.initialValue;
+
+let hash (list: list 'a): int => hashWith Hash.structural list;
 
 let removeAll (list: list 'a): (list 'a) => [];
 

@@ -3,11 +3,13 @@
  * vim: set ft=reason:
  */
 
+open Comparator;
 open Equality;
 open Functions;
 open Functions.Operators;
 open Hash;
 open Option.Operators;
+open Ordering;
 open Pair;
 open Stream;
 
@@ -149,6 +151,20 @@ let module Stream = Stream.Make {
 
 let buffer = Stream.buffer;
 
+let rec compareWith (valueCompare: comparator 'a) (this: seq 'a) (that: seq 'a): ordering =>
+  this === that ? Ordering.equal : switch (this (), that ()) {
+    | (Next thisValue thisNext, Next thatValue thatNext) => switch (valueCompare thisValue thatValue) {
+        | Equal => compareWith valueCompare thisNext thatNext
+        | x => x
+      }
+    | (Completed, Completed) => Ordering.equal
+    | (Next _ _, Completed) => Ordering.greaterThan
+    | (Completed, Next _ _) => Ordering.lessThan
+};
+
+let compare (this: seq 'a) (that: seq 'a): ordering =>
+  compareWith Comparator.structural this that;
+
 let concat = Stream.concat;
 
 let concatAll = Stream.concatAll;
@@ -274,8 +290,11 @@ let count (seq: seq 'a): int => seq |> reduce
   (fun acc _ => succ acc)
   0;
 
-let hash (hash: (hash 'a)) (seq: seq 'a): int => seq
-  |> reduce (fun acc next => (31 * acc) + (hash next)) 17;
+let hashWith (hash: (hash 'a)) (seq: seq 'a): int => seq
+  |> reduce (Hash.reducer hash) Hash.initialValue;
+
+let hash (seq: seq 'a): int =>
+  hashWith Hash.structural seq;
 
 let toReversedList (seq: seq 'a): (list 'a) => seq |> (reduce
   (fun (acc: list 'a) next => [next, ...acc])

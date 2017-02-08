@@ -8,11 +8,17 @@ module type Stack = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
@@ -214,5 +220,69 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
 
     defer (fun () => Stack.find Functions.alwaysFalse stack) |> throws;
     expect (Stack.tryFind Functions.alwaysFalse stack) |> toBeEqualToNoneOfInt;
+  }),
+
+  it (sprintf "compare %i elements" count) (fun () => {
+    let orderingToString (ord: Ordering.t): string =>
+      ord === Ordering.equal ? "Equals" :
+      ord === Ordering.greaterThan ? "GreaterThan" :
+      "LesserThan";
+
+    let stackCount = Seq.inRange 0 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCountPlusOne = Seq.inRange 0 (Some (count + 1)) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCountDup = Seq.inRange 0 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackGreaterCount = Seq.inRange 1 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    expect (Stack.compare stackCount stackCount) |> toBeEqualTo orderingToString Ordering.equal;
+    expect (Stack.compare stackCount stackCountDup) |> toBeEqualTo orderingToString Ordering.equal;
+    expect (Stack.compare stackGreaterCount stackCount) |> toBeEqualTo orderingToString Ordering.greaterThan;
+    expect (Stack.compare stackCount stackGreaterCount) |> toBeEqualTo orderingToString Ordering.lessThan;
+    expect (Stack.compare stackCountPlusOne stackCount) |> toBeEqualTo orderingToString Ordering.greaterThan;
+    expect (Stack.compare stackCount stackCountPlusOne) |> toBeEqualTo orderingToString Ordering.lessThan;
+  }),
+
+  it (sprintf "equals %i elements" count) (fun () => {
+    let stackCountMinusOne = Seq.inRange 0 (Some (count - 1)) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCount = Seq.inRange 0 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCountDup = Seq.inRange 0 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCountPlusOne = Seq.inRange 0 (Some (count + 1)) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    expect (Stack.equals stackCount stackCount) |> toBeEqualToTrue;
+    expect (Stack.equals stackCount stackCountDup) |> toBeEqualToTrue;
+    expect (Stack.equals stackCount stackCountMinusOne) |> toBeEqualToFalse;
+    expect (Stack.equals stackCount stackCountPlusOne) |> toBeEqualToFalse;
+  }),
+
+  it (sprintf "hash %i elements" count) (fun () => {
+    let stackCountMinusOne = Seq.inRange 0 (Some (count - 1)) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCount = Seq.inRange 0 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCountDup = Seq.inRange 0 (Some count) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    let stackCountPlusOne = Seq.inRange 0 (Some (count + 1)) 1
+      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+
+    expect (Stack.hash stackCount) |> toBeEqualToInt (Stack.hash stackCount);
+    expect (Stack.hash stackCount) |> toBeEqualToInt (Stack.hash stackCountDup);
+    expect ((Stack.hash stackCount) != (Stack.hash stackCountMinusOne)) |> toBeEqualToTrue;
+    expect ((Stack.hash stackCount) != (Stack.hash stackCountPlusOne)) |> toBeEqualToTrue;
   }),
 ];

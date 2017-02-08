@@ -36,8 +36,11 @@ let equals (that: collection 'a) (this: collection 'a): bool => (this === that) 
   this.seq |> Seq.every that.contains
 );
 
-let hash (hash: hash 'a) (collection: collection 'a): int =>
-  collection.seq |> Seq.hash hash;
+let hashWith (hash: hash 'a) (collection: collection 'a): int =>
+  collection.seq |> Seq.hashWith hash;
+
+let hash (collection: collection 'a): int =>
+  collection.seq |> Seq.hash;
 
 let intersect (that: collection 'a) (this: collection 'a): (seq 'a) =>
   this.seq |> Seq.filter (that.contains);

@@ -9,11 +9,17 @@ module type Deque = {
 
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
@@ -39,11 +45,17 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     type t 'a = Deque.t 'a;
 
     let addFirst = Deque.addFirst;
+    let compare = Deque.compare;
+    let compareWith = Deque.compareWith;
     let count = Deque.count;
     let empty = Deque.empty;
+    let equals = Deque.equals;
+    let equalsWith = Deque.equalsWith;
     let every = Deque.every;
     let find = Deque.find;
     let first = Deque.first;
+    let hash = Deque.hash;
+    let hashWith = Deque.hashWith;
     let isEmpty = Deque.isEmpty;
     let isNotEmpty = Deque.isNotEmpty;
     let mapReverse = Deque.mapReverse;

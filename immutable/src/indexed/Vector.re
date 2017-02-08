@@ -1,8 +1,13 @@
+open Comparator;
 open CopyOnWriteArray;
+open Equality;
 open Functions;
+open Hash;
 open Indexed;
+open Hash;
 open Option;
 open Option.Operators;
+open Ordering;
 open Preconditions;
 open Seq;
 open Transient;
@@ -1266,13 +1271,27 @@ module TransientVector = {
     transient |> Transient.update (fun owner => TransientVectorImpl.update (Some owner) index value);
 };
 
-let addAll (seq: seq 'a) (trie: vector 'a): (vector 'a) => trie
+let addAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
   |> mutate
   |> TransientVector.addAll seq
   |> TransientVector.persist;
 
 let every (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.every f left) && (Trie.every f middle) && (CopyOnWriteArray.every f right);
+
+let equalsWith
+    (valueEquals: equality 'a)
+    ({ left: thisLeft, middle: thisMiddle, right: thisRight } as this: vector 'a)
+    ({ left: thatLeft, middle: thatMiddle, right: thatRight } as that: vector 'a): bool =>
+  this === that ? true :
+  (count this) != (count that) ? false :
+  CopyOnWriteArray.equalsWith valueEquals thisLeft thatLeft &&
+  /* Perhaps could make this more efficient by avoiding use of Seq */
+  Seq.equalsWith valueEquals (Trie.toSeq thisMiddle) (Trie.toSeq thatMiddle) &&
+  CopyOnWriteArray.equalsWith valueEquals thisRight thatRight;
+
+let equals (this: vector 'a) (that: vector 'a): bool =>
+  equalsWith Equality.structural this that;
 
 let find (f: 'a => bool) ({ left, middle, right }: vector 'a): 'a =>
   /* FIXME: Add an operator to Option for this use case */
@@ -1330,6 +1349,12 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector
 
   reduceRight reducer acc vec;
 };
+
+let hashWith (hash: hash 'a) (vec: vector 'a): int =>
+  vec |> reduce (Hash.reducer hash) Hash.initialValue;
+
+let hash (vec: vector 'a): int =>
+  hashWith Hash.structural vec;
 
 let map (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
   |> reduce
@@ -1429,6 +1454,15 @@ let toSeq ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
   Trie.toSeq middle,
   CopyOnWriteArray.toSeq right,
 ];
+
+let compareWith
+    (compareValue: comparator 'a)
+    (this: vector 'a)
+    (that: vector 'a): ordering =>
+  this === that ? Ordering.equal : Seq.compareWith compareValue (toSeq this) (toSeq that);
+
+let compare (this: vector 'a) (that: vector 'a): ordering =>
+  compareWith Comparator.structural this that;
 
 let toSeqReversed ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
   CopyOnWriteArray.toSeqReversed right,

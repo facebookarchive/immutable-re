@@ -14,12 +14,18 @@ module type Vector = {
 
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let compare: (Comparator.t (t 'a));
+  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
   let empty: (t 'a);
+  let equals: (Equality.t (t 'a));
+  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let get: int => (t 'a) => 'a;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
@@ -54,11 +60,17 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
     let addFirst = Vector.addFirst;
     let addLast = Vector.addLast;
+    let compare = Vector.compare;
+    let compareWith = Vector.compareWith;
     let count = Vector.count;
+    let equals = Vector.equals;
+    let equalsWith = Vector.equalsWith;
     let empty = Vector.empty;
     let every = Vector.every;
     let find = Vector.find;
     let first = Vector.first;
+    let hash = Vector.hash;
+    let hashWith = Vector.hashWith;
     let isEmpty = Vector.isEmpty;
     let isNotEmpty = Vector.isNotEmpty;
     let last = Vector.last;
