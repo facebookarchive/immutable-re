@@ -240,9 +240,10 @@ and TransientBiMap: {
 let module CopyOnWriteArray: {
   type t 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let concat: (list (t 'a)) => (t 'a);
@@ -253,7 +254,8 @@ let module CopyOnWriteArray: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
-  let fromSeq: int => 'a => (Seq.t 'a) => (t 'a);
+  let fromSeq: (Seq.t 'a) => (t 'a);
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -294,9 +296,10 @@ let module CopyOnWriteArray: {
 let module rec Deque: {
   type t 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
@@ -306,6 +309,8 @@ let module rec Deque: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let fromSeq: (Seq.t 'a) => (t 'a);
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: (t 'a) => bool;
@@ -332,7 +337,6 @@ let module rec Deque: {
 and TransientDeque: {
   type t 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
   let count: (t 'a) => int;
@@ -524,10 +528,8 @@ and TransientIntMap: {
 let module List: {
   type t 'a = list 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
-  /*let addAll: (Seq.t 'a) => (t 'a) => (t 'a);*/
-
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
@@ -537,7 +539,7 @@ let module List: {
   let every: ('a => bool) => (t 'a) => bool;
   let first: (t 'a) => 'a;
   let find: ('a => bool) => (t 'a) => 'a;
-  let fromSeq: (Seq.t 'a) => (list 'a);
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: (t 'a) => bool;
@@ -627,9 +629,8 @@ let module SortedSet: {
 let module Stack: {
   type t 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
-  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
@@ -639,12 +640,12 @@ let module Stack: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let fromList: (list 'a) => (t 'a);
-  let fromSeq: (Seq.t 'a) => (t 'a);
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
   let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
@@ -698,9 +699,10 @@ let module Table: {
 let module rec Vector: {
   type t 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   /* let alter: int => ('a => 'a) => (t 'a) => (t 'a);*/
   /* let alterAll: (int => 'a => 'a) => (t 'a) => (t 'a);*/
   let compare: (Comparator.t (t 'a));
@@ -714,6 +716,7 @@ let module rec Vector: {
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let fromSeq: (Seq.t 'a) => (t 'a);
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -753,7 +756,6 @@ let module rec Vector: {
 and TransientVector: {
   type t 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
   let count: (t 'a) => int;

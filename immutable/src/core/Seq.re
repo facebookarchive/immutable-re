@@ -312,3 +312,9 @@ let zipLongest = Stream.zipLongest;
 let zipLongest2 = Stream.zipLongest2;
 
 let zipLongest3 = Stream.zipLongest3;
+
+let listAddFirstAll (seq: seq 'a) (list: list 'a): (list 'a) =>
+  seq |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
+
+let listFromSeqReverse (seq: seq 'a): (list 'a) =>
+  [] |> listAddFirstAll seq;

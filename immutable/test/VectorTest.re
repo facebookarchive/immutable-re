@@ -11,7 +11,9 @@ let module Vector = {
   type t 'a = Vector.t 'a;
 
   let addFirst = Vector.addFirst;
+  let addFirstAll = Vector.addFirstAll;
   let addLast = Vector.addLast;
+  let addLastAll = Vector.addLastAll;
   let compare = Vector.compare;
   let compareWith = Vector.compareWith;
   let count = Vector.count;
@@ -21,6 +23,8 @@ let module Vector = {
   let every = Vector.every;
   let find = Vector.find;
   let first = Vector.first;
+  let fromSeq = Vector.fromSeq;
+  let fromSeqReversed = Vector.fromSeqReversed;
   let get = Vector.get;
   let hash = Vector.hash;
   let hashWith = Vector.hashWith;
@@ -53,14 +57,14 @@ let module Vector = {
   let update = Vector.update;
 };
 
-let test = describe "Vector" (List.fromSeq @@ Seq.concat @@ [
+let test = describe "Vector" (List.fromSeqReversed @@ Seq.concat @@ [
   (VectorTester.test 10 (module Vector)) |> List.toSeq,
   (VectorTester.test 48 (module Vector)) |> List.toSeq,
   (VectorTester.test 90 (module Vector)) |> List.toSeq,
   (VectorTester.test 500 (module Vector)) |> List.toSeq,
   (VectorTester.test 5000 (module Vector)) |> List.toSeq,
   (VectorTester.test 50000 (module Vector)) |> List.toSeq,
-  describe "TransientVector" (List.fromSeq @@ Seq.concat @@ [
+  describe "TransientVector" (List.fromSeqReversed @@ Seq.concat @@ [
     (TransientVectorTester.test 10 (module TransientVector)) |> List.toSeq,
     (TransientVectorTester.test 48 (module TransientVector)) |> List.toSeq,
     (TransientVectorTester.test 90 (module TransientVector)) |> List.toSeq,

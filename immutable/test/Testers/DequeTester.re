@@ -8,7 +8,9 @@ module type Deque = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
@@ -18,6 +20,8 @@ module type Deque = {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let fromSeq: (Seq.t 'a) => (t 'a);
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
@@ -45,6 +49,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     type t 'a = Deque.t 'a;
 
     let addFirst = Deque.addFirst;
+    let addFirstAll = Deque.addFirstAll;
     let compare = Deque.compare;
     let compareWith = Deque.compareWith;
     let count = Deque.count;
@@ -54,6 +59,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     let every = Deque.every;
     let find = Deque.find;
     let first = Deque.first;
+    let fromSeqReversed = Deque.fromSeqReversed;
     let hash = Deque.hash;
     let hashWith = Deque.hashWith;
     let isEmpty = Deque.isEmpty;
@@ -121,6 +127,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       let seqsEquality = Seq.equals (Deque.toSeqReversed deque) (Seq.inRange (count - 1) (Some count) (-1));
       expect seqsEquality |> toBeEqualToTrue;
     }),
+
     it (sprintf "addLast and removeFirst %i elements" count) (fun () => {
       let empty = Deque.empty;
 
@@ -171,6 +178,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       let seqsEquality = Seq.equals (Deque.toSeqReversed deque) (Seq.inRange (count - 1) (Some count) (-1));
       expect seqsEquality |> toBeEqualToTrue;
     }),
+
     it (sprintf "addFirst and removeLast %i elements" count) (fun () => {
       let empty = Deque.empty;
 
@@ -221,6 +229,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       let seqsEquality = Seq.equals (Deque.toSeqReversed deque) (Seq.inRange 0 (Some count) 1);
       expect seqsEquality |> toBeEqualToTrue;
     }),
+
     it (sprintf "map %i elements" count) (fun () => {
       Seq.inRange 0 (Some count) 1
         |> Seq.reduce (fun acc i => acc |> Deque.addLast i) Deque.empty
@@ -229,6 +238,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         |> expect
         |> toBeEqualToSeq string_of_int (Seq.inRange 1 (Some count) 1);
     }),
+
     it (sprintf "reduceRight %i elements" count) (fun () => {
       /* FIXME: This test could be better by not using a single repeated value. */
       Seq.repeat 1 (Some count)
@@ -236,6 +246,26 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         |> Deque.reduceRight (fun acc i => acc + i) 0
         |> expect
         |> toBeEqualToInt count;
+    }),
+
+    it (sprintf "addLastAll with %i elements" count) (fun () => {
+      let seq = Seq.inRange 0 (Some count) 1;
+      let result = Deque.empty |> Deque.addLastAll seq;
+
+      (Deque.toSeq result)
+        |> Seq.equals seq
+        |> expect
+        |> toBeEqualToTrue;
+    }),
+
+    it (sprintf "fromSeq with %i elements" count) (fun () => {
+      let seq = Seq.inRange 0 (Some count) 1;
+      let result = Deque.fromSeq seq;
+
+      (Deque.toSeq result)
+        |> Seq.equals seq
+        |> expect
+        |> toBeEqualToTrue;
     }),
     ...stackTests
   ];

@@ -19,7 +19,7 @@ type stackMultimap 'k 'v = {
 
 let add (key: 'k) (value: 'v) ({ count, map }: stackMultimap 'k 'v): (stackMultimap 'k 'v) => ({
   count: count + 1,
-  map: map |> HashMap.put key (map |> HashMap.tryGet key |? Stack.empty |> Stack.add value),
+  map: map |> HashMap.put key (map |> HashMap.tryGet key |? Stack.empty |> Stack.addFirst value),
 });
 
 let count ({ count }: stackMultimap 'k 'v) => count;

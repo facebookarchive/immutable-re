@@ -8,6 +8,7 @@ module type Stack = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
@@ -17,6 +18,7 @@ module type Stack = {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
@@ -284,5 +286,25 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     expect (Stack.hash stackCount) |> toBeEqualToInt (Stack.hash stackCountDup);
     expect ((Stack.hash stackCount) != (Stack.hash stackCountMinusOne)) |> toBeEqualToTrue;
     expect ((Stack.hash stackCount) != (Stack.hash stackCountPlusOne)) |> toBeEqualToTrue;
+  }),
+
+  it (sprintf "addFirstAll with %i elements" count) (fun () => {
+    let seq = Seq.inRange 0 (Some count) 1;
+    let result = Stack.empty |> Stack.addFirstAll seq;
+
+    (Stack.toSeq result)
+      |> Seq.equals (Seq.inRange (count - 1) (Some count) (-1))
+      |> expect
+      |> toBeEqualToTrue;
+  }),
+
+  it (sprintf "fromSeqReversed with %i elements" count) (fun () => {
+    let seq = Seq.inRange 0 (Some count) 1;
+    let result = Stack.fromSeqReversed seq;
+
+    (Stack.toSeq result)
+      |> Seq.equals (Seq.inRange (count - 1) (Some count) (-1))
+      |> expect
+      |> toBeEqualToTrue;
   }),
 ];

@@ -25,6 +25,12 @@ let addFirst (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   retval
 };
 
+let addFirstAll (seq: seq 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
+  /* FIXME: This implemenation is particularly bad. We can improve it
+   * by using dynamic array allocations.
+   */
+  seq |> Seq.reduce (fun acc next => acc |> addFirst next) arr;
+
 let addLast (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   let count = count arr;
 
@@ -33,7 +39,11 @@ let addLast (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   retval
 };
 
-let add = addLast;
+let addLastAll (seq: seq 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
+  /* FIXME: This implemenation is particularly bad. We can improve it
+   * by using dynamic array allocations.
+   */
+  seq |> Seq.reduce (fun acc next => acc |> addLast next) arr;
 
 let rec compareWith
     (valueCompare: comparator 'a)
@@ -104,18 +114,11 @@ let find (f: 'a => bool) (arr: copyOnWriteArray 'a): 'a => {
 
 let first (arr: copyOnWriteArray 'a): 'a => arr.(0);
 
-let fromSeq (length: int) (defaultValue: 'a) (seq: seq 'a): (array 'a) => {
-  let seq = ref seq;
+let fromSeq (seq: seq 'a): (copyOnWriteArray 'a) =>
+  [||] |> addLastAll seq;
 
-  let f (index: int) => switch (!seq ()) {
-    | Next value next =>
-        seq := next;
-        value
-    | Completed => defaultValue
-  };
-
-  Array.init length f
-};
+let fromSeqReversed (seq: seq 'a): (copyOnWriteArray 'a) =>
+  [||] |> addFirstAll seq;
 
 let get (index: int) (arr: copyOnWriteArray 'a): 'a => arr.(index);
 

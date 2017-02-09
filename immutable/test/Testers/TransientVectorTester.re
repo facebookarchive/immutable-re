@@ -12,7 +12,6 @@ open ReUnit.Test;
 module type TransientVector = {
   type t 'a;
 
-  let add: 'a => (t 'a) => (t 'a);
   let addFirst: 'a => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
   let count: (t 'a) => int;

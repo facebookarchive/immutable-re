@@ -13,7 +13,9 @@ module type Vector = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
+  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let count: (t 'a) => int;
@@ -23,6 +25,8 @@ module type Vector = {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let fromSeq: (Seq.t 'a) => (t 'a);
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -60,7 +64,9 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     type t 'a = Vector.t 'a;
 
     let addFirst = Vector.addFirst;
+    let addFirstAll = Vector.addFirstAll;
     let addLast = Vector.addLast;
+    let addLastAll = Vector.addLastAll;
     let compare = Vector.compare;
     let compareWith = Vector.compareWith;
     let count = Vector.count;
@@ -70,6 +76,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     let every = Vector.every;
     let find = Vector.find;
     let first = Vector.first;
+    let fromSeq = Vector.fromSeq;
+    let fromSeqReversed = Vector.fromSeqReversed;
     let hash = Vector.hash;
     let hashWith = Vector.hashWith;
     let isEmpty = Vector.isEmpty;

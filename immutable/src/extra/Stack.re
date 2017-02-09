@@ -14,9 +14,7 @@ let addFirst (value: 'a) ({ count, list }: stack 'a): (stack 'a) => ({
   list: [value, ...list],
 });
 
-let add = addFirst;
-
-let addAll (values: seq 'a) ({ count, list }: stack 'a): (stack 'a) => {
+let addFirstAll (values: seq 'a) ({ count, list }: stack 'a): (stack 'a) => {
   let newCount = ref count;
 
   let newList = values |> Seq.reduce
@@ -75,7 +73,7 @@ let first ({ list }: stack 'a): 'a => list |> ImmList.first;
 let fromList (list: list 'a): (stack 'a) =>
   { count: list |> ImmList.count, list };
 
-let fromSeq (values: seq 'a): (stack 'a) => empty |> addAll values;
+let fromSeqReversed (values: seq 'a): (stack 'a) => empty |> addFirstAll values;
 
 let hash ({ list }: stack 'a): int =>
   ImmList.hash list;

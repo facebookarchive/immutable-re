@@ -11,7 +11,9 @@ let module Vector = {
   type t 'a = CopyOnWriteArray.t 'a;
 
   let addFirst = CopyOnWriteArray.addFirst;
+  let addFirstAll = CopyOnWriteArray.addFirstAll;
   let addLast = CopyOnWriteArray.addLast;
+  let addLastAll = CopyOnWriteArray.addLastAll;
   let compare = CopyOnWriteArray.compare;
   let compareWith = CopyOnWriteArray.compareWith;
   let count = CopyOnWriteArray.count;
@@ -21,6 +23,8 @@ let module Vector = {
   let every = CopyOnWriteArray.every;
   let find = CopyOnWriteArray.find;
   let first = CopyOnWriteArray.first;
+  let fromSeq = CopyOnWriteArray.fromSeq;
+  let fromSeqReversed = CopyOnWriteArray.fromSeqReversed;
   let get = CopyOnWriteArray.get;
   let hash = CopyOnWriteArray.hash;
   let hashWith = CopyOnWriteArray.hashWith;
@@ -53,7 +57,7 @@ let module Vector = {
   let update = CopyOnWriteArray.update;
 };
 
-let test = describe "CopyOnWriteArray" (List.fromSeq @@ Seq.concat @@ [
+let test = describe "CopyOnWriteArray" (List.fromSeqReversed @@ Seq.concat @@ [
   (VectorTester.test 10 (module Vector)) |> List.toSeq,
   (VectorTester.test 5000 (module Vector)) |> List.toSeq,
 ]);

@@ -553,10 +553,10 @@ let module VectorImpl = {
   module type S = {
     type t 'a;
 
-    let add: (option owner) => 'a => (t 'a) => (t 'a);
-    let addAll: (option owner) => (seq 'a) => (t 'a) => (t 'a);
     let addFirst: (option owner) => 'a => (t 'a) => (t 'a);
+    let addFirstAll: (option owner) => (seq 'a) => (t 'a) => (t 'a);
     let addLast: (option owner) => 'a => (t 'a) => (t 'a);
+    let addLastAll: (option owner) => (seq 'a) => (t 'a) => (t 'a);
     let count: (t 'a) => int;
     let empty: (t 'a);
     let first: (t 'a) => 'a;
@@ -576,9 +576,10 @@ let module VectorImpl = {
   let module Make = fun (X: VectorBase) => {
     type t 'a = X.t 'a;
 
-    let add = X.addLast;
+    let addFirstAll (owner: option owner) (seq: seq 'a) (vector: t 'a): (t 'a) => seq
+      |> Seq.reduce (fun acc next => acc |> X.addFirst owner next) vector;
 
-    let addAll (owner: option owner) (seq: seq 'a) (vector: t 'a): (t 'a) => seq
+    let addLastAll (owner: option owner) (seq: seq 'a) (vector: t 'a): (t 'a) => seq
       |> Seq.reduce (fun acc next => acc |> X.addLast owner next) vector;
 
     let addFirst = X.addFirst;
@@ -1145,7 +1146,6 @@ let module TransientVectorImpl = VectorImpl.Make {
   };
 };
 
-let add value => PersistentVector.add None value;
 let addFirst value => PersistentVector.addFirst None value;
 let addLast value => PersistentVector.addLast None value;
 let count = PersistentVector.count;
@@ -1177,13 +1177,14 @@ module TransientVector = {
   let addFirst (value: 'a) (transient: transientVector 'a): (transientVector 'a) =>
     transient |> Transient.update (fun owner => TransientVectorImpl.addFirst (Some owner) value);
 
+  let addFirstAll (seq: seq 'a) (transient: transientVector 'a): (transientVector 'a) =>
+    transient |> Transient.update (fun owner => TransientVectorImpl.addFirstAll (Some owner) seq);
+
   let addLast (value: 'a) (transient: transientVector 'a): (transientVector 'a) =>
     transient |> Transient.update (fun owner => TransientVectorImpl.addLast (Some owner) value);
 
-  let add = addLast;
-
-  let addAll (seq: seq 'a) (transient: transientVector 'a): (transientVector 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.addAll (Some owner) seq);
+  let addLastAll (seq: seq 'a) (transient: transientVector 'a): (transientVector 'a) =>
+    transient |> Transient.update (fun owner => TransientVectorImpl.addLastAll (Some owner) seq);
 
   let count (transient: transientVector 'a): int =>
     transient |> Transient.get |> TransientVectorImpl.count;
@@ -1271,9 +1272,14 @@ module TransientVector = {
     transient |> Transient.update (fun owner => TransientVectorImpl.update (Some owner) index value);
 };
 
-let addAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
+let addFirstAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
   |> mutate
-  |> TransientVector.addAll seq
+  |> TransientVector.addFirstAll seq
+  |> TransientVector.persist;
+
+let addLastAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
+  |> mutate
+  |> TransientVector.addLastAll seq
   |> TransientVector.persist;
 
 let every (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
@@ -1303,14 +1309,17 @@ let find (f: 'a => bool) ({ left, middle, right }: vector 'a): 'a =>
     }
   };
 
+let fromSeq (seq: seq 'a): (vector 'a) =>
+  empty |> addLastAll seq;
+
+let fromSeqReversed (seq: seq 'a): (vector 'a) =>
+  empty|> addFirstAll seq;
+
 let none (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.none f left) && (Trie.none f middle) && (CopyOnWriteArray.none f right);
 
 let some (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.some f left) || (Trie.some f middle) || (CopyOnWriteArray.some f right);
-
-let fromSeq (seq: seq 'a): (vector 'a) =>
-  empty |> addAll seq;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: vector 'a): 'acc => {
   let acc = left |> CopyOnWriteArray.reduce f acc;
@@ -1358,19 +1367,19 @@ let hash (vec: vector 'a): int =>
 
 let map (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
   |> reduce
-    (fun acc next => acc |> TransientVector.add @@ f @@ next)
+    (fun acc next => acc |> TransientVector.addLast @@ f @@ next)
     (mutate empty)
   |> TransientVector.persist;
 
 let mapWithIndex (f: int => 'a => 'b) (vector: vector 'a): (vector 'b) => vector
   |> reduceWithIndex
-    (fun acc index next => acc |> TransientVector.add @@ f index @@ next)
+    (fun acc index next => acc |> TransientVector.addLast @@ f index @@ next)
     (mutate empty)
   |> TransientVector.persist;
 
 let mapReverse (f: 'a => 'b) (vector: vector 'a): (vector 'b) => vector
   |> reduceRight
-    (fun acc next => acc |> TransientVector.add @@ f @@ next)
+    (fun acc next => acc |> TransientVector.addLast @@ f @@ next)
     (mutate empty)
   |> TransientVector.persist;
 
@@ -1382,7 +1391,7 @@ let mapReverseWithIndex (f: int => 'a => 'b) (vector: vector 'a): (vector 'b) =>
 
 let reverse (vector: vector 'a): (vector 'a) => vector
   |> reduceRight
-    (fun acc next => acc |> TransientVector.add next)
+    (fun acc next => acc |> TransientVector.addLast next)
     (mutate empty)
   |> TransientVector.persist;
 
