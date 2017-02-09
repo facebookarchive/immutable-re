@@ -50,6 +50,9 @@ let rec every (f: 'a => bool) (list: list 'a): bool => switch list {
   | [] => true
 };
 
+let forEach (f: 'a => unit) (list: list 'a): unit =>
+  list |> List.iter f;
+
 let isEmpty (list: list 'a): bool => switch list {
   | [] => true
   | _ => false;

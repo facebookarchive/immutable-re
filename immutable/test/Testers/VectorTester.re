@@ -25,11 +25,16 @@ module type Vector = {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
+  let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
+  let forEachReverse: ('a => unit) => (t 'a) => unit;
+  let forEachReverseWithIndex: (int => 'a => unit) => (t 'a) => unit;
   let fromSeq: (Seq.t 'a) => (t 'a);
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  let init: int => (int => 'a) => (t 'a);
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let last: (t 'a) => 'a;
@@ -76,6 +81,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     let every = Vector.every;
     let find = Vector.find;
     let first = Vector.first;
+    let forEach = Vector.forEach;
+    let forEachReverse = Vector.forEachReverse;
     let fromSeq = Vector.fromSeq;
     let fromSeqReversed = Vector.fromSeqReversed;
     let hash = Vector.hash;
@@ -207,6 +214,32 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         (Seq.inRange 1 (count - 2 |> Option.return) 1);
 
       expect seqsEquality |> toBeEqualToTrue;
+    }),
+    it (sprintf "init with %i elements" count) (fun () => {
+      let vector = Vector.init count (fun i => i);
+      vector |> Vector.forEachWithIndex (fun i v => {
+        expect i |> toBeEqualToInt v
+      });
+    }),
+    it (sprintf "forEachWithIndex with %i elements" count) (fun () => {
+      let counted = ref 0;
+      let seq = Seq.inRange (count - 1) (Some count) (-1);
+      let result = Vector.fromSeqReversed seq;
+      result |> Vector.forEachWithIndex (fun i v => {
+        expect i |> toBeEqualToInt v;
+        expect i |> toBeEqualToInt !counted;
+        counted := !counted + 1;
+      });
+    }),
+    it (sprintf "forEachReverseWithIndex with %i elements" count) (fun () => {
+      let counted = ref (count - 1);
+      let seq = Seq.inRange 0 (Some count) 1;
+      let result = Vector.fromSeq seq;
+      result |> Vector.forEachReverseWithIndex (fun i v => {
+        expect i |> toBeEqualToInt v;
+        expect i |> toBeEqualToInt !counted;
+        counted := !counted - 1;
+      });
     }),
     ...dequeTests
   ]

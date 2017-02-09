@@ -254,6 +254,10 @@ let module CopyOnWriteArray: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
+  let forEachReverse: ('a => unit) => (t 'a) => unit;
+  let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
+  let forEachReverseWithIndex: (int => 'a => unit) => (t 'a) => unit;
   let fromSeq: (Seq.t 'a) => (t 'a);
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
@@ -309,6 +313,8 @@ let module rec Deque: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
+  let forEachReverse: ('a => unit) => (t 'a) => unit;
   let fromSeq: (Seq.t 'a) => (t 'a);
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
@@ -539,6 +545,7 @@ let module List: {
   let every: ('a => bool) => (t 'a) => bool;
   let first: (t 'a) => 'a;
   let find: ('a => bool) => (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -640,6 +647,7 @@ let module Stack: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -715,11 +723,16 @@ let module rec Vector: {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
+  let forEachReverse: ('a => unit) => (t 'a) => unit;
+  let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
+  let forEachReverseWithIndex: (int => 'a => unit) => (t 'a) => unit;
   let fromSeq: (Seq.t 'a) => (t 'a);
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  let init: int => (int => 'a) => (t 'a);
   /*let insertAt: int => 'a => (t 'a) => (t 'a);*/
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;

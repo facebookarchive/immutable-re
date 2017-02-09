@@ -1315,6 +1315,10 @@ let fromSeq (seq: seq 'a): (vector 'a) =>
 let fromSeqReversed (seq: seq 'a): (vector 'a) =>
   empty|> addFirstAll seq;
 
+let init (count: int) (f: int => 'a): (vector 'a) => Seq.inRange 0 (Some count) 1
+  |> Seq.reduce (fun acc next => acc |> TransientVector.addLast (f next)) (mutate empty)
+  |> TransientVector.persist;
+
 let none (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.none f left) && (Trie.none f middle) && (CopyOnWriteArray.none f right);
 
@@ -1328,6 +1332,9 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: vector 
   acc;
 };
 
+let forEach (f: 'a => unit) (vec: vector 'a): unit =>
+  vec |> reduce (fun _ next => f next) ();
+
 let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector 'a): 'acc => {
   /* kinda a hack, but a lot less code to write */
   let index = ref 0;
@@ -1340,12 +1347,18 @@ let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector 'a):
   reduce reducer acc vec;
 };
 
+let forEachWithIndex (f: int => 'a => unit) (vec: vector 'a): unit =>
+  vec |> reduceWithIndex (fun _ index next => f index next) ();
+
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: vector 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
   let acc = middle |> Trie.reduceRight f acc;
   let acc = left |> CopyOnWriteArray.reduceRight f acc;
   acc;
 };
+
+let forEachReverse (f: 'a => unit) (vec: vector 'a): unit =>
+  vec |> reduceRight (fun _ next => f next) ();
 
 let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector 'a): 'acc => {
   /* kinda a hack, but a lot less code to write */
@@ -1358,6 +1371,9 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector
 
   reduceRight reducer acc vec;
 };
+
+let forEachReverseWithIndex (f: int => 'a => unit) (vec: vector 'a): unit =>
+  vec |> reduceRightWithIndex (fun _ index next => f index next) ();
 
 let hashWith (hash: hash 'a) (vec: vector 'a): int =>
   vec |> reduce (Hash.reducer hash) Hash.initialValue;

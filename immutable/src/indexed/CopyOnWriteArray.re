@@ -114,6 +114,12 @@ let find (f: 'a => bool) (arr: copyOnWriteArray 'a): 'a => {
 
 let first (arr: copyOnWriteArray 'a): 'a => arr.(0);
 
+let forEach (f: 'a => unit) (arr: copyOnWriteArray 'a): 'acc =>
+  arr |> Array.iter f;
+
+let forEachWithIndex (f: int => 'a => unit) (arr: copyOnWriteArray 'a): 'acc =>
+  arr |> Array.iteri f;
+
 let fromSeq (seq: seq 'a): (copyOnWriteArray 'a) =>
   [||] |> addLastAll seq;
 
@@ -198,6 +204,9 @@ let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOnWrite
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc =>
   Array.fold_right (flip f) arr acc;
 
+let forEachReverse (f: 'a => unit) (arr: copyOnWriteArray 'a): unit =>
+  arr |> reduceRight (fun _ next => f next) ();
+
 let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc => {
   let arrLastIndex = lastIndex arr;
   let rec loop acc index => index >= 0 ? {
@@ -207,6 +216,9 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOn
 
   loop acc arrLastIndex;
 };
+
+let forEachReverseWithIndex (f: int => 'a => unit) (arr: copyOnWriteArray 'a): unit =>
+  arr |> reduceRightWithIndex (fun _ index next => f index next) ();
 
 let hashWith (hash: hash 'a) (arr: copyOnWriteArray 'a): int =>
   arr |> reduce (Hash.reducer hash) Hash.initialValue;

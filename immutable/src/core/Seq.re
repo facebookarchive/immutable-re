@@ -296,11 +296,6 @@ let hashWith (hash: (hash 'a)) (seq: seq 'a): int => seq
 let hash (seq: seq 'a): int =>
   hashWith Hash.structural seq;
 
-let toReversedList (seq: seq 'a): (list 'a) => seq |> (reduce
-  (fun (acc: list 'a) next => [next, ...acc])
-  []
-);
-
 let zip = Stream.zip;
 
 let zip2 = Stream.zip2;

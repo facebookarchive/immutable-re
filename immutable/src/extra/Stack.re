@@ -70,6 +70,9 @@ let find (f: 'a => bool) ({ list }: stack 'a): 'a =>
 
 let first ({ list }: stack 'a): 'a => list |> ImmList.first;
 
+let forEach (f: 'a => unit) ({ list }: stack 'a): unit =>
+  list |> ImmList.forEach f;
+
 let fromList (list: list 'a): (stack 'a) =>
   { count: list |> ImmList.count, list };
 

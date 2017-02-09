@@ -15,6 +15,7 @@ let test = describe "Stack" (StackTester.test 10 (module {
   let every = Stack.every;
   let find = Stack.find;
   let first = Stack.first;
+  let forEach = Stack.forEach;
   let fromSeqReversed = Stack.fromSeqReversed;
   let hash = Stack.hash;
   let hashWith = Stack.hashWith;

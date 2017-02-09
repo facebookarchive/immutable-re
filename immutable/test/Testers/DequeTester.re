@@ -20,6 +20,8 @@ module type Deque = {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
+  let forEachReverse: ('a => unit) => (t 'a) => unit;
   let fromSeq: (Seq.t 'a) => (t 'a);
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
@@ -59,6 +61,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     let every = Deque.every;
     let find = Deque.find;
     let first = Deque.first;
+    let forEach = Deque.forEach;
     let fromSeqReversed = Deque.fromSeqReversed;
     let hash = Deque.hash;
     let hashWith = Deque.hashWith;
@@ -267,6 +270,17 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         |> expect
         |> toBeEqualToTrue;
     }),
+
+    it (sprintf "forEachReverse with %i elements" count) (fun () => {
+      let counted = ref count;
+      let seq = Seq.inRange 0 (Some count) 1;
+      let result = Deque.fromSeqReversed seq;
+      result |> Deque.forEachReverse (fun i => {
+        expect (count - i) |> toBeEqualToInt !counted;
+        counted := !counted - 1;
+      });
+    }),
+
     ...stackTests
   ];
 };

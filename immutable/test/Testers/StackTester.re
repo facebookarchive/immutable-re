@@ -18,6 +18,7 @@ module type Stack = {
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -306,5 +307,15 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
       |> Seq.equals (Seq.inRange (count - 1) (Some count) (-1))
       |> expect
       |> toBeEqualToTrue;
+  }),
+
+  it (sprintf "forEach with %i elements" count) (fun () => {
+    let counted = ref 0;
+    let seq = Seq.inRange (count - 1) (Some count) (-1);
+    let result = Stack.fromSeqReversed seq;
+    result |> Stack.forEach (fun i => {
+      expect i |> toBeEqualToInt !counted;
+      counted := !counted + 1;
+    });
   }),
 ];

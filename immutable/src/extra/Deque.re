@@ -133,10 +133,16 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: deque 'a): 'acc => switch
   | Descending vector => vector |> Vector.reduceRight f acc;
 };
 
+let forEach (f: 'a => unit) (deque: deque 'a): unit =>
+  deque |> reduce (fun _ next => f next) ();
+
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: deque 'a): 'acc => switch deque {
   | Ascending vector => vector |> Vector.reduceRight f acc;
   | Descending vector => vector |> Vector.reduce f acc;
 };
+
+let forEachReverse (f: 'a => unit) (deque: deque 'a): unit =>
+  deque |> reduceRight (fun _ next => f next) ();
 
 let removeAll (_: deque 'a): (deque 'a) => empty;
 
