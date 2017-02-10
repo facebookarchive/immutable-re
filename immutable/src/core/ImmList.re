@@ -105,6 +105,8 @@ let removeFirst (list: list 'a): (list 'a) => switch list {
   | [] => failwith "List is empty"
 };
 
+let return (value: 'a): (list 'a) => [value];
+
 let rec reverseImpl (src: list 'a) (dst: list 'a): (list 'a) => switch src {
   | [head, ...tail] => reverseImpl tail [head, ...dst]
   | [] => dst

@@ -105,6 +105,11 @@ let removeFirst ({ count, list }: stack 'a): (stack 'a) => ({
   },
 });
 
+let return (value: 'a): (stack 'a) => {
+  count: 1,
+  list: [value],
+};
+
 let reverse ({ count, list }: stack 'a): (stack 'a) => {
   count,
   list: list |> ImmList.reverse,

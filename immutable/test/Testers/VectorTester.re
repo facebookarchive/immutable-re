@@ -51,6 +51,7 @@ module type Vector = {
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let skip: int => (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
@@ -98,6 +99,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     let removeAll = Vector.removeAll;
     let removeFirst = Vector.removeFirst;
     let removeLast = Vector.removeLast;
+    let return = Vector.return;
     let reverse = Vector.reverse;
     let some = Vector.some;
     let toSeq = Vector.toSeq;

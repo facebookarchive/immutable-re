@@ -287,6 +287,8 @@ let removeAt (index: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
 let removeFirst (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
   removeAt 0 arr;
 
+let return (value: 'a): (copyOnWriteArray 'a) => [| value |];
+
 let reverse (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   let count = count arr;
   Array.init count (fun i => arr.(count - i - 1))

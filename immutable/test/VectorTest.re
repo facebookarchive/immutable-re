@@ -49,6 +49,7 @@ let module Vector = {
   let removeAll = Vector.removeAll;
   let removeFirst = Vector.removeFirst;
   let removeLast = Vector.removeLast;
+  let return = Vector.return;
   let reverse = Vector.reverse;
   let skip = Vector.skip;
   let some = Vector.some;

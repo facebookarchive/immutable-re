@@ -1405,6 +1405,9 @@ let mapReverseWithIndex (f: int => 'a => 'b) (vector: vector 'a): (vector 'b) =>
     (mutate empty)
   |> TransientVector.persist;
 
+let return (value: 'a): (vector 'a) =>
+  empty |> addLast value;
+
 let reverse (vector: vector 'a): (vector 'a) => vector
   |> reduceRight
     (fun acc next => acc |> TransientVector.addLast next)

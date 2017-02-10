@@ -108,6 +108,9 @@ let removeLast (deque: deque 'a): (deque 'a) => switch deque {
       Descending (Vector.removeFirst vector)
 };
 
+let return (value: 'a): (deque 'a) =>
+  Ascending (Vector.return value);
+
 let reverse (deque: deque 'a): (deque 'a) => switch deque {
   | Ascending vector => Descending vector
   | Descending vector => Ascending vector

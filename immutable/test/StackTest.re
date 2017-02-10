@@ -26,6 +26,7 @@ let test = describe "Stack" (StackTester.test 10 (module {
   let reduce = Stack.reduce;
   let removeAll = Stack.removeAll;
   let removeFirst = Stack.removeFirst;
+  let return = Stack.return;
   let reverse = Stack.reverse;
   let some = Stack.some;
   let toSeq = Stack.toSeq;

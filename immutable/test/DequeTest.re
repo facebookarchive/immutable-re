@@ -40,6 +40,7 @@ let module Deque = {
   let removeAll = Deque.removeAll;
   let removeFirst = Deque.removeFirst;
   let removeLast = Deque.removeLast;
+  let return = Deque.return;
   let reverse = Deque.reverse;
   let some = Deque.some;
   let toSeq = Deque.toSeq;

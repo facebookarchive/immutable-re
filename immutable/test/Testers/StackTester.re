@@ -29,6 +29,7 @@ module type Stack = {
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
@@ -317,5 +318,11 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
       expect i |> toBeEqualToInt !counted;
       counted := !counted + 1;
     });
+  }),
+
+  it "return" (fun () => {
+    let result = Stack.return 0;
+    expect (Stack.count result) |> toBeEqualToInt 1;
+    expect (Stack.first result) |> toBeEqualToInt 0;
   }),
 ];

@@ -37,6 +37,7 @@ module type Deque = {
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
@@ -72,6 +73,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     let reduce = Deque.reduce;
     let removeAll = Deque.removeAll;
     let removeFirst = Deque.removeFirst;
+    let return = Deque.return;
     let reverse = Deque.reverse;
     let some = Deque.some;
     let toSeq = Deque.toSeq;

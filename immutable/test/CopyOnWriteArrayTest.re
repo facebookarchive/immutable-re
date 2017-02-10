@@ -49,6 +49,7 @@ let module Vector = {
   let removeAll = CopyOnWriteArray.removeAll;
   let removeFirst = CopyOnWriteArray.removeFirst;
   let removeLast = CopyOnWriteArray.removeLast;
+  let return = CopyOnWriteArray.return;
   let reverse = CopyOnWriteArray.reverse;
   let skip = CopyOnWriteArray.skip;
   let some = CopyOnWriteArray.some;

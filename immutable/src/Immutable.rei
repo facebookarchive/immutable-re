@@ -283,6 +283,7 @@ let module CopyOnWriteArray: {
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let skip: int => (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
@@ -331,6 +332,7 @@ let module rec Deque: {
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
@@ -556,6 +558,7 @@ let module List: {
   let reduce: ('acc => 'a => 'acc ) => 'acc => (t 'a) => 'acc;
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toSeq: (t 'a) => (Seq.t 'a);
@@ -659,6 +662,7 @@ let module Stack: {
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let toList: (t 'a) => (list 'a);
@@ -752,6 +756,7 @@ let module rec Vector: {
   let removeAll: (t 'a) => (t 'a);
   let removeFirst: (t 'a) => (t 'a);
   let removeLast: (t 'a) => (t 'a);
+  let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let skip: int => (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
