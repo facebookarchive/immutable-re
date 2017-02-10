@@ -25,6 +25,19 @@ let rec compareWith
 let compare (this: list 'a) (that: list 'a): ordering =>
   compareWith Comparator.structural this that;
 
+let containsWith (valueEquals: equality 'a) (value: 'a) (list: list 'a): bool => {
+  let rec loop list => switch list {
+    | [head, ..._] when valueEquals head value => true
+    | [_, ...tail] => loop tail
+    | [] => false
+  };
+
+  loop list;
+};
+
+let contains (value: 'a) (list: list 'a): bool =>
+  containsWith Equality.structural value list;
+
 let rec countImpl (list: list 'a) (count: int): int => switch list {
   | [head, ...tail] => countImpl tail (count + 1)
   | [] => count

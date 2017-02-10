@@ -18,6 +18,8 @@ module type Vector = {
   let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));
@@ -75,6 +77,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     let addLastAll = Vector.addLastAll;
     let compare = Vector.compare;
     let compareWith = Vector.compareWith;
+    let contains = Vector.contains;
+    let containsWith = Vector.containsWith;
     let count = Vector.count;
     let equals = Vector.equals;
     let equalsWith = Vector.equalsWith;

@@ -171,6 +171,15 @@ let concatAll = Stream.concatAll;
 
 let concatMap = Stream.concatMap;
 
+let rec containsWith (valueEquals: equality 'a) (value: 'a) (seq: seq 'a): bool => switch (seq ()) {
+  | Next next _ when valueEquals next value => true
+  | Next _ nextSeq => containsWith valueEquals value nextSeq
+  | Completed => false
+};
+
+let contains (value: 'a) (seq: seq 'a): bool =>
+  containsWith Equality.structural value seq;
+
 let defer = Stream.defer;
 
 let distinctUntilChanged = Stream.distinctUntilChanged;

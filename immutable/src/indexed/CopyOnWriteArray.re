@@ -68,6 +68,20 @@ let rec compareWith
 let compare (this: copyOnWriteArray 'a) (that: copyOnWriteArray 'a): ordering =>
   compareWith Comparator.structural this that;
 
+let containsWith (valueEquals: equality 'a) (value: 'a) (arr: copyOnWriteArray 'a): bool => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    index < arrCount && valueEquals arr.(index) value ? true :
+    index < arrCount ? loop (index + 1) :
+    false;
+
+  loop 0;
+};
+
+let contains (value: 'a) (list: copyOnWriteArray 'a): bool =>
+  containsWith Equality.structural value list;
+
 let empty: (copyOnWriteArray 'a) = [||];
 
 let rec equalsWith

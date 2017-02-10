@@ -40,6 +40,12 @@ let compareWith
   ? Ordering.equal
   : ImmList.compareWith valueCompare thisList thatList;
 
+let contains (value: 'a) ({ list }: stack 'a): bool =>
+  list |> ImmList.contains value;
+
+let containsWith (valueEquals: equality 'a) (value: 'a) ({ list }: stack 'a): bool =>
+  list |> ImmList.containsWith valueEquals value;
+
 let count ({ count, list }: stack 'a): int => count;
 
 let empty: stack 'a = {

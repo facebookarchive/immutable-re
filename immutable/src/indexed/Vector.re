@@ -1282,6 +1282,14 @@ let addLastAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
   |> TransientVector.addLastAll seq
   |> TransientVector.persist;
 
+let containsWith (valueEquals: equality 'a) (value: 'a) ({ left, middle, right }: vector 'a): bool =>
+  left |> CopyOnWriteArray.containsWith valueEquals value ||
+  middle |> Trie.toSeq |> Seq.containsWith valueEquals value ||
+  right |> CopyOnWriteArray.containsWith valueEquals value;
+
+let contains (value: 'a) (vec: vector 'a): bool =>
+  containsWith Equality.structural value vec;
+
 let every (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.every f left) && (Trie.every f middle) && (CopyOnWriteArray.every f right);
 

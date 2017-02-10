@@ -11,6 +11,8 @@ module type Stack = {
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));
@@ -324,5 +326,20 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     let result = Stack.return 0;
     expect (Stack.count result) |> toBeEqualToInt 1;
     expect (Stack.first result) |> toBeEqualToInt 0;
+  }),
+
+  it (sprintf "contains with %i elements" count) (fun () => {
+    let seq = Seq.inRange 0 (Some count) 1;
+    let result = Stack.fromSeqReversed seq;
+
+    result
+      |> Stack.contains (count / 2)
+      |> expect
+      |> toBeEqualToTrue;
+
+    result
+      |> Stack.contains count
+      |> expect
+      |> toBeEqualToFalse;
   }),
 ];

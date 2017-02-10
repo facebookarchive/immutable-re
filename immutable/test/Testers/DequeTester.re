@@ -13,6 +13,8 @@ module type Deque = {
   let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));
@@ -55,6 +57,8 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     let addFirstAll = Deque.addFirstAll;
     let compare = Deque.compare;
     let compareWith = Deque.compareWith;
+    let contains = Deque.contains;
+    let containsWith = Deque.containsWith;
     let count = Deque.count;
     let empty = Deque.empty;
     let equals = Deque.equals;

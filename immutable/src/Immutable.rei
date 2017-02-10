@@ -64,6 +64,8 @@ let module Seq: {
   let concat: (list (t 'a)) => (t 'a);
   let concatAll: (t (t 'a)) => (t 'a);
   let concatMap: ('a => (t 'b)) => (t 'a) => (t 'b);
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let defer: (unit => t 'a) => (t 'a);
   let distinctUntilChanged: (t 'a) => (t 'a);
@@ -247,6 +249,8 @@ let module CopyOnWriteArray: {
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let concat: (list (t 'a)) => (t 'a);
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));
@@ -307,6 +311,8 @@ let module rec Deque: {
   let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));
@@ -540,6 +546,8 @@ let module List: {
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));
@@ -643,6 +651,8 @@ let module Stack: {
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));
@@ -720,6 +730,8 @@ let module rec Vector: {
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   /*let concat: (list (t 'a)) => (t 'a);*/
+  let contains: 'a => (t 'a) => bool;
+  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (Equality.t (t 'a));

@@ -165,6 +165,15 @@ let compareWith (valueCompare: comparator 'a) (this: deque 'a) (that: deque 'a):
 let compare (this: deque 'a) (that: deque 'a): ordering =>
   compareWith Comparator.structural this that;
 
+let containsWith (valueEquals: equality 'a) (value: 'a) (deque: deque 'a): bool => switch deque {
+  | Ascending vector
+  | Descending vector =>
+      vector |> Vector.containsWith valueEquals value;
+};
+
+let contains (value: 'a) (deque: deque 'a): bool =>
+  containsWith Equality.structural value deque;
+
 let module TransientDeque = {
   let addFirst
       (value: 'a)
