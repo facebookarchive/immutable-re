@@ -31,6 +31,8 @@ module type TransientVector = {
   let tryGet: int => (t 'a) => (option 'a);
   let tryLast: (t 'a) => option 'a;
   let update: int => 'a => (t 'a) => (t 'a);
+  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
 };
 
 
@@ -67,6 +69,26 @@ let test (count: int) (module TransientVector: TransientVector): (list Test.t) =
 
       let updated = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i =>
         acc |> TransientVector.update i (i + 1)
+      ) vector;
+
+      Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
+        expect (updated |> TransientVector.get i) |> toBeEqualToInt (i + 1);
+        expect (updated |> TransientVector.tryGet i) |> toBeEqualToSomeOfInt (i + 1);
+      });
+    }),
+
+    it (sprintf "updateWith %i elements" count) (fun () => {
+      let vector = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i =>
+        acc |> TransientVector.addLast i
+      ) (TransientVector.empty ());
+
+      Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
+        expect (vector |> TransientVector.get i) |> toBeEqualToInt i;
+        expect (vector |> TransientVector.tryGet i) |> toBeEqualToSomeOfInt i;
+      });
+
+      let updated = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i =>
+        acc |> TransientVector.updateWith i (fun v => v + 1)
       ) vector;
 
       Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {

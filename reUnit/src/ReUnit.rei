@@ -37,6 +37,7 @@ let module Expect: {
   let toBeEqualToNoneOfInt: (t (option int)) => unit;
   let toBeEqualToNoneOfString: (t (option string)) => unit;
   let toBeEqualToSeq: ('a => string) => (Seq.t 'a) => (t (Seq.t 'a)) => unit;
+  let toBeEqualToSeqOfInt: (Seq.t int) => (t (Seq.t int)) => unit;
   let toBeEqualToSeqOfString: (Seq.t string) => (t (Seq.t string)) => unit;
   let toBeEqualToSeqWith: (Equality.t 'a) => ('a => string) => (Seq.t 'a) => (t (Seq.t 'a)) => unit;
   let toBeEqualToSome: ('a => string) => 'a => (t (option 'a)) => unit;

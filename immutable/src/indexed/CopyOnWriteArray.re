@@ -107,9 +107,19 @@ let equals (this: copyOnWriteArray 'a) (that: copyOnWriteArray 'a): bool =>
 
 let every (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   let arrCount = count arr;
-  let rec loop i =>
-    i >= arrCount ? true :
-    (f arr.(i)) ? loop (i + 1) :
+  let rec loop index =>
+    index >= arrCount ? true :
+    (f arr.(index)) ? loop (index + 1) :
+    false;
+
+  loop 0;
+};
+
+let everyWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): bool => {
+  let arrCount = count arr;
+  let rec loop index =>
+    index >= arrCount ? true :
+    (f index arr.(index)) ? loop (index + 1) :
     false;
 
   loop 0;
@@ -121,6 +131,17 @@ let find (f: 'a => bool) (arr: copyOnWriteArray 'a): 'a => {
   let rec loop index => index < arrCount ? {
     let v = arr.(index);
     f v ? v : loop (index + 1)
+  } : failwith "not found";
+
+  loop 0;
+};
+
+let findWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): 'a => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f index v ? v : loop (index + 1)
   } : failwith "not found";
 
   loop 0;
@@ -174,7 +195,7 @@ let concat (arrays: list (array 'a)): (array 'a) => {
       let countNext = count next;
       Array.blit next 0 retval index countNext;
       index + countNext;
-    }) 0 |> ignore;
+    }) 0 arrays |> ignore;
 
     retval;
   };
@@ -182,10 +203,20 @@ let concat (arrays: list (array 'a)): (array 'a) => {
 
 let none (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   let arrCount = count arr;
-  let rec loop i =>
-    i >= arrCount ? true :
-    (f arr.(i)) ? false :
-    loop (i + 1);
+  let rec loop index =>
+    index >= arrCount ? true :
+    (f arr.(index)) ? false :
+    loop (index + 1);
+
+  loop 0;
+};
+
+let noneWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): bool => {
+  let arrCount = count arr;
+  let rec loop index =>
+    index >= arrCount ? true :
+    (f index arr.(index)) ? false :
+    loop (index + 1);
 
   loop 0;
 };
@@ -316,10 +347,21 @@ let skip (startIndex: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => 
 let some (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   let arrCount = count arr;
 
-  let rec loop i =>
-    i >= arrCount ? false :
-    (f arr.(i)) ? true :
-    loop (i + 1);
+  let rec loop index =>
+    index >= arrCount ? false :
+    (f arr.(index)) ? true :
+    loop (index + 1);
+
+  loop 0;
+};
+
+let someWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): bool => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    index >= arrCount ? false :
+    (f index arr.(index)) ? true :
+    loop (index + 1);
 
   loop 0;
 };
@@ -365,16 +407,48 @@ let tryFind (f: 'a => bool) (arr: copyOnWriteArray 'a): (option 'a) => {
   loop 0;
 };
 
+let tryFindWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): (option 'a) => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f index v ? Some v : loop (index + 1)
+  } : None;
+
+  loop 0;
+};
+
 let tryFirst (arr: copyOnWriteArray 'a): (option 'a) => tryGet 0 arr;
 
 let tryLast (arr: copyOnWriteArray 'a): (option 'a) => tryGet ((count arr) - 1) arr;
 
 let update (index: int) (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
+  let arrCount = count arr;
+
+  Preconditions.failIfOutOfRange arrCount index;
+
+  let clone = Array.copy arr;
+  clone.(index) = item;
+  clone
+};
+
+let updateAll (f: int => 'a => 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
+  let arrCount = count arr;
+  let clone = Array.copy arr;
+  let rec loop index => index < arrCount ? {
+    clone.(index) = f index arr.(index);
+    loop (index + 1);
+  }: clone;
+
+  loop 0;
+};
+
+let updateWith (index: int) (f: 'a => 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   let count = count arr;
 
   Preconditions.failIfOutOfRange count index;
 
   let clone = Array.copy arr;
-  clone.(index) = item;
+  clone.(index) = f arr.(index);
   clone
 };

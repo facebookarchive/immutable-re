@@ -130,11 +130,8 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (shouldBeEmpty |> Deque.tryFirst) |>  toBeEqualToNoneOfInt;
       expect (shouldBeEmpty |> Deque.tryLast) |>  toBeEqualToNoneOfInt;
 
-      let seqsEquality = Seq.equals (Deque.toSeq deque) (Seq.inRange 0 (Some count) 1);
-      expect seqsEquality |> toBeEqualToTrue;
-
-      let seqsEquality = Seq.equals (Deque.toSeqReversed deque) (Seq.inRange (count - 1) (Some count) (-1));
-      expect seqsEquality |> toBeEqualToTrue;
+      expect @@ Deque.toSeq @@ deque |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+      expect @@ Deque.toSeqReversed @@ deque |> toBeEqualToSeqOfInt (Seq.inRange (count - 1) (Some count) (-1));
     }),
 
     it (sprintf "addLast and removeFirst %i elements" count) (fun () => {
@@ -178,14 +175,12 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (Deque.count shouldBeEmpty) |> toBeEqualToInt 0;
       defer (fun () => shouldBeEmpty |> Deque.first) |> throws;
       defer (fun () => shouldBeEmpty |> Deque.last) |> throws;
-      expect (shouldBeEmpty |> Deque.tryFirst) |>  toBeEqualToNoneOfInt;
-      expect (shouldBeEmpty |> Deque.tryLast) |>  toBeEqualToNoneOfInt;
+      expect (shouldBeEmpty |> Deque.tryFirst) |> toBeEqualToNoneOfInt;
+      expect (shouldBeEmpty |> Deque.tryLast) |> toBeEqualToNoneOfInt;
 
-      let seqsEquality = Seq.equals (Deque.toSeq deque) (Seq.inRange 0 (Some count) 1);
-      expect seqsEquality |> toBeEqualToTrue;
+      expect @@ Deque.toSeq @@ deque |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+      expect @@ Deque.toSeqReversed @@ deque |> toBeEqualToSeqOfInt (Seq.inRange (count - 1) (Some count) (-1));
 
-      let seqsEquality = Seq.equals (Deque.toSeqReversed deque) (Seq.inRange (count - 1) (Some count) (-1));
-      expect seqsEquality |> toBeEqualToTrue;
     }),
 
     it (sprintf "addFirst and removeLast %i elements" count) (fun () => {
@@ -232,11 +227,8 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (shouldBeEmpty |> Deque.tryFirst) |>  toBeEqualToNoneOfInt;
       expect (shouldBeEmpty |> Deque.tryLast) |>  toBeEqualToNoneOfInt;
 
-      let seqsEquality = Seq.equals (Deque.toSeq deque) (Seq.inRange (count - 1) (Some count) (-1));
-      expect seqsEquality |> toBeEqualToTrue;
-
-      let seqsEquality = Seq.equals (Deque.toSeqReversed deque) (Seq.inRange 0 (Some count) 1);
-      expect seqsEquality |> toBeEqualToTrue;
+      expect @@ Deque.toSeq @@ deque |> toBeEqualToSeqOfInt (Seq.inRange (count - 1) (Some count) (-1));
+      expect @@ Deque.toSeqReversed @@ deque |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
     }),
 
     it (sprintf "map %i elements" count) (fun () => {
@@ -245,7 +237,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         |> Deque.map (fun i => i + 1)
         |> Deque.toSeq
         |> expect
-        |> toBeEqualToSeq string_of_int (Seq.inRange 1 (Some count) 1);
+        |> toBeEqualToSeqOfInt (Seq.inRange 1 (Some count) 1);
     }),
 
     it (sprintf "reduceRight %i elements" count) (fun () => {

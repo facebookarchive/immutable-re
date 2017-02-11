@@ -76,8 +76,7 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     defer (fun () => shouldBeEmpty |> Stack.first) |> throws;
     expect (shouldBeEmpty |> Stack.tryFirst) |>  toBeEqualToNoneOfInt;
 
-    let seqsEquality = Seq.equals (Stack.toSeq stack) (Seq.inRange (count - 1) (Some count) (-1));
-    expect seqsEquality |> toBeEqualToTrue;
+    expect @@ Stack.toSeq @@ stack |> toBeEqualToSeqOfInt (Seq.inRange (count - 1) (Some count) (-1));
   }),
 
   it (sprintf "every with %i elements" count) (fun () => {
@@ -164,7 +163,7 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
       |> Stack.mapReverse (fun i => i + 1)
       |> Stack.toSeq
       |> expect
-      |> toBeEqualToSeq string_of_int (Seq.inRange 1 (Some count) 1);
+      |> toBeEqualToSeqOfInt (Seq.inRange 1 (Some count) 1);
   }),
 
   it (sprintf "reverse %i elements" count) (fun () => {
@@ -176,13 +175,13 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     reversed
       |> Stack.toSeq
       |> expect
-      |> toBeEqualToSeq string_of_int (Seq.inRange 0 (Some count) 1);
+      |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
 
     reversed
       |> Stack.reverse
       |> Stack.toSeq
       |> expect
-      |> toBeEqualToSeq string_of_int (stack |> Stack.toSeq);
+      |> toBeEqualToSeqOfInt (stack |> Stack.toSeq);
   }),
 
   it (sprintf "addFirst and removeAll %i elements" count) (fun () => {

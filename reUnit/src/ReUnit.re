@@ -101,6 +101,9 @@ let module Expect = {
   let toBeEqualToSeq (toString: 'a => string) =>
     toBeEqualToWith Seq.equals (stringOfSeq toString);
 
+  let toBeEqualToSeqOfInt (seq: Seq.t int) (expect: t (Seq.t int)) =>
+    toBeEqualToSeq string_of_int seq expect;
+
   let toBeEqualToSeqOfString (seq: Seq.t string) (expect: t (Seq.t string)) =>
     toBeEqualToSeq identity seq expect;
 
