@@ -1,8 +1,3 @@
-/*
- * vim: set ft=rust:
- * vim: set ft=reason:
- */
-
 let alwaysFailWith (message: string) () => failwith message;
 let alwaysFalse _: bool => false;
 let alwaysNone _: option _ => None;

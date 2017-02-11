@@ -1,8 +1,3 @@
-/*
- * vim: set ft=rust:
- * vim: set ft=reason:
- */
-
 open Option.Operators;
 open Immutable;
 open ReUnit;

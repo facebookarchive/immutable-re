@@ -1,8 +1,3 @@
-/*
- * vim: set ft=rust:
- * vim: set ft=reason:
- */
-
 let count (opt: option 'a): int => switch opt {
   | Some _ => 1
   | None => 0

@@ -1,8 +1,3 @@
-/*
- * vim: set ft=rust:
- * vim: set ft=reason:
- */
-
 let module Hash: {
   type t 'a = 'a => int;
 

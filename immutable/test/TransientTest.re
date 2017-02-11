@@ -1,8 +1,3 @@
-/*
- * vim: set ft=rust:
- * vim: set ft=reason:
- */
-
 open ReUnit;
 open Transient;
 open ReUnit.Expect;

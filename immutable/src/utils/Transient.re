@@ -1,8 +1,3 @@
-/*
- * vim: set ft=rust:
- * vim: set ft=reason:
- */
-
 type ownerT = | Owner;
 type owner = ref ownerT;
 

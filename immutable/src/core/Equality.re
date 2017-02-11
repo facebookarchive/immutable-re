@@ -1,8 +1,3 @@
-/*
- * vim: set ft=rust:
- * vim: set ft=reason:
- */
-
 type equality 'a = 'a => 'a => bool;
 
 /* Will be available in Ocaml 4.03
