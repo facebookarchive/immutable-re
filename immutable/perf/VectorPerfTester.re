@@ -37,27 +37,27 @@ let generateTests
 
 let test (n: int): Test.t => {
   let indexes = Seq.inRange 0 (Some n) 1;
-  let deque = indexes |> Seq.reduce (fun acc i => acc |> Deque.add i) Deque.empty;
+  let vector = indexes |> Seq.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty;
 
   describe "VectorPerf" [
-    describe "Deque" (
+    describe "Vector" (
       generateTests
-        (fun () => deque)
-        (fun () => Deque.empty)
-        Deque.add
-        Deque.update
-        Deque.removeLast
-        Deque.tryGet
+        (fun () => vector)
+        (fun () => Vector.empty)
+        Vector.addLast
+        Vector.update
+        Vector.removeLast
+        Vector.tryGet
         n
     ),
-    describe "TransientDeque" (
+    describe "TransientVector" (
       generateTests
-        (fun () => deque |> Deque.mutate)
-        (fun () => Deque.empty |> Deque.mutate)
-        TransientDeque.add
-        TransientDeque.update
-        TransientDeque.removeLast
-        TransientDeque.tryGet
+        (fun () => vector |> Vector.mutate)
+        (fun () => Vector.empty |> Vector.mutate)
+        TransientVector.addLast
+        TransientVector.update
+        TransientVector.removeLast
+        TransientVector.tryGet
         n
     ),
   ];
