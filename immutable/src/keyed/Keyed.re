@@ -94,10 +94,11 @@ let hashWith (keyHash: hash 'k) (valueHash: hash 'v) ({ seq }: keyed 'k 'v): int
 let hash (keyed: keyed 'k 'v): int =>
   hashWith Hash.structural Hash.structural keyed;
 
-let keys ({ count, seq } as keyed: keyed 'k 'v): (collection 'k) => Collection.create
-  contains::(fun key => keyed |> containsKey key)
-  count::count
-  seq::(seq |> Seq.map fst);
+let keys ({ count, seq } as keyed: keyed 'k 'v): (collection 'k) => {
+  contains: fun key => keyed |> containsKey key,
+  count,
+  toSeq: seq |> Seq.map fst,
+};
 
 let map (f: 'v1 => 'v2) ({ count, seq, tryGet }: keyed 'k 'v1): (keyed 'k 'v2) => create
   count::count
@@ -116,10 +117,11 @@ let ofCollection (col: collection 'a): (keyed 'a 'a) => create
 
 let toCollection
     (valueEquality: equality 'v)
-    ({ count, seq } as keyed: keyed 'k 'v): (collection ('k, 'v)) => Collection.create
-  contains::(fun (k, v) => keyed |> contains valueEquality k v)
-  count::count
-  seq::seq;
+    ({ count, seq } as keyed: keyed 'k 'v): (collection ('k, 'v)) => {
+  contains: fun (k, v) => keyed |> contains valueEquality k v,
+  count,
+  toSeq: seq,
+};
 
 let toSeq (keyed: keyed 'k 'v): (seq ('k, 'v)) => keyed.seq;
 

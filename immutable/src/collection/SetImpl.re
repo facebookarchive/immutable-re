@@ -26,10 +26,11 @@ let module Make: (
 ) => S with type t 'a = X.t 'a = fun (X: SetBase) => {
   type t 'a = X.t 'a;
 
-  let toCollection (set: t 'a): (collection 'a) => Collection.create
-    contains::(fun a => set |> X.contains a)
-    count::(set |> X.count)
-    seq::(set |> X.toSeq);
+  let toCollection (set: t 'a): (collection 'a) => {
+    contains: fun a => set |> X.contains a,
+    count: (set |> X.count),
+    toSeq: (set |> X.toSeq),
+  };
 
   let toKeyed (set: t 'a): (keyed 'a 'a) => Keyed.create
     count::(set |> X.count)

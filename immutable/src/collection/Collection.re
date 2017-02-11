@@ -12,7 +12,7 @@ open Seq;
 type collection 'a = {
   contains: 'a => bool,
   count: int,
-  seq: (seq 'a),
+  toSeq: (seq 'a),
 };
 
 let contains (value: 'a) (collection: collection 'a): bool =>
@@ -20,37 +20,59 @@ let contains (value: 'a) (collection: collection 'a): bool =>
 
 let count (collection: collection 'a): int => collection.count;
 
-let create
-  contains::(contains: 'a => bool)
-  count::(count: int)
-  seq::(seq: seq 'a): (collection 'a) => ({ contains, count, seq });
-
 let empty: (collection 'a) = {
   contains: alwaysFalse,
   count: 0,
-  seq: Seq.empty,
+  toSeq: Seq.empty,
 };
 
-let equals (that: collection 'a) (this: collection 'a): bool => (this === that) || (
-  (this.count == that.count) &&
-  this.seq |> Seq.every that.contains
-);
+let every (f: 'a => bool) ({ toSeq }: collection 'a): bool =>
+  toSeq |> Seq.every f;
 
-let hashWith (hash: hash 'a) (collection: collection 'a): int =>
-  collection.seq |> Seq.hashWith hash;
+let equals (that: collection 'a) (this: collection 'a): bool =>
+  (this === that) ? true :
+  (this.count != that.count) ? false :
+  this |> every that.contains;
 
-let hash (collection: collection 'a): int =>
-  collection.seq |> Seq.hash;
+let forEach (f: 'a => unit) ({ toSeq }: collection 'a): unit =>
+  toSeq |> Seq.forEach f;
+
+let find (f: 'a => bool) ({ toSeq }: collection 'a): 'a =>
+  toSeq |> Seq.find f;
+
+let hashWith (hash: hash 'a) ({ toSeq }: collection 'a): int =>
+  toSeq |> Seq.hashWith hash;
+
+let hash ({ toSeq }: collection 'a): int =>
+  toSeq |> Seq.hash;
+
+let isEmpty ({ count }: collection 'a): bool =>
+  count == 0;
+
+let isNotEmpty ({ count }: collection 'a): bool =>
+  count != 0;
 
 let intersect (that: collection 'a) (this: collection 'a): (seq 'a) =>
-  this.seq |> Seq.filter (that.contains);
+  this.toSeq |> Seq.filter (that.contains);
+
+let none (f: 'a => bool) ({ toSeq }: collection 'a): bool =>
+  toSeq |> Seq.none f;
+
+let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ toSeq }: collection 'a): 'acc =>
+  toSeq |> Seq.reduce f acc;
+
+let some (f: 'a => bool) ({ toSeq }: collection 'a): bool =>
+  toSeq |> Seq.some f;
 
 let subtractFrom (that: collection 'a) (this: collection 'a): (seq 'a) =>
-  that.seq |> Seq.filter (this.contains >> not);
+  that.toSeq |> Seq.filter (this.contains >> not);
 
-let toSeq (collection: collection 'a): (seq 'a) => collection.seq;
+let tryFind (f: 'a => bool) ({ toSeq }: collection 'a): (option 'a) =>
+  toSeq |> Seq.tryFind f;
+
+let toSeq ({ toSeq }: collection 'a): (seq 'a) => toSeq;
 
 let union (that: collection 'a) (this: collection 'a): (seq 'a) => Seq.concat [
-  this.seq,
-  that.seq |> Seq.filter (this.contains >> not)
+  this.toSeq,
+  that.toSeq |> Seq.filter (this.contains >> not)
 ];

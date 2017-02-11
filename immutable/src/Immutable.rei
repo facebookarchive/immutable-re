@@ -118,13 +118,20 @@ let module Collection: {
   let count: (t 'a) => int;
   let empty: (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
+  let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => 'a;
+  let forEach: ('a => unit) => (t 'a) => unit;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  let intersect: (t 'a) => (t 'a) => (Seq.t 'a);
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
-  let intersect: (t 'a) => (t 'a) => (Seq.t 'a);
+  let none: ('a => bool) => (t 'a) => bool;
+  let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let some: ('a => bool) => (t 'a) => bool;
   let subtractFrom: (t 'a) => (t 'a) => (Seq.t 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
+  let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let union: (t 'a) => (t 'a) => (Seq.t 'a);
 };
 
@@ -144,7 +151,6 @@ let module Keyed: {
   let keys: (t 'k 'v) => (Collection.t 'k);
   let map: ('v1 => 'v2) => (t 'k 'v1) => (t 'k 'v2);
   let mapWithKey: ('k => 'v1 => 'v2) => (t 'k 'v1) => (t 'k 'v2);
-  let ofCollection: (Collection.t 'a) => (t 'a 'a);
   let toCollection: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryGet: 'k => (t 'k 'v) => (option 'v);
