@@ -17,7 +17,7 @@ open Transient;
  */
 let module BitmapTrie = {
   type node 'a =
-    | Entry (int, 'a)
+    | Entry int 'a
     | Level int32 (array (node 'a)) (option owner);
 
   type bitmapTrie 'a = option (node 'a);
@@ -86,7 +86,7 @@ let module BitmapTrie = {
           ? nodes.(index) |> tryGetFromNode (depth + 1) key
           : None
 
-    | Entry (entryKey, entryValue) => key == entryKey ? Some entryValue : None;
+    | Entry entryKey entryValue => key == entryKey ? Some entryValue : None;
   };
 
   let tryGet (key: int) (node: node 'a): (option 'a) =>
@@ -106,12 +106,12 @@ let module BitmapTrie = {
       (depth: int)
       (key: int)
       (node: node 'a): (alterResult (node 'a)) => switch node {
-    | Entry (entryKey, entryValue) when key == entryKey => switch (f @@ Option.return @@ entryValue) {
+    | Entry entryKey entryValue when key == entryKey => switch (f @@ Option.return @@ entryValue) {
         | Some newEntryValue when newEntryValue === entryValue => NoChange
-        | Some newEntryValue => Replace (Entry (key, newEntryValue))
+        | Some newEntryValue => Replace (Entry key newEntryValue)
         | None => Empty
       }
-    | Entry (entryKey, entryValue) => switch (f None) {
+    | Entry entryKey entryValue => switch (f None) {
         | Some newEntryValue =>
             let bitmap = bitPos entryKey depth;
             Level bitmap [| node |] owner
@@ -139,7 +139,7 @@ let module BitmapTrie = {
           }
         } : switch (f None) {
           | Some newEntryValue =>
-              let node = Entry (key, newEntryValue);
+              let node = Entry key newEntryValue;
               let nodes = nodes |> CopyOnWriteArray.insertAt index node;
               Added (Level (Int32.logor bitmap bit) nodes owner)
           | None => NoChange
@@ -161,20 +161,20 @@ let module BitmapTrie = {
       | Empty => Empty
     )
     |> Option.orCompute (fun () => switch (f None) {
-        | Some value => Added (Entry (key, value) |> Option.return)
+        | Some value => Added (Entry key value |> Option.return)
         | _ => NoChange
       }
     );
 
   let rec reduceWithKey (f: 'acc => int => 'a => 'acc) (acc: 'acc) (node: node 'a): 'acc => switch node {
-    | Entry (key, value) => f acc key value;
+    | Entry key value => f acc key value;
     | Level _ nodes _ =>
         let reducer acc node => reduceWithKey f acc node;
         nodes |> CopyOnWriteArray.reduce reducer acc;
   };
 
   let rec toSeq (node: node 'a): (seq ((int, 'a))) => switch node {
-    | Entry entry => Seq.return entry
+    | Entry key value => Seq.return (key, value)
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
   };
 };
