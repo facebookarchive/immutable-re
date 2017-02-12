@@ -3,7 +3,6 @@ open CopyOnWriteArray;
 open Equality;
 open Functions;
 open Hash;
-open Indexed;
 open Hash;
 open Option;
 open Option.Operators;
@@ -1759,12 +1758,6 @@ let toSeqReversed ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
   Trie.toSeqReversed middle,
   CopyOnWriteArray.toSeqReversed left,
 ];
-
-let toIndexed (vector: vector 'a): (indexed 'a) => Indexed.create
-  count::(count vector)
-  rseq::(toSeqReversed vector)
-  seq::(toSeq vector)
-  tryGet::(fun i => vector |> tryGet i);
 
 let tryFind (f: 'a => bool) ({ left, middle, right }: vector 'a): (option 'a) =>
   /* FIXME: Add an operator to Option for this use case */

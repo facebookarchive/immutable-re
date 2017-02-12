@@ -2,7 +2,6 @@ open Comparator;
 open Equality;
 open Functions;
 open Hash;
-open Indexed;
 open Option.Operators;
 open Ordering;
 open Preconditions;
@@ -378,15 +377,6 @@ let toSeq (arr: copyOnWriteArray 'a): (seq 'a) => {
     : Completed;
   loop 0;
 };
-
-let toIndexed (arr: copyOnWriteArray 'a): indexed 'a => ({
-  count: count arr,
-  rseq: toSeqReversed arr,
-  seq: toSeq arr,
-  tryGet: fun (index: int) => index >= 0 && index < (count arr)
-    ? Some (arr.(index))
-    : None,
-});
 
 let tryGet (index: int) (arr: copyOnWriteArray 'a): (option 'a) =>
   Preconditions.noneIfIndexOutOfRange (count arr) index (flip get arr);

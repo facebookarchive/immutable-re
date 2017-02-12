@@ -158,29 +158,6 @@ let module Keyed = {
   let tryGet = Keyed.tryGet;
 };
 
-let module Indexed = {
-  type t 'a = Indexed.indexed 'a;
-
-  let count = Indexed.count;
-  let empty = Indexed.empty;
-  let equals = Indexed.equals;
-  let equalsWith = Indexed.equalsWith;
-  let hash = Indexed.hash;
-  let hashWith = Indexed.hashWith;
-  let isEmpty indexed => isEmpty count indexed;
-  let isNotEmpty indexed => isNotEmpty count indexed;
-  let map = Indexed.map;
-  let mapWithIndex = Indexed.mapWithIndex;
-  let range = Indexed.range;
-  let reverse = Indexed.reverse;
-  let toKeyed = Indexed.toKeyed;
-  let toSeq = Indexed.toSeq;
-  let toSeqReversed = Indexed.toSeqReversed;
-  let tryFirst = Indexed.tryFirst;
-  let tryGet = Indexed.tryGet;
-  let tryLast = Indexed.tryLast;
-};
-
 let module HashStrategy = {
   type t 'a = HashStrategy.hashStrategy 'a;
 
@@ -287,7 +264,6 @@ let module CopyOnWriteArray = {
   let some = CopyOnWriteArray.some;
   let someWithIndex = CopyOnWriteArray.someWithIndex;
   let take = CopyOnWriteArray.take;
-  let toIndexed = CopyOnWriteArray.toIndexed;
   let toSeq = CopyOnWriteArray.toSeq;
   let toSeqReversed = CopyOnWriteArray.toSeqReversed;
   let tryFind = CopyOnWriteArray.tryFind;
@@ -774,7 +750,6 @@ let module Vector = {
   let some = Vector.some;
   let someWithIndex = Vector.someWithIndex;
   let take = Vector.take;
-  let toIndexed = Vector.toIndexed;
   let toSeq = Vector.toSeq;
   let toSeqReversed = Vector.toSeqReversed;
   let tryFind = Vector.tryFind;

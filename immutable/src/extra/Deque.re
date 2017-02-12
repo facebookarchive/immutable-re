@@ -3,7 +3,6 @@ open CopyOnWriteArray;
 open Equality;
 open Functions;
 open Hash;
-open Indexed;
 open Option.Operators;
 open Ordering;
 open Preconditions;
