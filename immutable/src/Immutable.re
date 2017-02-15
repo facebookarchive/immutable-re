@@ -1,10 +1,10 @@
-open BiMap;
+/*open BiMap;*/
 open Deque;
 open Equality;
-open HashMap;
+/*open HashMap;
 open HashMultiset;
 open HashSet;
-open IntMap;
+open IntMap;*/
 open Vector;
 
 let isEmpty (count: 'collection => 'int) (collection: 'collection): bool =>
@@ -113,6 +113,7 @@ let module Seq = {
   let zipLongest3 = Seq.zipLongest3;
 };
 
+let module CollectionInternal = Collection;
 let module Collection = {
   type t 'a = Collection.collection 'a;
 
@@ -125,13 +126,14 @@ let module Collection = {
   let forEach = Collection.forEach;
   let hash = Collection.hash;
   let hashWith = Collection.hashWith;
+  let inRange = Collection.inRange;
   let intersect = Collection.intersect;
   let isEmpty = Collection.isEmpty;
   let isNotEmpty = Collection.isNotEmpty;
   let none = Collection.none;
   let reduce = Collection.reduce;
   let some = Collection.some;
-  let subtractFrom = Collection.subtractFrom;
+  let subtract = Collection.subtract;
   let toSeq = Collection.toSeq;
   let tryFind = Collection.tryFind;
   let union = Collection.union;
@@ -141,21 +143,31 @@ let module Keyed = {
   type t 'k 'v = Keyed.keyed 'k 'v;
 
   let contains = Keyed.contains;
+  let containsWith = Keyed.containsWith;
   let containsKey = Keyed.containsKey;
   let count = Keyed.count;
   let empty = Keyed.empty;
   let equals = Keyed.equals;
   let equalsWith = Keyed.equalsWith;
+  let every = Keyed.every;
+  let find = Keyed.find;
+  let forEach = Keyed.forEach;
+  let get = Keyed.get;
   let hash = Keyed.hash;
   let hashWith = Keyed.hashWith;
   let isEmpty keyed => isEmpty count keyed;
   let isNotEmpty keyed => isNotEmpty count keyed;
   let keys = Keyed.keys;
   let map = Keyed.map;
-  let mapWithKey = Keyed.mapWithKey;
+  let none = Keyed.none;
+  let reduce = Keyed.reduce;
+  let some = Keyed.some;
   let toCollection = Keyed.toCollection;
+  let toCollectionWith = Keyed.toCollectionWith;
   let toSeq = Keyed.toSeq;
+  let tryFind = Keyed.tryFind;
   let tryGet = Keyed.tryGet;
+  let values = Keyed.values;
 };
 
 let module HashStrategy = {
@@ -167,7 +179,7 @@ let module HashStrategy = {
   let structuralCompare = HashStrategy.structuralCompare;
   let structuralEquality = HashStrategy.structuralEquality;
 };
-
+/*
 let module BiMap = {
   type t 'k 'v = BiMap.biMap 'k 'v;
 
@@ -206,7 +218,7 @@ let module TransientBiMap = {
   let tryGet = TransientBiMap.tryGet;
   let tryPut = TransientBiMap.tryPut;
 };
-
+*/
 let module CopyOnWriteArray = {
   type t 'a = CopyOnWriteArray.copyOnWriteArray 'a;
 
@@ -237,6 +249,8 @@ let module CopyOnWriteArray = {
   let get = CopyOnWriteArray.get;
   let hash = CopyOnWriteArray.hash;
   let hashWith = CopyOnWriteArray.hashWith;
+  let indexOf = CopyOnWriteArray.indexOf;
+  let indexOfWithIndex = CopyOnWriteArray.indexOfWithIndex;
   let init = CopyOnWriteArray.init;
   let insertAt = CopyOnWriteArray.insertAt;
   let isEmpty = CopyOnWriteArray.isEmpty;
@@ -264,12 +278,15 @@ let module CopyOnWriteArray = {
   let some = CopyOnWriteArray.some;
   let someWithIndex = CopyOnWriteArray.someWithIndex;
   let take = CopyOnWriteArray.take;
+  let toKeyed = CopyOnWriteArray.toKeyed;
   let toSeq = CopyOnWriteArray.toSeq;
   let toSeqReversed = CopyOnWriteArray.toSeqReversed;
   let tryFind = CopyOnWriteArray.tryFind;
   let tryFindWithIndex = CopyOnWriteArray.tryFindWithIndex;
   let tryFirst = CopyOnWriteArray.tryFirst;
   let tryGet = CopyOnWriteArray.tryGet;
+  let tryIndexOf = CopyOnWriteArray.tryIndexOf;
+  let tryIndexOfWithIndex = CopyOnWriteArray.tryIndexOfWithIndex;
   let tryLast = CopyOnWriteArray.tryLast;
   let update = CopyOnWriteArray.update;
   let updateAll = CopyOnWriteArray.updateAll;
@@ -341,7 +358,7 @@ let module TransientDeque = {
   let tryFirst = TransientDeque.tryFirst;
   let tryLast = TransientDeque.tryLast;
 };
-
+/*
 let module HashMap = {
   type t 'k 'v  = HashMap.hashMap 'k 'v;
 
@@ -512,7 +529,7 @@ let module TransientIntMap = {
   let remove = TransientIntMap.remove;
   let removeAll = TransientIntMap.removeAll;
   let tryGet = TransientIntMap.tryGet;
-};
+};*/
 
 let module List = {
   type t 'a = list 'a;
@@ -552,13 +569,23 @@ let module List = {
 let module Option = {
   type t 'a = option 'a;
 
+  let compare = Option.compare;
+  let compareWith = Option.compareWith;
+  let contains = Option.contains;
+  let containsWith = Option.containsWith;
   let count = Option.count;
   let empty = Option.empty;
+  let equals = Option.equals;
+  let equalsWith = Option.equalsWith;
+  let every = Option.every;
   let filter = Option.filter;
+  let find = Option.find;
   let flatMap = Option.flatMap;
   let flatten = Option.flatten;
   let forEach = Option.forEach;
   let get = Option.get;
+  let hash = Option.hash;
+  let hashWith = Option.hashWith;
   let isEmpty = Option.isEmpty;
   let isNotEmpty = Option.isNotEmpty;
   let map = Option.map;
@@ -566,9 +593,12 @@ let module Option = {
   let reduce = Option.reduce;
   let return = Option.return;
   let some = Option.some;
+  let toCollection = CollectionInternal.ofOption;
+  let toCollectionWith  = CollectionInternal.ofOptionWith;
   let toSeq = SeqInternal.ofOption;
+  let tryFind = Option.tryFind;
 };
-
+/*
 let module SortedMap = {
   type t 'k 'v = SortedMap.sortedMap 'k 'v;
 
@@ -618,7 +648,7 @@ let module SortedSet = {
   let toKeyed = SortedSet.toKeyed;
   let toSeq = SortedSet.toSeq;
 };
-
+*/
 let module Stack ={
   type t 'a = Stack.stack 'a;
 
@@ -655,7 +685,7 @@ let module Stack ={
   let tryFind = Stack.tryFind;
   let tryFirst = Stack.tryFirst;
 };
-
+/*
 let module StackMultimap = {
   type t 'k 'v = StackMultimap.stackMultimap 'k 'v;
 
@@ -692,7 +722,7 @@ let module Table = {
   let toSeq = Table.toSeq;
   let tryGet = Table.tryGet;
 };
-
+*/
 let module Vector = {
   type t 'a = Vector.vector 'a;
 
@@ -724,6 +754,8 @@ let module Vector = {
   let hash = Vector.hash;
   let hashWith = Vector.hashWith;
   let init = Vector.init;
+  let indexOf = Vector.indexOf;
+  let indexOfWithIndex = Vector.indexOfWithIndex;
   let insertAt = Vector.insertAt;
   let isEmpty = Vector.isEmpty;
   let isNotEmpty = Vector.isNotEmpty;
@@ -750,12 +782,15 @@ let module Vector = {
   let some = Vector.some;
   let someWithIndex = Vector.someWithIndex;
   let take = Vector.take;
+  let toKeyed = Vector.toKeyed;
   let toSeq = Vector.toSeq;
   let toSeqReversed = Vector.toSeqReversed;
   let tryFind = Vector.tryFind;
   let tryFindWithIndex = Vector.tryFindWithIndex;
   let tryFirst = Vector.tryFirst;
   let tryGet = Vector.tryGet;
+  let tryIndexOf = Vector.tryIndexOf;
+  let tryIndexOfWithIndex = Vector.tryIndexOfWithIndex;
   let tryLast = Vector.tryLast;
   let update = Vector.update;
   let updateAll = Vector.updateAll;

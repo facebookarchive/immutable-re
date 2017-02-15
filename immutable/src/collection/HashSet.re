@@ -379,14 +379,3 @@ let removeAll ({ strategy }: hashSet 'a): (hashSet 'a) => emptyWith strategy;
 
 let toSeq ({ root }: hashSet 'a): (seq 'a) => root |> IntMap.toSeq
   |> Seq.flatMap (fun (_, hashNode) => hashNode |> HashNode.toSeq);
-
-let module HashSetSetImpl = SetImpl.Make {
-  type t 'a = hashSet 'a;
-
-  let contains = contains;
-  let count = count;
-  let toSeq = toSeq;
-};
-
-let toCollection = HashSetSetImpl.toCollection;
-let toKeyed = HashSetSetImpl.toKeyed;

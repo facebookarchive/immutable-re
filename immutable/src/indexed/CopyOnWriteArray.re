@@ -2,6 +2,7 @@ open Comparator;
 open Equality;
 open Functions;
 open Hash;
+open Keyed;
 open Option.Operators;
 open Ordering;
 open Preconditions;
@@ -61,20 +62,6 @@ let rec compareWith
 
 let compare (this: copyOnWriteArray 'a) (that: copyOnWriteArray 'a): ordering =>
   compareWith Comparator.structural this that;
-
-let containsWith (valueEquals: equality 'a) (value: 'a) (arr: copyOnWriteArray 'a): bool => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    index < arrCount && valueEquals arr.(index) value ? true :
-    index < arrCount ? loop (index + 1) :
-    false;
-
-  loop 0;
-};
-
-let contains (value: 'a) (list: copyOnWriteArray 'a): bool =>
-  containsWith Equality.structural value list;
 
 let empty: (copyOnWriteArray 'a) = [||];
 
@@ -160,6 +147,28 @@ let get (index: int) (arr: copyOnWriteArray 'a): 'a => arr.(index);
 let lastIndex (arr: copyOnWriteArray 'a): int => count arr - 1;
 
 let last (arr: copyOnWriteArray 'a): 'a => arr.(lastIndex arr);
+
+let indexOf (f: 'a => bool) (arr: copyOnWriteArray 'a): int => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f v ? index : loop (index + 1)
+  } : failwith "not found";
+
+  loop 0;
+};
+
+let indexOfWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): int => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f index v ? index : loop (index + 1)
+  } : failwith "not found";
+
+  loop 0;
+};
 
 let init = Array.init;
 
@@ -349,6 +358,12 @@ let some (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   loop 0;
 };
 
+let containsWith (valueEquals: equality 'a) (value: 'a) (arr: copyOnWriteArray 'a): bool =>
+  some (valueEquals value) arr;
+
+let contains (value: 'a) (list: copyOnWriteArray 'a): bool =>
+  containsWith Equality.structural value list;
+
 let someWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   let arrCount = count arr;
 
@@ -374,6 +389,14 @@ let toSeq (arr: copyOnWriteArray 'a): (seq 'a) => {
   let arrCount = count arr;
   let rec loop index => fun () => index < arrCount
     ? Next arr.(index) (loop (index + 1))
+    : Completed;
+  loop 0;
+};
+
+let toSeqWithIndex (arr: copyOnWriteArray 'a): (seq (int, 'a)) => {
+  let arrCount = count arr;
+  let rec loop index => fun () => index < arrCount
+    ? Next (index, arr.(index)) (loop (index + 1))
     : Completed;
   loop 0;
 };
@@ -404,6 +427,28 @@ let tryFindWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): (option 
 };
 
 let tryFirst (arr: copyOnWriteArray 'a): (option 'a) => tryGet 0 arr;
+
+let tryIndexOf (f: 'a => bool) (arr: copyOnWriteArray 'a): (option int) => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f v ? Some index : loop (index + 1)
+  } : None;
+
+  loop 0;
+};
+
+let tryIndexOfWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): (option int) => {
+  let arrCount = count arr;
+
+  let rec loop index => index < arrCount ? {
+    let v = arr.(index);
+    f index v ? Some index : loop (index + 1)
+  } : None;
+
+  loop 0;
+};
 
 let tryLast (arr: copyOnWriteArray 'a): (option 'a) => tryGet ((count arr) - 1) arr;
 
@@ -436,4 +481,26 @@ let updateWith (index: int) (f: 'a => 'a) (arr: copyOnWriteArray 'a): (copyOnWri
   let clone = Array.copy arr;
   clone.(index) = f arr.(index);
   clone
+};
+
+let toKeyed (arr: copyOnWriteArray 'a): (keyed int 'a) => {
+  containsWith: fun equals index value => index >= 0 && index < count arr
+    ? equals arr.(index) value
+    : false,
+  containsKey: fun index => index >= 0 && index < count arr,
+  count: count arr,
+  every: fun f => everyWithIndex f arr,
+  find: fun f => {
+    let index = indexOfWithIndex f arr;
+    (index, arr.(index))
+  },
+  forEach: fun f => forEachWithIndex f arr,
+  get: fun index => get index arr,
+  none: fun f => noneWithIndex f arr,
+  reduce: fun f acc => reduceWithIndex f acc arr,
+  some: fun f => someWithIndex f arr,
+  toSeq: toSeqWithIndex arr,
+  tryFind: fun f => tryIndexOfWithIndex f arr >>| fun index => (index, arr.(index)),
+  tryGet: fun i => tryGet i arr,
+  values: toSeq arr,
 };

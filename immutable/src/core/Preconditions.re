@@ -13,3 +13,6 @@ let noneIfIndexOutOfRange (count:int) (index: int) (f: int => 'a): (option 'a) =
   index < 0 ? None:
   index >= count ? None :
   f index |> Option.return;
+
+let failIf (msg: string) (condition: bool): unit =>
+  condition ? failwith msg : ();

@@ -178,13 +178,3 @@ let removeAll ({ comparator }: sortedSet 'a): (sortedSet 'a) =>
   emptyWith comparator;
 
 let toSeq ({ tree }: sortedSet 'a): (seq 'a) => tree |> RedBlackTree.toSeq;
-
-let module SortedSetSetImpl = SetImpl.Make {
-  type t 'a = sortedSet 'a;
-  let contains = contains;
-  let count = count;
-  let toSeq = toSeq;
-};
-
-let toCollection = SortedSetSetImpl.toCollection;
-let toKeyed = SortedSetSetImpl.toKeyed;

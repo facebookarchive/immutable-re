@@ -1,4 +1,4 @@
-let alwaysFailWith (message: string) () => failwith message;
+let alwaysFailWith (message: string) _ => failwith message;
 let alwaysFalse _: bool => false;
 let alwaysNone _: option _ => None;
 let alwaysTrue _: bool => true;

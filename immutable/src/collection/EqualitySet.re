@@ -76,14 +76,3 @@ let remove (value: 'a) ({ equality, treeList } as equalitySet: equalitySet 'a): 
   |? equalitySet;
 
 let toSeq ({ treeList }: equalitySet 'a): (seq 'a) => treeList |> TreeList.toSeq;
-
-let module EqualitySetSetImpl = SetImpl.Make {
-  type t 'a = equalitySet 'a;
-
-  let contains = contains;
-  let count = count;
-  let toSeq = toSeq;
-};
-
-let toCollection = EqualitySetSetImpl.toCollection;
-let toKeyed = EqualitySetSetImpl.toKeyed;

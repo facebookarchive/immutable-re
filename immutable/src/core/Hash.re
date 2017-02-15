@@ -14,5 +14,5 @@ let structural = Hashtbl.hash;
 
 let initialValue = 17;
 
-let reducer (hash: hash 'a) (acc: int) (next: 'a) =>
+let reducer (hash: hash 'a) (acc: int) (next: 'a): int =>
   (31 * acc) + (hash next);

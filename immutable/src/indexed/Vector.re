@@ -4,6 +4,7 @@ open Equality;
 open Functions;
 open Hash;
 open Hash;
+open Keyed;
 open Option;
 open Option.Operators;
 open Ordering;
@@ -1483,14 +1484,6 @@ let addLastAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
   |> TransientVector.addLastAll seq
   |> TransientVector.persist;
 
-let containsWith (valueEquals: equality 'a) (value: 'a) ({ left, middle, right }: vector 'a): bool =>
-  left |> CopyOnWriteArray.containsWith valueEquals value ||
-  middle |> Trie.toSeq |> Seq.containsWith valueEquals value ||
-  right |> CopyOnWriteArray.containsWith valueEquals value;
-
-let contains (value: 'a) (vec: vector 'a): bool =>
-  containsWith Equality.structural value vec;
-
 let every (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.every f left) && (Trie.every f middle) && (CopyOnWriteArray.every f right);
 
@@ -1548,6 +1541,30 @@ let fromSeq (seq: seq 'a): (vector 'a) =>
 let fromSeqReversed (seq: seq 'a): (vector 'a) =>
   empty|> addFirstAll seq;
 
+let indexOf (f: 'a => bool) (vec: vector 'a): int => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref (-1);
+  findWithIndex (fun i v => {
+    let result = f v;
+    if result { index := i };
+    result;
+  }) vec;
+
+  !index >= 0 ? !index : failwith "not found";
+};
+
+let indexOfWithIndex (f: int => 'a => bool) (vec: vector 'a): int => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref (-1);
+  findWithIndex (fun i v => {
+    let result = f i v;
+    if result { index := i };
+    result;
+  }) vec;
+
+  !index >= 0 ? !index : failwith "not found";
+};
+
 let init (count: int) (f: int => 'a): (vector 'a) => Seq.inRange 0 (Some count) 1
   |> Seq.reduce (fun acc next => acc |> TransientVector.addLast (f next)) (mutate empty)
   |> TransientVector.persist;
@@ -1569,6 +1586,12 @@ let noneWithIndex (f: int => 'a => bool) (vec: vector 'a): bool => {
 
 let some (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.some f left) || (Trie.some f middle) || (CopyOnWriteArray.some f right);
+
+let containsWith (valueEquals: equality 'a) (value: 'a) (vec: vector 'a): bool =>
+  some (valueEquals value) vec;
+
+let contains (value: 'a) (vec: vector 'a): bool =>
+  containsWith Equality.structural value vec;
 
 let someWithIndex (f: int => 'a => bool) (vec: vector 'a): bool => {
   /* kind of a hack, but a lot less code to write */
@@ -1779,6 +1802,52 @@ let tryFindWithIndex (f: int => 'a => bool) (vec: vector 'a): (option 'a) => {
   };
 
   tryFind f vec;
+};
+
+let tryIndexOf (f: 'a => bool) (vec: vector 'a): (option int) => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref (-1);
+  tryFindWithIndex (fun i v => {
+    let result = f v;
+    if result { index := i };
+    result;
+  }) vec;
+
+  !index >= 0 ? Some !index : None;
+};
+
+let tryIndexOfWithIndex (f: int => 'a => bool) (vec: vector 'a): (option int) => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref (-1);
+  tryFindWithIndex (fun i v => {
+    let result = f i v;
+    if result { index := i };
+    result;
+  }) vec;
+
+  !index >= 0 ? Some !index : None;
+};
+
+let toKeyed (vec: vector 'a): (keyed int 'a) => {
+  containsWith: fun equals index value => index >= 0 && index < count vec
+    ? equals (get index vec) value
+    : false,
+  containsKey: fun index => index >= 0 && index < count vec,
+  count: count vec,
+  every: fun f => everyWithIndex f vec,
+  find: fun f => {
+    let index = indexOfWithIndex f vec;
+    (index, vec |> get index)
+  },
+  forEach: fun f => forEachWithIndex f vec,
+  get: fun index => get index vec,
+  none: fun f => noneWithIndex f vec,
+  reduce: fun f acc => reduceWithIndex f acc vec,
+  some: fun f => someWithIndex f vec,
+  toSeq: Seq.zip2 (Seq.inRange 0 (Some (count vec)) 1) (toSeq vec),
+  tryFind: fun f => tryIndexOfWithIndex f vec >>| fun index => (index, vec |> get index),
+  tryGet: fun i => tryGet i vec,
+  values: toSeq vec,
 };
 
 let updateAll (f: int => 'a => 'a) (vec: vector 'a): (vector 'a) => vec
