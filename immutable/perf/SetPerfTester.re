@@ -57,20 +57,20 @@ let test (n: int): Test.t => {
   let camlStringSet = keys |> Seq.reduce
     (fun acc i => acc |> CamlStringSet.add i)
     CamlStringSet.empty;
-
+/*
   let hashSetComparison = keys |> Seq.reduce
     (fun acc i => acc |> HashSet.put i)
     (HashSet.empty ());
 
   let hashSetEquality = keys |> Seq.reduce
     (fun acc i => acc |> HashSet.put i)
-    (HashSet.emptyWith @@ HashStrategy.structuralEquality @@ ());
+    (HashSet.emptyWith @@ HashStrategy.structuralEquality @@ ());*/
 
   let sortedSet = keys |> Seq.reduce
-    (fun acc i => acc |> SortedSet.put i)
+    (fun acc i => acc |> SortedSet.add i)
     SortedSet.empty;
 
-  describe (sprintf "SetPerf")[
+  describe (sprintf "SetPerf")[/*
     describe "HashSet" [
       describe "Comparison" (
         generateTests
@@ -92,14 +92,14 @@ let test (n: int): Test.t => {
           HashSet.contains
           n
       ),
-    ],
+    ],*/
 
     describe "SortedSet" (
       generateTests
         (fun () => sortedSet)
         (fun () => keys)
         (fun () => SortedSet.empty)
-        SortedSet.put
+        SortedSet.add
         SortedSet.remove
         SortedSet.contains
         n
@@ -115,7 +115,7 @@ let test (n: int): Test.t => {
         (fun k map => CamlStringSet.mem k map)
         n
     ),
-
+/*
     describe "TransientHashSet" [
       describe "Comparison" (
         generateTests
@@ -138,6 +138,6 @@ let test (n: int): Test.t => {
           TransientHashSet.contains
           n
       ),
-    ],
+    ],*/
   ]
 };
