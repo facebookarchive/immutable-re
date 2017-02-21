@@ -626,29 +626,46 @@ let module SortedMap = {
   let toSeq = SortedMap.toSeq;
   let tryGet = SortedMap.tryGet;
 };
-
+*/
 let module SortedSet = {
   type t 'a = SortedSet.sortedSet 'a;
 
+  let add = SortedSet.add;
+  let addAll = SortedSet.addAll;
+  let compare = SortedSet.compare;
+  let compareWith = SortedSet.compareWith;
   let contains = SortedSet.contains;
   let count = SortedSet.count;
   let empty = SortedSet.empty;
   let emptyWith = SortedSet.emptyWith;
+  let equals = SortedSet.equals;
+  let equalsWith = SortedSet.equalsWith;
+  let every = SortedSet.every;
+  let find = SortedSet.find;
+  let forEach = SortedSet.forEach;
   let fromSeq = SortedSet.fromSeq;
   let fromSeqWith = SortedSet.fromSeqWith;
-  let isEmpty set => isEmpty count set;
-  let isNotEmpty set => isNotEmpty count set;
-  let put = SortedSet.put;
-  let putAll = SortedSet.putAll;
+  let hash = SortedSet.hash;
+  let hashWith = SortedSet.hashWith;
+  let intersect = SortedSet.intersect;
+  let isEmpty = SortedSet.isEmpty;
+  let isNotEmpty = SortedSet.isNotEmpty;
+  let none = SortedSet.none;
   let reduce = SortedSet.reduce;
   let reduceRight = SortedSet.reduceRight;
   let remove = SortedSet.remove;
   let removeAll = SortedSet.removeAll;
+  let search = SortedSet.search;
+  let some = SortedSet.some;
+  let subtract = SortedSet.subtract;
   let toCollection = SortedSet.toCollection;
   let toKeyed = SortedSet.toKeyed;
   let toSeq = SortedSet.toSeq;
+  let tryFind = SortedSet.tryFind;
+  let trySearch = SortedSet.trySearch;
+  let union = SortedSet.union;
 };
-*/
+
 let module Stack ={
   type t 'a = Stack.stack 'a;
 

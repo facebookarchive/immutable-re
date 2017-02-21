@@ -493,12 +493,12 @@ let module rec HashSet: {
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
-  let subtract: (t 'a) => (t 'a) => (Seq.t 'a);
+  let subtract: (t 'a) => (t 'a) => (t 'a);
   let toCollection: (t 'a) => (Collection.t 'a);
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
-  let union: (t 'a) => (t 'a) => (Seq.t 'a);
+  let union: (t 'a) => (t 'a) => (t 'a);
 }
 
 and TransientHashSet: {
@@ -710,15 +710,17 @@ let module SortedMap: {
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   let values: (t 'k 'v) => (Seq.t 'v);
-};
+};*/
 
 let module SortedSet: {
   type t 'a;
 
+  let add: 'a => (t 'a) => (t 'a);
+  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
-  let empty: t 'a;
+  let empty: (t 'a);
   let emptyWith: (Comparator.t 'a) => (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
   let every: ('a => bool) => (t 'a) => bool;
@@ -728,24 +730,24 @@ let module SortedSet: {
   let fromSeqWith: (Comparator.t 'a)  => (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-  let intersect: (t 'a) => (t 'a) => (Seq.t 'a);
-  let isEmpty: t 'a => bool;
-  let isNotEmpty: t 'a => bool;
+  let intersect: (t 'a) => (t 'a) => (t 'a);
+  let isEmpty: (t 'a) => bool;
+  let isNotEmpty: (t 'a) => bool;
   let none: ('a => bool) => (t 'a) => bool;
-  let putAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  let put: 'a => (t 'a) => (t 'a);
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
+  let search: ('a => Ordering.t) => (t 'a) => 'a;
   let some: ('a => bool) => (t 'a) => bool;
-  let subtract: (t 'a) => (t 'a) => (Seq.t 'a);
+  let subtract: (t 'a) => (t 'a) => (t 'a);
   let toCollection: (t 'a) => (Collection.t 'a);
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
-  let union: (t 'a) => (t 'a) => (Seq.t 'a);
-};*/
+  let trySearch: ('a => Ordering.t) => (t 'a) => (option 'a);
+  let union: (t 'a) => (t 'a) => (t 'a);
+};
 
 let module Stack: {
   type t 'a;

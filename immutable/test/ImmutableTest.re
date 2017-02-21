@@ -15,8 +15,8 @@ ReUnit.run (describe "Immutable.re" [
   KeyedTest.test,
   OptionTest.test,/*
   SeqTest.test,
-  SortedMapTest.test,
-  SortedSetTest.test,*/
+  SortedMapTest.test,*/
+  SortedSetTest.test,
   StackTest.test,/*
   StackMultimapTest.test,
   TableTest.test,*/

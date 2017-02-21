@@ -92,20 +92,16 @@ let test = describe "Collection" [
     /* The other functions implemented by inRange are straight wrappers around the Seq apis. */
   ],
   it "intersect" (fun () => {
-    /*
-    FIXME:
-    let collectionA = ["a", "b", "c"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
-    let collectionB = ["b", "c", "d"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
+    let collectionA = ["a", "b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
+    let collectionB = ["b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
 
     let intersection = Collection.intersect collectionA collectionB
-      |> HashSet.fromSeq
-      |> HashSet.toCollection;
+      |> SortedSet.fromSeq
+      |> SortedSet.toCollection;
 
-    let expected = ["b", "c"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
+    let expected = ["b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
 
     expect (Collection.equals intersection expected) |> toBeEqualToTrue;
-    */
-    ()
   }),
   it "isEmpty" (fun () => {
     expect (Collection.empty |> Collection.isEmpty) |> toBeEqualToTrue;
@@ -116,35 +112,27 @@ let test = describe "Collection" [
     expect (Collection.inRange 0 1 1 |> Collection.isNotEmpty) |> toBeEqualToTrue;
   }),
   it "subtract" (fun () => {
-    /*
-    FIXME:
-    let collectionA = ["a", "b", "c"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
-    let collectionB = ["b", "c", "d"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
+    let collectionA = ["a", "b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
+    let collectionB = ["b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
 
-    let subtracted = collectionB |> Collection.subtractFrom collectionA
-      |> HashSet.fromSeq
-      |> HashSet.toCollection;
+    let subtracted = Collection.subtract collectionA collectionB
+      |> SortedSet.fromSeq
+      |> SortedSet.toCollection;
 
-    let expected = ["a"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
+    let expected = ["a"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
 
     expect (Collection.equals subtracted expected) |> toBeEqualToTrue;
-    */
-    ()
   }),
   it "union" (fun () => {
-    /*
-    FIXME:
-    let collectionA = ["a", "b", "c"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
-    let collectionB = ["b", "c", "d"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
+    let collectionA = ["a", "b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
+    let collectionB = ["b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
 
     let union =  Collection.union collectionA collectionB
-      |> HashSet.fromSeq
-      |> HashSet.toCollection;
+      |> SortedSet.fromSeq
+      |> SortedSet.toCollection;
 
-    let expected = ["a", "b", "c", "d"] |> List.toSeq |> HashSet.fromSeq |> HashSet.toCollection;
+    let expected = ["a", "b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toCollection;
 
     expect (Collection.equals union expected) |> toBeEqualToTrue;
-    */
-    ()
   }),
 ];

@@ -3,12 +3,12 @@ open Comparator;
 open Equality;
 open Functions;
 open Functions.Operators;
+open Hash;
 open Keyed;
 open Option.Operators;
 open Ordering;
 open RedBlackTree;
 open Seq;
-open SetImpl;
 
 type sortedSet 'a = {
   comparator: comparator 'a,
@@ -35,6 +35,27 @@ let balLeft l v r => balLeft t l v r;
 let balRight l v r => balRight t l v r;
 
 let balance l v r => balance t l v r;
+
+let add (x: 'a) ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sortedSet 'a) => {
+  let rec recurse (tree: redBlackTree 'a): (redBlackTree 'a) => switch tree {
+    | E => T R E x E
+    | T color a y b => x === y ? tree : switch (comparator x y) {
+      | LessThan =>
+          let insA = recurse a;
+          color == B ? balance insA y b : T R insA y b
+      | GreaterThan =>
+          let insB = recurse b;
+          color === B ? balance a y insB : T R a y insB
+      | Equal => T color a x b
+    };
+  };
+
+  let newTree = tree |> recurse;
+  newTree === tree ? sortedSet : { comparator, count: count + 1, tree: blacken newTree }
+};
+
+let addAll (seq: seq 'a) (sortedSet: sortedSet 'a): (sortedSet 'a) => seq
+  |> Seq.reduce (fun acc next => acc |> add next) sortedSet;
 
 let alter
     (predicate: 'a => ordering)
@@ -98,51 +119,34 @@ let contains (x: 'a) ({ comparator, tree }: sortedSet 'a): bool => {
   recurse tree;
 };
 
-let count ({ count }: sortedSet 'a) => count;
+let count ({ count }: sortedSet 'a): int => count;
 
 let empty: sortedSet 'a = { comparator: Comparator.structural, count: 0, tree: E };
 
 let emptyWith (comparator: comparator 'a): (sortedSet 'a) => ({ comparator, count: 0, tree: E });
 
-let find (predicate: 'a => ordering) ({ tree }: sortedSet 'a): (option 'a) => {
-  let rec recurse (tree: redBlackTree 'a): (option 'a) => switch tree {
-    | E => None
+let isEmpty ({ count }: sortedSet 'a): bool => count == 0;
+
+let isNotEmpty ({ count }: sortedSet 'a): bool => count != 0;
+
+let search (predicate: 'a => ordering) ({ tree }: sortedSet 'a): 'a => {
+  let rec recurse (tree: redBlackTree 'a): 'a => switch tree {
+    | E => failwith "not found"
     | T _ left value right => switch (predicate value) {
         | LessThan => recurse left
         | GreaterThan => recurse right
-        | _ => Some value
+        | _ => value
       }
   };
 
   tree |> recurse;
 };
 
-let put (x: 'a) ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sortedSet 'a) => {
-  let rec recurse (tree: redBlackTree 'a): (redBlackTree 'a) => switch tree {
-    | E => T R E x E
-    | T color a y b => x === y ? tree : switch (comparator x y) {
-      | LessThan =>
-          let insA = recurse a;
-          color == B ? balance insA y b : T R insA y b
-      | GreaterThan =>
-          let insB = recurse b;
-          color === B ? balance a y insB : T R a y insB
-      | Equal => T color a x b
-    };
-  };
-
-  let newTree = tree |> recurse;
-  newTree === tree ? sortedSet : { comparator, count: count + 1, tree: blacken newTree }
-};
-
-let putAll (seq: seq 'a) (sortedSet: sortedSet 'a): (sortedSet 'a) => seq
-  |> Seq.reduce (fun acc next => acc |> put next) sortedSet;
-
 let fromSeq (seq: seq 'a): (sortedSet 'a) =>
-  empty |> putAll seq;
+  empty |> addAll seq;
 
 let fromSeqWith (comparator: comparator 'a) (seq: seq 'a): (sortedSet 'a) =>
-  emptyWith comparator |> putAll seq;
+  emptyWith comparator |> addAll seq;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ tree }: sortedSet 'a): 'acc =>
   tree |> RedBlackTree.reduce f acc;
@@ -177,4 +181,109 @@ let remove (x: 'a) ({ comparator, count, tree } as sortedSet: sortedSet 'a): (so
 let removeAll ({ comparator }: sortedSet 'a): (sortedSet 'a) =>
   emptyWith comparator;
 
+let search (predicate: 'a => ordering) ({ tree }: sortedSet 'a): 'a => {
+  let rec recurse (tree: redBlackTree 'a): 'a => switch tree {
+    | E => failwith "not found"
+    | T _ left value right => switch (predicate value) {
+        | LessThan => recurse left
+        | GreaterThan => recurse right
+        | _ => value
+      }
+  };
+
+  tree |> recurse;
+};
+
 let toSeq ({ tree }: sortedSet 'a): (seq 'a) => tree |> RedBlackTree.toSeq;
+
+let compareWith (comparator: comparator 'a) (this: sortedSet 'a) (that: sortedSet 'a): ordering =>
+  Seq.compareWith comparator (toSeq this) (toSeq that);
+
+let compare (this: sortedSet 'a) (that: sortedSet 'a): ordering =>
+  compareWith Comparator.structural this that;
+
+let equalsWith (equals: equality 'a) (this: sortedSet 'a) (that: sortedSet 'a): bool =>
+  Seq.equalsWith equals (toSeq this) (toSeq that);
+
+let equals (this: sortedSet 'a) (that: sortedSet 'a): bool =>
+  equalsWith Equality.structural this that;
+
+let every (f: 'a => bool) (set: sortedSet 'a): bool =>
+  set |> toSeq |> Seq.every f;
+
+let find (f: 'a => bool) (set: sortedSet 'a): 'a =>
+  set |> toSeq |> Seq.find f;
+
+let forEach (f: 'a => unit) (set: sortedSet 'a) =>
+  set |> toSeq |> Seq.forEach f;
+
+let hash (set: sortedSet 'a): int =>
+  set |> toSeq |> Seq.hash;
+
+let hashWith (hash: hash 'a) (set: sortedSet 'a): int =>
+  set |> toSeq |> Seq.hashWith hash;
+
+let none (f: 'a => bool) (set: sortedSet 'a): bool =>
+  set |> toSeq |> Seq.none f;
+
+let some (f: 'a => bool) (set: sortedSet 'a): bool =>
+  set |> toSeq |> Seq.some f;
+
+let tryFind (f: 'a => bool) (set: sortedSet 'a): (option 'a) =>
+  set |> toSeq |> Seq.tryFind f;
+
+let trySearch (predicate: 'a => ordering) ({ tree }: sortedSet 'a): (option 'a) => {
+  let rec recurse (tree: redBlackTree 'a): (option 'a) => switch tree {
+    | E => None
+    | T _ left value right => switch (predicate value) {
+        | LessThan => recurse left
+        | GreaterThan => recurse right
+        | _ => Some value
+      }
+  };
+
+  tree |> recurse;
+};
+
+let toCollection (set: sortedSet 'a): (collection 'a) => {
+  contains: fun a => contains a set,
+  count: count set,
+  every: fun f => every f set,
+  find: fun f => find f set,
+  forEach: fun f => forEach f set,
+  none: fun f => none f set,
+  reduce: fun f acc => reduce f acc set,
+  some: fun f => some f set,
+  toSeq: toSeq set,
+  tryFind: fun f => tryFind f set,
+};
+
+let toKeyed (set: sortedSet 'a): (keyed 'a 'a) => {
+  containsWith: fun equals k v => set |> contains k ? equals k v : false,
+  containsKey: fun k => set |> contains k,
+  count: count set,
+  every: fun f => set |> every (fun k => f k k),
+  find: fun f => {
+    let k = set |> find (fun k => f k k);
+    (k, k)
+  },
+  forEach: fun f => set |> forEach (fun k => f k k),
+  get: fun k => set |> contains k ? k : failwith "not found",
+  none: fun f => set |> none (fun k => f k k),
+  reduce: fun f acc => set |> reduce (fun acc k => f acc k k) acc,
+  some: fun f => set |> some (fun k => f k k),
+  toSeq: toSeq set |> Seq.map (fun k => (k, k)),
+  tryFind: fun f => set |> tryFind (fun k => f k k) >>| (fun k => (k, k)),
+  tryGet: fun k => set |> contains k ? Some k : None,
+  values: toSeq set,
+};
+
+/* FIXME: Unimplemented functions */
+let intersect (this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
+  failwith "Not Implemented";
+
+let subtract (this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
+  failwith "Not Implemented";
+
+let union (this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
+  failwith "Not Implemented";
