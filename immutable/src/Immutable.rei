@@ -733,11 +733,15 @@ let module SortedSet: {
   let intersect: (t 'a) => (t 'a) => (t 'a);
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
+  let maxValue: (t 'a) => 'a;
+  let minValue: (t 'a) => 'a;
   let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
+  let removeMax: (t 'a) => (t 'a);
+  let removeMin: (t 'a) => (t 'a);
   let search: ('a => Ordering.t) => (t 'a) => 'a;
   let some: ('a => bool) => (t 'a) => bool;
   let subtract: (t 'a) => (t 'a) => (t 'a);
@@ -745,6 +749,8 @@ let module SortedSet: {
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  let tryMaxValue: (t 'a) => (option 'a);
+  let tryMinValue: (t 'a) => (option 'a);
   let trySearch: ('a => Ordering.t) => (t 'a) => (option 'a);
   let union: (t 'a) => (t 'a) => (t 'a);
 };

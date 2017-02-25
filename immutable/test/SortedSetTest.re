@@ -63,11 +63,37 @@ let test = describe "SortedSet" [
     let setShorter = Seq.inRange 0 (Some (count - 1)) 1 |> SortedSet.fromSeq;
     expect (SortedSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
   }),
+  it "maxValue and tryMaxValue" (fun () => {
+    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq;
+    expect (set |> SortedSet.maxValue) |> toBeEqualToInt (count - 1);
+    expect (set |> SortedSet.tryMaxValue) |> toBeEqualToSomeOfInt (count - 1);
+
+
+    defer (fun () => SortedSet.empty |> SortedSet.maxValue) |> throws;
+    expect (SortedSet.empty |> SortedSet.tryMaxValue) |> toBeEqualToNoneOfInt;
+  }),
+  it "minValue and tryMinValue" (fun () => {
+    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq;
+    expect (set |> SortedSet.minValue) |> toBeEqualToInt 0;
+    expect (set |> SortedSet.tryMinValue) |> toBeEqualToSomeOfInt 0;
+
+
+    defer (fun () => SortedSet.empty |> SortedSet.minValue) |> throws;
+    expect (SortedSet.empty |> SortedSet.tryMinValue) |> toBeEqualToNoneOfInt;
+  }),
   it "reduceRight" (fun () => {
     Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.reduceRight (fun acc i => {
       expect (i < acc) |> toBeEqualToTrue;
       i
     }) count |> ignore;
+  }),
+  it "removeMax" (fun () => {
+    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.removeMax;
+    expect (set |> Set.contains (count - 1)) |> toBeEqualToFalse;
+  }),
+  it "removeMin" (fun () => {
+    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.removeMin;
+    expect (set |> Set.contains 0) |> toBeEqualToFalse;
   }),
   it "search and trySearch" (fun () => {
     let set = Seq.inRange 0 (Some count) 1 |> Set.fromSeq;
