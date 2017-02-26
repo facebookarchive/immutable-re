@@ -384,12 +384,11 @@ let toKeyed (set: sortedSet 'a): (keyed 'a 'a) => {
   values: toSeq set,
 };
 
-/* FIXME: Unimplemented functions */
-let intersect (this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  failwith "Not Implemented";
+let intersect ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
+  Collection.intersect (toCollection this) (toCollection that) |> fromSeqWith comparator;
 
-let subtract (this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  failwith "Not Implemented";
+let subtract ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
+  Collection.subtract (toCollection this) (toCollection that) |> fromSeqWith comparator;
 
-let union (this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  failwith "Not Implemented";
+let union ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
+  Collection.union (toCollection this) (toCollection that) |> fromSeqWith comparator;

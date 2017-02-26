@@ -18,7 +18,6 @@ module type Set = {
   let forEach: ('a => unit) => (t 'a) => unit;
   let fromSeq: (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
-  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let intersect: (t 'a) => (t 'a) => (t 'a);
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
@@ -107,28 +106,24 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     expect (Set.equals setCount setCountPlusOne) |> toBeEqualToFalse;
   }),
   it (sprintf "every with %i elements" count) (fun () => {
-    Seq.concat [Seq.return false, Seq.repeat true (Some (count - 1))]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.every (fun v => v)
+      |> Set.every (fun v => v > (count / 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [Seq.repeat true (Some (count - 1)), Seq.return false]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.every (fun v => v)
+      |> Set.every (fun v => v > 0)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [
-      Seq.repeat true (Some (count / 2 - 1)),
-      Seq.return false,
-      Seq.repeat true (Some (count / 2 - 1)),
-    ]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.every (fun v => v)
+      |> Set.every (fun v => v > (count - 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.repeat true (Some count)
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.every (fun v => v)
+      |> Set.every (fun v => v < count)
       |> expect |> toBeEqualToTrue;
   }),
   it (sprintf "find and tryFind in %i elements" count) (fun () => {
@@ -164,36 +159,32 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     expect (Set.hash col) |> toBeEqualToInt (Set.hash dup);
   }),
   it (sprintf "intersect with %i elements" count) (fun () => {
-    let setA = Seq.inRange 0 (Some (count / 2)) 1 |> Set.fromSeq;
-    let setB = Seq.inRange (count / 2) (Some (count / 2)) 1 |> Set.fromSeq;
+    let setA = Seq.inRange 0 (Some count) 1 |> Set.fromSeq;
+    let setB = Seq.inRange 0 (Some (count / 2)) 2 |> Set.fromSeq;
 
     let intersection = Set.intersect setA setB;
-    let expected = Seq.inRange 0 (Some count) 1 |> Set.fromSeq;
+    let expected = Seq.inRange 0 (Some (count / 2)) 2 |> Set.fromSeq;
     expect (Set.equals intersection expected) |> toBeEqualToTrue;
   }),
   it (sprintf "none with %i elements" count) (fun () => {
-    Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.none (fun v => v)
+      |> Set.none (fun v => v > 0)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.none (fun v => v)
+      |> Set.none (fun v => v > (count / 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [
-      Seq.repeat false (Some (count / 2 - 1)),
-      Seq.return true,
-      Seq.repeat false (Some (count / 2 - 1)),
-    ]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.none (fun v => v)
+      |> Set.none (fun v => v > (count - 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.repeat false (Some count)
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.none (fun v => v)
+      |> Set.none (fun v => v < 0)
       |> expect |> toBeEqualToTrue;
   }),
   it (sprintf "reduce with %i elements" count) (fun () => {
@@ -230,29 +221,26 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     );
   }),
   it (sprintf "some with %i elements" count) (fun () => {
-    Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.some (fun v => v)
+      |> Set.some (fun v => v > 0)
       |> expect |> toBeEqualToTrue;
 
-    Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.some (fun v => v)
+      |> Set.some (fun v => v > (count - 2))
       |> expect |> toBeEqualToTrue;
 
-    Seq.concat [
-      Seq.repeat false (Some (count / 2 - 1)),
-      Seq.return true,
-      Seq.repeat false (Some (count / 2 - 1)),
-    ]
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.some (fun v => v)
+      |> Set.some (fun v => v > (count / 2))
       |> expect |> toBeEqualToTrue;
 
-    Seq.repeat false (Some count)
+    Seq.inRange 0 (Some count) 1
       |> Set.fromSeq
-      |> Set.some (fun v => v)
+      |> Set.some (fun v => v < 0)
       |> expect |> toBeEqualToFalse;
+
   }),
   it (sprintf "subtract with %i elements" count) (fun () => {
     let setA = Seq.inRange 0 (Some count) 1 |> Set.fromSeq;
@@ -276,32 +264,28 @@ let test (count: int) (module Set: Set): (list Test.t) => [
       expect (Collection.count set) |> toBeEqualToInt count;
     }),
     it (sprintf "every with %i elements" count) (fun () => {
-      Seq.concat [Seq.return false, Seq.repeat true (Some (count - 1))]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.every (fun v => v)
+        |> Collection.every (fun v => v > (count / 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.concat [Seq.repeat true (Some (count - 1)), Seq.return false]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.every (fun v => v)
+        |> Collection.every (fun v => v > 0)
         |> expect |> toBeEqualToFalse;
 
-      Seq.concat [
-        Seq.repeat true (Some (count / 2 - 1)),
-        Seq.return false,
-        Seq.repeat true (Some (count / 2 - 1)),
-      ]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.every (fun v => v)
+        |> Collection.every (fun v => v > (count - 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.repeat true (Some count)
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.every (fun v => v)
+        |> Collection.every (fun v => v < count)
         |> expect |> toBeEqualToTrue;
     }),
     it (sprintf "find and tryFind with %i elements" count) (fun () => {
@@ -329,32 +313,28 @@ let test (count: int) (module Set: Set): (list Test.t) => [
       });
     }),
     it (sprintf "none with %i elements" count) (fun () => {
-      Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.none (fun v => v)
+        |> Collection.none (fun v => v > 0)
         |> expect |> toBeEqualToFalse;
 
-      Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.none (fun v => v)
+        |> Collection.none (fun v => v > (count / 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.concat [
-        Seq.repeat false (Some (count / 2 - 1)),
-        Seq.return true,
-        Seq.repeat false (Some (count / 2 - 1)),
-      ]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.none (fun v => v)
+        |> Collection.none (fun v => v > (count - 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.repeat false (Some count)
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.none (fun v => v)
+        |> Collection.none (fun v => v < 0)
         |> expect |> toBeEqualToTrue;
     }),
     it (sprintf "reduce with %i elements" count) (fun () => {
@@ -366,32 +346,28 @@ let test (count: int) (module Set: Set): (list Test.t) => [
         |> toBeEqualToInt count;
     }),
     it (sprintf "some with %i elements" count) (fun () => {
-      Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.some (fun v => v)
+        |> Collection.some (fun v => v > 0)
         |> expect |> toBeEqualToTrue;
 
-      Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.some (fun v => v)
+        |> Collection.some (fun v => v > (count - 2))
         |> expect |> toBeEqualToTrue;
 
-      Seq.concat [
-        Seq.repeat false (Some (count / 2 - 1)),
-        Seq.return true,
-        Seq.repeat false (Some (count / 2 - 1)),
-      ]
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.some (fun v => v)
+        |> Collection.some (fun v => v > (count / 2))
         |> expect |> toBeEqualToTrue;
 
-      Seq.repeat false (Some count)
+      Seq.inRange 0 (Some count) 1
         |> Set.fromSeq
         |> Set.toCollection
-        |> Collection.some (fun v => v)
+        |> Collection.some (fun v => v < 0)
         |> expect |> toBeEqualToFalse;
     }),
     describe "toSeq" [
@@ -436,7 +412,6 @@ let test (count: int) (module Set: Set): (list Test.t) => [
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;
       let loopCount = ref 0;
       keyed |> Keyed.forEach (fun i v => {
-        expect i |> toBeEqualToInt !loopCount;
         expect i |> toBeEqualToInt v;
         loopCount := !loopCount + 1;
       });
@@ -454,7 +429,11 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     }),
     it (sprintf "keys with %i elements" count) (fun () => {
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;
-      expect (keyed |> Keyed.keys |> Collection.toSeq) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+      keyed
+        |> Keyed.keys
+        |> Collection.equals (Collection.inRange 0 count 1)
+        |> expect
+        |> toBeEqualToTrue;
     }),
     it (sprintf "none with %i elements" count) (fun () => {
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;
@@ -479,7 +458,7 @@ let test (count: int) (module Set: Set): (list Test.t) => [
       expect (keyed |> Keyed.tryFind (fun i v => i == v)) |> toBeEqualToSome (fun _ => "") (0, 0);
       expect (keyed |> Keyed.tryFind (fun i v => i != v)) |> toBeEqualToNone (fun _ => "");
     }),
-    it (sprintf "tryFind with %i elements" count) (fun () => {
+    it (sprintf "tryGet with %i elements" count) (fun () => {
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;
       Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
         expect (keyed |> Keyed.tryGet i) |> toBeEqualToSomeOfInt i;
@@ -488,9 +467,15 @@ let test (count: int) (module Set: Set): (list Test.t) => [
       expect (keyed |> Keyed.tryGet (-1)) |> toBeEqualToNoneOfInt;
       expect (keyed |> Keyed.tryGet count) |> toBeEqualToNoneOfInt;
     }),
-    it (sprintf "tryFind with %i elements" count) (fun () => {
+    it (sprintf "values with %i elements" count) (fun () => {
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;
-      expect (keyed |> Keyed.values) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+      keyed
+        |> Keyed.values
+        |> Set.fromSeq
+        |> Set.toCollection
+        |> Collection.equals (Collection.inRange 0 count 1)
+        |> expect
+        |> toBeEqualToTrue;
     }),
   ],
   describe "toSeq" [
@@ -500,9 +485,9 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     let setA = Seq.inRange 1 (Some (count / 2)) 2 |> Set.fromSeq;
     let setB = Seq.inRange 0 (Some (count / 2)) 2 |> Set.fromSeq;
 
-    let subtracted = Set.subtract setA setB;
+    let union = Set.union setA setB;
     let expected = Seq.inRange 0 (Some count) 1 |> Set.fromSeq;
 
-    expect (Set.equals subtracted expected) |> toBeEqualToTrue;
+    expect (Set.equals union expected) |> toBeEqualToTrue;
   }),
 ];

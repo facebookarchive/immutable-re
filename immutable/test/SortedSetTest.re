@@ -1,5 +1,4 @@
 open Immutable;
-open MapTester;
 open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
@@ -23,7 +22,6 @@ let module Set = {
   let forEach = SortedSet.forEach;
   let fromSeq = SortedSet.fromSeq;
   let hash = SortedSet.hash;
-  let hashWith = SortedSet.hashWith;
   let intersect = SortedSet.intersect;
   let isEmpty = SortedSet.isEmpty;
   let isNotEmpty = SortedSet.isNotEmpty;
