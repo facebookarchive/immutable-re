@@ -138,6 +138,26 @@ let map (m: 'k => 'a => 'b) (keyed: keyed 'k 'a): (keyed 'k 'b) => {
 let none (f: 'k => 'v => bool) ({ none }: keyed 'k 'v): bool =>
   none f;
 
+let ofCollection (collection: collection 'a): (keyed 'a 'a) => {
+  containsWith: fun equals k v => collection |> Collection.contains k ? equals k v : false,
+  containsKey: fun k => collection |> Collection.contains k,
+  count: Collection.count collection,
+  every: fun f => collection |> Collection.every (fun k => f k k),
+  find: fun f => {
+    let k = collection |> Collection.find (fun k => f k k);
+    (k, k)
+  },
+  forEach: fun f => collection |> Collection.forEach (fun k => f k k),
+  get: fun k => collection |> Collection.contains k ? k : failwith "not found",
+  none: fun f => collection |> Collection.none (fun k => f k k),
+  reduce: fun f acc => collection |> Collection.reduce (fun acc k => f acc k k) acc,
+  some: fun f => collection |> Collection.some (fun k => f k k),
+  toSeq: toSeq collection |> Seq.map (fun k => (k, k)),
+  tryFind: fun f => collection |> Collection.tryFind (fun k => f k k) >>| (fun k => (k, k)),
+  tryGet: fun k => collection |> Collection.contains k ? Some k : None,
+  values: toSeq collection,
+};
+
 let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ reduce }: keyed 'k 'v): 'acc =>
   reduce f acc;
 

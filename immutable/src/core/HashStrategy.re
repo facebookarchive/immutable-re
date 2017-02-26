@@ -13,21 +13,21 @@ let createWithComparator (hash: hash 'a) (comparator: comparator 'a): (hashStrat
 let createWithEquality (hash: hash 'a) (equality: equality 'a): (hashStrategy 'a) =>
   Equality hash equality;
 
-let identity (): hashStrategy 'a =>
-  Equality (Hash.random ()) Equality.reference;
+let identity: hashStrategy 'a =
+  Equality Hash.structural Equality.reference;
 
-let structuralCompare (): hashStrategy 'a =>
-  Comparator (Hash.random ()) Comparator.structural;
+let structuralCompare: hashStrategy 'a =
+  Comparator Hash.structural Comparator.structural;
 
-let structuralEquality (): hashStrategy 'a =>
-  Equality (Hash.random ()) Equality.structural;
+let structuralEquality: hashStrategy 'a =
+  Equality Hash.structural Equality.structural;
 
 let comparator (strategy: hashStrategy 'a): comparator 'a => switch strategy {
   | Comparator _ comparator => comparator;
   | Equality _ equality => fun x y => equality x y ? Equal : GreaterThan;
 };
 
-let hash (value: 'a) (strategy: hashStrategy 'a): int => switch strategy {
+let hash (strategy: hashStrategy 'a): (hash 'a) => switch strategy {
   | Comparator hash _
-  | Equality hash _ => hash value;
+  | Equality hash _ => hash;
 };

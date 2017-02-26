@@ -15,7 +15,7 @@ let module Set = {
   let addAll = SortedSet.addAll;
   let contains = SortedSet.contains;
   let count = SortedSet.count;
-  let empty = SortedSet.empty;
+  let empty = fun () => SortedSet.empty;
   let equals = SortedSet.equals;
   let every = SortedSet.every;
   let find = SortedSet.find;

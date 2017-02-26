@@ -8,8 +8,8 @@ ReUnit.run (describe "Immutable.re" [
   DequeTest.test,
   FunctionsTest.test,/*
   HashMapTest.test,
-  HashMultisetTest.test,
-  HashSetTest.test,
+  HashMultisetTest.test,*/
+  HashSetTest.test,/*
   HashSetMultimapTest.test,
   IntMapTest.test,*/
   KeyedTest.test,

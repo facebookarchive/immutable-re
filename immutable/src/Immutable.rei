@@ -106,7 +106,7 @@ let module Seq: {
   let zipLongest3: (t 'a) => (t 'b) => (t 'c) => (t (option 'a, option 'b, option 'c));
 };
 
-let module Collection: {
+let module rec Collection: {
   type t 'a;
 
   let contains: 'a => (t 'a) => bool;
@@ -126,12 +126,13 @@ let module Collection: {
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let some: ('a => bool) => (t 'a) => bool;
   let subtract: (t 'a) => (t 'a) => (Seq.t 'a);
+  let toKeyed: (t 'a) => (Keyed.t 'a 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let union: (t 'a) => (t 'a) => (Seq.t 'a);
-};
+}
 
-let module Keyed: {
+and Keyed: {
   type t 'k 'v;
 
   let contains: 'k => 'v => (t 'k 'v) => bool;
@@ -167,9 +168,9 @@ let module HashStrategy: {
 
   let createWithComparator: (Hash.t 'a) => (Comparator.t 'a) => (t 'a);
   let createWithEquality: (Hash.t 'a) => (Equality.t 'a) => (t 'a);
-  let identity: unit => t 'a;
-  let structuralCompare: unit => t 'a;
-  let structuralEquality: unit => t 'a;
+  let identity: t 'a;
+  let structuralCompare: t 'a;
+  let structuralEquality: t 'a;
 };
 /*
 let module rec BiMap: {
@@ -466,14 +467,16 @@ and TransientHashMultiset: {
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
   let set: 'a => int => (t 'a) => (t 'a);
-};
+};*/
 
 let module rec HashSet: {
   type t 'a;
 
+  let add: 'a => (t 'a) => (t 'a);
+  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
-  let empty: unit => t 'a;
+  let empty: t 'a;
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
   let every: ('a => bool) => (t 'a) => bool;
@@ -487,8 +490,6 @@ let module rec HashSet: {
   let isNotEmpty: t 'a => bool;
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   let none: ('a => bool) => (t 'a) => bool;
-  let put: 'a => (t 'a) => (t 'a);
-  let putAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
@@ -504,17 +505,17 @@ let module rec HashSet: {
 and TransientHashSet: {
   type t 'a;
 
+  let add: 'a => (t 'a) => (t 'a);
+  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let persist: (t 'a) => (HashSet.t 'a);
-  let put: 'a => (t 'a) => (t 'a);
-  let putAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
 };
-
+/*
 let module HashSetMultimap: {
   type t 'k 'v;
 

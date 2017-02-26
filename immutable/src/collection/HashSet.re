@@ -1,381 +1,337 @@
 open Collection;
-open Equality;
+open Comparator;
 open EqualitySet;
-open Functions;
-open Functions.Operators;
+open Hash;
 open HashStrategy;
-open IntMap;
 open Keyed;
-open Option;
-open Option.Operators;
 open Ordering;
-open Pair;
 open Seq;
-open SetImpl;
 open SortedSet;
 open Transient;
 
-type hashNode 'a =
-  | EqualitySet (equalitySet 'a)
-  | SortedSet (sortedSet 'a)
-  | Entry 'a;
+type bitmapTrieSet 'a =
+  | Level int32 (array (bitmapTrieSet 'a)) (option owner)
+  | SortedSetCollision int (sortedSet 'a)
+  | EqualitySetCollision int (equalitySet 'a)
+  | Entry int 'a
+  | Empty;
 
-type trieSet 'a = intMap (hashNode 'a);
+let module BitmapTrieSet = {
+  let rec add
+      (hashStrategy: hashStrategy 'a)
+      (updateLevelNode: int => (bitmapTrieSet 'a) => (bitmapTrieSet 'a) => (bitmapTrieSet 'a))
+      (owner: option owner)
+      (depth: int)
+      (hash: int)
+      (value: 'a)
+      (set: bitmapTrieSet 'a): (bitmapTrieSet 'a) => switch set {
+    | Level bitmap nodes _ =>
+        let bit = BitmapTrie.bitPos hash depth;
+        let index = BitmapTrie.index bitmap bit;
+
+        if (BitmapTrie.containsNode bitmap bit) {
+          let childNode = nodes.(index);
+          let newChildNode = childNode |> add hashStrategy updateLevelNode owner (depth + 1) hash value;
+
+          if (childNode === newChildNode) set
+          else (updateLevelNode index newChildNode set)
+        } else {
+          let entry = Entry hash value;
+          let nodes = nodes |> CopyOnWriteArray.insertAt index entry;
+          Level (Int32.logor bitmap bit) nodes owner;
+        }
+    | EqualitySetCollision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> EqualitySet.add value;
+        if (newEntrySet === entrySet) set else (EqualitySetCollision entryHash newEntrySet);
+    | EqualitySetCollision entryHash entrySet =>
+        let bitmap = BitmapTrie.bitPos entryHash depth;
+        Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
+    | SortedSetCollision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> SortedSet.add value;
+        if (newEntrySet === entrySet) set else (SortedSetCollision entryHash newEntrySet);
+    | SortedSetCollision entryHash entrySet =>
+        let bitmap = BitmapTrie.bitPos entryHash depth;
+        Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
+    | Entry entryHash entryValue when hash == entryHash =>
+        if ((HashStrategy.comparator hashStrategy value entryValue) === Equal) set
+        else (switch hashStrategy {
+          | Comparator _ comparator =>
+              let set = SortedSet.emptyWith comparator
+                |> SortedSet.add entryValue
+                |> SortedSet.add value;
+              SortedSetCollision entryHash set;
+          | Equality _ equals =>
+            let set = EqualitySet.emptyWith equals
+              |> EqualitySet.add entryValue
+              |> EqualitySet.add value;
+            EqualitySetCollision entryHash set;
+        });
+    | Entry entryHash entryValue =>
+        let bitmap = BitmapTrie.bitPos entryHash depth;
+        Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
+    | Empty => Entry hash value;
+  };
+
+  let rec contains
+      (hashStrategy: hashStrategy 'a)
+      (depth: int)
+      (hash: int)
+      (value: 'a)
+      (set: bitmapTrieSet 'a): bool => switch set {
+    | Level bitmap nodes _ =>
+        let bit = BitmapTrie.bitPos hash depth;
+        let index = BitmapTrie.index bitmap bit;
+
+        (BitmapTrie.containsNode bitmap bit) &&
+        (contains hashStrategy (depth + 1) hash value nodes.(index));
+    | EqualitySetCollision entryHash entrySet =>
+        (hash == entryHash) && (EqualitySet.contains value entrySet);
+    | SortedSetCollision entryHash entrySet =>
+        (hash == entryHash) && (SortedSet.contains value entrySet);
+    | Entry entryHash entryValue =>
+        (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Equal);
+    | Empty => false;
+  };
+
+  let rec remove
+      (hashStrategy: hashStrategy 'a)
+      (updateLevelNode: int => (bitmapTrieSet 'a) => (bitmapTrieSet 'a) => (bitmapTrieSet 'a))
+      (owner: option owner)
+      (depth: int)
+      (hash: int)
+      (value: 'a)
+      (set: bitmapTrieSet 'a): (bitmapTrieSet 'a) => switch set {
+    | Level bitmap nodes _ =>
+        let bit = BitmapTrie.bitPos hash depth;
+        let index = BitmapTrie.index bitmap bit;
+
+        if (BitmapTrie.containsNode bitmap bit) {
+          let childNode = nodes.(index);
+          let newChildNode = childNode |> remove hashStrategy updateLevelNode owner (depth + 1) hash value;
+
+          if (newChildNode === childNode) set
+          else if (newChildNode === Empty) {
+            let nodes = nodes |> CopyOnWriteArray.removeAt index;
+
+            if (CopyOnWriteArray.count nodes > 0) (Level (Int32.logxor bitmap bit) nodes owner)
+            else Empty;
+          } else (updateLevelNode index newChildNode set);
+        } else set;
+    | EqualitySetCollision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> EqualitySet.remove value;
+
+        if (newEntrySet === entrySet) set
+        else if ((EqualitySet.count newEntrySet) == 1) {
+          let entryValue = entrySet |> EqualitySet.toSeq |> Seq.first;
+          (Entry entryHash entryValue)
+        } else (EqualitySetCollision entryHash newEntrySet);
+    | SortedSetCollision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> SortedSet.remove value;
+
+        if (newEntrySet === entrySet) set
+        else if ((SortedSet.count newEntrySet) == 1) {
+          let entryValue = SortedSet.minValue newEntrySet;
+          (Entry entryHash entryValue)
+        } else (SortedSetCollision entryHash newEntrySet);
+    | Entry entryHash entryValue when (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Equal) =>
+        Empty;
+    | _ => set
+  };
+
+  let rec toSeq (set: bitmapTrieSet 'a): (seq 'a) => switch set {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
+    | SortedSetCollision _ entrySet => SortedSet.toSeq entrySet;
+    | EqualitySetCollision _ entrySet => EqualitySet.toSeq entrySet;
+    | Entry _ entryValue => Seq.return entryValue;
+    | Empty => Seq.empty;
+  };
+};
+
 type hashSet 'a = {
   count: int,
-  root: trieSet 'a,
+  root: bitmapTrieSet 'a,
   strategy: hashStrategy 'a,
 };
 
-type transientTrieSet 'a = transientIntMap (hashNode 'a);
-type transientHashSet 'a = {
-  mutable count: int,
-  root: transientTrieSet 'a,
-  strategy: hashStrategy 'a,
+let updateLevelNodePersistent
+    (index: int)
+    (childNode: bitmapTrieSet 'a)
+    ((Level bitmap nodes _): (bitmapTrieSet 'a)): (bitmapTrieSet 'a) =>
+  Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
+
+let add (value: 'a) ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
+  let hash = HashStrategy.hash strategy value;
+  let newRoot = root |> BitmapTrieSet.add strategy updateLevelNodePersistent None 0 hash value;
+  if (newRoot === root) set
+  else { count: count + 1, root: newRoot, strategy };
 };
 
-let module HashNode = {
-  let alter
-      (strategy: hashStrategy 'a)
-      (predicate: 'a => ordering)
-      (f: option 'a => option 'a)
-      (maybeHashNode: option (hashNode 'a)): (option (hashNode 'a)) => switch maybeHashNode {
-    | Some (EqualitySet equalitySet) =>
-        let newEqualitySet = equalitySet |> EqualitySet.alter predicate f;
-
-        equalitySet === newEqualitySet ? maybeHashNode :
-        (EqualitySet.count newEqualitySet) == 1 ? newEqualitySet
-          |> EqualitySet.toSeq
-          |> Seq.tryFirst
-          >>| (fun entry => Entry entry) :
-        Some (EqualitySet newEqualitySet)
-    | Some (SortedSet sortedSet) =>
-        let newSortedSet = sortedSet |> SortedSet.alter predicate f;
-
-        sortedSet === newSortedSet ? maybeHashNode :
-        (SortedSet.count newSortedSet) == 1 ? newSortedSet
-          |> SortedSet.toSeq
-          |> Seq.tryFirst
-          >>| (fun entry => Entry entry) :
-        Some (SortedSet newSortedSet)
-    | Some (Entry value) when predicate value === Equal => (f @@ Option.return @@ value) >>= fun newValue =>
-        value === newValue ? maybeHashNode : Some (Entry newValue)
-    | Some (Entry value) => (f None) >>= fun newValue => switch strategy {
-        | Equality _ equality =>
-            let newEntrySet = EqualitySet.emptyWith equality
-              |> EqualitySet.put value
-              |> EqualitySet.put newValue;
-            Some (EqualitySet newEntrySet)
-        | Comparator _ comparator =>
-            let newEntrySet = SortedSet.emptyWith comparator
-              |> SortedSet.put value
-              |> SortedSet.put newValue;
-            Some (SortedSet newEntrySet)
-      }
-    | None => f None >>| (fun value => Entry value)
-  };
-
-  let put
-      (strategy: hashStrategy 'a)
-      (newValue: 'a)
-      (maybeHashNode: option (hashNode 'a)): (option (hashNode 'a)) => switch (maybeHashNode, strategy) {
-    | (Some (EqualitySet equalitySet), _) =>
-        let newEqualitySet = equalitySet |> EqualitySet.put newValue;
-        equalitySet === newEqualitySet ? maybeHashNode : Some (EqualitySet newEqualitySet)
-    | (Some (SortedSet sortedSet), _) =>
-        let newSortedSet = sortedSet |> SortedSet.put newValue;
-        sortedSet === newSortedSet ? maybeHashNode : Some (SortedSet newSortedSet)
-    | (Some (Entry value), _) when value === newValue => maybeHashNode
-    | (Some (Entry value), _) when (HashStrategy.comparator strategy value newValue) === Equal =>
-        Some (Entry newValue)
-    | (Some (Entry value), Equality _ equality) =>
-        let newEntrySet = EqualitySet.emptyWith equality
-          |> EqualitySet.put value
-          |> EqualitySet.put newValue;
-        Some (EqualitySet newEntrySet)
-    | (Some (Entry value), Comparator _ comparator) =>
-        let newEntrySet = SortedSet.emptyWith comparator
-          |> SortedSet.put value
-          |> SortedSet.put newValue;
-        Some (SortedSet newEntrySet)
-    | (None, _) => Some (Entry newValue)
-  };
-
-  let remove
-      (strategy: hashStrategy 'a)
-      (value: 'a)
-      (maybeHashNode: option (hashNode 'a)): (option (hashNode 'a)) => switch maybeHashNode {
-    | Some (EqualitySet equalitySet) =>
-        let newEqualitySet = equalitySet |> EqualitySet.remove value;
-
-        equalitySet === newEqualitySet ? maybeHashNode :
-        (EqualitySet.count newEqualitySet) == 1 ? newEqualitySet
-          |> EqualitySet.toSeq
-          |> Seq.tryFirst
-          >>| (fun entry => Entry entry) :
-        Some (EqualitySet newEqualitySet)
-    | Some (SortedSet sortedSet) =>
-        let newSortedSet = sortedSet |> SortedSet.remove value;
-
-        sortedSet === newSortedSet ? maybeHashNode :
-        (SortedSet.count newSortedSet) == 1 ? newSortedSet
-          |> SortedSet.toSeq
-          |> Seq.tryFirst
-          >>| (fun entry => Entry entry) :
-        Some (SortedSet newSortedSet)
-    | Some (Entry entryValue) when (HashStrategy.comparator strategy entryValue value) === Equal => None
-    | _ => maybeHashNode
-  };
-
-  let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (hashNode: hashNode 'a): 'acc => switch hashNode {
-    | EqualitySet equalitySet => equalitySet |> EqualitySet.reduce f acc
-    | SortedSet sortedSet => sortedSet |> SortedSet.reduce f acc
-    | Entry entry => f acc entry
-  };
-
-  let toSeq (hashNode: hashNode 'a): (seq 'a) => switch hashNode {
-    | EqualitySet equalitySet => equalitySet |> EqualitySet.toSeq
-    | SortedSet sortedSet => sortedSet |> SortedSet.toSeq
-    | Entry entry => Seq.return entry
-  };
+let contains (value: 'a) ({ root, strategy }: hashSet 'a): bool => {
+  let hash = HashStrategy.hash strategy value;
+  root |> BitmapTrieSet.contains strategy 0 hash value;
 };
 
-let module HashSetImpl = {
-  module type HashSetBase = {
-    type set 'a;
-    type root 'a;
+let count ({ count }: hashSet 'a): int => count;
 
-    let alterRoot: int => (option (hashNode 'a) => option (hashNode 'a)) => (root 'a) => (root 'a);
-    let count: set 'a => int;
-    let root: set 'a => (root 'a);
-    let strategy: set 'a => hashStrategy 'a;
-    let tryGet: int => (root 'a) => option (hashNode 'a);
-    let updateWith: (root 'a) => int => (hashStrategy 'a) => (set 'a) => set 'a;
-  };
-
-  module type S = {
-    type set 'a;
-    type root 'a;
-
-    let alter: int => ('a => ordering) => (option 'a => option 'a) => (set 'a) => (set 'a);
-    let count: (set 'a) => int;
-    let contains: 'a => (set 'a) => bool;
-    let find: int => ('a => ordering) => (set 'a) => (option 'a);
-    let put: 'a => (set 'a) => (set 'a);
-    let putAll: (seq 'a) => (set 'a) => (set 'a);
-    let remove: 'a => (set 'a) => (set 'a);
-  };
-
-  let module Make: (
-    X: HashSetBase
-  ) => S with type set 'a = X.set 'a and type root 'a = X.root 'a = fun (X: HashSetBase) => {
-    type set 'a = X.set 'a;
-    type root 'a = X.root 'a;
-
-    let alterImpl
-        (alter: option (hashNode 'a) => option (hashNode 'a))
-        (hash: int)
-        (set: set 'a): (set 'a) => {
-      let count = X.count set;
-      let newCount = ref count;
-      let strategy = set |> X.strategy;
-
-      let alterHashNode (maybeHashNode: option (hashNode 'a)): option (hashNode 'a) => {
-        let newHashNode = alter maybeHashNode;
-
-        /* I'm not proud of this but it works */
-        newCount := switch (maybeHashNode, newHashNode) {
-          | (None, Some (Entry _))
-          | (Some (Entry _), Some (EqualitySet _))
-          | (Some (Entry _), Some (SortedSet _)) =>
-              count + 1
-
-          | (Some (EqualitySet _), Some (Entry _))
-          | (Some (SortedSet _), Some (Entry _))
-          | (Some (Entry _), None) =>
-              count - 1
-
-          | (Some (EqualitySet oldEqualitySet), Some (EqualitySet newEqualitySet)) =>
-              count + (newEqualitySet |> EqualitySet.count) - (oldEqualitySet |> EqualitySet.count)
-          | (Some (SortedSet oldSortedSet), Some (SortedSet newSortedSet)) =>
-              count + (newSortedSet |> SortedSet.count) - (oldSortedSet |> SortedSet.count)
-
-          | (Some (Entry _), Some (Entry _))
-          | (None, None) =>
-              count
-
-          | _ => failwith "Invalid state"
-        };
-
-        newHashNode
-      };
-
-      let root = set |> X.root;
-      let newRoot = root |> X.alterRoot hash alterHashNode;
-      let newCount = !newCount;
-
-      (root === newRoot) && (count == newCount) ? set : set |> X.updateWith newRoot newCount strategy;
-    };
-
-    let alter
-        (hash: int)
-        (predicate: 'a => ordering)
-        (f: option 'a => option 'a)
-        (set: set 'a): (set 'a) => {
-      let strategy = set |> X.strategy;
-      alterImpl (HashNode.alter strategy predicate f) hash set
-    };
-
-    let count = X.count;
-
-    let find
-        (hash: int)
-        (predicate: 'a => ordering)
-        (set: set 'a): (option 'a) => set
-      |> X.root
-      |> X.tryGet hash >>= fun
-        | EqualitySet equalitySet => equalitySet |> EqualitySet.find predicate
-        | SortedSet sortedSet => sortedSet |> SortedSet.find predicate
-        | Entry entry => (predicate entry) === Equal ? Some entry : None;
-
-    let contains (entry: 'a) (set: set 'a): bool => {
-      let strategy = X.strategy set;
-      let predicate = HashStrategy.comparator strategy entry;
-      let hash = strategy |> HashStrategy.hash entry;
-
-      set
-      |> X.root
-      |> X.tryGet hash >>| (fun
-        | EqualitySet equalitySet => equalitySet |> EqualitySet.contains entry
-        | SortedSet sortedSet => sortedSet |> SortedSet.contains entry
-        | Entry entry => (predicate entry) === Equal ? true : false
-      ) |? false;
-    };
-
-    let put (entry: 'a) (set: set 'a): (set 'a) => {
-      let strategy = set |> X.strategy;
-      let hash = strategy |> HashStrategy.hash entry;
-
-      alterImpl (HashNode.put strategy entry) hash set
-    };
-
-    let putAll (seq: seq 'a) (set: set 'a): (set 'a) => seq
-      |> Seq.reduce (fun acc next => acc |> put next) set;
-
-    let remove (entry: 'a) (set: set 'a): (set 'a) => {
-      let strategy = set |> X.strategy;
-      let hash = strategy |> HashStrategy.hash entry;
-
-      alterImpl (HashNode.remove strategy entry) hash set
-    };
-  };
+let empty: (hashSet 'a) = {
+  count: 0,
+  root: Empty,
+  strategy: HashStrategy.structuralCompare,
 };
 
-let module PersistentHashSetImpl = HashSetImpl.Make {
-  type set 'a = hashSet 'a;
-  type root 'a = trieSet 'a;
-
-  let alterRoot = IntMap.alter;
-  let count ({ count }: hashSet 'a): int => count;
-  let create = create;
-  let root ({ root }: hashSet 'a): (root 'a) => root;
-  let strategy ({ strategy }: hashSet 'a): (hashStrategy 'a) => strategy;
-  let tryGet = IntMap.tryGet;
-  let updateWith
-      (root: trieSet 'a)
-      (count: int)
-      (strategy: hashStrategy 'a)
-      (set: hashSet 'a): hashSet 'a =>
-    { root, count, strategy };
+let emptyWith (strategy: hashStrategy 'a): (hashSet 'a) => {
+  count: 0,
+  root: Empty,
+  strategy,
 };
 
-let module TransientHashSetImpl = HashSetImpl.Make {
-  type set 'a = transientHashSet 'a;
-  type root 'a = transientTrieSet 'a;
+let isEmpty ({ count }: hashSet 'a): bool => count == 0;
 
-  let alterRoot = TransientIntMap.alter;
-  let count ({ count }: transientHashSet 'a): int => count;
-  let create = create;
-  let root ({ root }: set 'a): (root 'a) => root;
-  let strategy ({ strategy }: transientHashSet 'a): (hashStrategy 'a) => strategy;
-  let tryGet = TransientIntMap.tryGet;
-  let updateWith
-      (root: transientTrieSet 'a)
-      (count: int)
-      (strategy: hashStrategy 'a)
-      (set: transientHashSet 'a): transientHashSet 'a => {
-    set.count = count;
-    set;
-  };
+let isNotEmpty ({ count }: hashSet 'a): bool => count != 0;
+
+let remove (value: 'a) ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
+  let hash = HashStrategy.hash strategy value;
+  let newRoot = root |> BitmapTrieSet.remove strategy updateLevelNodePersistent None 0 hash value;
+  if (newRoot === root) set
+  else { count: count - 1, root: newRoot, strategy };
 };
+
+let removeAll ({ strategy }: hashSet 'a): (hashSet 'a) =>
+  emptyWith strategy;
+
+let toSeq ({ root }: hashSet 'a): (seq 'a) => root |> BitmapTrieSet.toSeq;
+
+let every (f: 'a => bool) (set: hashSet 'a): bool =>
+  set |> toSeq |> Seq.every f;
+
+let find (f: 'a => bool) (set: hashSet 'a): 'a =>
+  set |> toSeq |> Seq.find f;
+
+let forEach (f: 'a => unit) (set: hashSet 'a): unit =>
+  set |> toSeq |> Seq.forEach f;
+
+let none (f: 'a => bool) (set: hashSet 'a): bool =>
+  set |> toSeq |> Seq.none f;
+
+let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (set: hashSet 'a): 'acc =>
+  set |> toSeq |> Seq.reduce f acc;
+
+let some (f: 'a => bool) (set: hashSet 'a): bool =>
+  set |> toSeq |> Seq.some f;
+
+let tryFind (f: 'a => bool) (set: hashSet 'a): (option 'a) =>
+  set |> toSeq |> Seq.tryFind f;
+
+let toCollection (set: hashSet 'a): (collection 'a) => {
+  contains: fun v => contains v set,
+  count: count set,
+  every: fun f => set |> every f,
+  find: fun f => set |> find f,
+  forEach: fun f => set |> forEach f,
+  none: fun f => set |> none f,
+  reduce: fun f acc => set |> reduce f acc,
+  some: fun f => set |> some f,
+  toSeq: toSeq set,
+  tryFind: fun f => set |> tryFind f,
+};
+
+let equals (this: hashSet 'a) (that: hashSet 'a): bool =>
+  Collection.equals (toCollection this) (toCollection that);
+
+let hash ({ strategy } as set: hashSet 'a): int =>
+  set |> toCollection |> Collection.hashWith (HashStrategy.hash strategy);
+
+let toKeyed (set: hashSet 'a): (keyed 'a 'a) =>
+  set |> toCollection |> Keyed.ofCollection;
+
+type transientHashSet 'a = transient (hashSet 'a);
 
 let module TransientHashSet = {
-  let alter = TransientHashSetImpl.alter;
-  let count = TransientHashSetImpl.count;
-  let contains = TransientHashSetImpl.contains;
-  let find = TransientHashSetImpl.find;
-
-  let persist ({ count, root, strategy }: transientHashSet 'a): (hashSet 'a) => {
-    count,
-    root: root |> TransientIntMap.persist,
-    strategy
+  let updateLevelNodeTransient
+      (owner: owner)
+      (index: int)
+      (childNode: bitmapTrieSet 'a)
+      ((Level bitmap nodes nodeOwner) as node: (bitmapTrieSet 'a)): (bitmapTrieSet 'a) => switch nodeOwner {
+    | Some nodeOwner when nodeOwner === owner =>
+        nodes.(index) = childNode;
+        node
+    | _ => Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
   };
 
-  let put = TransientHashSetImpl.put;
-  let putAll = TransientHashSetImpl.putAll;
-  let remove = TransientHashSetImpl.remove;
-  let removeAll ({ root } as transient: transientHashSet 'a): (transientHashSet 'a) => {
-    root |> TransientIntMap.removeAll |> ignore;
-    transient.count = 0;
-    transient;
-  };
+  let add (value: 'a) (transient: transientHashSet 'a): (transientHashSet 'a) =>
+    transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
+      let hash = HashStrategy.hash strategy value;
+      if (set |> contains value) set
+      else {
+        let newRoot = root |> BitmapTrieSet.add strategy (updateLevelNodeTransient owner) (Some owner) 0 hash value;
+        { count: count + 1, root: newRoot, strategy };
+      }
+    });
+
+  let addAll (seq: seq 'a) (transient: transientHashSet 'a): (transientHashSet 'a) =>
+    transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
+      let newCount = ref count;
+
+      let newRoot = seq |> Seq.reduce (fun acc value => {
+        let hash = HashStrategy.hash strategy value;
+
+        if (acc |> BitmapTrieSet.contains strategy 0 hash value) acc
+        else  {
+          let newRoot = acc
+            |> BitmapTrieSet.add strategy (updateLevelNodeTransient owner) (Some owner) 0 hash value;
+          newCount := !newCount + 1;
+          newRoot
+        }
+      }) root;
+
+      if (!newCount == count) set
+      else { count: !newCount, root: newRoot, strategy };
+    });
+
+  let contains (value: 'a) (transient: transientHashSet 'a): bool =>
+    transient |> Transient.get |> contains value;
+
+  let count (transient: transientHashSet 'a): int =>
+    transient |> Transient.get |> count;
+
+  let isEmpty (transient: transientHashSet 'a): bool =>
+    transient |> Transient.get |> isEmpty;
+
+  let isNotEmpty (transient: transientHashSet 'a): bool =>
+    transient |> Transient.get |> isNotEmpty;
+
+  let persist (transient: transientHashSet 'a): (hashSet 'a) =>
+    transient |> Transient.persist;
+
+  let remove (value: 'a) (transient: transientHashSet 'a): (transientHashSet 'a) =>
+    transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
+      let hash = HashStrategy.hash strategy value;
+      let newRoot = root |> BitmapTrieSet.remove strategy (updateLevelNodeTransient owner) None 0 hash value;
+      if (newRoot === root) set
+      else { count: count - 1, root: newRoot, strategy };
+    });
+
+  let removeAll  (transient: transientHashSet 'a): (transientHashSet 'a) =>
+    transient |> Transient.update (fun owner ({ strategy }) => emptyWith strategy);
 };
 
-let alter = PersistentHashSetImpl.alter;
-let count = PersistentHashSetImpl.count;
-let contains = PersistentHashSetImpl.contains;
+let mutate (set: hashSet 'a): (transientHashSet 'a) =>
+  Transient.create set;
 
-let empty (): hashSet 'a => {
-  count: 0,
-  root: IntMap.empty,
-  strategy: HashStrategy.structuralCompare (),
-};
-
-let emptyWith (strategy: hashStrategy 'a): (hashSet 'a) => ({
-  count: 0,
-  root: IntMap.empty,
-  strategy,
-});
-
-let find = PersistentHashSetImpl.find;
-
-let mutate ({ count, root, strategy }: hashSet 'a): (transientHashSet 'a) => {
-  count,
-  root: root |> IntMap.mutate,
-  strategy,
-};
-
-let putAll (seq: seq 'a) (set: hashSet 'a): (hashSet 'a) => set
-  |> mutate
-  |> TransientHashSet.putAll seq
-  |> TransientHashSet.persist;
+let addAll (seq: seq 'a) (set: hashSet 'a): (hashSet 'a) =>
+  set |> mutate |> TransientHashSet.addAll seq |> TransientHashSet.persist;
 
 let fromSeq (seq: seq 'a): (hashSet 'a) =>
-  empty () |> putAll seq;
+  empty |> addAll seq;
 
 let fromSeqWith (strategy: hashStrategy 'a) (seq: seq 'a): (hashSet 'a) =>
-  emptyWith strategy |> putAll seq;
+  emptyWith strategy |> addAll seq;
 
-let put = PersistentHashSetImpl.put;
+let intersect ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
+  Collection.intersect (toCollection this) (toCollection that) |> fromSeqWith strategy;
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ root }: hashSet 'a): 'acc => {
-  let reducer acc _ hashNode => hashNode |> HashNode.reduce f acc;
-  root |> IntMap.reduceWithKey reducer acc
-};
+let subtract ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
+  Collection.subtract (toCollection this) (toCollection that) |> fromSeqWith strategy;
 
-let remove = PersistentHashSetImpl.remove;
-
-let removeAll ({ strategy }: hashSet 'a): (hashSet 'a) => emptyWith strategy;
-
-let toSeq ({ root }: hashSet 'a): (seq 'a) => root |> IntMap.toSeq
-  |> Seq.flatMap (fun (_, hashNode) => hashNode |> HashNode.toSeq);
+let union ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
+  Collection.union (toCollection this) (toCollection that) |> fromSeqWith strategy;

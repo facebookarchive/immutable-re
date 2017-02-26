@@ -1,7 +1,7 @@
 open Immutable;
 open ReUnit;
 
-[100000, 100000, 100000, 100000, 100000, 100000] |> List.toSeq |> Seq.forEach(fun i => {
+[500000, 500000, 500000, 500000, 500000, 500000] |> List.toSeq |> Seq.forEach(fun i => {
   ReUnit.run (SetPerfTester.test i);
   print_newline ();
 });

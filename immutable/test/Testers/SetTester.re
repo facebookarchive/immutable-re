@@ -11,7 +11,7 @@ module type Set = {
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
-  let empty: t 'a;
+  let empty: unit => t 'a;
   let equals: (t 'a) => (t 'a) => bool;
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => 'a;
@@ -34,6 +34,9 @@ module type Set = {
   let union: (t 'a) => (t 'a) => (t 'a);
 };
 
+let intTupleToString (i, v) =>
+  "(" ^ (string_of_int i) ^ "," ^ (string_of_int v) ^ ")";
+
 let test (count: int) (module Set: Set): (list Test.t) => [
   it (sprintf "add %i elements" count) (fun () => {
     let src = Seq.inRange 0 (Some count) 1 |> Seq.map (Hash.random ());
@@ -41,7 +44,7 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     let (_, mapOfSizeN) = src
       |> Seq.scan
         (fun (hash, acc) i => (i, acc |> Set.add i))
-        (0, Set.empty)
+        (0, Set.empty ())
       |> Seq.doOnNext(fun (i, acc) =>
         expect (acc |> Set.contains i) |> toBeEqualToTrue
       )
@@ -64,7 +67,7 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     expect (Set.count shouldBeEmpty) |> toBeEqualToInt 0;
   }),
   it (sprintf "remove %i elements" count) (fun () => {
-    let empty = Set.empty;
+    let empty = Set.empty ();
 
     expect (Set.isNotEmpty empty) |> toBeEqualToFalse;
     expect (Set.isEmpty empty) |> toBeEqualToTrue;
@@ -405,7 +408,9 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     }),
     it (sprintf "find with %i elements" count) (fun () => {
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;
-      expect (keyed |> Keyed.find (fun i v => i == v)) |> toBeEqualTo (fun _ => "") (0, 0);
+      expect (keyed |> Keyed.find (fun i v =>
+        (i == (count - 1)) && (v == (count - 1))
+      )) |> toBeEqualTo intTupleToString (count - 1, count - 1);
       defer (fun () => keyed |> Keyed.find (fun i v => i != v)) |> throws;
     }),
     it (sprintf "forEach with %i elements" count) (fun () => {
@@ -455,8 +460,10 @@ let test (count: int) (module Set: Set): (list Test.t) => [
     ],
     it (sprintf "tryFind with %i elements" count) (fun () => {
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;
-      expect (keyed |> Keyed.tryFind (fun i v => i == v)) |> toBeEqualToSome (fun _ => "") (0, 0);
-      expect (keyed |> Keyed.tryFind (fun i v => i != v)) |> toBeEqualToNone (fun _ => "");
+      expect (keyed |> Keyed.tryFind (fun i v =>
+        (i == (count - 1)) && (v == (count - 1))
+      )) |> toBeEqualToSome intTupleToString (count - 1, count - 1);
+      expect (keyed |> Keyed.tryFind (fun i v => i != v)) |> toBeEqualToNone intTupleToString;
     }),
     it (sprintf "tryGet with %i elements" count) (fun () => {
       let keyed = Seq.inRange 0 (Some count) 1 |> Set.fromSeq |> Set.toKeyed;

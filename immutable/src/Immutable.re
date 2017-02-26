@@ -2,9 +2,9 @@
 open Deque;
 open Equality;
 /*open HashMap;
-open HashMultiset;
+open HashMultiset;*/
 open HashSet;
-open IntMap;*/
+/*open IntMap;*/
 open Vector;
 
 let isEmpty (count: 'collection => 'int) (collection: 'collection): bool =>
@@ -134,6 +134,7 @@ let module Collection = {
   let reduce = Collection.reduce;
   let some = Collection.some;
   let subtract = Collection.subtract;
+  let toKeyed = Keyed.ofCollection;
   let toSeq = Collection.toSeq;
   let tryFind = Collection.tryFind;
   let union = Collection.union;
@@ -438,43 +439,54 @@ let module TransientHashMultiset = {
   let removeAll = TransientHashMultiset.removeAll;
   let set = TransientHashMultiset.set;
 };
-
+*/
 let module HashSet = {
-  type t 'a = HashSet. hashSet 'a;
+  type t 'a = HashSet.hashSet 'a;
 
+  let add = HashSet.add;
+  let addAll = HashSet.addAll;
   let contains = HashSet.contains;
   let count = HashSet.count;
   let empty = HashSet.empty;
   let emptyWith = HashSet.emptyWith;
+  let equals = HashSet.equals;
+  let every = HashSet.every;
+  let find = HashSet.find;
+  let forEach = HashSet.forEach;
   let fromSeq = HashSet.fromSeq;
   let fromSeqWith = HashSet.fromSeqWith;
+  let hash = HashSet.hash;
+  let intersect = HashSet.intersect;
   let isEmpty set => isEmpty count set;
   let isNotEmpty set => isNotEmpty count set;
   let mutate = HashSet.mutate;
-  let put = HashSet.put;
-  let putAll = HashSet.putAll;
+  let none = HashSet.none;
   let reduce = HashSet.reduce;
   let remove = HashSet.remove;
   let removeAll = HashSet.removeAll;
+  let some = HashSet.some;
+  let subtract = HashSet.subtract;
   let toCollection = HashSet.toCollection;
   let toKeyed = HashSet.toKeyed;
   let toSeq = HashSet.toSeq;
+  let tryFind = HashSet.tryFind;
+  let union = HashSet.union;
 };
 
 let module TransientHashSet = {
   type t 'a = transientHashSet 'a;
 
+  let add = TransientHashSet.add;
+  let addAll = TransientHashSet.addAll;
   let contains = TransientHashSet.contains;
   let count = TransientHashSet.count;
   let isEmpty transient => isEmpty count transient;
   let isNotEmpty transient => isNotEmpty count transient;
   let persist = TransientHashSet.persist;
-  let put = TransientHashSet.put;
-  let putAll = TransientHashSet.putAll;
   let remove = TransientHashSet.remove;
   let removeAll = TransientHashSet.removeAll;
 };
-
+/*
 let module HashSetMultimap = {
   type t 'k 'v = HashSetMultimap.hashSetMultimap 'k 'v;
 

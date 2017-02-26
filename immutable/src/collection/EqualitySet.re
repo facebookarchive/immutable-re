@@ -1,78 +1,37 @@
-open Collection;
+/* FIXME: Ideally use vector, once it implements removeAt */
+open CopyOnWriteArray;
 open Equality;
-open Functions;
-open Keyed;
 open Option.Operators;
-open Ordering;
-
-/* FIXME: Ideally use vector, once its optimized more */
-open TreeList;
 open Seq;
 
 type equalitySet 'a = {
+  array: copyOnWriteArray 'a,
   equality: equality 'a,
-  treeList: treeList 'a,
 };
 
-let alter
-    (predicate: 'a => ordering)
-    (f: option 'a => option 'a)
-    ({ equality, treeList } as set: equalitySet 'a): (equalitySet 'a) => treeList
-  |> TreeList.toSeq
-  |> Seq.tryFindIndex (fun a => (predicate a) === Equal)
-  >>| (fun index => {
-      let current = treeList |> TreeList.tryGet index;
-      let next = f current;
+let add (value: 'a) ({ array, equality } as set: equalitySet 'a): (equalitySet 'a) =>
+  if (CopyOnWriteArray.containsWith equality value array) set
+  else {
+    array: array |> CopyOnWriteArray.addLast value,
+    equality,
+  };
 
-      let current = current |> Option.get;
-      switch next {
-        | None => { equality, treeList: treeList |> TreeList.removeAt index }
-        | (Some next) when current === next => set
-        | (Some next) => { equality, treeList: treeList |> TreeList.update index next }
-      }
-    })
-  |> Option.orCompute (fun () => switch (f None) {
-      | Some v => { equality, treeList: treeList |> TreeList.add v }
-      | _ => set
-    }
-  );
+let contains (value: 'a) ({ array, equality }: equalitySet 'a): bool =>
+  array |> CopyOnWriteArray.containsWith equality value;
 
-let contains (value: 'a) ({ equality, treeList }: equalitySet 'a): bool => treeList
-  |> TreeList.toSeq
-  |> Seq.tryFind (equality value)
-  |> Option.isNotEmpty;
 
-let count ({ treeList }: equalitySet 'a): int => treeList |> TreeList.count;
-
-let empty: equalitySet 'a = { equality: Equality.structural, treeList: TreeList.empty };
+let count ({ array, equality }: equalitySet 'a): int =>
+  array |> CopyOnWriteArray.count;
 
 let emptyWith (equality: equality 'a): (equalitySet 'a) => {
+  array: [||],
   equality,
-  treeList: TreeList.empty,
 };
 
-let find (predicate: 'a => ordering) ({ treeList }: equalitySet 'a): (option 'a) => treeList
-  |> TreeList.toSeq
-  |> Seq.tryFind (fun a => (predicate a) === Equal);
+let remove (value: 'a) ({ array, equality } as equalitySet: equalitySet 'a): (equalitySet 'a) =>
+  array |> CopyOnWriteArray.tryIndexOf (equality value)  >>| (fun index => {
+    array: array |> CopyOnWriteArray.removeAt index,
+    equality,
+  }) |? equalitySet;
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ treeList }: equalitySet 'a): 'acc =>
-  treeList |> TreeList.reduce f acc;
-
-let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ treeList }: equalitySet 'a): 'acc =>
-  treeList |> TreeList.reduceRight f acc;
-
-let put (value: 'a) ({ equality, treeList }: equalitySet 'a): (equalitySet 'a) => treeList
-  |> TreeList.toSeq
-  |> Seq.tryFindIndex (equality value)
-  >>| (fun index =>
-      { equality, treeList: treeList |> TreeList.update index value }
-    )
-  |> Option.orCompute (fun () => { equality, treeList: treeList |> TreeList.add value });
-
-let remove (value: 'a) ({ equality, treeList } as equalitySet: equalitySet 'a): (equalitySet 'a) => treeList
-  |> TreeList.toSeq
-  |> Seq.tryFindIndex (equality value)
-  >>| (fun index => { equality, treeList: treeList |> TreeList.removeAt index })
-  |? equalitySet;
-
-let toSeq ({ treeList }: equalitySet 'a): (seq 'a) => treeList |> TreeList.toSeq;
+let toSeq ({ array }: equalitySet 'a): (seq 'a) => array |> CopyOnWriteArray.toSeq;
