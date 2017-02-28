@@ -61,23 +61,23 @@ let test = describe "SortedSet" [
     let setShorter = Seq.inRange 0 (Some (count - 1)) 1 |> SortedSet.fromSeq;
     expect (SortedSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
   }),
-  it "maxValue and tryMaxValue" (fun () => {
+  it "last and tryLast" (fun () => {
     let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq;
-    expect (set |> SortedSet.maxValue) |> toBeEqualToInt (count - 1);
-    expect (set |> SortedSet.tryMaxValue) |> toBeEqualToSomeOfInt (count - 1);
+    expect (set |> SortedSet.last) |> toBeEqualToInt (count - 1);
+    expect (set |> SortedSet.tryLast) |> toBeEqualToSomeOfInt (count - 1);
 
 
-    defer (fun () => SortedSet.empty |> SortedSet.maxValue) |> throws;
-    expect (SortedSet.empty |> SortedSet.tryMaxValue) |> toBeEqualToNoneOfInt;
+    defer (fun () => SortedSet.empty |> SortedSet.last) |> throws;
+    expect (SortedSet.empty |> SortedSet.tryLast) |> toBeEqualToNoneOfInt;
   }),
-  it "minValue and tryMinValue" (fun () => {
+  it "first and tryFirst" (fun () => {
     let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq;
-    expect (set |> SortedSet.minValue) |> toBeEqualToInt 0;
-    expect (set |> SortedSet.tryMinValue) |> toBeEqualToSomeOfInt 0;
+    expect (set |> SortedSet.first) |> toBeEqualToInt 0;
+    expect (set |> SortedSet.tryFirst) |> toBeEqualToSomeOfInt 0;
 
 
-    defer (fun () => SortedSet.empty |> SortedSet.minValue) |> throws;
-    expect (SortedSet.empty |> SortedSet.tryMinValue) |> toBeEqualToNoneOfInt;
+    defer (fun () => SortedSet.empty |> SortedSet.first) |> throws;
+    expect (SortedSet.empty |> SortedSet.tryFirst) |> toBeEqualToNoneOfInt;
   }),
   it "reduceRight" (fun () => {
     Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.reduceRight (fun acc i => {
@@ -85,12 +85,12 @@ let test = describe "SortedSet" [
       i
     }) count |> ignore;
   }),
-  it "removeMax" (fun () => {
-    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.removeMax;
+  it "removeLast" (fun () => {
+    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.removeLast;
     expect (set |> Set.contains (count - 1)) |> toBeEqualToFalse;
   }),
-  it "removeMin" (fun () => {
-    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.removeMin;
+  it "removeFirst" (fun () => {
+    let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.removeFirst;
     expect (set |> Set.contains 0) |> toBeEqualToFalse;
   }),
   it "search and trySearch" (fun () => {

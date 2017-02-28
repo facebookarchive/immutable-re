@@ -106,7 +106,13 @@ let module AVLTreeSet = {
       }
   };
 
-  let rec forEach (f: 'a => unit) (tree: avlTreeSet 'a): 'acc => switch tree {
+  let rec first (tree: avlTreeSet 'a): 'a => switch tree {
+    | Leaf v => v
+    | Node _ Empty v _ => v
+    | Node _ left _ _ => first left
+  };
+
+  let rec forEach (f: 'a => unit) (tree: avlTreeSet 'a) => switch tree {
     | Empty  => ()
     | Leaf v => f v
     | Node _ left v right =>
@@ -115,16 +121,10 @@ let module AVLTreeSet = {
        forEach f right;
   };
 
-  let rec maxValue (tree: avlTreeSet 'a): 'a => switch tree {
+  let rec last (tree: avlTreeSet 'a): 'a => switch tree {
     | Leaf v => v
     | Node _ _ v Empty => v
-    | Node _ _ _ right => maxValue right
-  };
-
-  let rec minValue (tree: avlTreeSet 'a): 'a => switch tree {
-    | Leaf v => v
-    | Node _ Empty v _ => v
-    | Node _ left _ _ => minValue left
+    | Node _ _ _ right => last right
   };
 
   let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: avlTreeSet 'a): 'acc => switch tree {
@@ -147,18 +147,18 @@ let module AVLTreeSet = {
        acc
   };
 
-  let rec removeMax (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
-    | Empty => Empty
-    | Leaf v => Empty
-    | Node _ left v Empty => left
-    | Node _ left v right => rebalance left v (removeMax right);
-  };
-
-  let rec removeMin (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+  let rec removeFirst (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
     | Empty => Empty
     | Leaf v => Empty
     | Node _ Empty v right => right
-    | Node _ left v right => rebalance (removeMin left) v right;
+    | Node _ left v right => rebalance (removeFirst left) v right;
+  };
+
+  let rec removeLast (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+    | Empty => Empty
+    | Leaf v => Empty
+    | Node _ left v Empty => left
+    | Node _ left v right => rebalance left v (removeLast right);
   };
 
   let rec remove (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
@@ -170,7 +170,7 @@ let module AVLTreeSet = {
     | Node _ left v right => if (x === v) (switch (left, right) {
         | (Empty, _) => right
         | (_, Empty) => left
-        | _ => rebalance left (minValue right) (removeMin right)
+        | _ => rebalance left (first right) (removeFirst right)
       }) else {
         let cmp = comparator x v;
         if (cmp === LessThan) {
@@ -182,7 +182,7 @@ let module AVLTreeSet = {
         } else switch (left, right) {
           | (Empty, _) => right
           | (_, Empty) => left
-          | _ => rebalance left (minValue right) (removeMin right)
+          | _ => rebalance left (first right) (removeFirst right)
         }
       }
   };
@@ -197,7 +197,7 @@ let module AVLTreeSet = {
         let result = predicate v;
         if (result === LessThan) (search predicate left)
         else if (result === GreaterThan) (search predicate right)
-        else  v
+        else v
   };
 
   let rec toSeq (tree: avlTreeSet 'a): (seq 'a) => switch tree {
@@ -210,18 +210,18 @@ let module AVLTreeSet = {
       ]
   };
 
-  let rec tryMaxValue (tree: avlTreeSet 'a): (option 'a) => switch tree {
-    | Empty => None
-    | Leaf v => Some v
-    | Node _ _ v Empty => Some v
-    | Node _ _ _ right => tryMaxValue right
-  };
-
-  let rec tryMinValue (tree: avlTreeSet 'a): (option 'a) => switch tree {
+  let rec tryFirst (tree: avlTreeSet 'a): (option 'a) => switch tree {
     | Empty => None
     | Leaf v => Some v
     | Node _ Empty v _ => Some v
-    | Node _ left _ _ => tryMinValue left
+    | Node _ left _ _ => tryFirst left
+  };
+
+  let rec tryLast (tree: avlTreeSet 'a): (option 'a) => switch tree {
+    | Empty => None
+    | Leaf v => Some v
+    | Node _ _ v Empty => Some v
+    | Node _ _ _ right => tryLast right
   };
 
   let rec trySearch (predicate: 'a => ordering) (tree: avlTreeSet 'a): (option 'a) => switch tree {
@@ -284,13 +284,13 @@ let remove (x: 'a) ({ comparator, count, tree } as sortedSet: sortedSet 'a): (so
 let removeAll ({ comparator }: sortedSet 'a): (sortedSet 'a) =>
   emptyWith comparator;
 
-let removeMax ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sortedSet 'a) => {
-  let newTree = AVLTreeSet.removeMax tree;
+let removeFirst ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sortedSet 'a) => {
+  let newTree = AVLTreeSet.removeFirst tree;
   if (newTree === tree) sortedSet else { comparator, count: count - 1, tree: newTree }
 };
 
-let removeMin ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sortedSet 'a) => {
-  let newTree = AVLTreeSet.removeMin tree;
+let removeLast ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sortedSet 'a) => {
+  let newTree = AVLTreeSet.removeLast tree;
   if (newTree === tree) sortedSet else { comparator, count: count - 1, tree: newTree }
 };
 
@@ -300,23 +300,20 @@ let search (predicate: 'a => ordering) ({ tree }: sortedSet 'a): 'a =>
 let toSeq ({ tree }: sortedSet 'a): (seq 'a) =>
   tree |> AVLTreeSet.toSeq;
 
-let compareWith (comparator: comparator 'a) (this: sortedSet 'a) (that: sortedSet 'a): ordering =>
-  Seq.compareWith comparator (toSeq this) (toSeq that);
+let compare ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): ordering =>
+   Seq.compareWith comparator (toSeq this) (toSeq that);
 
-let compare (this: sortedSet 'a) (that: sortedSet 'a): ordering =>
-  compareWith Comparator.structural this that;
-
-let equalsWith (equals: equality 'a) (this: sortedSet 'a) (that: sortedSet 'a): bool =>
-  Seq.equalsWith equals (toSeq this) (toSeq that);
-
-let equals (this: sortedSet 'a) (that: sortedSet 'a): bool =>
-  equalsWith Equality.structural this that;
+let equals ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): bool =>
+  Seq.equalsWith (fun a b => (comparator a b) === Equal) (toSeq this) (toSeq that);
 
 let every (f: 'a => bool) (set: sortedSet 'a): bool =>
   set |> toSeq |> Seq.every f;
 
 let find (f: 'a => bool) (set: sortedSet 'a): 'a =>
   set |> toSeq |> Seq.find f;
+
+let first ({ tree }: sortedSet 'a): 'a =>
+  AVLTreeSet.first tree;
 
 let forEach (f: 'a => unit) ({ tree }: sortedSet 'a) =>
   tree |> AVLTreeSet.forEach f;
@@ -327,11 +324,8 @@ let hashWith (hash: (hash 'a)) (set: sortedSet 'a): int => set
 let hash (set: sortedSet 'a): int =>
   hashWith Hash.structural set;
 
-let maxValue ({ tree }: sortedSet 'a): 'a =>
-  AVLTreeSet.maxValue tree;
-
-let minValue ({ tree }: sortedSet 'a): 'a =>
-  AVLTreeSet.minValue tree;
+let last ({ tree }: sortedSet 'a): 'a =>
+  AVLTreeSet.last tree;
 
 let none (f: 'a => bool) (set: sortedSet 'a): bool =>
   set |> toSeq |> Seq.none f;
@@ -342,11 +336,11 @@ let some (f: 'a => bool) (set: sortedSet 'a): bool =>
 let tryFind (f: 'a => bool) (set: sortedSet 'a): (option 'a) =>
   set |> toSeq |> Seq.tryFind f;
 
-let tryMaxValue ({ tree }: sortedSet 'a): (option 'a) =>
-  AVLTreeSet.tryMaxValue tree;
+let tryFirst ({ tree }: sortedSet 'a): (option 'a) =>
+  AVLTreeSet.tryFirst tree;
 
-let tryMinValue ({ tree }: sortedSet 'a): (option 'a) =>
-  AVLTreeSet.tryMinValue tree;
+let tryLast ({ tree }: sortedSet 'a): (option 'a) =>
+  AVLTreeSet.tryLast tree;
 
 let trySearch (predicate: 'a => ordering) ({ tree }: sortedSet 'a): (option 'a) =>
   tree |> AVLTreeSet.trySearch predicate;

@@ -130,7 +130,7 @@ let module BitmapTrieSet = {
 
         if (newEntrySet === entrySet) set
         else if ((SortedSet.count newEntrySet) == 1) {
-          let entryValue = SortedSet.minValue newEntrySet;
+          let entryValue = SortedSet.first newEntrySet;
           (Entry entryHash entryValue)
         } else (SortedSetCollision entryHash newEntrySet);
     | Entry entryHash entryValue when (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Equal) =>
