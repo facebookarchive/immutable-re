@@ -1,3 +1,4 @@
+open AVLTreeSet;
 open Collection;
 open Comparator;
 open EqualitySet;
@@ -11,7 +12,7 @@ open Transient;
 
 type bitmapTrieSet 'a =
   | Level int32 (array (bitmapTrieSet 'a)) (option owner)
-  | SortedSetCollision int (sortedSet 'a)
+  | ComparatorCollision int (avlTreeSet 'a)
   | EqualitySetCollision int (equalitySet 'a)
   | Entry int 'a
   | Empty;
@@ -41,29 +42,29 @@ let module BitmapTrieSet = {
           Level (Int32.logor bitmap bit) nodes owner;
         }
     | EqualitySetCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> EqualitySet.add value;
+        let newEntrySet = entrySet |> EqualitySet.add (HashStrategy.equals hashStrategy) value;
         if (newEntrySet === entrySet) set else (EqualitySetCollision entryHash newEntrySet);
     | EqualitySetCollision entryHash entrySet =>
         let bitmap = BitmapTrie.bitPos entryHash depth;
         Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
-    | SortedSetCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> SortedSet.add value;
-        if (newEntrySet === entrySet) set else (SortedSetCollision entryHash newEntrySet);
-    | SortedSetCollision entryHash entrySet =>
+    | ComparatorCollision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) value;
+        if (newEntrySet === entrySet) set else (ComparatorCollision entryHash newEntrySet);
+    | ComparatorCollision entryHash entrySet =>
         let bitmap = BitmapTrie.bitPos entryHash depth;
         Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
     | Entry entryHash entryValue when hash == entryHash =>
         if ((HashStrategy.comparator hashStrategy value entryValue) === Equal) set
         else (switch hashStrategy {
           | Comparator _ comparator =>
-              let set = SortedSet.emptyWith comparator
-                |> SortedSet.add entryValue
-                |> SortedSet.add value;
-              SortedSetCollision entryHash set;
+              let set = AVLTreeSet.Empty
+                |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) entryValue
+                |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) value;
+              ComparatorCollision entryHash set;
           | Equality _ equals =>
-            let set = EqualitySet.emptyWith equals
-              |> EqualitySet.add entryValue
-              |> EqualitySet.add value;
+            let set = EqualitySet.empty
+              |> EqualitySet.add (HashStrategy.equals hashStrategy) entryValue
+              |> EqualitySet.add (HashStrategy.equals hashStrategy) value;
             EqualitySetCollision entryHash set;
         });
     | Entry entryHash entryValue =>
@@ -85,9 +86,9 @@ let module BitmapTrieSet = {
         (BitmapTrie.containsNode bitmap bit) &&
         (contains hashStrategy (depth + 1) hash value nodes.(index));
     | EqualitySetCollision entryHash entrySet =>
-        (hash == entryHash) && (EqualitySet.contains value entrySet);
-    | SortedSetCollision entryHash entrySet =>
-        (hash == entryHash) && (SortedSet.contains value entrySet);
+        (hash == entryHash) && (EqualitySet.contains (HashStrategy.equals hashStrategy) value entrySet);
+    | ComparatorCollision entryHash entrySet =>
+        (hash == entryHash) && (AVLTreeSet.contains (HashStrategy.comparator hashStrategy) value entrySet);
     | Entry entryHash entryValue =>
         (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Equal);
     | Empty => false;
@@ -118,21 +119,20 @@ let module BitmapTrieSet = {
           } else (updateLevelNode index newChildNode set);
         } else set;
     | EqualitySetCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> EqualitySet.remove value;
+        let newEntrySet = entrySet |> EqualitySet.remove (HashStrategy.equals hashStrategy) value;
 
         if (newEntrySet === entrySet) set
         else if ((EqualitySet.count newEntrySet) == 1) {
           let entryValue = entrySet |> EqualitySet.toSeq |> Seq.first;
           (Entry entryHash entryValue)
         } else (EqualitySetCollision entryHash newEntrySet);
-    | SortedSetCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> SortedSet.remove value;
+    | ComparatorCollision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> AVLTreeSet.remove (HashStrategy.comparator hashStrategy) value;
 
-        if (newEntrySet === entrySet) set
-        else if ((SortedSet.count newEntrySet) == 1) {
-          let entryValue = SortedSet.first newEntrySet;
-          (Entry entryHash entryValue)
-        } else (SortedSetCollision entryHash newEntrySet);
+        if (newEntrySet === entrySet) set else (switch newEntrySet {
+          | Leaf entryValue => (Entry entryHash entryValue)
+          | _ => (ComparatorCollision entryHash newEntrySet)
+        });
     | Entry entryHash entryValue when (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Equal) =>
         Empty;
     | _ => set
@@ -140,7 +140,7 @@ let module BitmapTrieSet = {
 
   let rec toSeq (set: bitmapTrieSet 'a): (seq 'a) => switch set {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
-    | SortedSetCollision _ entrySet => SortedSet.toSeq entrySet;
+    | ComparatorCollision _ entrySet => AVLTreeSet.toSeq entrySet;
     | EqualitySetCollision _ entrySet => EqualitySet.toSeq entrySet;
     | Entry _ entryValue => Seq.return entryValue;
     | Empty => Seq.empty;

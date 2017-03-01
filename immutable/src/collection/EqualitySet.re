@@ -4,34 +4,21 @@ open Equality;
 open Option.Operators;
 open Seq;
 
-type equalitySet 'a = {
-  array: copyOnWriteArray 'a,
-  equality: equality 'a,
-};
+type equalitySet 'a = copyOnWriteArray 'a;
 
-let add (value: 'a) ({ array, equality } as set: equalitySet 'a): (equalitySet 'a) =>
-  if (CopyOnWriteArray.containsWith equality value array) set
-  else {
-    array: array |> CopyOnWriteArray.addLast value,
-    equality,
-  };
+let add (equality: equality 'a) (value: 'a) (set: equalitySet 'a): (equalitySet 'a) =>
+  if (CopyOnWriteArray.containsWith equality value set) set
+  else (CopyOnWriteArray.addLast value set);
 
-let contains (value: 'a) ({ array, equality }: equalitySet 'a): bool =>
-  array |> CopyOnWriteArray.containsWith equality value;
+let contains = CopyOnWriteArray.containsWith;
 
+let count = CopyOnWriteArray.count;
 
-let count ({ array, equality }: equalitySet 'a): int =>
-  array |> CopyOnWriteArray.count;
+let empty = [||];
 
-let emptyWith (equality: equality 'a): (equalitySet 'a) => {
-  array: [||],
-  equality,
-};
+let remove (equality: equality 'a) (value: 'a) (set: equalitySet 'a): (equalitySet 'a) =>
+  set |> CopyOnWriteArray.tryIndexOf (equality value) >>| (fun index =>
+    set |> CopyOnWriteArray.removeAt index
+  ) |? set;
 
-let remove (value: 'a) ({ array, equality } as equalitySet: equalitySet 'a): (equalitySet 'a) =>
-  array |> CopyOnWriteArray.tryIndexOf (equality value)  >>| (fun index => {
-    array: array |> CopyOnWriteArray.removeAt index,
-    equality,
-  }) |? equalitySet;
-
-let toSeq ({ array }: equalitySet 'a): (seq 'a) => array |> CopyOnWriteArray.toSeq;
+let toSeq = CopyOnWriteArray.toSeq;

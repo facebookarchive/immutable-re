@@ -27,6 +27,11 @@ let comparator (strategy: hashStrategy 'a): comparator 'a => switch strategy {
   | Equality _ equality => fun x y => equality x y ? Equal : GreaterThan;
 };
 
+let equals (strategy: hashStrategy 'a): equality 'a => switch strategy {
+  | Comparator _ comparator => fun x y => (comparator x y) === Equal
+  | Equality _ equals => equals
+};
+
 let hash (strategy: hashStrategy 'a): (hash 'a) => switch strategy {
   | Comparator hash _
   | Equality hash _ => hash;
