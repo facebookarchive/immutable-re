@@ -47,8 +47,8 @@ let module CamlStringSet = Set.Make {
   let compare = Pervasives.compare;
 };
 
-let test (n: int): Test.t => {
-  let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash |> Seq.map string_of_int;
+let test (n: int) (count: int): Test.t => {
+  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash |> Seq.map string_of_int;
 
   let camlStringSet = keys |> Seq.reduce
     (fun acc i => acc |> CamlStringSet.add i)
@@ -62,13 +62,13 @@ let test (n: int): Test.t => {
     (fun acc i => acc |> HashSet.add i)
     (HashSet.emptyWith HashStrategy.structuralEquality);
 
-let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
+  let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
 
   let sortedSet = keys |> Seq.reduce
     (fun acc i => acc |> SortedSet.add i)
     SortedSet.empty;
 
-  describe (sprintf "SetPerf")[
+  let testGroup = [
     describe "HashSet" [
       describe "Comparison" (
         generateTests
@@ -78,7 +78,7 @@ let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
           HashSet.add
           HashSet.remove
           HashSet.contains
-          n
+          count
       ),
       describe "Equality" (
         generateTests
@@ -88,7 +88,7 @@ let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
           HashSet.add
           HashSet.remove
           HashSet.contains
-          n
+          count
       ),
     ],
 
@@ -100,7 +100,7 @@ let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
         CamlStringSet.add
         CamlStringSet.remove
         (fun k map => CamlStringSet.mem k map)
-        n
+        count
     ),
 
     describe "SortedSet" (
@@ -111,7 +111,7 @@ let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
         SortedSet.add
         SortedSet.remove
         SortedSet.contains
-        n
+        count
     ),
 
     describe "TransientHashSet" [
@@ -123,7 +123,7 @@ let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
           TransientHashSet.add
           TransientHashSet.remove
           TransientHashSet.contains
-          n
+          count
       ),
 
       describe "Equality" (
@@ -134,8 +134,11 @@ let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
           TransientHashSet.add
           TransientHashSet.remove
           TransientHashSet.contains
-          n
+          count
       ),
     ],
-  ]
+  ];
+
+  let tests = Seq.repeat testGroup (Some n) |> Seq.flatMap List.toSeq |> List.fromSeqReversed;
+  describe (sprintf "SetPerf") tests
 };

@@ -30,11 +30,11 @@ let generateTests
   }),
 ];
 
-let test (n: int): Test.t => {
-  let indexes = Seq.inRange 0 (Some n) 1;
+let test (n: int) (count: int): Test.t => {
+  let indexes = Seq.inRange 0 (Some count) 1;
   let vector = indexes |> Seq.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty;
 
-  describe "VectorPerf" [
+  let testGroup = [
     describe "Vector" (
       generateTests
         (fun () => vector)
@@ -43,7 +43,7 @@ let test (n: int): Test.t => {
         Vector.update
         Vector.removeLast
         Vector.tryGet
-        n
+        count
     ),
     describe "TransientVector" (
       generateTests
@@ -53,7 +53,10 @@ let test (n: int): Test.t => {
         TransientVector.update
         TransientVector.removeLast
         TransientVector.tryGet
-        n
+        count
     ),
   ];
+
+  let tests = Seq.repeat testGroup (Some n) |> Seq.flatMap List.toSeq |> List.fromSeqReversed;
+  describe "VectorPerf" tests;
 };
