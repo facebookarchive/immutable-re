@@ -16,7 +16,7 @@ let generateTests
     let src = Seq.inRange 0 (Some n) 1;
     src |> Seq.reduce (fun acc i => acc |> add i) (empty ()) |> ignore;
   }),
-  it (sprintf "vector with %i elements, pop %i elements" n (n / 2)) (fun () => {
+  it (sprintf "vector with %i elements, removeLast %i elements" n (n / 2)) (fun () => {
     Seq.inRange 0 (Some (n / 2)) 1
       |> Seq.reduce (fun acc _ => acc |> removeLast) (getTestData ()) |> ignore;
   }),

@@ -1,7 +1,6 @@
 open Immutable;
 open ReUnit;
 
-
 ReUnit.run (SetPerfTester.test 5 500000);
 print_newline ();
 
