@@ -54,8 +54,8 @@ let module CamlStringMap = Map.Make {
   let compare = Pervasives.compare;
 };
 
-let test (n: int): Test.t => {
-  let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash |> Seq.map string_of_int;
+let test (n: int) (count: int): Test.t => {
+  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash |> Seq.map string_of_int;
 
   let camlIntMap = keys |> Seq.reduce
     (fun acc i => acc |> CamlStringMap.add i i)
@@ -63,40 +63,17 @@ let test (n: int): Test.t => {
 
   let hashMapComparison = keys |> Seq.reduce
     (fun acc i => acc |> HashMap.put i i)
-    (HashMap.empty ());
+    HashMap.empty;
 
   let hashMapEquality = keys |> Seq.reduce
     (fun acc i => acc |> HashMap.put i i)
-    (HashMap.emptyWith @@ HashStrategy.structuralEquality @@ ());
+    (HashMap.emptyWith HashStrategy.structuralEquality);
 
   let sortedMap = keys |> Seq.reduce
     (fun acc i => acc |> SortedMap.put i i)
-    (SortedMap.empty ());
+    SortedMap.empty;
 
-  describe (sprintf "MapPerf")[
-    describe "HashMap" [
-      describe "Comparison" (
-        generateTests
-          (fun () => hashMapComparison)
-          (fun () => keys)
-          HashMap.empty
-          HashMap.put
-          HashMap.remove
-          HashMap.tryGet
-          n
-      ),
-      describe "Equality" (
-        generateTests
-          (fun () => hashMapEquality)
-          (fun () => keys)
-          (fun () => HashMap.emptyWith @@ HashStrategy.structuralEquality @@ ())
-          HashMap.put
-          HashMap.remove
-          HashMap.tryGet
-          n
-      ),
-    ],
-
+  let testGroup = [
     describe "CamlStringMap" (
       generateTests
         (fun () => camlIntMap)
@@ -105,42 +82,68 @@ let test (n: int): Test.t => {
         CamlStringMap.add
         CamlStringMap.remove
         (fun k map => (CamlStringMap.mem k map) ? Some (CamlStringMap.find k map) : None)
-        n
+        count
     ),
 
     describe "SortedMap" (
       generateTests
         (fun () => sortedMap)
         (fun () => keys)
-        SortedMap.empty
+        (fun () => SortedMap.empty)
         SortedMap.put
         SortedMap.remove
         SortedMap.tryGet
-        n
+        count
     ),
+
+    describe "HashMap" [
+      describe "Comparison" (
+        generateTests
+          (fun () => hashMapComparison)
+          (fun () => keys)
+          (fun () => HashMap.empty)
+          HashMap.put
+          HashMap.remove
+          HashMap.tryGet
+          count
+      ),
+      describe "Equality" (
+        generateTests
+          (fun () => hashMapEquality)
+          (fun () => keys)
+          (fun () => HashMap.emptyWith HashStrategy.structuralEquality)
+          HashMap.put
+          HashMap.remove
+          HashMap.tryGet
+          count
+      ),
+    ],
 
     describe "TransientHashMap" [
       describe "Comparison" (
         generateTests
           (fun () => hashMapComparison |> HashMap.mutate)
           (fun () => keys)
-          (fun () => HashMap.empty () |> HashMap.mutate)
+          (fun () => HashMap.empty |> HashMap.mutate)
           TransientHashMap.put
           TransientHashMap.remove
           TransientHashMap.tryGet
-          n
+          count
       ),
 
       describe "Equality" (
         generateTests
           (fun () => hashMapEquality |> HashMap.mutate)
           (fun () => keys)
-          (fun () => HashMap.emptyWith @@ HashStrategy.structuralEquality @@ () |> HashMap.mutate)
+          (fun () => HashMap.emptyWith HashStrategy.structuralEquality |> HashMap.mutate)
           TransientHashMap.put
           TransientHashMap.remove
           TransientHashMap.tryGet
-          n
+          count
       ),
     ],
-  ]
+  ];
+
+  let tests = Seq.repeat testGroup (Some n) |> Seq.flatMap List.toSeq |> List.fromSeqReversed;
+  describe (sprintf "MapPerf") tests
 };

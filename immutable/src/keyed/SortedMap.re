@@ -1,115 +1,220 @@
+open AVLTreeMap;
+open Collection;
 open Comparator;
 open Equality;
-open Functions;
+open Hash;
 open Keyed;
-open Option;
-open Option.Operators;
-open Pair;
+open Ordering;
 open Seq;
-open SortedSet;
 
 type sortedMap 'k 'v = {
-  keyComparator: comparator 'k,
-  set: sortedSet ('k, 'v),
+  comparator: comparator 'k,
+  count: int,
+  tree: avlTreeMap 'k 'v,
+};
+
+let empty: (sortedMap 'k 'v) = {
+  comparator: Comparator.structural,
+  count: 0,
+  tree: Empty,
+};
+
+let emptyWith (comparator: comparator 'k): (sortedMap 'k 'v) => {
+  comparator: comparator,
+  count: 0,
+  tree: Empty,
 };
 
 let alter
     (key: 'k)
     (f: option 'v => option 'v)
-    ({ keyComparator, set } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
-  let newSet = set |> SortedSet.alter (KeyedEntry.keyComparatorFinder keyComparator key) (KeyedEntry.alter key f);
-  set === newSet ? map : ({ keyComparator, set: newSet });
+    ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
+  let alterResult = ref NoChange;
+  let newTree = tree |> AVLTreeMap.alter comparator alterResult key f;
+  switch !alterResult {
+    | Added => { comparator, count: count + 1, tree: newTree }
+    | NoChange => map
+    | Replace => { comparator, count, tree: newTree }
+    | Removed => { comparator, count: count - 1, tree: newTree }
+  };
 };
 
-let count ({ set }: sortedMap 'k 'v): int =>
-  set |> SortedSet.count;
+let containsWith
+    (valueEquals: equality 'v )
+    (key: 'k)
+    (value: 'v)
+    ({ comparator, tree }: sortedMap 'k 'v): bool =>
+  tree |> AVLTreeMap.contains comparator valueEquals key value;
 
-let emptyWith (keyComparator: comparator 'k): sortedMap 'k 'v => ({
-  keyComparator,
-  set: SortedSet.emptyWith (KeyedEntry.keyComparator keyComparator),
-});
+let contains (key: 'k) (value: 'v) (map: sortedMap 'k 'v): bool =>
+  map |> containsWith Equality.structural key value;
 
-let empty (): sortedMap 'k 'v =>
-  emptyWith Comparator.structural;
+let containsKey (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): bool =>
+  tree |> AVLTreeMap.containsKey comparator key;
 
-let tryGet (key: 'k) ({ keyComparator, set }: sortedMap 'k 'v): (option 'v) => set
-  |> SortedSet.find (KeyedEntry.keyComparatorFinder keyComparator key)
-  >>| snd;
+let count ({ count }: sortedMap 'k 'v): int => count;
 
-let put (key: 'k) (value: 'v) ({ keyComparator, set } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
-  let newSet = set |> SortedSet.put (key, value);
-  set === newSet ? map : ({ keyComparator, set: newSet });
-};
+let every (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
+  tree |> AVLTreeMap.every f;
 
-let remove (key: 'k) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
-  map |> alter key alwaysNone;
+let first ({ tree }: sortedMap 'k 'v): ('k, 'v) =>
+  tree |> AVLTreeMap.first;
 
-let removeAll ({ keyComparator, set }: sortedMap 'k 'v): (sortedMap 'k 'v) =>
-  emptyWith keyComparator;
+let forEach (f: 'k => 'v => unit) ({ tree }: sortedMap 'k 'v): unit =>
+  tree |> AVLTreeMap.forEach f;
 
-let toSeq ({ set }: sortedMap 'k 'v): (seq ('k, 'v)) =>
-  set |> SortedSet.toSeq;
+let isEmpty ({ count }: sortedMap 'k 'v): bool =>
+  count == 0;
 
-let toKeyed (map: sortedMap 'k 'v): (keyed 'k 'v) => Keyed.create
-  count::(map |> count)
-  seq::(map |> toSeq)
-  tryGet::(fun k => map |> tryGet k);
+let isNotEmpty ({ count }: sortedMap 'k 'v): bool =>
+  count != 0;
 
-let putAll (seq: seq ('k, 'v)) (map: sortedMap 'k 'v): (sortedMap 'k 'v) => seq
-  |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
+let last ({ tree }: sortedMap 'k 'v): ('k, 'v) =>
+  tree |> AVLTreeMap.last;
+
+let none (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
+  tree |> AVLTreeMap.none f;
+
+let put (key: 'k) (value: 'v) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
+  map |> alter key (Functions.return @@ Option.return @@ value);
+
+let putAll (seq: seq ('k, 'v)) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
+  seq |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
 
 let fromSeqWith (comparator: comparator 'k) (seq: seq ('k, 'v)): (sortedMap 'k 'v) =>
   emptyWith comparator |> putAll seq;
 
-let fromSeq (seq: seq ('k, 'v)): (sortedMap 'k 'v) => fromSeqWith (Comparator.structural) seq;
+let fromSeq (seq: seq ('k, 'v)): (sortedMap 'k 'v) =>
+  fromSeqWith (Comparator.structural) seq;
 
 let fromKeyedWith (comparator: comparator 'k) (keyed: keyed 'k 'v): (sortedMap 'k 'v) =>
-  keyed |> Keyed.toSeq |> fromSeqWith comparator;
+  keyed |> Keyed.reduce (fun acc k v => acc |> put k v) (emptyWith comparator);
 
-let fromKeyed (keyed: keyed 'k 'v): (sortedMap 'k 'v) => keyed |> Keyed.toSeq |> fromSeq;
+let fromKeyed (keyed: keyed 'k 'v): (sortedMap 'k 'v) =>
+  fromKeyedWith Comparator.structural keyed;
 
-let map (f: 'a => 'b) ({ keyComparator } as map: sortedMap 'k 'a): (sortedMap 'k 'b) => {
-  let empty = emptyWith keyComparator;
-  empty |> putAll (map |> toSeq |> Seq.map (Pair.mapSnd f));
+let get (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): 'v =>
+  tree |> AVLTreeMap.get comparator key;
+
+let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ tree }: sortedMap 'k 'v): 'acc =>
+  tree |> AVLTreeMap.reduce f acc;
+
+let reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ tree }: sortedMap 'k 'v): 'acc =>
+  tree |> AVLTreeMap.reduceRight f acc;
+
+let map (f: 'k => 'a => 'b) ({ comparator } as map: sortedMap 'k 'a): (sortedMap 'k 'b) =>
+  map |> reduce (fun acc k v => acc |> put k (f k v)) (emptyWith comparator);
+
+let remove (key: 'k) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
+  map |> alter key Functions.alwaysNone;
+
+let removeAll ({ comparator }: sortedMap 'k 'v): (sortedMap 'k 'v) =>
+  emptyWith comparator;
+
+let removeFirst ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
+  let newTree = tree |> AVLTreeMap.removeFirst;
+
+  if (tree === newTree) map
+  else { comparator, count: count - 1, tree: newTree }
 };
 
-let mapWithKey (f: 'k => 'a => 'b) ({ keyComparator } as map: sortedMap 'k 'a): (sortedMap 'k 'b) => {
-  let empty = emptyWith keyComparator;
-  empty |> putAll (map |> toSeq |> Seq.map @@ Pair.mapSndWithFst @@ f);
+let removeLast ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
+  let newTree = tree |> AVLTreeMap.removeLast;
+
+  if (tree === newTree) map
+  else { comparator, count: count - 1, tree: newTree }
 };
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ set }: sortedMap 'k 'a): 'acc => {
-  let reducer acc (_, value) => f acc value;
-  set |> SortedSet.reduce reducer acc
+let some (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
+  tree |> AVLTreeMap.none f;
+
+let toSeq ({ tree }: sortedMap 'k 'v): (seq ('k, 'v)) =>
+  tree |> AVLTreeMap.toSeq;
+
+let tryFind (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
+  tree |> AVLTreeMap.tryFind f;
+
+let find (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): ('k, 'v) =>
+  tree |> AVLTreeMap.tryFind f |> Option.get;
+
+let tryFirst ({ tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
+  tree |> AVLTreeMap.tryFirst;
+
+let tryGet (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): (option 'v) =>
+  tree |> AVLTreeMap.tryGet comparator key;
+
+let tryLast ({ tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
+  tree |> AVLTreeMap.tryLast;
+
+let values ({ tree }: sortedMap 'k 'v): (seq 'v) =>
+  tree |> AVLTreeMap.values;
+
+let toKeyed (map: sortedMap 'k 'v): (keyed 'k 'v) => {
+  containsWith: fun eq k v => map |> containsWith eq k v,
+  containsKey: fun k => containsKey k map,
+  count: (count map),
+  every: fun f => every f map,
+  find: fun f => find f map,
+  forEach: fun f => forEach f map,
+  get: fun i => get i map,
+  none: fun f => none f map,
+  reduce: fun f acc => map |> reduce f acc,
+  some: fun f => map |> some f,
+  toSeq: (toSeq map),
+  tryFind: fun f => tryFind f map,
+  tryGet: fun i => tryGet i map,
+  values: (values map),
 };
 
-let reduceWithKey (f: 'acc => 'k => 'a => 'acc) (acc: 'acc) ({ set }: sortedMap 'k 'a): 'acc => {
-  let reducer acc (key, value) => f acc key value;
-  set |> SortedSet.reduce reducer acc
-};
+let compareWith
+    (compareValue: comparator 'v)
+    ({ comparator } as this: sortedMap 'k 'v)
+    (that: sortedMap 'k 'v): ordering =>
+  Seq.compareWith (fun (k1, v1) (k2, v2) => {
+    let cmp = comparator k1 k2;
+    if (cmp === Equal) (compareValue v1 v2)
+    else cmp
+  }) (toSeq this) (toSeq that);
 
-let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ set }: sortedMap 'k 'a): 'acc => {
-  let reducer acc (_, value) => f acc value;
-  set |> SortedSet.reduceRight reducer acc
-};
+let compare (this: sortedMap 'k 'v) (that: sortedMap 'k 'v): ordering =>
+  compareWith Comparator.structural this that;
 
-let reduceRightWithKey (f: 'acc => 'k => 'a => 'acc) (acc: 'acc) ({ set }: sortedMap 'k 'a): 'acc => {
-  let reducer acc (key, value) => f acc key value;
-  set |> SortedSet.reduceRight reducer acc
-};
+let equalsWith
+    (valueEquals: equality 'v)
+    ({ comparator } as this: sortedMap 'k 'v)
+    (that: sortedMap 'k 'v): bool =>
+  Seq.equalsWith (fun (k1, v1) (k2, v2) =>
+    if (k1 === k2) true
+    else if (comparator k1 k2 === Equal) (valueEquals v1 v2)
+    else false
+  ) (toSeq this) (toSeq that);
+
+let equals (this: sortedMap 'k 'v) (that: sortedMap 'k 'v): bool =>
+  equalsWith Equality.structural this that;
+
+let hash (map: sortedMap 'k 'v): int =>
+  map |> toKeyed |> Keyed.hash;
+
+let hashWith (keyHash: hash 'k) (valueHash: hash 'v) (map: sortedMap 'k 'v): int =>
+  map |> toKeyed |> Keyed.hashWith keyHash valueHash;
+
+let keys (map: sortedMap 'k 'v): (collection 'k) =>
+  map |> toKeyed |> Keyed.keys;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: keyed 'k 'v)
     (map: sortedMap 'k 'vAcc): (sortedMap 'k 'vAcc) =>
-  Collection.union (map |> toKeyed |> Keyed.keys) (next |> Keyed.keys)
-    |> Seq.reduce (
-        fun acc key => {
-          let result = f key (map |> tryGet key) (next |> Keyed.tryGet key);
-          switch result {
-            | None => acc |> remove key
-            | Some value => acc |> put key value
-          }
-        }
-      )
-      map;
+  Collection.union (map |> toKeyed |> Keyed.keys) (next |> Keyed.keys) |> Seq.reduce (
+    fun acc key => {
+      let result = f key (map |> tryGet key) (next |> Keyed.tryGet key);
+      switch result {
+        | None => acc |> remove key
+        | Some value => acc |> put key value
+      }
+    }
+  )
+  map;
+
+let toCollection (equality: equality 'v) (map: sortedMap 'k 'v): (collection ('k, 'v)) =>
+  map |> toKeyed |> Keyed.toCollectionWith equality;

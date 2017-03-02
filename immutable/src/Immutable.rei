@@ -365,15 +365,16 @@ and TransientDeque: {
   let tryFirst: (t 'a) => option 'a;
   let tryLast: (t 'a) => option 'a;
 };
-/*
+
 let module rec HashMap: {
   type t 'k 'v;
 
+  let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
   let contains: 'k => 'v => (t 'k 'v) => bool;
   let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
   let containsKey: 'k => (t 'k 'v) => bool;
   let count: (t 'k 'v) => int;
-  let empty: unit => (t 'k 'v);
+  let empty: (t 'k 'v);
   let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
@@ -411,6 +412,7 @@ let module rec HashMap: {
 and TransientHashMap: {
   type t 'k 'v;
 
+  let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
   let count: (t 'k 'v) => int;
   let isEmpty: t 'k 'v => bool;
   let isNotEmpty: t 'k 'v => bool;
@@ -421,7 +423,7 @@ and TransientHashMap: {
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let tryGet: 'k => (t 'k 'v) => (option 'v);
 };
-
+/*
 let module rec HashMultiset: {
   type t 'a;
 
@@ -547,10 +549,11 @@ let module HashSetMultimap: {
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   let values: (t 'k 'v) => (Seq.t 'v);
 };
-
+*/
 let module rec IntMap: {
   type t 'a;
 
+  let alter: int => ((option 'a) => (option 'a)) => (t 'a) => (t 'a);
   let contains: int => 'a => (t 'a) => bool;
   let containsWith: (Equality.t 'a) => int => 'a => (t 'a) => bool;
   let containsKey: int => (t 'a) => bool;
@@ -590,6 +593,7 @@ let module rec IntMap: {
 and TransientIntMap: {
   type t 'a;
 
+  let alter: int => ((option 'a) => (option 'a)) => (t 'a) => (t 'a);
   let count: (t 'a) => int;
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
@@ -599,7 +603,7 @@ and TransientIntMap: {
   let remove: int => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
   let tryGet: int => (t 'a) => (option 'a);
-};*/
+};
 
 let module List: {
   type t 'a = list 'a;
@@ -668,22 +672,24 @@ let module Option: {
   let toSeq: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
 };
-/*
+
 let module SortedMap: {
   type t 'k 'v;
 
+  let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
   let compare: (Comparator.t (t 'k 'v));
   let compareWith: (Comparator.t 'v) => (Comparator.t (t 'k 'v));
   let contains: 'k => 'v => (t 'k 'v) => bool;
   let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
   let containsKey: 'k => (t 'k 'v) => bool;
   let count: (t 'k 'v) => int;
-  let empty: unit => (t 'k 'v);
+  let empty: (t 'k 'v);
   let emptyWith: (Comparator.t 'k) => (t 'k 'v);
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
   let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+  let first: (t 'k 'v) => ('k, 'v);
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
   let fromKeyed: (Keyed.t 'k 'v) => (t 'k 'v);
   let fromKeyedWith: (Comparator.t 'k) => (Keyed.t 'k 'v) => (t 'k 'v);
@@ -695,6 +701,7 @@ let module SortedMap: {
   let isEmpty: t 'k 'v => bool;
   let isNotEmpty: t 'k 'v => bool;
   let keys: (t 'k 'v) => (Collection.t 'k);
+  let last: (t 'k 'v) => ('k, 'v);
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
   let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (Keyed.t 'k 'v) => (t 'k 'vAcc)  => (t 'k 'vAcc);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
@@ -704,14 +711,18 @@ let module SortedMap: {
   let reduceRight: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
   let removeAll: (t 'k 'v) => (t 'k 'v);
+  let removeFirst: (t 'k 'v) => (t 'k 'v);
+  let removeLast: (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   let toCollection: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+  let tryFirst: (t 'k 'v) => (option ('k, 'v));
+  let tryLast: (t 'k 'v) => (option ('k, 'v));
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   let values: (t 'k 'v) => (Seq.t 'v);
-};*/
+};
 
 let module SortedSet: {
   type t 'a;

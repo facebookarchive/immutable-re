@@ -69,6 +69,28 @@ let test (n: int) (count: int): Test.t => {
     SortedSet.empty;
 
   let testGroup = [
+    describe "CamlStringSet" (
+      generateTests
+        (fun () => camlStringSet)
+        (fun () => keys)
+        (fun () => CamlStringSet.empty)
+        CamlStringSet.add
+        CamlStringSet.remove
+        (fun k map => CamlStringSet.mem k map)
+        count
+    ),
+
+    describe "SortedSet" (
+      generateTests
+        (fun () => sortedSet)
+        (fun () => keys)
+        (fun () => SortedSet.empty)
+        SortedSet.add
+        SortedSet.remove
+        SortedSet.contains
+        count
+    ),
+
     describe "HashSet" [
       describe "Comparison" (
         generateTests
@@ -91,28 +113,6 @@ let test (n: int) (count: int): Test.t => {
           count
       ),
     ],
-
-    describe "CamlStringSet" (
-      generateTests
-        (fun () => camlStringSet)
-        (fun () => keys)
-        (fun () => CamlStringSet.empty)
-        CamlStringSet.add
-        CamlStringSet.remove
-        (fun k map => CamlStringSet.mem k map)
-        count
-    ),
-
-    describe "SortedSet" (
-      generateTests
-        (fun () => sortedSet)
-        (fun () => keys)
-        (fun () => SortedSet.empty)
-        SortedSet.add
-        SortedSet.remove
-        SortedSet.contains
-        count
-    ),
 
     describe "TransientHashSet" [
       describe "Comparison" (

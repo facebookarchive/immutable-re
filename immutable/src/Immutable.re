@@ -1,10 +1,10 @@
 /*open BiMap;*/
 open Deque;
 open Equality;
-/*open HashMap;
+open HashMap;/*
 open HashMultiset;*/
 open HashSet;
-/*open IntMap;*/
+open IntMap;
 open Vector;
 
 let isEmpty (count: 'collection => 'int) (collection: 'collection): bool =>
@@ -359,37 +359,54 @@ let module TransientDeque = {
   let tryFirst = TransientDeque.tryFirst;
   let tryLast = TransientDeque.tryLast;
 };
-/*
-let module HashMap = {
-  type t 'k 'v  = HashMap.hashMap 'k 'v;
 
+let module HashMap = {
+  type t 'k 'v  = hashMap 'k 'v;
+
+  let alter = HashMap.alter;
+  let contains = HashMap.contains;
+  let containsKey = HashMap.containsKey;
+  let containsWith = HashMap.containsWith;
   let count = HashMap.count;
   let empty = HashMap.empty;
   let emptyWith = HashMap.emptyWith;
+  let equals = HashMap.equals;
+  let equalsWith = HashMap.equalsWith;
+  let every = HashMap.every;
+  let find = HashMap.find;
+  let forEach = HashMap.forEach;
   let fromKeyed = HashMap.fromKeyed;
   let fromKeyedWith = HashMap.fromKeyedWith;
   let fromSeq = HashMap.fromSeq;
   let fromSeqWith = HashMap.fromSeqWith;
+  let get = HashMap.get;
+  let hash = HashMap.hash;
+  let hashWith = HashMap.hashWith;
   let isEmpty map => isEmpty count map;
   let isNotEmpty map => isNotEmpty count map;
+  let keys = HashMap.keys;
   let map = HashMap.map;
-  let mapWithKey = HashMap.mapWithKey;
   let merge = HashMap.merge;
   let mutate = HashMap.mutate;
+  let none = HashMap.none;
   let put = HashMap.put;
   let putAll = HashMap.putAll;
   let reduce = HashMap.reduce;
-  let reduceWithKey = HashMap.reduceWithKey;
   let remove = HashMap.remove;
   let removeAll = HashMap.removeAll;
+  let some = HashMap.some;
+  let toCollection = HashMap.toCollection;
   let toKeyed = HashMap.toKeyed;
   let toSeq = HashMap.toSeq;
+  let tryFind = HashMap.tryFind;
   let tryGet = HashMap.tryGet;
+  let values = HashMap.values;
 };
 
 let module TransientHashMap = {
   type t 'k 'v = transientHashMap 'k 'v;
 
+  let alter = TransientHashMap.alter;
   let count = TransientHashMap.count;
   let isEmpty transient => isEmpty count transient;
   let isNotEmpty transient => isNotEmpty count transient;
@@ -400,7 +417,7 @@ let module TransientHashMap = {
   let removeAll = TransientHashMap.removeAll;
   let tryGet = TransientHashMap.tryGet;
 };
-
+/*
 let module HashMultiset = {
   type t 'a = HashMultiset.hashMultiset 'a;
 
@@ -504,34 +521,51 @@ let module HashSetMultimap = {
   let toKeyed = HashSetMultimap.toKeyed;
   let toSeq = HashSetMultimap.toSeq;
 };
-
+*/
 let module IntMap = {
   type t 'a = IntMap.intMap 'a;
 
+  let alter = IntMap.alter;
+  let contains = IntMap.contains;
+  let containsKey = IntMap.containsKey;
+  let containsWith = IntMap.containsWith;
   let count = IntMap.count;
   let empty = IntMap.empty;
+  let equals = IntMap.equals;
+  let equalsWith = IntMap.equalsWith;
+  let every = IntMap.every;
   let fromKeyed = IntMap.fromKeyed;
   let fromSeq = IntMap.fromSeq;
-  let isEmpty map => isEmpty count map;
-  let isNotEmpty map => isNotEmpty count map;
+  let find = IntMap.find;
+  let forEach = IntMap.forEach;
+  let get = IntMap.get;
+  let hash = IntMap.hash;
+  let hashWith = IntMap.hashWith;
+  let isEmpty = IntMap.isEmpty;
+  let isNotEmpty = IntMap.isNotEmpty;
+  let keys = IntMap.keys;
   let map = IntMap.map;
-  let mapWithKey = IntMap.mapWithKey;
   let merge = IntMap.merge;
   let mutate = IntMap.mutate;
+  let none = IntMap.none;
   let put = IntMap.put;
   let putAll = IntMap.putAll;
   let reduce = IntMap.reduce;
-  let reduceWithKey = IntMap.reduceWithKey;
   let remove = IntMap.remove;
   let removeAll = IntMap.removeAll;
+  let some = IntMap.some;
+  let toCollection = IntMap.toCollection;
   let toKeyed = IntMap.toKeyed;
   let toSeq = IntMap.toSeq;
+  let tryFind = IntMap.tryFind;
   let tryGet = IntMap.tryGet;
+  let values = IntMap.values;
 };
 
 let module TransientIntMap = {
   type t 'a = transientIntMap 'a;
 
+  let alter = TransientIntMap.alter;
   let count = TransientIntMap.count;
   let isEmpty transient => isEmpty count transient;
   let isNotEmpty transient => isNotEmpty count transient;
@@ -541,7 +575,7 @@ let module TransientIntMap = {
   let remove = TransientIntMap.remove;
   let removeAll = TransientIntMap.removeAll;
   let tryGet = TransientIntMap.tryGet;
-};*/
+};
 
 let module List = {
   type t 'a = list 'a;
@@ -610,35 +644,58 @@ let module Option = {
   let toSeq = SeqInternal.ofOption;
   let tryFind = Option.tryFind;
 };
-/*
+
 let module SortedMap = {
   type t 'k 'v = SortedMap.sortedMap 'k 'v;
 
+  let alter = SortedMap.alter;
+  let compare = SortedMap.compare;
+  let compareWith = SortedMap.compareWith;
+  let contains = SortedMap.contains;
+  let containsWith = SortedMap.containsWith;
+  let containsKey = SortedMap.containsKey;
   let count = SortedMap.count;
   let empty = SortedMap.empty;
   let emptyWith = SortedMap.emptyWith;
+  let equals = SortedMap.equals;
+  let equalsWith = SortedMap.equalsWith;
+  let every = SortedMap.every;
+  let find = SortedMap.find;
+  let first = SortedMap.first;
+  let forEach = SortedMap.forEach;
   let fromKeyed = SortedMap.fromKeyed;
   let fromKeyedWith = SortedMap.fromKeyedWith;
   let fromSeq = SortedMap.fromSeq;
   let fromSeqWith = SortedMap.fromSeqWith;
-  let isEmpty map => isEmpty count map;
-  let isNotEmpty map => isNotEmpty count map;
+  let get = SortedMap.get;
+  let hash = SortedMap.hash;
+  let hashWith = SortedMap.hashWith;
+  let isEmpty = SortedMap.isEmpty;
+  let isNotEmpty = SortedMap.isNotEmpty;
+  let keys = SortedMap.keys;
+  let last = SortedMap.last;
   let map = SortedMap.map;
-  let mapWithKey = SortedMap.mapWithKey;
   let merge = SortedMap.merge;
+  let none = SortedMap.none;
   let put = SortedMap.put;
   let putAll = SortedMap.putAll;
   let reduce = SortedMap.reduce;
-  let reduceWithKey = SortedMap.reduceWithKey;
   let reduceRight = SortedMap.reduceRight;
-  let reduceRightWithKey = SortedMap.reduceRightWithKey;
   let remove = SortedMap.remove;
   let removeAll = SortedMap.removeAll;
+  let removeFirst = SortedMap.removeFirst;
+  let removeLast = SortedMap.removeLast;
+  let some = SortedMap.some;
+  let toCollection = SortedMap.toCollection;
   let toKeyed = SortedMap.toKeyed;
   let toSeq = SortedMap.toSeq;
+  let tryFind = SortedMap.tryFind;
+  let tryFirst = SortedMap.tryFirst;
   let tryGet = SortedMap.tryGet;
+  let tryLast = SortedMap.tryLast;
+  let values = SortedMap.values;
 };
-*/
+
 let module SortedSet = {
   type t 'a = SortedSet.sortedSet 'a;
 

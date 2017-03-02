@@ -1,106 +1,35 @@
+open Collection;
 open CopyOnWriteArray;
 open Equality;
 open Functions;
+open Hash;
 open Keyed;
 open Option;
 open Option.Operators;
 open Seq;
 open Transient;
 
-/* FIXME: Consider making this a functor, that takes the bitcounting strategy and branch factor
- * as arguments so we can compare them for performance.
- */
-let module BitmapTrie = {
-  type node 'a =
-    | Entry int 'a
-    | Level int32 (array (node 'a)) (option owner);
+type bitmapTrieIntMap 'a =
+  | Level int32 (array (bitmapTrieIntMap 'a)) (option owner)
+  | Entry int 'a
+  | Empty;
 
-  type bitmapTrie 'a = option (node 'a);
-
-  let empty: bitmapTrie 'a = None;
-
-  /* FIXME: It's not clear which bit counting strategy to use. The bitcount table
-   * is likely faster but uses more memory.
-   */
-  let bitCountTable = {
-    let table = Array.make 65536 0;
-    let position1 = ref (-1);
-    let position2 = ref (-1);
-    for i in 1 to 65535 {
-      if (!position1 == !position2) {
-        position1 := 0;
-        position2 := i;
-      };
-
-      table.(i) = table.(!position1) + 1;
-      position1 := !position1 + 1;
-    };
-
-    table
-  };
-
-  let countBits (x: int32): int => {
-    let intValue = Int32.to_int x;
-    let intBits = bitCountTable.(intValue land 65535) + bitCountTable.((intValue asr 16) land 65535);
-    intBits + (x < 0l ? 1 : 0);
-  };
-  /*
-  let countBits (x: int32): int => {
-    let intBits = {
-      let x = Int32.to_int x;
-      let x = x - ((x asr 1) land 0x55555555);
-      let x = (x land 0x33333333) + ((x asr 2) land 0x33333333);
-      let x = (x + (x asr 4)) land 0x0f0f0f0f;
-      let x = x + (x asr 8);
-      let x = x + (x asr 16);
-      x land 0x7f;
-    };
-    intBits + (x < 0l ? 1 : 0);
-  };*/
-
-  let shift = 5;
-  let width = 1 lsl shift;
-
-  let bitPos (key: int) (depth: int): int32 => {
-    let mask = (key lsr (depth * shift)) land 0x1F;
-    Int32.shift_left 1l mask;
-  };
-
-  let index (bitmap: int32) (bit: int32): int  =>
-    Int32.logand bitmap (Int32.sub bit 1l) |> countBits;
-
-  let containsNode (bitmap: int32) (bit: int32): bool =>
-    (Int32.logand bitmap bit) != 0l;
-
-  let rec tryGetFromNode (depth: int) (key: int) (node: node 'a): (option 'a) => switch node {
-    | Level bitmap nodes _ =>
-        let bit = bitPos key depth;
-        let index = index bitmap bit;
-
-        containsNode bitmap bit
-          ? nodes.(index) |> tryGetFromNode (depth + 1) key
-          : None
-
-    | Entry entryKey entryValue => key == entryKey ? Some entryValue : None;
-  };
-
-  let tryGet (key: int) (node: node 'a): (option 'a) =>
-    tryGetFromNode 0 key node;
-
+let module BitmapTrieIntMap = {
+  /* FIXME: Use the same alter pattern used in the other maps to avoid allocations */
   type alterResult 'a =
     | Added 'a
-    | Empty
     | NoChange
     | Removed 'a
-    | Replace 'a;
+    | Replace 'a
+    | Empty;
 
-  let rec alterNode
-      (updateLevelNode: int => (node 'a) => (node 'a) => (node 'a))
+  let rec alter
+      (updateLevelNode: int => (bitmapTrieIntMap 'a) => (bitmapTrieIntMap 'a) => (bitmapTrieIntMap 'a))
       (owner: option owner)
       (f: option 'a => option 'a)
       (depth: int)
       (key: int)
-      (node: node 'a): (alterResult (node 'a)) => switch node {
+      (map: bitmapTrieIntMap 'a): (alterResult (bitmapTrieIntMap 'a)) => switch map {
     | Entry entryKey entryValue when key == entryKey => switch (f @@ Option.return @@ entryValue) {
         | Some newEntryValue when newEntryValue === entryValue => NoChange
         | Some newEntryValue => Replace (Entry key newEntryValue)
@@ -108,146 +37,263 @@ let module BitmapTrie = {
       }
     | Entry entryKey entryValue => switch (f None) {
         | Some newEntryValue =>
-            let bitmap = bitPos entryKey depth;
-            Level bitmap [| node |] owner
-              |> alterNode updateLevelNode owner (Functions.return @@ Option.return @@ newEntryValue) depth key
+            let bitmap = BitmapTrie.bitPos entryKey depth;
+            Level bitmap [| map |] owner
+              |> alter updateLevelNode owner (Functions.return @@ Option.return @@ newEntryValue) depth key
         | _ => NoChange
       }
     | Level bitmap nodes _ =>
-        let bit = bitPos key depth;
-        let index = index bitmap bit;
+        let bit = BitmapTrie.bitPos key depth;
+        let index = BitmapTrie.index bitmap bit;
 
-        (containsNode bitmap bit) ? {
+        if (BitmapTrie.containsNode bitmap bit) {
           let childNode = nodes.(index);
-          let childNodeAlterResult = childNode |> alterNode updateLevelNode owner f (depth + 1) key;
+          let childNodeAlterResult = childNode |> alter updateLevelNode owner f (depth + 1) key;
 
           switch childNodeAlterResult {
-            | Added newChildNode => Added (node |> updateLevelNode index newChildNode)
+            | Added newChildNode => Added (map |> updateLevelNode index newChildNode)
             | NoChange => NoChange
-            | Removed newChildNode => Removed (node |> updateLevelNode index newChildNode)
-            | Replace newChildNode => Replace (node |> updateLevelNode index newChildNode)
+            | Removed newChildNode => Removed (map |> updateLevelNode index newChildNode)
+            | Replace newChildNode => Replace (map |> updateLevelNode index newChildNode)
             | Empty =>
                 let nodes = nodes |> CopyOnWriteArray.removeAt index;
-                CopyOnWriteArray.count nodes > 0
-                  ? Removed (Level (Int32.logxor bitmap bit) nodes owner)
-                  : Empty
+                if (CopyOnWriteArray.count nodes > 0) (Removed (Level (Int32.logxor bitmap bit) nodes owner))
+                else Empty
           }
-        } : switch (f None) {
+        } else (switch (f None) {
           | Some newEntryValue =>
               let node = Entry key newEntryValue;
               let nodes = nodes |> CopyOnWriteArray.insertAt index node;
               Added (Level (Int32.logor bitmap bit) nodes owner)
           | None => NoChange
-        }
-  };
-
-  let alter
-      (updateLevelNode: int => (node 'a) => (node 'a) => (node 'a))
-      (owner: option owner)
-      (f: option 'a => option 'a)
-      (key: int)
-      (trie: bitmapTrie 'a): (alterResult (bitmapTrie 'a)) => trie
-    >>| (alterNode updateLevelNode None f 0 key)
-    >>| (fun
-      | Added node => Added (Some node)
-      | NoChange => NoChange
-      | Removed node => Removed (Some node)
-      | Replace node => Replace (Some node)
-      | Empty => Empty
-    )
-    |> Option.orCompute (fun () => switch (f None) {
-        | Some value => Added (Entry key value |> Option.return)
-        | _ => NoChange
+        })
+    | Empty => switch (f None) {
+        | None => NoChange
+        | Some v => Added (Entry key v)
       }
-    );
-
-  let rec reduceWithKey (f: 'acc => int => 'a => 'acc) (acc: 'acc) (node: node 'a): 'acc => switch node {
-    | Entry key value => f acc key value;
-    | Level _ nodes _ =>
-        let reducer acc node => reduceWithKey f acc node;
-        nodes |> CopyOnWriteArray.reduce reducer acc;
   };
 
-  let rec toSeq (node: node 'a): (seq ((int, 'a))) => switch node {
+  let rec containsKey
+      (depth: int)
+      (key: int)
+      (map: bitmapTrieIntMap 'a): bool => switch map {
+    | Level bitmap nodes _ =>
+        let bit = BitmapTrie.bitPos key depth;
+        let index = BitmapTrie.index bitmap bit;
+
+        (BitmapTrie.containsNode bitmap bit) &&
+        (containsKey (depth + 1) key nodes.(index));
+    | Entry entryKey entryValue => key == entryKey;
+    | Empty => false;
+  };
+
+  let rec containsWith
+      (equality: equality 'a)
+      (depth: int)
+      (key: int)
+      (value: 'a)
+      (map: bitmapTrieIntMap 'a): bool => switch map {
+    | Level bitmap nodes _ =>
+        let bit = BitmapTrie.bitPos key depth;
+        let index = BitmapTrie.index bitmap bit;
+
+        (BitmapTrie.containsNode bitmap bit) &&
+        (containsWith equality (depth + 1) key value nodes.(index));
+    | Entry entryKey entryValue =>
+        key == entryKey && (equality value entryValue);
+    | Empty => false;
+  };
+
+  let rec every (f: int => 'a => bool) (map: bitmapTrieIntMap 'a): bool => switch map {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (fun node => every f node)
+    | Entry key value => f key value
+    | Empty => true
+  };
+
+  let rec forEach (f: int => 'a => unit) (map: bitmapTrieIntMap 'a): unit => switch map {
+    | Level _ nodes _ =>
+        let f map => forEach f map;
+        nodes |> CopyOnWriteArray.forEach f;
+    | Entry key value => f key value;
+    | Empty => ();
+  };
+
+  let rec none (f: int => 'a => bool) (map: bitmapTrieIntMap 'a): bool => switch map {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (fun node => none f node)
+    | Entry key value => f key value |> not
+    | Empty => true
+  };
+
+  let rec reduce (f: 'acc => int => 'a => 'acc) (acc: 'acc) (map: bitmapTrieIntMap 'a): 'acc => switch map {
+    | Level _ nodes _ =>
+        let reducer acc map => reduce f acc map;
+        nodes |> CopyOnWriteArray.reduce reducer acc;
+    | Entry key value => f acc key value;
+    | Empty => acc;
+  };
+
+  let rec some (f: int => 'a => bool) (map: bitmapTrieIntMap 'a): bool => switch map {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.some (fun node => some f node)
+    | Entry key value => f key value
+    | Empty => false
+  };
+
+  let rec toSeq (map: bitmapTrieIntMap 'a): (seq (int, 'a)) => switch map {
     | Entry key value => Seq.return (key, value)
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
+    | Empty => Seq.empty;
+  };
+
+  let rec tryFind (f: int => 'a => bool) (map: bitmapTrieIntMap 'a): (option (int, 'a)) => switch map {
+    | Level _ nodes _ =>
+        let nodesCount = CopyOnWriteArray.count nodes;
+        let rec loop index =>
+          if (index < nodesCount) {
+            switch (tryFind f nodes.(index)) {
+              | Some _ as result => result
+              | _ => loop (index + 1)
+            }
+          } else None;
+        loop 0
+    | Entry key value => if (f key value) (Some (key, value)) else None;
+    | Empty => None
+  };
+
+  let rec tryGet (depth: int) (key: int) (map: bitmapTrieIntMap 'a): (option 'a) => switch map {
+    | Level bitmap nodes _ =>
+        let bit = BitmapTrie.bitPos key depth;
+        let index = BitmapTrie.index bitmap bit;
+
+        if (BitmapTrie.containsNode bitmap bit) (tryGet (depth + 1) key nodes.(index))
+        else None;
+    | Entry entryKey entryValue when key == entryKey => Some entryValue
+    | _ => None
+  };
+
+  let rec values (map: bitmapTrieIntMap 'a): (seq 'a) => switch map {
+    | Entry key value => Seq.return value
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap values
+    | Empty => Seq.empty;
   };
 };
-
-open BitmapTrie;
 
 type intMap 'a = {
   count: int,
-  trie: (bitmapTrie 'a),
+  root: (bitmapTrieIntMap 'a),
 };
-
-type transientIntMap 'a = transient (intMap 'a);
-
-let count ({ count }: intMap 'a): int => count;
-
-let empty: intMap 'a = { count: 0, trie: BitmapTrie.empty };
-
-let mutate (map: intMap 'a): (transientIntMap 'a) => Transient.create map;
 
 let updateLevelNodePersistent
     (index: int)
-    (childNode: node 'a)
-    (node: (node 'a)): (node 'a) => switch node {
-  | Level bitmap nodes _ => Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None
-  | _ => failwith "Invalid state"
+    (childNode: bitmapTrieIntMap 'a)
+    ((Level bitmap nodes _): (bitmapTrieIntMap 'a)): (bitmapTrieIntMap 'a) =>
+  Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
+
+let empty: intMap 'a = { count: 0, root: Empty };
+
+let alter (key: int) (f: option 'a => option 'a) ({ count, root } as map: intMap 'a): (intMap 'a) => {
+  let alterResult = root |> BitmapTrieIntMap.alter updateLevelNodePersistent None f 0 key;
+
+  switch alterResult {
+    | BitmapTrieIntMap.Added root => { count: count + 1, root }
+    | BitmapTrieIntMap.NoChange => map
+    | BitmapTrieIntMap.Replace root => { count, root }
+    | BitmapTrieIntMap.Removed root => { count: count - 1, root }
+    | BitmapTrieIntMap.Empty => empty
+  }
 };
 
-let alterWithOwnerAndMutator
-    (owner: option owner)
-    (updateLevelNode: int => (node 'a) => (node 'a) => (node 'a))
-    (key: int)
-    (f: option 'a => option 'a)
-    ({ count, trie } as map: intMap 'a): (intMap 'a) => {
-      let alterResult = trie |> BitmapTrie.alter
-        updateLevelNode
-        None
-        f
-        key;
+let containsKey (key: int) ({ root }: intMap 'a): bool =>
+  root |> BitmapTrieIntMap.containsKey 0 key;
 
-      switch alterResult {
-        | Added trie => { count: count + 1, trie }
-        | NoChange => map
-        | Replace trie => { count, trie }
-        | Removed trie => { count: count - 1, trie }
-        | Empty => empty
-      }
-};
+let containsWith (equality: equality 'a) (key: int) (value: 'a) ({ root }: intMap 'a): bool =>
+  root |> BitmapTrieIntMap.containsWith equality 0 key value;
 
-let alter
-    (key: int)
-    (f: option 'a => option 'a)
-    (map: intMap 'a): (intMap 'a) =>
-  alterWithOwnerAndMutator None updateLevelNodePersistent key f map;
+let contains (key: int) (value: 'a) (map: intMap 'a): bool =>
+  map |> containsWith Equality.structural key value;
 
-let put (key: int) (value: 'a) ({ count, trie } as map: intMap 'a): (intMap 'a) =>
+let count ({ count }: intMap 'a): int => count;
+
+let every (f: int => 'a => bool) ({ root }: intMap 'a): bool =>
+  root |> BitmapTrieIntMap.every f;
+
+let find (f: int => 'a => bool) ({ root }: intMap 'a): (int, 'a) =>
+  root |> BitmapTrieIntMap.tryFind f |> Option.get;
+
+let forEach (f: int => 'a => unit) ({ root }: intMap 'a): unit =>
+  root |> BitmapTrieIntMap.forEach f;
+
+let get (key: int) ({ root }: intMap 'a): 'a =>
+  root |> BitmapTrieIntMap.tryGet 0 key |> Option.get;
+
+let isEmpty ({ count }: intMap 'a): bool => count == 0;
+
+let isNotEmpty ({ count }: intMap 'a): bool => count != 0;
+
+let none (f: int => 'a => bool) ({ root }: intMap 'a): bool =>
+  root |> BitmapTrieIntMap.none f;
+
+let put (key: int) (value: 'a) ({ count, root } as map: intMap 'a): (intMap 'a) =>
   map |> alter key (Functions.return @@ Option.return @@ value);
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ trie }: intMap 'a): 'acc =>
-  trie >>| BitmapTrie.reduceWithKey (fun acc _ v => f acc v) acc |? acc;
-
-let reduceWithKey (f: 'acc => int => 'a => 'acc) (acc: 'acc) ({ trie }: intMap 'a): 'acc =>
-  trie >>| BitmapTrie.reduceWithKey f acc |? acc;
+let reduce (f: 'acc => int => 'a => 'acc) (acc: 'acc) ({ root }: intMap 'a): 'acc =>
+  root |> BitmapTrieIntMap.reduce f acc;
 
 let remove (key: int) (map: intMap 'a): (intMap 'a) =>
   map |> alter key alwaysNone;
 
 let removeAll (map: intMap 'a): (intMap 'a) => empty;
 
-let toKeyed ({ count, trie }: intMap 'a): (keyed int 'a) => Keyed.create
-  count::count
-  seq::(trie >>| BitmapTrie.toSeq |? Seq.empty)
-  tryGet::(fun key => trie >>= BitmapTrie.tryGet key);
+let some (f: int => 'a => bool) ({ root }: intMap 'a): bool =>
+  root |> BitmapTrieIntMap.some f;
 
-let toSeq ({ trie }: intMap 'a): (seq ((int, 'a))) =>
-  trie >>| BitmapTrie.toSeq |? Seq.empty;
+let toSeq ({ root }: intMap 'a): (seq ((int, 'a))) =>
+  root |> BitmapTrieIntMap.toSeq;
 
-let tryGet (key: int) ({ trie }: intMap 'a): (option 'a) =>
-  trie >>= BitmapTrie.tryGet key;
+let tryFind (f: int => 'a => bool) ({ root }: intMap 'a): (option (int, 'a)) =>
+  root |> BitmapTrieIntMap.tryFind f;
+
+let tryGet (key: int) ({ root }: intMap 'a): (option 'a) =>
+  root |> BitmapTrieIntMap.tryGet 0 key;
+
+let values ({ root }: intMap 'a): (seq 'a) =>
+  root |> BitmapTrieIntMap.values;
+
+let toKeyed (map: intMap 'a): (keyed int 'a) => {
+  containsWith: fun eq k v => map |> containsWith eq k v,
+  containsKey: fun k => containsKey k map,
+  count: (count map),
+  every: fun f => every f map,
+  find: fun f => find f map,
+  forEach: fun f => forEach f map,
+  get: fun i => get i map,
+  none: fun f => none f map,
+  reduce: fun f acc => map |> reduce f acc,
+  some: fun f => map |> some f,
+  toSeq: (toSeq map),
+  tryFind: fun f => tryFind f map,
+  tryGet: fun i => tryGet i map,
+  values: (values map),
+};
+
+let equals (this: intMap 'a) (that: intMap 'a): bool =>
+  Keyed.equals (toKeyed this) (toKeyed that);
+
+let equalsWith (equality: equality 'a) (this: intMap 'a) (that: intMap 'a): bool =>
+  Keyed.equalsWith equality (toKeyed this) (toKeyed that);
+
+let hash (map: intMap 'a): int =>
+  map |> toKeyed |> Keyed.hash;
+
+let hashWith (hash: hash 'a) (map: intMap 'a): int =>
+  map |> toKeyed |> Keyed.hashWith Hash.structural hash;
+
+let keys (map: intMap 'a): (collection int) =>
+  map |> toKeyed |> Keyed.keys;
+
+let toCollection (equality: equality 'a) (map: intMap 'a): (collection (int, 'a)) =>
+  map |> toKeyed |> Keyed.toCollectionWith equality;
+
+type transientIntMap 'a = transient (intMap 'a);
 
 let module TransientIntMap = {
   let count (transient: transientIntMap 'a): int =>
@@ -259,28 +305,29 @@ let module TransientIntMap = {
   let updateLevelNodeTransient
       (owner: owner)
       (index: int)
-      (childNode: node 'a)
-      (node: (node 'a)): (node 'a) => switch node {
-    | Level bitmap nodes nodeOwner => switch nodeOwner {
-        | Some nodeOwner when nodeOwner === owner =>
-            nodes.(index) = childNode;
-            node
-        | _ => Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
-      }
-    | _ => failwith "invalid state"
+      (childNode: bitmapTrieIntMap 'a)
+      ((Level bitmap nodes nodeOwner) as node: (bitmapTrieIntMap 'a)): (bitmapTrieIntMap 'a) => switch nodeOwner {
+    | Some nodeOwner when nodeOwner === owner =>
+        nodes.(index) = childNode;
+        node
+    | _ => Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
   };
 
   let alter
       (key: int)
       (f: option 'a => option 'a)
       (transient: transientIntMap 'a): (transientIntMap 'a) =>
-    transient |> Transient.update (fun owner map => alterWithOwnerAndMutator
-      (Some owner)
-      (updateLevelNodeTransient owner)
-      key
-      f
-      map
-    );
+    transient |> Transient.update (fun owner ({ count, root } as map) => {
+      let alterResult = root |> BitmapTrieIntMap.alter updateLevelNodePersistent None f 0 key;
+
+      switch alterResult {
+        | BitmapTrieIntMap.Added root => { count: count + 1, root }
+        | BitmapTrieIntMap.NoChange => map
+        | BitmapTrieIntMap.Replace root => { count, root }
+        | BitmapTrieIntMap.Removed root => { count: count - 1, root }
+        | BitmapTrieIntMap.Empty => empty
+      }
+    });
 
   let put (key: int) (value: 'a) (transient: transientIntMap 'a): (transientIntMap 'a) =>
     transient |> alter key (Functions.return @@ Option.return @@ value);
@@ -300,20 +347,24 @@ let module TransientIntMap = {
     transient |> Transient.get |> (tryGet key);
 };
 
+let mutate (map: intMap 'a): (transientIntMap 'a) => Transient.create map;
+
 let putAll (seq: seq (int, 'a)) (map: intMap 'a): (intMap 'a) => map
   |> mutate
   |> TransientIntMap.putAll seq
   |> TransientIntMap.persist;
 
-let map (f: 'a => 'b) (map: intMap 'a): (intMap 'b) =>
-  empty |> putAll (map |> toSeq |> Seq.map (Pair.mapSnd f));
-
-let mapWithKey (f: int => 'a => 'b) (map: intMap 'a): (intMap 'b) =>
-  empty |> putAll (map |> toSeq |> Seq.map @@ Pair.mapSndWithFst @@ f);
+let map (f: int => 'a => 'b) (map: intMap 'a): (intMap 'b) => map
+  |> reduce
+    (fun acc key value => acc |> TransientIntMap.put key (f key value))
+    (mutate empty)
+  |> TransientIntMap.persist;
 
 let fromSeq (seq: seq (int, 'a)): (intMap 'a) => putAll seq empty;
 
-let fromKeyed (keyed: keyed int 'a): (intMap 'a) => keyed |> Keyed.toSeq |> fromSeq;
+let fromKeyed (keyed: keyed int 'a): (intMap 'a) => keyed
+  |> Keyed.reduce (fun acc k v => acc |> TransientIntMap.put k v) (mutate empty)
+  |> TransientIntMap.persist;
 
 let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))

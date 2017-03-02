@@ -1,8 +1,6 @@
 open AVLTreeSet;
 open Collection;
-open Comparator;
 open EqualitySet;
-open Hash;
 open HashStrategy;
 open Keyed;
 open Ordering;
