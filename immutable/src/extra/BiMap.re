@@ -105,7 +105,7 @@ let some (f: 'k => 'v => bool) ({ map }: biMap 'k 'v): bool =>
 
 let toCollection ({ map, inverse }: biMap 'k 'v): (collection ('k, 'v)) =>
   /* Kind of cheating */
-  map |> HashMap.toCollection (HashStrategy.equals inverse.strategy);
+  map |> HashMap.toCollectionWith (HashStrategy.equals inverse.strategy);
 
 let toInverseMap ({ inverse }: biMap 'k 'v): (hashMap 'k 'k) => inverse;
 

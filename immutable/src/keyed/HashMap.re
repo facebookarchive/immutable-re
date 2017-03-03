@@ -496,7 +496,10 @@ let hashWith (valueHash: hash 'v) ({ strategy } as map: hashMap 'k 'v): int =>
 let keys (map: hashMap 'k 'v): (collection 'k) =>
   map |> toKeyed |> Keyed.keys;
 
-let toCollection (equality: equality 'v) (map: hashMap 'k 'v): (collection ('k, 'v)) =>
+let toCollection (map: hashMap 'k 'v): (collection ('k, 'v)) =>
+  map |> toKeyed |> Keyed.toCollection;
+
+let toCollectionWith (equality: equality 'v) (map: hashMap 'k 'v): (collection ('k, 'v)) =>
   map |> toKeyed |> Keyed.toCollectionWith equality;
 
 type transientHashMap 'k 'v = transient (hashMap 'k 'v);

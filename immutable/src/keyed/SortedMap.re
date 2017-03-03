@@ -216,5 +216,8 @@ let merge
   )
   map;
 
-let toCollection (equality: equality 'v) (map: sortedMap 'k 'v): (collection ('k, 'v)) =>
+let toCollectionWith (equality: equality 'v) (map: sortedMap 'k 'v): (collection ('k, 'v)) =>
   map |> toKeyed |> Keyed.toCollectionWith equality;
+
+let toCollection (map: sortedMap 'k 'v): (collection ('k, 'v)) =>
+  map |> toKeyed |> Keyed.toCollection;

@@ -307,7 +307,10 @@ let hashWith (hash: hash 'a) (map: intMap 'a): int =>
 let keys (map: intMap 'a): (collection int) =>
   map |> toKeyed |> Keyed.keys;
 
-let toCollection (equality: equality 'a) (map: intMap 'a): (collection (int, 'a)) =>
+let toCollection (map: intMap 'a): (collection (int, 'a)) =>
+  map |> toKeyed |> Keyed.toCollection;
+
+let toCollectionWith (equality: equality 'a) (map: intMap 'a): (collection (int, 'a)) =>
   map |> toKeyed |> Keyed.toCollectionWith equality;
 
 type transientIntMap 'a = transient (intMap 'a);

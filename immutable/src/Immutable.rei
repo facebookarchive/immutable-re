@@ -401,7 +401,8 @@ let module rec HashMap: {
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let toCollection: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
+  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
+  let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
@@ -589,7 +590,8 @@ let module rec IntMap: {
   let remove: int => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
   let some: (int => 'a => bool) => (t 'a) => bool;
-  let toCollection: (Equality.t 'a) => (t 'a) => (Collection.t (int, 'a));
+  let toCollection: (t 'a) => (Collection.t (int, 'a));
+  let toCollectionWith: (Equality.t 'a) => (t 'a) => (Collection.t (int, 'a));
   let toKeyed: (t 'a) => (Keyed.t int 'a);
   let toSeq: (t 'a) => (Seq.t ((int, 'a)));
   let tryFind: (int => 'a => bool) => (t 'a) => (option (int, 'a));
@@ -722,7 +724,8 @@ let module SortedMap: {
   let removeFirst: (t 'k 'v) => (t 'k 'v);
   let removeLast: (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let toCollection: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
+  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
+  let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
