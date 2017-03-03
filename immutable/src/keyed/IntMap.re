@@ -16,31 +16,39 @@ type bitmapTrieIntMap 'a =
 
 let module BitmapTrieIntMap = {
   /* FIXME: Use the same alter pattern used in the other maps to avoid allocations */
-  type alterResult 'a =
-    | Added 'a
+  type alterResult =
+    | Added
     | NoChange
-    | Removed 'a
-    | Replace 'a
-    | Empty;
+    | Removed
+    | Replace;
 
   let rec alter
       (updateLevelNode: int => (bitmapTrieIntMap 'a) => (bitmapTrieIntMap 'a) => (bitmapTrieIntMap 'a))
       (owner: option owner)
-      (f: option 'a => option 'a)
+      (alterResult: ref alterResult)
       (depth: int)
       (key: int)
-      (map: bitmapTrieIntMap 'a): (alterResult (bitmapTrieIntMap 'a)) => switch map {
+      (f: option 'a => option 'a)
+      (map: bitmapTrieIntMap 'a): (bitmapTrieIntMap 'a) => switch map {
     | Entry entryKey entryValue when key == entryKey => switch (f @@ Option.return @@ entryValue) {
-        | Some newEntryValue when newEntryValue === entryValue => NoChange
-        | Some newEntryValue => Replace (Entry key newEntryValue)
-        | None => Empty
+        | Some newEntryValue when newEntryValue === entryValue =>
+            alterResult := NoChange;
+            map;
+        | Some newEntryValue =>
+            alterResult := Replace;
+            Entry key newEntryValue
+        | None =>
+            alterResult := Removed;
+            Empty
       }
-    | Entry entryKey entryValue => switch (f None) {
+    | Entry entryKey _ => switch (f None) {
         | Some newEntryValue =>
             let bitmap = BitmapTrie.bitPos entryKey depth;
             Level bitmap [| map |] owner
-              |> alter updateLevelNode owner (Functions.return @@ Option.return @@ newEntryValue) depth key
-        | _ => NoChange
+              |> alter updateLevelNode owner alterResult depth key (Functions.return @@ Option.return @@ newEntryValue)
+        | _ =>
+            alterResult := NoChange;
+            map;
       }
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos key depth;
@@ -48,28 +56,37 @@ let module BitmapTrieIntMap = {
 
         if (BitmapTrie.containsNode bitmap bit) {
           let childNode = nodes.(index);
-          let childNodeAlterResult = childNode |> alter updateLevelNode owner f (depth + 1) key;
+          let newChildNode = childNode |> alter updateLevelNode owner alterResult (depth + 1) key f;
 
-          switch childNodeAlterResult {
-            | Added newChildNode => Added (map |> updateLevelNode index newChildNode)
-            | NoChange => NoChange
-            | Removed newChildNode => Removed (map |> updateLevelNode index newChildNode)
-            | Replace newChildNode => Replace (map |> updateLevelNode index newChildNode)
-            | Empty =>
-                let nodes = nodes |> CopyOnWriteArray.removeAt index;
-                if (CopyOnWriteArray.count nodes > 0) (Removed (Level (Int32.logxor bitmap bit) nodes owner))
-                else Empty
+          switch !alterResult {
+            | Added => map |> updateLevelNode index newChildNode;
+            | NoChange => map
+            | Replace => map |> updateLevelNode index newChildNode
+            | Removed => switch newChildNode {
+                | Empty =>
+                    let nodes = nodes |> CopyOnWriteArray.removeAt index;
+                    if (CopyOnWriteArray.count nodes > 0) (Level (Int32.logxor bitmap bit) nodes owner)
+                    else Empty
+                | _ => map |> updateLevelNode index newChildNode
+              }
           }
         } else (switch (f None) {
           | Some newEntryValue =>
+              alterResult := Added;
               let node = Entry key newEntryValue;
               let nodes = nodes |> CopyOnWriteArray.insertAt index node;
-              Added (Level (Int32.logor bitmap bit) nodes owner)
-          | None => NoChange
+              Level (Int32.logor bitmap bit) nodes owner;
+          | None =>
+              alterResult := NoChange;
+              map;
         })
     | Empty => switch (f None) {
-        | None => NoChange
-        | Some v => Added (Entry key v)
+        | None =>
+            alterResult := NoChange;
+            map
+        | Some v =>
+            alterResult := Added;
+            Entry key v;
       }
   };
 
@@ -191,14 +208,14 @@ let updateLevelNodePersistent
 let empty: intMap 'a = { count: 0, root: Empty };
 
 let alter (key: int) (f: option 'a => option 'a) ({ count, root } as map: intMap 'a): (intMap 'a) => {
-  let alterResult = root |> BitmapTrieIntMap.alter updateLevelNodePersistent None f 0 key;
+  let alterResult = ref BitmapTrieIntMap.NoChange;
+  let newRoot = root |> BitmapTrieIntMap.alter updateLevelNodePersistent None alterResult 0 key f;
 
-  switch alterResult {
-    | BitmapTrieIntMap.Added root => { count: count + 1, root }
+  switch !alterResult {
+    | BitmapTrieIntMap.Added => { count: count + 1, root: newRoot }
     | BitmapTrieIntMap.NoChange => map
-    | BitmapTrieIntMap.Replace root => { count, root }
-    | BitmapTrieIntMap.Removed root => { count: count - 1, root }
-    | BitmapTrieIntMap.Empty => empty
+    | BitmapTrieIntMap.Replace => { count, root: newRoot }
+    | BitmapTrieIntMap.Removed => { count: count - 1, root: newRoot }
   }
 };
 
@@ -295,13 +312,9 @@ let toCollection (equality: equality 'a) (map: intMap 'a): (collection (int, 'a)
 
 type transientIntMap 'a = transient (intMap 'a);
 
+let mutate (map: intMap 'a): (transientIntMap 'a) => Transient.create map;
+
 let module TransientIntMap = {
-  let count (transient: transientIntMap 'a): int =>
-    transient |> Transient.get |> count;
-
-  let persist (transient: transientIntMap 'a): (intMap 'a) =>
-    transient |> Transient.persist;
-
   let updateLevelNodeTransient
       (owner: owner)
       (index: int)
@@ -318,16 +331,33 @@ let module TransientIntMap = {
       (f: option 'a => option 'a)
       (transient: transientIntMap 'a): (transientIntMap 'a) =>
     transient |> Transient.update (fun owner ({ count, root } as map) => {
-      let alterResult = root |> BitmapTrieIntMap.alter updateLevelNodePersistent None f 0 key;
+      let alterResult = ref BitmapTrieIntMap.NoChange;
+      let newRoot = root
+        |> BitmapTrieIntMap.alter (updateLevelNodeTransient owner) (Some owner) alterResult 0 key f;
 
-      switch alterResult {
-        | BitmapTrieIntMap.Added root => { count: count + 1, root }
+      switch !alterResult {
+        | BitmapTrieIntMap.Added => { count: count + 1, root: newRoot }
         | BitmapTrieIntMap.NoChange => map
-        | BitmapTrieIntMap.Replace root => { count, root }
-        | BitmapTrieIntMap.Removed root => { count: count - 1, root }
-        | BitmapTrieIntMap.Empty => empty
+        | BitmapTrieIntMap.Replace => if (root === newRoot) map else { count, root: newRoot }
+        | BitmapTrieIntMap.Removed => { count: count - 1, root: newRoot }
       }
     });
+
+  let count (transient: transientIntMap 'a): int =>
+    transient |> Transient.get |> count;
+
+  let persistentEmpty = empty;
+  let empty (): transientIntMap 'a =>
+    empty |> mutate;
+
+  let isEmpty (transient: transientIntMap 'a): bool =>
+    transient |> Transient.get |> isEmpty;
+
+  let isNotEmpty (transient: transientIntMap 'a): bool =>
+    transient |> Transient.get |> isNotEmpty;
+
+  let persist (transient: transientIntMap 'a): (intMap 'a) =>
+    transient |> Transient.persist;
 
   let put (key: int) (value: 'a) (transient: transientIntMap 'a): (transientIntMap 'a) =>
     transient |> alter key (Functions.return @@ Option.return @@ value);
@@ -341,13 +371,11 @@ let module TransientIntMap = {
     transient |> alter key alwaysNone;
 
   let removeAll (transient: transientIntMap 'a): (transientIntMap 'a) =>
-      transient |> Transient.update (fun owner map => empty);
+      transient |> Transient.update (fun owner map => persistentEmpty);
 
   let tryGet (key: int) (transient: transientIntMap 'a): (option 'a) =>
     transient |> Transient.get |> (tryGet key);
 };
-
-let mutate (map: intMap 'a): (transientIntMap 'a) => Transient.create map;
 
 let putAll (seq: seq (int, 'a)) (map: intMap 'a): (intMap 'a) => map
   |> mutate

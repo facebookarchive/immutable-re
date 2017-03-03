@@ -90,6 +90,12 @@ let hash ({ list }: stack 'a): int =>
 let hashWith (valueHash: hash 'a) ({ list }: stack 'a): int =>
   ImmList.hashWith valueHash list;
 
+let isEmpty ({ list }: stack 'a): bool =>
+  list |> ImmList.isEmpty;
+
+let isNotEmpty ({ list }: stack 'a): bool =>
+  list |> ImmList.isNotEmpty;
+
 let mapReverse (f: 'a => 'b) ({ count, list }: stack 'a): (stack 'b) => {
   count,
   list: list |> ImmList.mapReverse f,

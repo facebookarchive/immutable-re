@@ -244,6 +244,9 @@ let toKeyed (set: hashSet 'a): (keyed 'a 'a) =>
 
 type transientHashSet 'a = transient (hashSet 'a);
 
+let mutate (set: hashSet 'a): (transientHashSet 'a) =>
+  Transient.create set;
+
 let module TransientHashSet = {
   let updateLevelNodeTransient
       (owner: owner)
@@ -292,6 +295,14 @@ let module TransientHashSet = {
   let count (transient: transientHashSet 'a): int =>
     transient |> Transient.get |> count;
 
+  let empty (): (transientHashSet 'a) =>
+    empty |> mutate;
+
+  let persistentEmptyWith = emptyWith;
+
+  let emptyWith (strategy: hashStrategy 'a): (transientHashSet 'a) =>
+    emptyWith strategy |> mutate;
+
   let isEmpty (transient: transientHashSet 'a): bool =>
     transient |> Transient.get |> isEmpty;
 
@@ -310,11 +321,8 @@ let module TransientHashSet = {
     });
 
   let removeAll  (transient: transientHashSet 'a): (transientHashSet 'a) =>
-    transient |> Transient.update (fun owner ({ strategy }) => emptyWith strategy);
+    transient |> Transient.update (fun owner ({ strategy }) => persistentEmptyWith strategy);
 };
-
-let mutate (set: hashSet 'a): (transientHashSet 'a) =>
-  Transient.create set;
 
 let addAll (seq: seq 'a) (set: hashSet 'a): (hashSet 'a) =>
   set |> mutate |> TransientHashSet.addAll seq |> TransientHashSet.persist;

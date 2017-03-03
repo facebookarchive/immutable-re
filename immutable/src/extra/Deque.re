@@ -16,19 +16,6 @@ type deque 'a =
 
 let empty: (deque 'a) = Ascending Vector.empty;
 
-type transientDequeImpl 'a =
-  | Ascending (transientVector 'a)
-  | Descending (transientVector 'a);
-
-type transientDeque 'a = transient (transientDequeImpl 'a);
-
-let mutate (deque: deque 'a): (transientDeque 'a) => switch deque {
-  | Ascending vector =>
-      Transient.create (Ascending (Vector.mutate vector))
-  | Descending vector  =>
-      Transient.create (Descending (Vector.mutate vector))
-};
-
 let addFirst (value: 'a) (deque: deque 'a): (deque 'a) => switch deque {
   | Ascending vector =>
       Ascending (vector |> Vector.addFirst value)
@@ -82,6 +69,12 @@ let hash (deque: deque 'a): int => switch deque {
   | Ascending vector
   | Descending vector => Vector.hash vector
 };
+
+let isEmpty (deque: deque 'a): bool =>
+  deque |> count == 0;
+
+let isNotEmpty (deque: deque 'a): bool =>
+  deque |> count != 0;
 
 let last (deque: deque 'a): 'a => switch deque {
   | Ascending vector => Vector.last vector
@@ -168,6 +161,19 @@ let containsWith (valueEquals: equality 'a) (value: 'a) (deque: deque 'a): bool 
 let contains (value: 'a) (deque: deque 'a): bool =>
   containsWith Equality.structural value deque;
 
+type transientDequeImpl 'a =
+  | Ascending (transientVector 'a)
+  | Descending (transientVector 'a);
+
+type transientDeque 'a = transient (transientDequeImpl 'a);
+
+let mutate (deque: deque 'a): (transientDeque 'a) => switch deque {
+  | Ascending vector =>
+      Transient.create (Ascending (Vector.mutate vector))
+  | Descending vector  =>
+      Transient.create (Descending (Vector.mutate vector))
+};
+
 let module TransientDeque = {
   let addFirst
       (value: 'a)
@@ -218,12 +224,19 @@ let module TransientDeque = {
     | Descending vector => TransientVector.count vector
   };
 
-  let empty () => empty |> mutate;
+  let empty (): (transientDeque 'a) =>
+    empty |> mutate;
 
   let first (transient: transientDeque 'a) => switch (Transient.get transient) {
     | Ascending vector => TransientVector.first vector
     | Descending vector => TransientVector.last vector
   };
+
+  let isEmpty (transient: transientDeque 'a): bool =>
+    transient |> count == 0;
+
+  let isNotEmpty (transient: transientDeque 'a): bool =>
+    transient |> count != 0;
 
   let last (transient: transientDeque 'a): 'a => switch (Transient.get transient)  {
     | Ascending vector => TransientVector.last vector

@@ -172,15 +172,14 @@ let module HashStrategy: {
   let structuralCompare: t 'a;
   let structuralEquality: t 'a;
 };
-/*
+
 let module rec BiMap: {
   type t 'k 'v;
 
   let contains: 'k => 'v => (t 'k 'v) => bool;
-  /*let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;*/
   let containsKey: 'k => (t 'k 'v) => bool;
   let count: (t 'k 'v) => int;
-  let empty: unit => (t 'k 'v);
+  let empty: (t 'k 'v);
   let emptyWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (t 'k 'v);
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
@@ -190,7 +189,6 @@ let module rec BiMap: {
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
   let get: 'k => (t 'k 'v) => 'v;
   let hash: (Hash.t (t 'k 'v));
-  /*let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));*/
   let inverse: (t 'k 'v) => t 'v 'k;
   let isEmpty: t 'k 'v => bool;
   let isNotEmpty: t 'k 'v => bool;
@@ -203,7 +201,7 @@ let module rec BiMap: {
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let toCollection: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
+  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
@@ -216,6 +214,8 @@ and TransientBiMap: {
   type t 'k 'v;
 
   let count: (t 'k 'v) => int;
+  let empty: unit => (t 'k 'v);
+  let emptyWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (t 'k 'v);
   let isEmpty: t 'k 'v => bool;
   let isNotEmpty: t 'k 'v => bool;
   let persist: (t 'k 'v) => (BiMap.t 'k 'v);
@@ -225,7 +225,7 @@ and TransientBiMap: {
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   let tryPut: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-};*/
+};
 
 let module CopyOnWriteArray: {
   type t 'a;
@@ -387,7 +387,7 @@ let module rec HashMap: {
   let fromSeqWith: (HashStrategy.t 'k) => (Seq.t ('k, 'v)) => (t 'k 'v);
   let get: 'k => (t 'k 'v) => 'v;
   let hash: (Hash.t (t 'k 'v));
-  let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
+  let hashWith: (Hash.t 'v) => (Hash.t (t 'k 'v));
   let keys: (t 'k 'v) => (Collection.t 'k);
   let isEmpty: t 'k 'v => bool;
   let isNotEmpty: t 'k 'v => bool;
@@ -414,8 +414,10 @@ and TransientHashMap: {
 
   let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
   let count: (t 'k 'v) => int;
-  let isEmpty: t 'k 'v => bool;
-  let isNotEmpty: t 'k 'v => bool;
+  let empty: unit => (t 'k 'v);
+  let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
+  let isEmpty: (t 'k 'v) => bool;
+  let isNotEmpty: (t 'k 'v) => bool;
   let persist: (t 'k 'v) => (HashMap.t 'k 'v);
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
   let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
@@ -423,7 +425,7 @@ and TransientHashMap: {
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let tryGet: 'k => (t 'k 'v) => (option 'v);
 };
-/*
+
 let module rec HashMultiset: {
   type t 'a;
 
@@ -431,18 +433,18 @@ let module rec HashMultiset: {
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
-  let empty: unit => (t 'a);
+  let empty: (t 'a);
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
   let every: ('a => int => bool) => (t 'a) => bool;
-  let find: ('a => int => bool) => (t 'a) => 'a;
+  let find: ('a => int => bool) => (t 'a) => ('a, int);
   let forEach: ('a => int => unit) => (t 'a) => unit;
-  let hash: (Hash.t (t 'a));
-  let isEmpty: t 'a => bool;
-  let isNotEmpty: t 'a => bool;
   let fromSeq: (Seq.t 'a) => (t 'a);
   let fromSeqWith: (HashStrategy.t 'a) => (Seq.t 'a) => (t 'a);
   let get: 'a => (t 'a) => int;
+  let hash: (Hash.t (t 'a));
+  let isEmpty: (t 'a) => bool;
+  let isNotEmpty: (t 'a) => bool;
   let mutate: (t 'a) => (TransientHashMultiset.t 'a);
   let none: ('a => int => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => int => 'acc) => 'acc => (t 'a) => 'acc;
@@ -451,8 +453,9 @@ let module rec HashMultiset: {
   let set: 'a => int => (t 'a) => (t 'a);
   let some: ('a => int => bool) => (t 'a) => bool;
   let toKeyed: (t 'a) => (Keyed.t 'a int);
-  let toSeq: (t 'a) => (Seq.t 'a);
-  let tryFind: ('a => int => bool) => (t 'a) => (option 'a);
+  let toSeq: (t 'a) => (Seq.t ('a, int));
+  let tryFind: ('a => int => bool) => (t 'a) => (option ('a, int));
+  let values: (t 'a) => (Collection.t 'a);
 }
 
 and TransientHashMultiset: {
@@ -462,14 +465,16 @@ and TransientHashMultiset: {
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
+  let empty: unit => (t 'a);
+  let emptyWith: (HashStrategy.t 'a) => (t 'a);
   let get: 'a => (t 'a) => int;
-  let isEmpty: t 'a => bool;
-  let isNotEmpty: t 'a => bool;
+  let isEmpty: (t 'a) => bool;
+  let isNotEmpty: (t 'a) => bool;
   let persist: (t 'a) => (HashMultiset.t 'a);
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
   let set: 'a => int => (t 'a) => (t 'a);
-};*/
+};
 
 let module rec HashSet: {
   type t 'a;
@@ -511,8 +516,10 @@ and TransientHashSet: {
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
-  let isEmpty: t 'a => bool;
-  let isNotEmpty: t 'a => bool;
+  let empty: unit => (t 'a);
+  let emptyWith: (HashStrategy.t 'a) => (t 'a);
+  let isEmpty: (t 'a) => bool;
+  let isNotEmpty: (t 'a) => bool;
   let persist: (t 'a) => (HashSet.t 'a);
   let remove: 'a => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
@@ -558,7 +565,7 @@ let module rec IntMap: {
   let containsWith: (Equality.t 'a) => int => 'a => (t 'a) => bool;
   let containsKey: int => (t 'a) => bool;
   let count: (t 'a) => int;
-  let empty: t 'a;
+  let empty: (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
   let equalsWith: (Equality.t 'a) => (t 'a) => (t 'a) => bool;
   let every: (int => 'a => bool) => (t 'a) => bool;
@@ -595,6 +602,7 @@ and TransientIntMap: {
 
   let alter: int => ((option 'a) => (option 'a)) => (t 'a) => (t 'a);
   let count: (t 'a) => int;
+  let empty: unit => (t 'a);
   let isEmpty: t 'a => bool;
   let isNotEmpty: t 'a => bool;
   let persist: (t 'a) => (IntMap.t 'a);

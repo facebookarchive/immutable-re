@@ -11,34 +11,62 @@ type biMap 'k 'v = {
   inverse: hashMap 'v 'k
 };
 
-type transientBiMap 'k 'v = {
-  map: transientHashMap 'k 'v,
-  inverse: transientHashMap 'v 'k,
-};
+let contains (key: 'k) (value: 'v) ({ map, inverse }: biMap 'k 'v): bool =>
+  map |> HashMap.containsWith (HashStrategy.equals inverse.strategy) key value;
+
+let containsKey (key: 'k) ({ map }: biMap 'k 'v): bool =>
+  map |> HashMap.containsKey key;
 
 let count ({ map }: biMap 'k 'v) => map |> HashMap.count;
 
-let empty (): (biMap 'k 'v) => ({
-  map: HashMap.empty (),
-  inverse: HashMap.empty ()
-});
+let empty: (biMap 'k 'v) = {
+  map: HashMap.empty,
+  inverse: HashMap.empty,
+};
 
 let emptyWith
     (keyStrategy: hashStrategy 'k)
-    (valueStrategy: hashStrategy 'v): (biMap 'k 'v) => ({
+    (valueStrategy: hashStrategy 'v): (biMap 'k 'v) => {
   map: HashMap.emptyWith keyStrategy,
   inverse: HashMap.emptyWith valueStrategy,
-});
+};
 
-let inverse ({ map, inverse }: biMap 'k 'v): biMap 'v 'k => ({
+let equals ({ map: thisMap, inverse: thisInverse }: biMap 'k 'v) ({ map: thatMap }: biMap 'k 'v): bool => {
+  let { strategy: valueStrategy } = thisInverse;
+  HashMap.equalsWith (HashStrategy.equals valueStrategy) thisMap thatMap;
+};
+
+let every (f: 'k => 'v => bool) ({ map }: biMap 'k 'v): bool =>
+  map |> HashMap.every f;
+
+let find (f: 'k => 'v => bool) ({ map }: biMap 'k 'v): ('k, 'v) =>
+  map |> HashMap.find f;
+
+let forEach (f: 'k => 'v => unit) ({ map }: biMap 'k 'v) =>
+  map |> HashMap.forEach f;
+
+let get (key: 'k) ({ map }: biMap 'k 'v): 'v =>
+  map |> HashMap.get key;
+
+let hash ({ map, inverse }: biMap 'k 'v): int =>
+  map |> HashMap.hashWith (HashStrategy.hash inverse.strategy);
+
+let keys ({ map }: biMap 'k 'v): (collection 'k) =>
+  map |> HashMap.keys;
+
+let inverse ({ map, inverse }: biMap 'k 'v): biMap 'v 'k => {
   map: inverse,
   inverse: map,
-});
+};
 
-let mutate ({ map, inverse }: biMap 'k 'v): (transientBiMap 'k 'v) => ({
-  map: map |> HashMap.mutate,
-  inverse: inverse |> HashMap.mutate,
-});
+let isEmpty ({ map }: biMap 'k 'v): bool =>
+  map |> HashMap.isEmpty;
+
+let isNotEmpty ({ map }: biMap 'k 'v): bool =>
+  map |> HashMap.isNotEmpty;
+
+let none (f: 'k => 'v => bool) ({ map }: biMap 'k 'v): bool =>
+  map |> HashMap.none f;
 
 let put
     (key: 'k)
@@ -56,11 +84,8 @@ let put
       })
   };
 
-let reduce (f: 'acc => 'v => 'acc) (acc: 'acc) ({ map }: biMap 'k 'v): 'acc =>
+let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: biMap 'k 'v): 'acc =>
   map |> HashMap.reduce f acc;
-
-let reduceWithKey (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: biMap 'k 'v): 'acc =>
-  map |> HashMap.reduceWithKey f acc;
 
 let remove
     (key: 'k)
@@ -75,15 +100,24 @@ let remove
 let removeAll ({ map, inverse }: biMap 'k 'v): (biMap 'k 'v) =>
   { map: map |> HashMap.removeAll, inverse: inverse |> HashMap.removeAll };
 
+let some (f: 'k => 'v => bool) ({ map }: biMap 'k 'v): bool =>
+  map |> HashMap.some f;
+
+let toCollection ({ map, inverse }: biMap 'k 'v): (collection ('k, 'v)) =>
+  /* Kind of cheating */
+  map |> HashMap.toCollection (HashStrategy.equals inverse.strategy);
+
 let toInverseMap ({ inverse }: biMap 'k 'v): (hashMap 'k 'k) => inverse;
 
 let toKeyed ({ map }: biMap 'k 'v): (keyed 'k 'v) => map |> HashMap.toKeyed;
 
-let toMap ({ map }: biMap 'k 'v): (hashMap 'k 'v) => map;
-
 let toSeq ({ map }: biMap 'k 'v): (seq ('k, 'v)) => map |> HashMap.toSeq;
 
-let tryGet (key: 'k) ({ map }: biMap 'k 'v): (option 'v) => map |> HashMap.tryGet key;
+let tryFind (f: 'k => 'v => bool) ({ map }: biMap 'k 'v): (option ('k, 'v)) =>
+  map |> HashMap.tryFind f;
+
+let tryGet (key: 'k) ({ map }: biMap 'k 'v): (option 'v) =>
+  map |> HashMap.tryGet key;
 
 let tryPut
     (key: 'k)
@@ -98,8 +132,35 @@ let tryPut
       })
   };
 
+let values ({ inverse }: biMap 'k 'v): (collection 'v) =>
+  inverse |> HashMap.keys;
+
+type transientBiMap 'k 'v = {
+  map: transientHashMap 'k 'v,
+  inverse: transientHashMap 'v 'k,
+};
+
+let mutate ({ map, inverse }: biMap 'k 'v): (transientBiMap 'k 'v) => ({
+  map: map |> HashMap.mutate,
+  inverse: inverse |> HashMap.mutate,
+});
+
 let module TransientBiMap = {
   let count ({ map }: transientBiMap 'k 'v) => map |> TransientHashMap.count;
+
+  let empty (): (transientBiMap 'k 'v) =>
+    empty |> mutate;
+
+  let emptyWith
+      (keyStrategy: hashStrategy 'k)
+      (valueStrategy: hashStrategy 'v): (transientBiMap 'k 'v) =>
+    emptyWith keyStrategy valueStrategy |> mutate;
+
+  let isEmpty (transient: transientBiMap 'k 'v): bool =>
+    transient |> count == 0;
+
+  let isNotEmpty (transient: transientBiMap 'k 'v): bool =>
+    transient |> count != 0;
 
   let persist ({ map, inverse }: transientBiMap 'k 'v): (biMap 'k 'v) => ({
     map: map |> TransientHashMap.persist,
@@ -171,7 +232,7 @@ let putAll (seq: seq ('k, 'v)) (map: biMap 'k 'v): (biMap 'k 'v) => map
   |> TransientBiMap.persist;
 
 let fromSeq (seq: seq ('k, 'v)): (biMap 'k 'v) =>
-  empty () |> putAll seq;
+  empty |> putAll seq;
 
 let fromSeqWith
     (keyStrategy: hashStrategy 'k)

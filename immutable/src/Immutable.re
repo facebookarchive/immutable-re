@@ -1,17 +1,11 @@
-/*open BiMap;*/
+open BiMap;
 open Deque;
 open Equality;
-open HashMap;/*
-open HashMultiset;*/
+open HashMap;
+open HashMultiset;
 open HashSet;
 open IntMap;
 open Vector;
-
-let isEmpty (count: 'collection => 'int) (collection: 'collection): bool =>
-  (count collection) == 0;
-
-let isNotEmpty (count: 'collection => 'int) (collection: 'collection): bool =>
-  (count collection) != 0;
 
 let module Hash = {
   type t 'a = Hash.hash 'a;
@@ -156,8 +150,8 @@ let module Keyed = {
   let get = Keyed.get;
   let hash = Keyed.hash;
   let hashWith = Keyed.hashWith;
-  let isEmpty keyed => isEmpty count keyed;
-  let isNotEmpty keyed => isNotEmpty count keyed;
+  let isEmpty = Keyed.isEmpty;
+  let isNotEmpty = Keyed.isNotEmpty;
   let keys = Keyed.keys;
   let map = Keyed.map;
   let none = Keyed.none;
@@ -180,37 +174,52 @@ let module HashStrategy = {
   let structuralCompare = HashStrategy.structuralCompare;
   let structuralEquality = HashStrategy.structuralEquality;
 };
-/*
-let module BiMap = {
-  type t 'k 'v = BiMap.biMap 'k 'v;
 
+let module BiMap = {
+  type t 'k 'v = biMap 'k 'v;
+
+  let contains = BiMap.contains;
+  let containsKey = BiMap.containsKey;
   let count = BiMap.count;
   let empty = BiMap.empty;
   let emptyWith = BiMap.emptyWith;
-  let isEmpty bimap => isEmpty count bimap;
-  let isNotEmpty bimap => isNotEmpty count bimap;
+  let equals = BiMap.equals;
+  let every = BiMap.every;
+  let find = BiMap.find;
+  let get = BiMap.get;
+  let hash = BiMap.hash;
+  let isEmpty = BiMap.isEmpty;
+  let isNotEmpty = BiMap.isNotEmpty;
+  let forEach = BiMap.forEach;
   let fromSeq = BiMap.fromSeq;
   let fromSeqWith = BiMap.fromSeqWith;
   let inverse = BiMap.inverse;
+  let keys = BiMap.keys;
   let mutate = BiMap.mutate;
+  let none = BiMap.none;
   let put = BiMap.put;
   let putAll = BiMap.putAll;
   let reduce = BiMap.reduce;
-  let reduceWithKey = BiMap.reduceWithKey;
   let remove = BiMap.remove;
   let removeAll = BiMap.removeAll;
+  let some = BiMap.some;
+  let toCollection = BiMap.toCollection;
   let toKeyed = BiMap.toKeyed;
   let toSeq = BiMap.toSeq;
+  let tryFind = BiMap.tryFind;
   let tryGet = BiMap.tryGet;
   let tryPut = BiMap.tryPut;
+  let values = BiMap.values;
 };
 
 let module TransientBiMap = {
   type t 'k 'v = transientBiMap 'k 'v;
 
   let count = TransientBiMap.count;
-  let isEmpty transient => isEmpty count transient;
-  let isNotEmpty transient => isNotEmpty count transient;
+  let empty = TransientBiMap.empty;
+  let emptyWith = TransientBiMap.emptyWith;
+  let isEmpty = TransientBiMap.isEmpty;
+  let isNotEmpty = TransientBiMap.isNotEmpty;
   let persist = TransientBiMap.persist;
   let put = TransientBiMap.put;
   let putAll = TransientBiMap.putAll;
@@ -219,7 +228,7 @@ let module TransientBiMap = {
   let tryGet = TransientBiMap.tryGet;
   let tryPut = TransientBiMap.tryPut;
 };
-*/
+
 let module CopyOnWriteArray = {
   type t 'a = CopyOnWriteArray.copyOnWriteArray 'a;
 
@@ -318,8 +327,8 @@ let module Deque = {
   let fromSeqReversed = Deque.fromSeqReversed;
   let hash = Deque.hash;
   let hashWith = Deque.hashWith;
-  let isEmpty deque => isEmpty count deque;
-  let isNotEmpty deque => isNotEmpty count deque;
+  let isEmpty = Deque.isEmpty;
+  let isNotEmpty = Deque.isNotEmpty;
   let last = Deque.last;
   let map = Deque.map;
   let mapReverse = Deque.mapReverse;
@@ -348,8 +357,8 @@ let module TransientDeque = {
   let count = TransientDeque.count;
   let empty = TransientDeque.empty;
   let first = TransientDeque.first;
-  let isEmpty transient => isEmpty count transient;
-  let isNotEmpty transient => isNotEmpty count transient;
+  let isEmpty = TransientDeque.isEmpty;
+  let isNotEmpty = TransientDeque.isNotEmpty;
   let last = TransientDeque.last;
   let persist = TransientDeque.persist;
   let removeAll = TransientDeque.removeAll;
@@ -382,8 +391,8 @@ let module HashMap = {
   let get = HashMap.get;
   let hash = HashMap.hash;
   let hashWith = HashMap.hashWith;
-  let isEmpty map => isEmpty count map;
-  let isNotEmpty map => isNotEmpty count map;
+  let isEmpty = HashMap.isEmpty;
+  let isNotEmpty = HashMap.isNotEmpty;
   let keys = HashMap.keys;
   let map = HashMap.map;
   let merge = HashMap.merge;
@@ -408,8 +417,10 @@ let module TransientHashMap = {
 
   let alter = TransientHashMap.alter;
   let count = TransientHashMap.count;
-  let isEmpty transient => isEmpty count transient;
-  let isNotEmpty transient => isNotEmpty count transient;
+  let empty = TransientHashMap.empty;
+  let emptyWith = TransientHashMap.emptyWith;
+  let isEmpty = TransientHashMap.isEmpty;
+  let isNotEmpty = TransientHashMap.isNotEmpty;
   let persist = TransientHashMap.persist;
   let put = TransientHashMap.put;
   let putAll = TransientHashMap.putAll;
@@ -417,7 +428,7 @@ let module TransientHashMap = {
   let removeAll = TransientHashMap.removeAll;
   let tryGet = TransientHashMap.tryGet;
 };
-/*
+
 let module HashMultiset = {
   type t 'a = HashMultiset.hashMultiset 'a;
 
@@ -427,18 +438,27 @@ let module HashMultiset = {
   let count = HashMultiset.count;
   let empty = HashMultiset.empty;
   let emptyWith = HashMultiset.emptyWith;
+  let equals = HashMultiset.equals;
+  let every = HashMultiset.every;
+  let find = HashMultiset.find;
+  let forEach = HashMultiset.forEach;
   let fromSeq = HashMultiset.fromSeq;
   let fromSeqWith = HashMultiset.fromSeqWith;
   let get = HashMultiset.get;
-  let isEmpty multiset => isEmpty count multiset;
-  let isNotEmpty multiset => isNotEmpty count multiset;
+  let hash = HashMultiset.hash;
+  let isEmpty = HashMultiset.isEmpty;
+  let isNotEmpty = HashMultiset.isNotEmpty;
   let mutate = HashMultiset.mutate;
+  let none = HashMultiset.none;
   let reduce = HashMultiset.reduce;
   let remove = HashMultiset.remove;
   let removeAll = HashMultiset.removeAll;
   let set = HashMultiset.set;
+  let some = HashMultiset.some;
   let toKeyed = HashMultiset.toKeyed;
   let toSeq = HashMultiset.toSeq;
+  let tryFind = HashMultiset.tryFind;
+  let values = HashMultiset.values;
 };
 
 let module TransientHashMultiset = {
@@ -448,17 +468,19 @@ let module TransientHashMultiset = {
   let addAll = TransientHashMultiset.addAll;
   let contains = TransientHashMultiset.contains;
   let count = TransientHashMultiset.count;
+  let empty = TransientHashMultiset.empty;
+  let emptyWith = TransientHashMultiset.emptyWith;
   let get = TransientHashMultiset.get;
-  let isEmpty transient => isEmpty count transient;
-  let isNotEmpty transient => isNotEmpty count transient;
+  let isEmpty = TransientHashMultiset.isEmpty;
+  let isNotEmpty = TransientHashMultiset.isNotEmpty;
   let persist = TransientHashMultiset.persist;
   let remove = TransientHashMultiset.remove;
   let removeAll = TransientHashMultiset.removeAll;
   let set = TransientHashMultiset.set;
 };
-*/
+
 let module HashSet = {
-  type t 'a = HashSet.hashSet 'a;
+  type t 'a = hashSet 'a;
 
   let add = HashSet.add;
   let addAll = HashSet.addAll;
@@ -474,8 +496,8 @@ let module HashSet = {
   let fromSeqWith = HashSet.fromSeqWith;
   let hash = HashSet.hash;
   let intersect = HashSet.intersect;
-  let isEmpty set => isEmpty count set;
-  let isNotEmpty set => isNotEmpty count set;
+  let isEmpty = HashSet.isEmpty;
+  let isNotEmpty = HashSet.isNotEmpty;
   let mutate = HashSet.mutate;
   let none = HashSet.none;
   let reduce = HashSet.reduce;
@@ -497,8 +519,10 @@ let module TransientHashSet = {
   let addAll = TransientHashSet.addAll;
   let contains = TransientHashSet.contains;
   let count = TransientHashSet.count;
-  let isEmpty transient => isEmpty count transient;
-  let isNotEmpty transient => isNotEmpty count transient;
+  let empty = TransientHashSet.empty;
+  let emptyWith = TransientHashSet.emptyWith;
+  let isEmpty = TransientHashSet.isEmpty;
+  let isNotEmpty = TransientHashSet.isNotEmpty;
   let persist = TransientHashSet.persist;
   let remove = TransientHashSet.remove;
   let removeAll = TransientHashSet.removeAll;
@@ -567,8 +591,9 @@ let module TransientIntMap = {
 
   let alter = TransientIntMap.alter;
   let count = TransientIntMap.count;
-  let isEmpty transient => isEmpty count transient;
-  let isNotEmpty transient => isNotEmpty count transient;
+  let empty = TransientIntMap.empty;
+  let isEmpty = TransientIntMap.isEmpty;
+  let isNotEmpty = TransientIntMap.isNotEmpty;
   let persist = TransientIntMap.persist;
   let put = TransientIntMap.put;
   let putAll = TransientIntMap.putAll;
@@ -760,8 +785,8 @@ let module Stack ={
   let fromSeqReversed = Stack.fromSeqReversed;
   let hash = Stack.hash;
   let hashWith = Stack.hashWith;
-  let isEmpty stack => isEmpty count stack;
-  let isNotEmpty stack => isNotEmpty count stack;
+  let isEmpty = Stack.isEmpty;
+  let isNotEmpty = Stack.isNotEmpty;
   let mapReverse = Stack.mapReverse;
   let none = Stack.none;
   let reduce = Stack.reduce;
@@ -897,8 +922,8 @@ let module TransientVector = {
   let first = TransientVector.first;
   let get = TransientVector.get;
   let insertAt = TransientVector.insertAt;
-  let isEmpty transient => isEmpty count transient;
-  let isNotEmpty transient => isNotEmpty count transient;
+  let isEmpty = TransientVector.isEmpty;
+  let isNotEmpty = TransientVector.isNotEmpty;
   let last = TransientVector.last;
   let persist = TransientVector.persist;
   let removeAll = TransientVector.removeAll;

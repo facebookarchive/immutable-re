@@ -490,16 +490,19 @@ let equals (this: hashMap 'k 'v) (that: hashMap 'k 'v): bool =>
 let hash (map: hashMap 'k 'v): int =>
   map |> toKeyed |> Keyed.hash;
 
-let hashWith (keyHash: hash 'k) (valueHash: hash 'v) (map: hashMap 'k 'v): int =>
-  map |> toKeyed |> Keyed.hashWith keyHash valueHash;
+let hashWith (valueHash: hash 'v) ({ strategy } as map: hashMap 'k 'v): int =>
+  map |> toKeyed |> Keyed.hashWith (HashStrategy.hash strategy) valueHash;
 
 let keys (map: hashMap 'k 'v): (collection 'k) =>
   map |> toKeyed |> Keyed.keys;
 
-let toCollection (equality: equality 'v) (map: hashMap 'k 'v): (collection ('k, 'a)) =>
+let toCollection (equality: equality 'v) (map: hashMap 'k 'v): (collection ('k, 'v)) =>
   map |> toKeyed |> Keyed.toCollectionWith equality;
 
 type transientHashMap 'k 'v = transient (hashMap 'k 'v);
+
+let mutate (map: hashMap 'k 'v): (transientHashMap 'k 'v) =>
+  Transient.create map;
 
 let module TransientHashMap = {
   let updateLevelNodeTransient
@@ -543,6 +546,14 @@ let module TransientHashMap = {
   let count (transient: transientHashMap 'k 'v): int =>
     transient |> Transient.get |> count;
 
+  let empty (): (transientHashMap 'k 'v) =>
+    empty |> mutate;
+
+  let persistentEmptyWith = emptyWith;
+
+  let emptyWith (strategy: hashStrategy 'k): (transientHashMap 'k 'v) =>
+    persistentEmptyWith strategy |> mutate;
+
   let isEmpty (transient: transientHashMap 'k 'v): bool =>
     transient |> Transient.get |> isEmpty;
 
@@ -562,14 +573,11 @@ let module TransientHashMap = {
     transient |> alter key Functions.alwaysNone;
 
   let removeAll (transient: transientHashMap 'k 'v): (transientHashMap 'k 'v) =>
-    transient |> Transient.update (fun _ { strategy } => emptyWith strategy);
+    transient |> Transient.update (fun _ { strategy } => persistentEmptyWith strategy);
 
   let tryGet (key: 'k) (transient: transientHashMap 'k 'v): (option 'v) =>
     transient |> Transient.get |> tryGet key;
 };
-
-let mutate (map: hashMap 'k 'v): (transientHashMap 'k 'v) =>
-  Transient.create map;
 
 let map (f: 'k => 'a => 'b) ({ strategy } as map: hashMap 'k 'a): (hashMap 'k 'b) => map
   |> reduce (fun acc k v => acc |> TransientHashMap.put k (f k v)) (emptyWith strategy |> mutate)
@@ -607,40 +615,3 @@ let merge
       )
       (mutate map)
     |> TransientHashMap.persist;
-
-
-/*
-let containsWith
-    (valueEquals: equality 'v )
-    (key: 'k)
-    (value: 'v)
-    ({ comparator, tree }: sortedMap 'k 'v): bool =>
-  tree |> BitmapTrieMap.contains comparator valueEquals key value;
-
-let contains (key: 'k) (value: 'v) (map: sortedMap 'k 'v): bool =>
-  map |> containsWith Equality.structural key value;
-
-let every (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
-  tree |> AVLTreeMap.every f;
-
-let forEach (f: 'k => 'v => unit) ({ tree }: sortedMap 'k 'v): unit =>
-  tree |> AVLTreeMap.forEach f;
-
-let none (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
-  tree |> AVLTreeMap.none f;
-
-let some (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
-  tree |> AVLTreeMap.none f;
-
-let tryFind (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
-  tree |> AVLTreeMap.tryFind f;
-
-let find (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): ('k, 'v) =>
-  tree |> AVLTreeMap.tryFind f |> Option.get;
-
-let values ({ tree }: sortedMap 'k 'v): (seq 'v) =>
-  tree |> AVLTreeMap.values;
-
-
-
-*/
