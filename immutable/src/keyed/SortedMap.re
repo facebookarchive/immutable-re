@@ -20,7 +20,7 @@ let empty: (sortedMap 'k 'v) = {
 };
 
 let emptyWith (comparator: comparator 'k): (sortedMap 'k 'v) => {
-  comparator: comparator,
+  comparator,
   count: 0,
   tree: Empty,
 };
@@ -75,8 +75,15 @@ let last ({ tree }: sortedMap 'k 'v): ('k, 'v) =>
 let none (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
   tree |> AVLTreeMap.none f;
 
-let put (key: 'k) (value: 'v) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
-  map |> alter key (Functions.return @@ Option.return @@ value);
+let put (key: 'k) (value: 'v) ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
+  let alterResult = ref AVLTreeMap.NoChange;
+  let newTree = tree |> AVLTreeMap.putWithResult comparator alterResult key value;
+  switch !alterResult {
+    | Added => { comparator, count: count + 1, tree: newTree }
+    | NoChange => map
+    | Replace => { comparator, count, tree: newTree }
+  };
+};
 
 let putAll (seq: seq ('k, 'v)) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
   seq |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;

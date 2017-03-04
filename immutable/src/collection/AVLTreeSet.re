@@ -146,6 +146,17 @@ let rec removeFirst (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
   | Node _ left v right => rebalance (removeFirst left) v right;
 };
 
+let rec removeFirstWithValue (first: ref 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+  | Empty => Empty
+  | Leaf v =>
+      first := v;
+      Empty
+  | Node _ Empty v right =>
+      first := v;
+      right
+  | Node _ left v right => rebalance (removeFirstWithValue first left) v right;
+};
+
 let rec removeLast (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
   | Empty => Empty
   | Leaf v => Empty
@@ -159,7 +170,7 @@ let rec remove (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTr
       let cmp = comparator x v;
       if (cmp === Equal) Empty else tree
     }
-  | Node _ left v right => if (x === v) (switch (left, right) {
+  | Node height left v right => if (x === v) (switch (left, right) {
       | (Empty, _) => right
       | (_, Empty) => left
       | _ => rebalance left (first right) (removeFirst right)
@@ -174,7 +185,12 @@ let rec remove (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTr
       } else switch (left, right) {
         | (Empty, _) => right
         | (_, Empty) => left
-        | _ => rebalance left (first right) (removeFirst right)
+        | _ =>
+            if (height > 4) {
+              let first = ref x;
+              let newRight = removeFirstWithValue first right;
+              rebalance left (!first) newRight
+            } else rebalance left (first right) (removeFirst right)
       }
     }
 };

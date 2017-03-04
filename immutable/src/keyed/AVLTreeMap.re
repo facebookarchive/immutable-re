@@ -368,7 +368,69 @@ let rec alter
       })
 };
 
-let put (comparator: comparator 'k) (key: 'k) (value: 'v) (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => {
-  let alterResult = ref NoChange;
-  alter comparator alterResult key (Functions.return @@ Option.return @@ value) tree;
+let rec put
+    (comparator: comparator 'k)
+    (xK: 'k)
+    (xV: 'v)
+    (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+  | Empty => Leaf xK xV
+  | Leaf k v =>
+      let cmp = comparator xK k;
+
+      if (cmp === LessThan) (Node 2 Empty xK xV tree)
+      else if (cmp === GreaterThan) (Node 2 tree xK xV Empty)
+      else if (xV === v) tree
+      else (Leaf xK xV)
+  | Node height left k v right =>
+      let cmp = comparator xK k;
+
+      if (cmp === LessThan) {
+        let newLeft = put comparator xK xV left;
+        if (newLeft === left) tree else rebalance newLeft k v right
+      } else if (cmp === GreaterThan) {
+        let newRight = put comparator xK xV right;
+        if (newRight === right) tree else rebalance left k v newRight
+      } else if (xV === v) tree
+      else (Node height left xK xV right)
+};
+
+let rec putWithResult
+    (comparator: comparator 'k)
+    (result: ref alterResult)
+    (xK: 'k)
+    (xV: 'v)
+    (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+  | Empty =>
+      result := Added;
+      Leaf xK xV
+  | Leaf k v =>
+      let cmp = comparator xK k;
+
+      if (cmp === LessThan) {
+        result := Added;
+        Node 2 Empty xK xV tree
+      }
+      else if (cmp === GreaterThan) {
+        result := Added;
+        Node 2 tree xK xV Empty
+      }
+      else if (xV === v) tree
+      else {
+        result := Replace;
+        Leaf xK xV
+      }
+  | Node height left k v right =>
+      let cmp = comparator xK k;
+
+      if (cmp === LessThan) {
+        let newLeft = putWithResult comparator result xK xV left;
+        if (newLeft === left) tree else rebalance newLeft k v right
+      } else if (cmp === GreaterThan) {
+        let newRight = putWithResult comparator result xK xV right;
+        if (newRight === right) tree else rebalance left k v newRight
+      } else if (xV === v) tree
+      else {
+        result := Replace;
+        Node height left xK xV right
+      }
 };
