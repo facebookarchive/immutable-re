@@ -528,25 +528,37 @@ let module TransientHashSet = {
   let remove = TransientHashSet.remove;
   let removeAll = TransientHashSet.removeAll;
 };
-/*
+
 let module HashSetMultimap = {
   type t 'k 'v = HashSetMultimap.hashSetMultimap 'k 'v;
 
+  let contains = HashSetMultimap.contains;
+  let containsKey = HashSetMultimap.containsKey;
   let count = HashSetMultimap.count;
   let empty = HashSetMultimap.empty;
   let emptyWith = HashSetMultimap.emptyWith;
-  let isEmpty multimap => isEmpty count multimap;
-  let isNotEmpty multimap => isNotEmpty count multimap;
+  let equals = HashSetMultimap.equals;
+  let every = HashSetMultimap.every;
+  let find = HashSetMultimap.find;
+  let forEach = HashSetMultimap.forEach;
   let get = HashSetMultimap.get;
+  let hash = HashSetMultimap.hash;
+  let isEmpty = HashSetMultimap.isEmpty;
+  let isNotEmpty = HashSetMultimap.isNotEmpty;
+  let keys = HashSetMultimap.keys;
+  let none = HashSetMultimap.none;
   let put = HashSetMultimap.put;
+  let putAllValues = HashSetMultimap.putAllValues;
   let reduce = HashSetMultimap.reduce;
-  let reduceWithKey = HashSetMultimap.reduceWithKey;
   let remove = HashSetMultimap.remove;
   let removeAll = HashSetMultimap.removeAll;
-  let toKeyed = HashSetMultimap.toKeyed;
+  let some = HashSetMultimap.some;
+  let toCollection = HashSetMultimap.toCollection;
   let toSeq = HashSetMultimap.toSeq;
+  let tryFind = HashSetMultimap.tryFind;
+  let values = HashSetMultimap.values;
 };
-*/
+
 let module IntMap = {
   type t 'a = IntMap.intMap 'a;
 
@@ -803,44 +815,74 @@ let module Stack ={
   let tryFind = Stack.tryFind;
   let tryFirst = Stack.tryFirst;
 };
-/*
+
 let module StackMultimap = {
   type t 'k 'v = StackMultimap.stackMultimap 'k 'v;
 
   let add = StackMultimap.add;
+  let addAllValues = StackMultimap.addAllValues;
+  let contains = StackMultimap.contains;
+  let containsWith = StackMultimap.containsWith;
+  let containsKey = StackMultimap.containsKey;
   let count = StackMultimap.count;
   let empty = StackMultimap.empty;
   let emptyWith = StackMultimap.emptyWith;
+  let equals = StackMultimap.equals;
+  let equalsWith = StackMultimap.equalsWith;
+  let every = StackMultimap.every;
+  let find = StackMultimap.find;
+  let forEach = StackMultimap.forEach;
   let get = StackMultimap.get;
-  let isEmpty multimap => isEmpty count multimap;
-  let isNotEmpty multimap => isNotEmpty count multimap;
+  let hash = StackMultimap.hash;
+  let hashWith = StackMultimap.hashWith;
+  let isEmpty = StackMultimap.isEmpty;
+  let isNotEmpty = StackMultimap.isNotEmpty;
+  let keys = StackMultimap.keys;
+  let none = StackMultimap.none;
   let reduce = StackMultimap.reduce;
-  let reduceWithKey = StackMultimap.reduceWithKey;
   let remove = StackMultimap.remove;
   let removeAll = StackMultimap.removeAll;
-  let toKeyed = StackMultimap.toKeyed;
+  let some = StackMultimap.some;
   let toSeq = StackMultimap.toSeq;
+  let tryFind = StackMultimap.tryFind;
+  let values = StackMultimap.values;
 };
 
 let module Table = {
   type t 'row 'column 'value = Table.table 'row 'column 'value;
 
+  let contains = Table.contains;
+  let containsRow = Table.containsRow;
+  let containsRowAndColumn = Table.containsRowAndColumn;
+  let containsWith = Table.containsWith;
+  let columns = Table.columns;
   let count = Table.count;
   let empty = Table.empty;
   let emptyWith = Table.emptyWith;
-  let isEmpty table => isEmpty count table;
-  let isNotEmpty table => isNotEmpty count table;
+  let equals = Table.equals;
+  let equalsWith = Table.equalsWith;
+  let every = Table.every;
+  let find = Table.find;
+  let forEach = Table.forEach;
+  let get = Table.get;
+  let hash = Table.hash;
+  let hashWith = Table.hashWith;
+  let isEmpty = Table.isEmpty;
+  let isNotEmpty = Table.isNotEmpty;
+  let none = Table.none;
   let put = Table.put;
   let reduce = Table.reduce;
-  let reduceWithRowAndColumn = Table.reduceWithRowAndColumn;
   let remove = Table.remove;
   let removeAll = Table.removeAll;
   let removeRow = Table.removeRow;
-  let toKeyed = Table.toKeyed;
+  let rows = Table.rows;
+  let some = Table.some;
   let toSeq = Table.toSeq;
+  let tryFind = Table.tryFind;
   let tryGet = Table.tryGet;
+  let values = Table.values;
 };
-*/
+
 let module Vector = {
   type t 'a = Vector.vector 'a;
 

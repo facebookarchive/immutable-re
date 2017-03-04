@@ -108,8 +108,8 @@ let some (f: 'a => int => bool) ({ map }: hashMultiset 'a): bool =>
 
 let toKeyed ({ map }: hashMultiset 'a): (keyed 'a int) => map |> HashMap.toKeyed;
 
-let toSeq ({ map }: hashMultiset 'a): (seq ('a, int)) =>
-  map |> HashMap.toSeq;
+let toSeq ({ map }: hashMultiset 'a): (seq 'a) =>
+  map |> HashMap.toSeq |> Seq.flatMap (fun (v, i) => Seq.repeat v (Some i));
 
 let tryFind (f: 'a => int => bool) ({ map }: hashMultiset 'a): (option ('a, int)) =>
   map |> HashMap.tryFind f;
