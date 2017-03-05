@@ -9,7 +9,7 @@ let fromSeqWith: (Comparator.t 'a)  => (Seq.t 'a) => (t 'a);
 */
 
 let module Set = {
-  type t 'a = SortedSet.t 'a;
+  type t = SortedSet.t int;
 
   let add = SortedSet.add;
   let addAll = SortedSet.addAll;

@@ -5,6 +5,7 @@ open HashMap;
 open HashMultiset;
 open HashSet;
 open IntMap;
+open IntSet;
 open Vector;
 
 let module Hash = {
@@ -614,6 +615,52 @@ let module TransientIntMap = {
   let remove = TransientIntMap.remove;
   let removeAll = TransientIntMap.removeAll;
   let tryGet = TransientIntMap.tryGet;
+};
+
+let module IntSet = {
+  type t = intSet;
+
+  let add = IntSet.add;
+  let addAll = IntSet.addAll;
+  let contains = IntSet.contains;
+  let count = IntSet.count;
+  let empty = IntSet.empty;
+  let equals = IntSet.equals;
+  let every = IntSet.every;
+  let find = IntSet.find;
+  let forEach = IntSet.forEach;
+  let fromSeq = IntSet.fromSeq;
+  let hash = IntSet.hash;
+  let intersect = IntSet.intersect;
+  let isEmpty = IntSet.isEmpty;
+  let isNotEmpty = IntSet.isNotEmpty;
+  let mutate = IntSet.mutate;
+  let none = IntSet.none;
+  let reduce = IntSet.reduce;
+  let remove = IntSet.remove;
+  let removeAll = IntSet.removeAll;
+  let some = IntSet.some;
+  let subtract = IntSet.subtract;
+  let toCollection = IntSet.toCollection;
+  let toKeyed = IntSet.toKeyed;
+  let toSeq = IntSet.toSeq;
+  let tryFind = IntSet.tryFind;
+  let union = IntSet.union;
+};
+
+let module TransientIntSet = {
+  type t = transientIntSet;
+
+  let add = TransientIntSet.add;
+  let addAll = TransientIntSet.addAll;
+  let contains = TransientIntSet.contains;
+  let count = TransientIntSet.count;
+  let empty = TransientIntSet.empty;
+  let isEmpty = TransientIntSet.isEmpty;
+  let isNotEmpty = TransientIntSet.isNotEmpty;
+  let persist = TransientIntSet.persist;
+  let remove = TransientIntSet.remove;
+  let removeAll = TransientIntSet.removeAll;
 };
 
 let module List = {

@@ -9,14 +9,14 @@ let hash = Hash.random ();
 
 let generateTests
     (getTestData: unit => 'set)
-    (keys: unit => Seq.t string)
+    (keys: unit => Seq.t int)
     (empty: unit => 'set)
-    (add: string => 'set => 'set)
-    (remove: string => 'set => 'set)
-    (contains: string => 'set => bool)
+    (add: int => 'set => 'set)
+    (remove: int => 'set => 'set)
+    (contains: int => 'set => bool)
     (n: int): (list Test.t) => [
   it (sprintf "add %i elements" n) (fun () => {
-    let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash |> Seq.map string_of_int;
+    let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash;
 
     keys |> Seq.reduce (fun acc i => acc |> add i) (empty ()) |> ignore;
   }),
@@ -42,17 +42,17 @@ let generateTests
   }),
 ];
 
-let module CamlStringSet = Set.Make {
-  type t = string;
+let module CamlIntSet = Set.Make {
+  type t = int;
   let compare = Pervasives.compare;
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash |> Seq.map string_of_int;
+  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash;
 
-  let camlStringSet = keys |> Seq.reduce
-    (fun acc i => acc |> CamlStringSet.add i)
-    CamlStringSet.empty;
+  let camlIntSet = keys |> Seq.reduce
+    (fun acc i => acc |> CamlIntSet.add i)
+    CamlIntSet.empty;
 
   let hashSetComparison = keys |> Seq.reduce
     (fun acc i => acc |> HashSet.add i)
@@ -62,6 +62,10 @@ let test (n: int) (count: int): Test.t => {
     (fun acc i => acc |> HashSet.add i)
     (HashSet.emptyWith HashStrategy.structuralEquality);
 
+  let intSet = keys |> Seq.reduce
+    (fun acc i => acc |> IntSet.add i)
+    IntSet.empty;
+
   let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
 
   let sortedSet = keys |> Seq.reduce
@@ -69,14 +73,14 @@ let test (n: int) (count: int): Test.t => {
     SortedSet.empty;
 
   let testGroup = [
-    describe "CamlStringSet" (
+    describe "CamlIntSet" (
       generateTests
-        (fun () => camlStringSet)
+        (fun () => camlIntSet)
         (fun () => keys)
-        (fun () => CamlStringSet.empty)
-        CamlStringSet.add
-        CamlStringSet.remove
-        (fun k map => CamlStringSet.mem k map)
+        (fun () => CamlIntSet.empty)
+        CamlIntSet.add
+        CamlIntSet.remove
+        (fun k map => CamlIntSet.mem k map)
         count
     ),
 
@@ -137,6 +141,28 @@ let test (n: int) (count: int): Test.t => {
           count
       ),
     ],
+        
+    describe "IntSet" (
+      generateTests
+        (fun () => intSet)
+        (fun () => keys)
+        (fun () => IntSet.empty)
+        IntSet.add
+        IntSet.remove
+        IntSet.contains
+        count
+    ),
+
+    describe "TransientIntSet" (
+      generateTests
+        (fun () => intSet |> IntSet.mutate)
+        (fun () => keys)
+        (fun () => IntSet.empty |> IntSet.mutate)
+        TransientIntSet.add
+        TransientIntSet.remove
+        TransientIntSet.contains
+        count
+    ),
   ];
 
   let tests = Seq.repeat testGroup (Some n) |> Seq.flatMap List.toSeq |> List.fromSeqReversed;

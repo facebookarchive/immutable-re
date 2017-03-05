@@ -5,7 +5,7 @@ open ReUnit.Expect;
 open ReUnit.Test;
 
 let module ComparatorSet = {
-  type t 'a = HashSet.t 'a;
+  type t = HashSet.t int;
 
   let add = HashSet.add;
   let addAll = HashSet.addAll;
@@ -35,7 +35,7 @@ let module ComparatorSet = {
 };
 
 let module EqualitySet = {
-  type t 'a = HashSet.t 'a;
+  type t = HashSet.t int;
 
   let add = HashSet.add;
   let addAll = HashSet.addAll;
@@ -65,7 +65,7 @@ let module EqualitySet = {
 };
 
 let module BadHashComparisonSet = {
-  type t 'a = HashSet.t 'a;
+  type t = HashSet.t int;
 
   let add = HashSet.add;
   let addAll = HashSet.addAll;
@@ -98,7 +98,7 @@ let module BadHashComparisonSet = {
 };
 
 let module BadHashEqualitySet = {
-  type t 'a = HashSet.t 'a;
+  type t = HashSet.t int;
 
   let add = HashSet.add;
   let addAll = HashSet.addAll;

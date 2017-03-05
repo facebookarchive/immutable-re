@@ -484,7 +484,7 @@ let module rec HashSet: {
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
   let contains: 'a => (t 'a) => bool;
   let count: (t 'a) => int;
-  let empty: t 'a;
+  let empty: (t 'a);
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
   let equals: (t 'a) => (t 'a) => bool;
   let every: ('a => bool) => (t 'a) => bool;
@@ -494,8 +494,8 @@ let module rec HashSet: {
   let fromSeqWith: (HashStrategy.t 'a)  => (Seq.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let intersect: (t 'a) => (t 'a) => (t 'a);
-  let isEmpty: t 'a => bool;
-  let isNotEmpty: t 'a => bool;
+  let isEmpty: (t 'a) => bool;
+  let isNotEmpty: (t 'a) => bool;
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
@@ -611,6 +611,52 @@ and TransientIntMap: {
   let remove: int => (t 'a) => (t 'a);
   let removeAll: (t 'a) => (t 'a);
   let tryGet: int => (t 'a) => (option 'a);
+};
+
+let module rec IntSet: {
+  type t;
+
+  let add: int => t => t;
+  let addAll: (Seq.t int) => t => t;
+  let contains: int => t => bool;
+  let count: t => int;
+  let empty: t;
+  let equals: t => t => bool;
+  let every: (int => bool) => t => bool;
+  let find: (int => bool) => t => int;
+  let forEach: (int => unit) => t => unit;
+  let fromSeq: (Seq.t int) => t;
+  let hash: (Hash.t t);
+  let intersect: t => t => t;
+  let isEmpty: t => bool;
+  let isNotEmpty: t => bool;
+  let mutate: t => TransientIntSet.t;
+  let none: (int => bool) => t => bool;
+  let reduce: ('acc => int => 'acc) => 'acc => t => 'acc;
+  let remove: int => t => t;
+  let removeAll: t => t;
+  let some: (int => bool) => t => bool;
+  let subtract: t => t => t;
+  let toCollection: t => (Collection.t int);
+  let toKeyed: t => (Keyed.t int int);
+  let toSeq: t => (Seq.t int);
+  let tryFind: (int => bool) => t => (option int);
+  let union: t => t => t;
+}
+
+and TransientIntSet: {
+  type t;
+
+  let add: int => t => t;
+  let addAll: (Seq.t int) => t => t;
+  let contains: int => t => bool;
+  let count: t => int;
+  let empty: unit => t;
+  let isEmpty: t => bool;
+  let isNotEmpty: t => bool;
+  let persist: t => IntSet.t;
+  let remove: int => t => t;
+  let removeAll: t => t;
 };
 
 let module List: {
