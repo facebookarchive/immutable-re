@@ -912,6 +912,7 @@ let module Table: {
   let hashWith: (Hash.t 'value) => (Hash.t (t 'row 'column 'value));
   let isEmpty: t 'row 'column 'value => bool;
   let isNotEmpty: t 'row 'column 'value => bool;
+  let map: ('row => 'column => 'a => 'b) => (t 'row 'column 'a) => (t 'row 'column 'b);
   let none: ('row => 'column => 'value => bool) => (t 'row 'column 'value) => bool;
   let put: 'row => 'column => 'value => (t 'row 'column 'value) => (t 'row 'column 'value);
   let reduce: ('acc => 'row => 'column => 'value => 'acc) => 'acc => (t 'row 'column 'value) => 'acc;

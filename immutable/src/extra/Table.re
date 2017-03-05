@@ -88,6 +88,17 @@ let isNotEmpty ({ map }: table 'row 'column 'value): bool =>
 let keys ({ map }: table 'row 'column 'value): (collection 'k) =>
   map |> HashMap.keys;
 
+let map
+    (f: 'row => 'column => 'a => 'b)
+    ({ columnStrategy, count, map }: table 'row 'column 'a): (table 'row 'column 'b) => {
+  let f' row map => map |> HashMap.map (fun col value => f row col value);
+  {
+    columnStrategy,
+    count,
+    map: map |> HashMap.map f',
+  };
+};
+
 let none (f: 'row => 'column => 'value => bool) ({ map }: table 'row 'column 'value): bool => {
   let f' row => HashMap.none (fun value column => f row value column);
   map |> HashMap.every f';

@@ -917,6 +917,7 @@ let module Table = {
   let isEmpty = Table.isEmpty;
   let isNotEmpty = Table.isNotEmpty;
   let none = Table.none;
+  let map = Table.map;
   let put = Table.put;
   let reduce = Table.reduce;
   let remove = Table.remove;
