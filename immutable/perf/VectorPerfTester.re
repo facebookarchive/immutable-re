@@ -32,9 +32,44 @@ let generateTests
 
 let test (n: int) (count: int): Test.t => {
   let indexes = Seq.inRange 0 (Some count) 1;
-  let vector = indexes |> Seq.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty;
+  let vector = indexes |> Vector.fromSeq;
+
+  let mutableArray = Array.init count (fun i => i);
+
+  let list = indexes |> List.fromSeqReversed;
+  let stack = indexes |> Stack.fromSeqReversed;
 
   let testGroup = [
+    describe "CamlMutableArray" (
+      generateTests
+        (fun () => mutableArray)
+        (fun () => mutableArray)
+        (fun a v => { v.(0) = a; v })
+        (fun i a v => { v.(i) = a; v })
+        (fun v => { v.(0) |> ignore; v })
+        (fun i v => { Some (v.(i)) })
+        count
+    ),
+    describe "List" (
+      generateTests
+        (fun () => list)
+        (fun () => [])
+        List.addFirst
+        (fun i a v => v)
+        List.removeFirst
+        (fun i v => None)
+        count
+    ),
+    describe "Stack" (
+      generateTests
+        (fun () => stack)
+        (fun () => Stack.empty)
+        Stack.addFirst
+        (fun i a v => v)
+        Stack.removeFirst
+        (fun i v => None)
+        count
+    ),
     describe "Vector" (
       generateTests
         (fun () => vector)

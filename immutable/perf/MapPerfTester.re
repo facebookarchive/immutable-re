@@ -11,14 +11,14 @@ let hash = Hash.random ();
 
 let generateTests
     (getTestData: unit => 'map)
-    (keys: unit => Seq.t string)
+    (keys: unit => Seq.t int)
     (empty: unit => 'map)
-    (put: string => string => 'map => 'map)
-    (remove: string => 'map => 'map)
-    (tryGet: string => 'map => option string)
+    (put: int => int => 'map => 'map)
+    (remove: int => 'map => 'map)
+    (tryGet: int => 'map => option int)
     (n: int): (list Test.t) => [
   it (sprintf "put %i elements" n) (fun () => {
-    let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash |> Seq.map string_of_int;
+    let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash;
 
     Seq.reduce
       (fun acc i => acc |> put i i)
@@ -39,7 +39,7 @@ let generateTests
     let keysToUpdate = keys () |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
 
     /* Multiply the updated value to avoid optimizations */
-    keysToUpdate |> Seq.reduce (fun acc i => acc |> put i "a") map |> ignore;
+    keysToUpdate |> Seq.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
   }),
 
   it (sprintf "tryGet %i values" n) (fun () => {
@@ -49,17 +49,17 @@ let generateTests
   }),
 ];
 
-let module CamlStringMap = Map.Make {
-  type t = string;
+let module CamlIntMap = Map.Make {
+  type t = int;
   let compare = Pervasives.compare;
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash |> Seq.map string_of_int;
+  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash;
 
   let camlIntMap = keys |> Seq.reduce
-    (fun acc i => acc |> CamlStringMap.add i i)
-    CamlStringMap.empty;
+    (fun acc i => acc |> CamlIntMap.add i i)
+    CamlIntMap.empty;
 
   let hashMapComparison = keys |> Seq.reduce
     (fun acc i => acc |> HashMap.put i i)
@@ -69,19 +69,21 @@ let test (n: int) (count: int): Test.t => {
     (fun acc i => acc |> HashMap.put i i)
     (HashMap.emptyWith HashStrategy.structuralEquality);
 
+  let intMap = keys |> Seq.map (fun i => (i, i)) |> IntMap.fromSeq;
+
   let sortedMap = keys |> Seq.reduce
     (fun acc i => acc |> SortedMap.put i i)
     SortedMap.empty;
 
   let testGroup = [
-    describe "CamlStringMap" (
+    describe "CamlIntMap" (
       generateTests
         (fun () => camlIntMap)
         (fun () => keys)
-        (fun () => CamlStringMap.empty)
-        CamlStringMap.add
-        CamlStringMap.remove
-        (fun k map => (CamlStringMap.mem k map) ? Some (CamlStringMap.find k map) : None)
+        (fun () => CamlIntMap.empty)
+        CamlIntMap.add
+        CamlIntMap.remove
+        (fun k map => (CamlIntMap.mem k map) ? Some (CamlIntMap.find k map) : None)
         count
     ),
 
@@ -124,7 +126,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapComparison |> HashMap.mutate)
           (fun () => keys)
-          (fun () => HashMap.empty |> HashMap.mutate)
+          TransientHashMap.empty
           TransientHashMap.put
           TransientHashMap.remove
           TransientHashMap.tryGet
@@ -135,13 +137,35 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapEquality |> HashMap.mutate)
           (fun () => keys)
-          (fun () => HashMap.emptyWith HashStrategy.structuralEquality |> HashMap.mutate)
+          (fun () => TransientHashMap.emptyWith HashStrategy.structuralEquality)
           TransientHashMap.put
           TransientHashMap.remove
           TransientHashMap.tryGet
           count
       ),
     ],
+
+    describe "IntMap" (
+      generateTests
+        (fun () => intMap)
+        (fun () => keys)
+        (fun () => IntMap.empty)
+        IntMap.put
+        IntMap.remove
+        IntMap.tryGet
+        count
+    ),
+
+    describe "TransientIntMap" (
+      generateTests
+        (fun () => intMap |> IntMap.mutate)
+        (fun () => keys)
+        TransientIntMap.empty
+        TransientIntMap.put
+        TransientIntMap.remove
+        TransientIntMap.tryGet
+        count
+    ),
   ];
 
   let tests = Seq.repeat testGroup (Some n) |> Seq.flatMap List.toSeq |> List.fromSeqReversed;
