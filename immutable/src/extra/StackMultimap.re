@@ -155,7 +155,7 @@ let tryFind (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): (option ('k, '
 };
 
 let find (f: 'k => 'v => bool) (multimap: stackMultimap 'k 'v): ('k, 'v) =>
-  multimap |> tryFind f |> Option.get;
+  multimap |> tryFind f |> Option.first;
 
 let values ({ map }: stackMultimap 'k 'v): (seq 'v) =>
   map |> HashMap.values |> Seq.flatMap Stack.toSeq;

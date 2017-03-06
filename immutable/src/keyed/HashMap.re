@@ -447,7 +447,7 @@ let tryFind (f: 'k => 'v => bool) ({ root }: hashMap 'k 'v): (option ('k, 'v)) =
   root |> BitmapTrieMap.tryFind f;
 
 let find (f: 'k => 'v => bool) (map: hashMap 'k 'v): ('k, 'v) =>
-  map |> tryFind f |> Option.get;
+  map |> tryFind f |> Option.first;
 
 let tryGet (key: 'k) ({ strategy, root }: hashMap 'k 'v): (option 'v) => {
   let hash = HashStrategy.hash strategy key;

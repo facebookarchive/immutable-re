@@ -56,6 +56,11 @@ let find (f: 'a => bool) (opt: option 'a): 'a => switch opt {
   | _ => failwith "not found"
 };
 
+let first (opt: option 'a): 'a => switch opt {
+  | Some x => x
+  | None => failwith "option is none"
+};
+
 let flatMap (f: 'a => option 'b) (opt: option 'a): option 'b => switch opt {
   | Some a => f a
   | _ => None
@@ -71,10 +76,7 @@ let forEach (f: 'a => unit) (opt: option 'a): unit => switch opt {
   | _ => ()
 };
 
-let get (opt: option 'a): 'a => switch opt {
-  | Some x => x
-  | None => failwith "option is none"
-};
+let last = first;
 
 let hashWith (hash: hash 'a) (opt: option 'a): int => switch opt {
   | None => 0
@@ -130,6 +132,9 @@ let tryFind (f: 'a => bool) (opt: option 'a): (option 'a) => switch opt {
   | Some a when f a => Some a
   | _ =>  None
 };
+
+let tryFirst = Functions.identity;
+let tryLast = tryFirst;
 
 let module Operators = {
   let (>>=) (opt: option 'a) (f: 'a => option 'b): option 'b => flatMap f opt;

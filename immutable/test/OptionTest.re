@@ -49,6 +49,10 @@ let test = describe "Option" [
     defer (fun () => Option.find Functions.alwaysTrue None) |> throws;
     defer (fun () => Option.find Functions.alwaysFalse (Some 1)) |> throws;
   }),
+  it "first" (fun () => {
+    expect (Some "a" |> Option.first) |> toBeEqualToString "a";
+    defer (fun () => None |> Option.first) |> throws;
+  }),
   it "flatMap" (fun () => {
     let someA = Some "a";
     let result = someA |> Option.flatMap (fun _ => Some "b");
@@ -70,10 +74,6 @@ let test = describe "Option" [
     Some 1 |> Option.forEach (fun i => {
       expect i |> toBeEqualToInt 1;
     });
-  }),
-  it "get" (fun () => {
-    expect (Some "a" |> Option.get) |> toBeEqualToString "a";
-    defer (fun () => None |> Option.get) |> throws;
   }),
   it "hash" (fun () => {
     expect (Some 1 |> Option.hash) |> toBeEqualToInt (Hash.structural 1);

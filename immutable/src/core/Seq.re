@@ -185,7 +185,7 @@ let doOnNext = Stream.doOnNext;
 
 let mapWithIndex (f: int => 'a => 'b) (seq: seq 'a): (seq 'b) => seq
   |> Stream.scan (fun (i, _) v => (i, Some v)) (0, None)
-  |> Stream.map (fun (i, v) => f i (Option.get v));
+  |> Stream.map (fun (i, v) => f i (Option.first v));
 
 let rec every (f: 'a => bool) (seq: seq 'a): bool => switch ( seq () ) {
   | Next value next => f value ? every f next : false

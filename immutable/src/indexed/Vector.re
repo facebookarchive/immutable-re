@@ -1082,7 +1082,7 @@ let module TransientVectorImpl = VectorImpl.Make {
     (tailIsFull leftCount) && (tailIsNotEmpty rightCount) ? {
       left: Array.make Trie.width value,
       leftCount: 1,
-      middle: Trie.addFirstLeafUsingMutator (updateLevelTransient @@ Option.get @@ owner) owner left middle,
+      middle: Trie.addFirstLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner left middle,
       right,
       rightCount,
     } :
@@ -1133,7 +1133,7 @@ let module TransientVectorImpl = VectorImpl.Make {
     {
       left,
       leftCount,
-      middle: Trie.addLastLeafUsingMutator (updateLevelTransient @@ Option.get @@ owner) owner right middle,
+      middle: Trie.addLastLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner right middle,
       right: Array.make Trie.width value,
       rightCount: 1,
     };
@@ -1157,10 +1157,10 @@ let module TransientVectorImpl = VectorImpl.Make {
 
     (Trie.count middle) > 0 ? {
       let (Leaf leftOwner left, middle) = middle
-        |> Trie.removeFirstLeafUsingMutator (updateLevelTransient @@ Option.get @@ owner) owner;
+        |> Trie.removeFirstLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner;
       let leftCount = CopyOnWriteArray.count left;
 
-      let owner = Option.get owner;
+      let owner = Option.first owner;
       let left = switch leftOwner {
         | Some leftOwner when leftOwner === owner && leftCount == Trie.width => left
         | _ => tailCopyAndExpand left
@@ -1212,10 +1212,10 @@ let module TransientVectorImpl = VectorImpl.Make {
 
     (Trie.count middle) > 0 ? {
       let (middle, Leaf rightOwner right) = middle
-        |> Trie.removeLastLeafUsingMutator (updateLevelTransient @@ Option.get @@ owner) owner;
+        |> Trie.removeLastLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner;
       let rightCount = CopyOnWriteArray.count right;
 
-      let owner = Option.get owner;
+      let owner = Option.first owner;
       let right = switch rightOwner {
         | Some rightOwner when rightOwner === owner && rightCount == Trie.width => right
         | _ => tailCopyAndExpand right
@@ -1298,8 +1298,8 @@ let module TransientVectorImpl = VectorImpl.Make {
     {
       let index = (index - leftCount);
       let middle = middle |> Trie.updateUsingMutator
-        (updateLevelTransient @@ Option.get @@ owner)
-        (updateLeafTransient @@ Option.get @@ owner)
+        (updateLevelTransient @@ Option.first @@ owner)
+        (updateLeafTransient @@ Option.first @@ owner)
         index
         value;
 
@@ -1341,8 +1341,8 @@ let module TransientVectorImpl = VectorImpl.Make {
     {
       let index = (index - leftCount);
       let middle = middle |> Trie.updateWithUsingMutator
-        (updateLevelTransient @@ Option.get @@ owner)
-        (updateLeafTransient @@ Option.get @@ owner)
+        (updateLevelTransient @@ Option.first @@ owner)
+        (updateLeafTransient @@ Option.first @@ owner)
         index
         f;
 

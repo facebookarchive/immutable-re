@@ -201,7 +201,7 @@ let tryFind
 let find
     (f: 'row => 'column => 'value => bool)
     (table: table 'row 'column 'value): ('row, 'column, 'value) =>
-  table |> tryFind f |> Option.get;
+  table |> tryFind f |> Option.first;
 
 let tryGet (row: 'row) (column: 'column) ({ map }: table 'row 'column 'value): (option 'value) =>
   map |> (HashMap.tryGet row) >>= (HashMap.tryGet column);

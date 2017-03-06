@@ -109,7 +109,7 @@ let module Make = fun (X: StreamBase) => {
         | _ => None
       })
     |> X.filter Option.isNotEmpty
-    |> X.map Option.get;
+    |> X.map Option.first;
 
   let distinctUntilChanged (stream: stream 'a): (stream 'a) =>
     stream |> distinctUntilChangedWith Equality.structural;
@@ -126,7 +126,7 @@ let module Make = fun (X: StreamBase) => {
         (fun acc next => Option.isEmpty acc ? Some next : None)
         None
     |> X.takeWhile Option.isNotEmpty
-    |> X.map Option.get;
+    |> X.map Option.first;
 
   let flatMap (f: 'a => (stream 'b)) (stream: stream 'a): (stream 'b) =>
     stream |> X.map f |> X.flatten;
@@ -158,7 +158,7 @@ let module Make = fun (X: StreamBase) => {
           : (count, Some next)
         ) (count, None)
       |> X.filter (snd >> Option.isNotEmpty)
-      |> X.map (snd >> Option.get) :
+      |> X.map (snd >> Option.first) :
     count == 0 ? stream :
     failwith "count must be greater or equal to 0";
 
@@ -169,7 +169,7 @@ let module Make = fun (X: StreamBase) => {
         | _ => f next ? None : Some next
       }) None
     |> X.filter Option.isNotEmpty
-    |> X.map Option.get;
+    |> X.map Option.first;
 
   let some (predicate: 'a => bool) (stream: stream 'a): (stream bool) =>
     stream |> X.filter predicate |> X.map (fun _ => true) |> first;
@@ -184,7 +184,7 @@ let module Make = fun (X: StreamBase) => {
           : (count, None)
           ) (count, None)
       |> X.takeWhile (snd >> Option.isNotEmpty)
-      |> X.map (snd >> Option.get) :
+      |> X.map (snd >> Option.first) :
     count == 0 ? X.empty :
     failwith "count must be greater or equal to 0";
 

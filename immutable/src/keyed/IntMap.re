@@ -234,13 +234,13 @@ let every (f: int => 'a => bool) ({ root }: intMap 'a): bool =>
   root |> BitmapTrieIntMap.every f;
 
 let find (f: int => 'a => bool) ({ root }: intMap 'a): (int, 'a) =>
-  root |> BitmapTrieIntMap.tryFind f |> Option.get;
+  root |> BitmapTrieIntMap.tryFind f |> Option.first;
 
 let forEach (f: int => 'a => unit) ({ root }: intMap 'a): unit =>
   root |> BitmapTrieIntMap.forEach f;
 
 let get (key: int) ({ root }: intMap 'a): 'a =>
-  root |> BitmapTrieIntMap.tryGet 0 key |> Option.get;
+  root |> BitmapTrieIntMap.tryGet 0 key |> Option.first;
 
 let isEmpty ({ count }: intMap 'a): bool => count == 0;
 

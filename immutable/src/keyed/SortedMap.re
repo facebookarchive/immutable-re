@@ -142,7 +142,7 @@ let tryFind (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): (opti
   tree |> AVLTreeMap.tryFind f;
 
 let find (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): ('k, 'v) =>
-  tree |> AVLTreeMap.tryFind f |> Option.get;
+  tree |> AVLTreeMap.tryFind f |> Option.first;
 
 let tryFirst ({ tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryFirst;

@@ -158,7 +158,7 @@ let tryFind (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): (option ('k,
 };
 
 let find (f: 'k => 'v => bool) (multimap: hashSetMultimap 'k 'v): ('k, 'v) =>
-  multimap |> tryFind f |> Option.get;
+  multimap |> tryFind f |> Option.first;
 
 let values ({ map }: hashSetMultimap 'k 'v): (seq 'v) =>
   map |> HashMap.values |> Seq.flatMap HashSet.toSeq;

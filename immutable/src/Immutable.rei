@@ -708,14 +708,15 @@ let module Option: {
   let every: ('a => bool) => (t 'a) => bool;
   let filter: ('a => bool) => (t 'a) => (t 'a);
   let find: ('a => bool) => (t 'a) => 'a;
+  let first: (t 'a) => 'a;
   let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
   let flatten: (t (t 'a)) => (t 'a);
   let forEach: ('a => unit) => (t 'a) => unit;
-  let get: (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: (t 'a) => bool;
   let isNotEmpty: (t 'a) => bool;
+  let last: (t 'a) => 'a;
   let map: ('a => 'b) => (t 'a) => (t 'b);
   let none: ('a => bool) => (t 'a) => bool;
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
@@ -725,6 +726,8 @@ let module Option: {
   let toCollectionWith: (Equality.t 'a) => (option 'a) => (Collection.t 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  let tryFirst: (t 'a) => (option 'a);
+  let tryLast: (t 'a) => (option 'a);
 };
 
 let module SortedMap: {

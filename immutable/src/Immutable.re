@@ -712,14 +712,15 @@ let module Option = {
   let every = Option.every;
   let filter = Option.filter;
   let find = Option.find;
+  let first = Option.first;
   let flatMap = Option.flatMap;
   let flatten = Option.flatten;
   let forEach = Option.forEach;
-  let get = Option.get;
   let hash = Option.hash;
   let hashWith = Option.hashWith;
   let isEmpty = Option.isEmpty;
   let isNotEmpty = Option.isNotEmpty;
+  let last = Option.last;
   let map = Option.map;
   let none = Option.none;
   let reduce = Option.reduce;
@@ -729,6 +730,8 @@ let module Option = {
   let toCollectionWith  = CollectionInternal.ofOptionWith;
   let toSeq = SeqInternal.ofOption;
   let tryFind = Option.tryFind;
+  let tryFirst = Option.tryFirst;
+  let tryLast = Option.tryLast;
 };
 
 let module SortedMap = {
