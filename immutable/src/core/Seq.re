@@ -279,6 +279,9 @@ let tryFindIndex (predicate: 'a => bool) (seq: seq 'a): (option int) => seq
   |> tryFind (fun (index, value) => predicate value)
   >>| fst;
 
+let get (index: int) (seq: seq 'a): 'a =>
+  index < 0 ? failwith "index < 0" : seq |> Stream.skip index |> first;
+
 let tryGet (index: int) (seq: seq 'a): (option 'a) =>
   index < 0 ? None : seq |> Stream.skip index |> tryFirst;
 

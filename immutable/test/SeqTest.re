@@ -74,6 +74,15 @@ let test = describe "Seq" [
 
     expect test |> toBeEqualToSeqOfString expected;
   }),
+  describe "get" [
+    it "in range" (fun () =>
+      expect (Seq.inRange 0 (Some 10) 1 |> Seq.get 2) |> toBeEqualToInt 2
+    ),
+    it "out of range" (fun () => {
+      defer (fun () => Seq.inRange 0 (Some 10) 1 |> Seq.get (-10)) |> throws;
+      defer (fun () => Seq.inRange 0 (Some 10) 1 |> Seq.get 20) |> throws;
+    }),
+  ],
   describe "hash" [],
   describe "isEmpty" [],
   describe "map" [],

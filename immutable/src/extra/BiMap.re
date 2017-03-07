@@ -100,6 +100,15 @@ let remove
 let removeAll ({ map, inverse }: biMap 'k 'v): (biMap 'k 'v) =>
   { map: map |> HashMap.removeAll, inverse: inverse |> HashMap.removeAll };
 
+let removeValue (value: 'v) ({ map, inverse } as biMap: biMap 'k 'v): (biMap 'k 'v) => {
+  let updated = inverse |> HashMap.tryGet value >>| fun key => ({
+    map: map |> HashMap.remove key,
+    inverse: inverse |> HashMap.remove value,
+  }: (biMap 'k 'v));
+
+  updated |? biMap;
+};
+
 let some (f: 'k => 'v => bool) ({ map }: biMap 'k 'v): bool =>
   map |> HashMap.some f;
 
