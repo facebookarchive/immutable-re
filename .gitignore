@@ -15,4 +15,6 @@ _build/**
 *.run
 *.opt
 *.native
-node_modules
+*.log
+/node_modules/
+/lib/
