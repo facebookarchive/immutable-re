@@ -1,0 +1,24 @@
+{
+  "name": "Immutable.re",
+  "sources": [
+    {
+      "dir": "immutable",
+      "subdirs": [
+        {
+          "dir": "src",
+          "subdirs": ["collection", "core", "extra", "indexed", "keyed", "utils"],
+        },
+        {
+          "dir": "test",
+        },
+        {
+          "dir": "perf",
+        },
+      ],
+    },
+    {
+      "dir": "reUnit",
+      "subdirs": ["src"],
+    },
+  ],
+}

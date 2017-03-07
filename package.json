@@ -34,10 +34,12 @@
     "top": "eval $(dependencyEnv) && rtop",
     "env": "eval $(dependencyEnv) && env",
     "editor": "eval $(dependencyEnv) && eval $EDITOR",
-    "whereisocamlmerlin": "eval $(dependencyEnv) && which ocamlmerlin-reason"
+    "whereisocamlmerlin": "eval $(dependencyEnv) && which ocamlmerlin-reason",
+    "build-js": "bsb"
   },
   "devDependencies": {
-      "@opam-alpha/merlin": "^ 2.5.0"
+      "@opam-alpha/merlin": "^ 2.5.0",
+      "bs-platform": "^1.5.0"
     },
   "dependencies": {
     "ocamlBetterErrors": "0.1.0",
