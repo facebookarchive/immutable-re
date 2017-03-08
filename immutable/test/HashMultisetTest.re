@@ -1,4 +1,4 @@
-open Immutable;
+/*open Immutable;
 open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
@@ -138,4 +138,4 @@ let test = describe "HashMultiset" [
       expect (set |> HashMultiset.get "d") |> toBeEqualToInt 0;
     }),
   ],
-];
+];*/

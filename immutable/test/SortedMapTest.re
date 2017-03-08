@@ -1,4 +1,4 @@
-open Immutable;
+/*open Immutable;
 open MapTester;
 open ReUnit;
 open ReUnit.Test;
@@ -12,4 +12,4 @@ let test = describe "SortedMap" (
       SortedMap.remove
       SortedMap.tryGet
       numOfElements
-);
+);*/

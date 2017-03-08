@@ -1,4 +1,4 @@
-open Immutable;
+/*open Immutable;
 open MapTester;
 open ReUnit;
 open ReUnit.Test;
@@ -51,4 +51,4 @@ let test = describe "HashMap" [
         numOfElements
     ),
   ],
-];
+];*/
