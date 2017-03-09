@@ -819,7 +819,6 @@ let module SortedSet = {
   let removeFirst = SortedSet.removeFirst;
   let removeLast = SortedSet.removeLast;
   let removeAll = SortedSet.removeAll;
-  let search = SortedSet.search;
   let some = SortedSet.some;
   let subtract = SortedSet.subtract;
   let toCollection = SortedSet.toCollection;
@@ -828,7 +827,6 @@ let module SortedSet = {
   let tryFind = SortedSet.tryFind;
   let tryFirst = SortedSet.tryFirst;
   let tryLast= SortedSet.tryLast;
-  let trySearch = SortedSet.trySearch;
   let union = SortedSet.union;
 };
 

@@ -67,17 +67,29 @@ let removeLast ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sorted
   if (newTree === tree) sortedSet else { comparator, count: count - 1, tree: newTree }
 };
 
-let search (predicate: 'a => ordering) ({ tree }: sortedSet 'a): 'a =>
-  tree |> AVLTreeSet.search predicate;
-
 let toSeq ({ tree }: sortedSet 'a): (seq 'a) =>
   tree |> AVLTreeSet.toSeq;
 
-let compare ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): ordering =>
-   Seq.compareWith comparator (toSeq this) (toSeq that);
+let compare
+    ({ comparator: thisCompare } as this: sortedSet 'a)
+    ({ comparator: thatCompare } as that: sortedSet 'a): ordering =>
+  if (thisCompare !== thatCompare) { failwith "Sets must use the same comparator" }
+  /* FIXME: Should be possible to make this more efficient
+   * by recursively walking the tree.
+   */
+  else Seq.compareWith thisCompare (toSeq this) (toSeq that);
 
-let equals ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): bool =>
-  Seq.equalsWith (fun a b => (comparator a b) === Equal) (toSeq this) (toSeq that);
+let equals
+    ({ comparator: thisCompare } as this: sortedSet 'a)
+    ({ comparator: thatCompare } as that: sortedSet 'a): bool =>
+  (this === that) || (
+    (thisCompare === thatCompare) &&
+
+    /* FIXME: Should be possible to make this more efficient
+     * by recursively walking the tree.
+     */
+    Seq.equalsWith (fun a b => (thisCompare a b) === Equal) (toSeq this) (toSeq that)
+  );
 
 let every (f: 'a => bool) (set: sortedSet 'a): bool =>
   set |> toSeq |> Seq.every f;
@@ -114,9 +126,6 @@ let tryFirst ({ tree }: sortedSet 'a): (option 'a) =>
 
 let tryLast ({ tree }: sortedSet 'a): (option 'a) =>
   AVLTreeSet.tryLast tree;
-
-let trySearch (predicate: 'a => ordering) ({ tree }: sortedSet 'a): (option 'a) =>
-  tree |> AVLTreeSet.trySearch predicate;
 
 let toCollection (set: sortedSet 'a): (collection 'a) => {
   contains: fun a => contains a set,

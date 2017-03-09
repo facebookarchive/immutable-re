@@ -195,19 +195,6 @@ let rec remove (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTr
     }
 };
 
-let rec search (predicate: 'a => ordering) (tree: avlTreeSet 'a): 'a => switch tree {
-  | Empty => failwith "not found"
-  | Leaf v =>
-      let result = predicate v;
-      if (result === Equal) v
-      else (failwith "not found")
-  | Node _ left v right =>
-      let result = predicate v;
-      if (result === LessThan) (search predicate left)
-      else if (result === GreaterThan) (search predicate right)
-      else v
-};
-
 let rec toSeq (tree: avlTreeSet 'a): (seq 'a) => switch tree {
   | Empty => Seq.empty
   | Leaf v => Seq.return v
@@ -230,16 +217,4 @@ let rec tryLast (tree: avlTreeSet 'a): (option 'a) => switch tree {
   | Leaf v => Some v
   | Node _ _ v Empty => Some v
   | Node _ _ _ right => tryLast right
-};
-
-let rec trySearch (predicate: 'a => ordering) (tree: avlTreeSet 'a): (option 'a) => switch tree {
-  | Empty => None
-  | Leaf v =>
-      let result = predicate v;
-      if (result === Equal) (Some v) else None
-  | Node _ left v right =>
-      let result = predicate v;
-      if (result === LessThan) (trySearch predicate left)
-      else if (result === GreaterThan) (trySearch predicate right)
-      else Some v
 };

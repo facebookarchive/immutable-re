@@ -60,6 +60,10 @@ let test = describe "SortedSet" [
 
     let setShorter = Seq.inRange 0 (Some (count - 1)) 1 |> SortedSet.fromSeq;
     expect (SortedSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
+
+    let setWithRandomComparator1 = SortedSet.emptyWith (fun a b => Ordering.greaterThan);
+    let setWithRandomComparator2 = SortedSet.emptyWith (fun a b => Ordering.lessThan);
+    defer (fun () => SortedSet.compare setWithRandomComparator1 setWithRandomComparator2) |> throws;
   }),
   it "last and tryLast" (fun () => {
     let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq;
@@ -92,24 +96,6 @@ let test = describe "SortedSet" [
   it "removeFirst" (fun () => {
     let set = Seq.inRange 0 (Some count) 1 |> SortedSet.fromSeq |> SortedSet.removeFirst;
     expect (set |> Set.contains 0) |> toBeEqualToFalse;
-  }),
-  it "search and trySearch" (fun () => {
-    let set = Seq.inRange 0 (Some count) 1 |> Set.fromSeq;
-
-    let find0 = Comparator.structural 0;
-    let findCountMinusOne = Comparator.structural (count - 1);
-    let findCountDividedByTwo = Comparator.structural (count / 2);
-
-    expect (SortedSet.search find0 set) |> toBeEqualToInt 0;
-    expect (SortedSet.search findCountMinusOne set) |> toBeEqualToInt (count - 1);
-    expect (SortedSet.search findCountDividedByTwo set) |> toBeEqualToInt (count / 2);
-
-    expect (SortedSet.trySearch find0 set) |> toBeEqualToSomeOfInt 0;
-    expect (SortedSet.trySearch  findCountMinusOne set) |> toBeEqualToSomeOfInt (count - 1);
-    expect (SortedSet.trySearch  findCountDividedByTwo set) |> toBeEqualToSomeOfInt (count / 2);
-
-    defer (fun () => SortedSet.search (fun i => Ordering.lessThan) set) |> throws;
-    expect (SortedSet.trySearch (fun i => Ordering.greaterThan) set) |> toBeEqualToNoneOfInt;
   }),
   ...(SetTester.test count (module Set))
 ];

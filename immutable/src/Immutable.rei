@@ -431,7 +431,7 @@ let module rec Collection: {
    */
 
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
-  /** [toKeyed collection] returns a Keyed collection of values in [collection]. */
+  /** [toKeyed collection] returns a Keyed collection view of [collection] as a mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq collection] returns a Seq of the values in [collection]. */
@@ -2064,46 +2064,189 @@ let module SortedMap: {
 };
 
 let module SortedSet: {
+  /** AVL tree based Set implementation. */
+
   type t 'a;
+  /** The SortedSet type */
 
   let add: 'a => (t 'a) => (t 'a);
+  /** [add value set] returns a new Set with [value], if [set] does not already contain [value].
+   *
+   *  Complexity: O(log N)
+   */
+
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addAll values set] returns a new Set with all elements in [values] added.
+   *
+   *  Complexity: O(N log N)
+   */
+
   let compare: (Comparator.t (t 'a));
+  /** A comparator that compares two SortedSet instances.
+   *  [compare this that] will throw if [this] and [that] do not use the
+   *  same comparison function.
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value set] returns true if any element in [set] is equal to [value].
+   *
+   *  Complexity: O(log N)
+   */
+
   let count: (t 'a) => int;
+  /** [count set] returns the number of elements in the set.
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: (t 'a);
+  /** The empty SortedSet using structural comparison */
+
   let emptyWith: (Comparator.t 'a) => (t 'a);
+  /** [empty comparator] returns an empty SortedSet using the provided [comparator]. */
+
   let equals: (t 'a) => (t 'a) => bool;
+  /** [equals this that] compares [this] and [that] for equality. Two SortedSet are only
+   *  equal if they use the same the comparison function and contain the same values.
+   */
+
   let every: ('a => bool) => (t 'a) => bool;
+  /** [every f set] returns true if the predicate [f] returns true for every
+   *  element in [set], otherwise false. If [set] is empty, returns true.
+   */
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f set] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let first: (t 'a) => 'a;
+  /** [first set] returns the first element in [set] or throws.
+   *
+   * Complexity: O(log n)
+   */
+
   let forEach: ('a => unit) => (t 'a) => unit;
+  /** [forEach f set] iterates through [set], invoking [f] for each element until [seq] completes. */
+
   let fromSeq: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a Set including the values in [seq] using structural comparison. */
+
   let fromSeqWith: (Comparator.t 'a)  => (Seq.t 'a) => (t 'a);
+  /** [fromSeq comparator seq] returns a Set including the values in [seq]
+   *  the provided [comparator] comparison function.
+   */
+
   let hash: (Hash.t (t 'a));
+  /** [hash set] hashes [set], hashing elements using structural hashing. */
+
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
+
   let intersect: (t 'a) => (t 'a) => (t 'a);
+  /** [intersect this that] returns a new set containing only elements that appear in
+   *  both [this] and [that]. The returned set uses [this]'s comparator function.
+   *
+   *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
+   *  the same comparator (NOT IMPLEMENTED).
+   */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty set] returns true if [set] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty set] returns true if [set] contains at least one element. */
+
   let last: (t 'a) => 'a;
+  /** [last set] returns the last element in [set] or throws.
+   *
+   * Complexity: O(log n)
+   */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f set] returns true if the predicate [f] returns false for every
+   *  elements in [set], otherwise true. If [set] is empty, returns true.
+   */
+
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc set] applies the accumulator function [f] to each element in [set]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceRight f acc set] applies the accumulator function [f] to each element in [set]
+   *  in reverse order with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let remove: 'a => (t 'a) => (t 'a);
+  /** [remove value set] returns a new Set without [value].
+   *
+   *  Complexity: O(log N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll set] returns the empty Set with the same comparator as [set].
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst set] returns a new Set without the first element.
+   *
+   *  Complexity: O(log N)
+   */
+
   let removeLast: (t 'a) => (t 'a);
-  let search: ('a => Ordering.t) => (t 'a) => 'a;
+  /** [removeLast set] returns a new Set without the last element.
+   *
+   *  Complexity: O(log N)
+   */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f set] returns true if the predicate [f] returns true for any element in [set], otherwise false.
+   *  If [set] is empty, returns false.
+   */
+
   let subtract: (t 'a) => (t 'a) => (t 'a);
+  /** [substract this that] returns a new set with the elements of [that] removed from [this].
+   *  The returned set uses [this]'s comparator function.
+   *
+   *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
+   *  the same comparator (NOT IMPLEMENTED).
+   */
+
   let toCollection: (t 'a) => (Collection.t 'a);
+  /** [toCollection set] returns a Collection view of [set] */
+
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
+  /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq set] returns a Seq of the values in [set]. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFirst: (t 'a) => (option 'a);
+  /** [tryFirst seq] returns first element in [seq] or None.
+   *
+   * Complexity: O(log n)
+   *
+   */
+
   let tryLast: (t 'a) => (option 'a);
-  let trySearch: ('a => Ordering.t) => (t 'a) => (option 'a);
+  /** [tryLast seq] returns the last element in [seq] or None.
+   *
+   *  Complexity: O(1)
+   */
+
   let union: (t 'a) => (t 'a) => (t 'a);
+  /** [union this that] returns a new set containing all the elements in
+   *  both [this] and [that]. The returned set uses [this]'s comparator function.
+   *
+   *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
+   *  the same comparator (NOT IMPLEMENTED).
+   */
 };
 
 let module Stack: {
