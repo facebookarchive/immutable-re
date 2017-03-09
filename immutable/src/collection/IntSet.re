@@ -8,6 +8,8 @@ type bitmapTrieIntSet =
   | Entry int
   | Empty;
 
+/* FIXME: I'm fairly certain the BitmapTrie functions can be changed to properly sort IntSet */
+
 let module BitmapTrieIntSet = {
   let rec add
       (updateLevelNode: int => bitmapTrieIntSet => bitmapTrieIntSet => bitmapTrieIntSet)

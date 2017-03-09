@@ -1689,49 +1689,185 @@ and TransientIntMap: {
 };
 
 let module rec IntSet: {
+  /** A set implementation optimized for storing sparse ints. */
+
   type t;
+  /** The IntSet type. */
 
   let add: int => t => t;
+  /** [add value set] returns a new IntSet with [value], if [set] does not already contain [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let addAll: (Seq.t int) => t => t;
+  /** [addAll values set] returns a new IntSet with all elements in [values] added.
+   *
+   *  Complexity: O(N log32 N)
+   */
+
   let contains: int => t => bool;
+  /** [contains value set] returns true if any element in [set] is equal to [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let count: t => int;
+  /** [count set] returns the number of elements in the set.
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: t;
+  /** The empty IntSet. */
+
   let equals: t => t => bool;
+  /** [equals this that] compares [this] and [that] for equality. */
+
   let every: (int => bool) => t => bool;
+  /** [every f set] returns true if the predicate [f] returns true for every
+   *  element in [set], otherwise false. If [set] is empty, returns true.
+   */
+
   let find: (int => bool) => t => int;
+  /** [find f set] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let forEach: (int => unit) => t => unit;
+  /** [forEach f set] iterates through [set], invoking [f] for each element until [seq] completes. */
+
   let fromSeq: (Seq.t int) => t;
+  /** [fromSeq seq] returns an IntSet including the values in [seq]. */
+
   let hash: (Hash.t t);
+  /** [hash set] hashes [set], hashing elements using structural hashing. */
+
   let intersect: t => t => t;
+  /** [intersect this that] returns a new IntSet containing only elements that appear in
+   *  both [this] and [that].
+   *
+   *  Complexity: Currently O(N),ideally O(log32 N).
+   */
+
   let isEmpty: t => bool;
+  /** [isEmpty set] returns true if [set] contains no elements. */
+
   let isNotEmpty: t => bool;
+  /** [isNotEmpty set] returns true if [set] contains at least one element. */
+
   let mutate: t => TransientIntSet.t;
+
   let none: (int => bool) => t => bool;
+  /** [none f set] returns true if the predicate [f] returns false for every
+   *  elements in [set], otherwise true. If [set] is empty, returns true.
+   */
+
   let reduce: ('acc => int => 'acc) => 'acc => t => 'acc;
+  /** [reduce f acc set] applies the accumulator function [f] to each element in [set]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let remove: int => t => t;
+  /** [remove value set] returns a new IntSet without [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: t => t;
+  /** [removeAll set] returns the empty IntSet.
+   *
+   *  Complexity: O(1)
+   */
+
   let some: (int => bool) => t => bool;
+  /** [some f set] returns true if the predicate [f] returns true for any element in [set], otherwise false.
+   *  If [set] is empty, returns false.
+   */
+
   let subtract: t => t => t;
+  /** [substract this that] returns a new IntSet with the elements of [that] removed from [this].
+   *
+   *  Complexity: O(N) currently, ideally O(log32 N).
+   */
+
   let toCollection: t => (Collection.t int);
+  /** [toCollection set] returns a Collection view of [set] */
+
   let toKeyed: t => (Keyed.t int int);
+  /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
+
   let toSeq: t => (Seq.t int);
+  /** [toSeq set] returns a Seq of the values in [set]. */
+
   let tryFind: (int => bool) => t => (option int);
+  /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
+
   let union: t => t => t;
+  /** [union this that] returns a new IntSet containing all the elements in
+   *  both [this] and [that].
+   *
+   *  Complexity: currently O(N), ideally O(log32 N).
+   */
 }
 
 and TransientIntSet: {
+  /** A temporarily mutable IntSet. Once persisted, any further operations on a
+   *  TransientIntSet instance will throw. Intended for implementing bulk mutation
+   *  operations efficiently.
+   */
+
   type t;
 
   let add: int => t => t;
+  /** [add value transient] adds [value] to [transient].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let addAll: (Seq.t int) => t => t;
+  /** [addAll values transient] adds all elements in [values] to [transient].
+   *
+   *  Complexity: O(N log32 N)
+   */
+
   let contains: int => t => bool;
+  /** [contains value transient] returns true if any element in [transient] is equal to [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let count: t => int;
+  /** [count transient] returns the number of elements in [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: unit => t;
+  /** [empty ()] return a new empty TransientIntSet. */
+
   let isEmpty: t => bool;
+  /** [isEmpty transient] returns true if [transient] contains no elements. */
+
   let isNotEmpty: t => bool;
+  /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+
   let persist: t => IntSet.t;
+  /** [persist transient] returns a persisted IntSet. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
+
   let remove: int => t => t;
+  /** [remove value transient] removes [value] from [transient].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: t => t;
+  /** [removeAll transient] removes all values from [transient].
+   *
+   *  Complexity: O(1)
+   */
 };
 
 let module List: {
@@ -2070,13 +2206,13 @@ let module SortedSet: {
   /** The SortedSet type */
 
   let add: 'a => (t 'a) => (t 'a);
-  /** [add value set] returns a new Set with [value], if [set] does not already contain [value].
+  /** [add value set] returns a new SortedSet with [value], if [set] does not already contain [value].
    *
    *  Complexity: O(log N)
    */
 
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addAll values set] returns a new Set with all elements in [values] added.
+  /** [addAll values set] returns a new SortedSet with all elements in [values] added.
    *
    *  Complexity: O(N log N)
    */
@@ -2130,10 +2266,10 @@ let module SortedSet: {
   /** [forEach f set] iterates through [set], invoking [f] for each element until [seq] completes. */
 
   let fromSeq: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a Set including the values in [seq] using structural comparison. */
+  /** [fromSeq seq] returns a SortedSet including the values in [seq] using structural comparison. */
 
   let fromSeqWith: (Comparator.t 'a)  => (Seq.t 'a) => (t 'a);
-  /** [fromSeq comparator seq] returns a Set including the values in [seq]
+  /** [fromSeq comparator seq] returns a SortedSet including the values in [seq]
    *  the provided [comparator] comparison function.
    */
 
@@ -2144,8 +2280,8 @@ let module SortedSet: {
   /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
 
   let intersect: (t 'a) => (t 'a) => (t 'a);
-  /** [intersect this that] returns a new set containing only elements that appear in
-   *  both [this] and [that]. The returned set uses [this]'s comparator function.
+  /** [intersect this that] returns a new SortedSet containing only elements that appear in
+   *  both [this] and [that]. The returned SortedSet uses [this]'s comparator function.
    *
    *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
    *  the same comparator (NOT IMPLEMENTED).
@@ -2179,25 +2315,25 @@ let module SortedSet: {
    */
 
   let remove: 'a => (t 'a) => (t 'a);
-  /** [remove value set] returns a new Set without [value].
+  /** [remove value set] returns a new SortedSet without [value].
    *
    *  Complexity: O(log N)
    */
 
   let removeAll: (t 'a) => (t 'a);
-  /** [removeAll set] returns the empty Set with the same comparator as [set].
+  /** [removeAll set] returns the empty SortedSet with the same comparator as [set].
    *
    *  Complexity: O(1)
    */
 
   let removeFirst: (t 'a) => (t 'a);
-  /** [removeFirst set] returns a new Set without the first element.
+  /** [removeFirst set] returns a new SortedSet without the first element.
    *
    *  Complexity: O(log N)
    */
 
   let removeLast: (t 'a) => (t 'a);
-  /** [removeLast set] returns a new Set without the last element.
+  /** [removeLast set] returns a new SortedSet without the last element.
    *
    *  Complexity: O(log N)
    */
@@ -2208,8 +2344,8 @@ let module SortedSet: {
    */
 
   let subtract: (t 'a) => (t 'a) => (t 'a);
-  /** [substract this that] returns a new set with the elements of [that] removed from [this].
-   *  The returned set uses [this]'s comparator function.
+  /** [substract this that] returns a new SortedSet with the elements of [that] removed from [this].
+   *  The returned SortedSet uses [this]'s comparator function.
    *
    *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
    *  the same comparator (NOT IMPLEMENTED).
@@ -2231,7 +2367,6 @@ let module SortedSet: {
   /** [tryFirst seq] returns first element in [seq] or None.
    *
    * Complexity: O(log n)
-   *
    */
 
   let tryLast: (t 'a) => (option 'a);
@@ -2241,8 +2376,8 @@ let module SortedSet: {
    */
 
   let union: (t 'a) => (t 'a) => (t 'a);
-  /** [union this that] returns a new set containing all the elements in
-   *  both [this] and [that]. The returned set uses [this]'s comparator function.
+  /** [union this that] returns a new SortedSet containing all the elements in
+   *  both [this] and [that]. The returned SortedSet uses [this]'s comparator function.
    *
    *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
    *  the same comparator (NOT IMPLEMENTED).
