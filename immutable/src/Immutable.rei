@@ -671,7 +671,7 @@ let module rec BiMap: {
   /** [keys bimap] returns a Collection view of keys in [bimap]. */
 
   let mutate: (t 'k 'v) => (TransientBiMap.t 'k 'v);
-  /** [mutate bimap] returns a TransientBiMap containing the same key values pairs as [bimap]
+  /** [mutate bimap] returns a TransientBiMap containing the same key values pairs as [bimap].
    *
    *  Complexity: O(1)
    */
@@ -858,12 +858,12 @@ let module CopyOnWriteArray: {
    */
 
   let compare: (Comparator.t (t 'a));
-  /** A comparator that compares two CopyOnWriteArray instances
+  /** A comparator that compares two CopyOnWriteArrays
    *  using structural comparison to compare elements.
    */
 
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
-  /** [compareWith comparator] returns a Comparator that compares two CopyOnWriteArray instances
+  /** [compareWith comparator] returns a Comparator that compares two CopyOnWriteArrays
    *  using [comparator] to compare elements.
    */
 
@@ -1007,12 +1007,12 @@ let module CopyOnWriteArray: {
 
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
   /** [mapReverse f cow] returns a new CopyOnWriteArray applying the
-   *  function [f] to each element in [cow], in reverse order.
+   *  function [f] to each element in [cow], reversing the result.
    */
 
   let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
   /** [mapReverseWithIndex f cow] returns a new CopyOnWriteArray applying the
-   *  function [f] to each index/element pair in [cow], in reverse order.
+   *  function [f] to each index/element pair in [cow], reversing the result.
    */
 
   let none: ('a => bool) => (t 'a) => bool;
@@ -1081,7 +1081,7 @@ let module CopyOnWriteArray: {
    */
 
   let removeLast: (t 'a) => (t 'a);
-  /** [removeFirst cow] returns a new CopyOnWriteArray without the last element.
+  /** [removeLast cow] returns a new CopyOnWriteArray without the last element.
    *
    *  Complexity: O(N)
    */
@@ -1167,68 +1167,271 @@ let module CopyOnWriteArray: {
 };
 
 let module rec Deque: {
+/** A double-ended queue with efficient appends [addLast] and prepends [addFirst]
+ *  and removals from either end of the queue [removeFirst] [removeFirst].
+ */
+
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value deque] returns a new Deque with [value] prepended.
+   *
+   *  Complexity: O(1)
+   */
+
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll seq deque] returns a new Deque with the values in [seq] prepended.
+   *
+   *  Complexity: O(N) the number of elements in [seq].
+   */
+
   let addLast: 'a => (t 'a) => (t 'a);
+  /** [addLast value deque] returns a new Deque with [value] appended.
+   *
+   *  Complexity: O(1)
+   */
+
   let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addLastAll seq deque] returns a new Deque with the values in [seq] appended.
+   *
+   *  Complexity: O(N) the number of elements in [seq].
+   */
+
   let compare: (Comparator.t (t 'a));
+  /** A comparator that compares two Deques
+   *  using structural comparison to compare elements.
+   */
+
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  /** [compareWith comparator] returns a Comparator that compares two Deques
+   *  using [comparator] to compare elements.
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value deque] returns true if any element in [deque] is equal to [value]
+   *  using structural equality, otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
+  /** [containsWith equals deque] returns true if any element in [deque] is equal to [a]
+   *  using the equality function [equals], otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let count: (t 'a) => int;
+  /** [count deque] returns the number of elements in [deque]. */
+
   let empty: (t 'a);
+  /** The empty Deque. */
+
   let equals: (Equality.t (t 'a));
+  /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
+  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let every: ('a => bool) => (t 'a) => bool;
+  /** [every f deque] returns true if the predicate [f] returns true for every
+   *  element in [deque], otherwise false. If [deque] is empty, returns true.
+   */
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f deque] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let first: (t 'a) => 'a;
+  /** [first deque] returns the first element in [deque] or throws. */
+
   let forEach: ('a => unit) => (t 'a) => unit;
+  /** [forEach f deque] iterates through [deque], invoking [f] for each element. */
+
   let forEachReverse: ('a => unit) => (t 'a) => unit;
+  /** [forEachReverse f deque] iterates through [deque] in reverser order,
+   *  invoking [f] for each element.
+   */
+
   let fromSeq: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new Deque containing the values in [seq].
+   *
+   * Complexity: O(N) the number of elements in [seq].
+   */
+
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new Deque containing the values in [seq]
+   *  in reverse order.
+   *
+   * Complexity: O(N) the number of elements in [seq].
+   */
+
   let hash: (Hash.t (t 'a));
+  /** [hash deque] hashes [deque], hashing elements using structural hashing. */
+
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash deque] hashes [deque], hashing elements using [hash]. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty deque] returns true if [deque] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty deque] returns true if [deque] contains at least one element. */
+
   let last: (t 'a) => 'a;
+  /** [last deque] returns the last element in [deque] or throws. */
+
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f deque] returns a new Deque applying the function [f] to each element in [deque]. */
+
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverse f deque] returns a new Deque applying the
+   *  function [f] to each element in [deque], reversing the result.
+   */
+
   let mutate: (t 'a) => (TransientDeque.t 'a);
+  /** [mutate deque] returns a TransientDeque containing the same elements as [deque].
+   *
+   *  Complexity: O(1)
+   */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f deque] returns true if the predicate [f] returns false for every
+   *  elements in [deque], otherwise true. If [deque] is empty, returns true.
+   */
+
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc deque] applies the accumulator function [f] to each element in [deque]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceRight f acc deque] applies the accumulator function [f] to each element in [deque]
+   *  in reverse order with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll cow] returns the empty Deque.
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst deque] returns a new Deque without the first element.
+   *
+   *  Complexity: O(1)
+   */
+
   let removeLast: (t 'a) => (t 'a);
+  /** [removeLast deque] returns a new Deque without the last element.
+   *
+   *  Complexity: O(1)
+   */
+
   let return: 'a => (t 'a);
+  /** [return value] returns a new Deque containing a single element, [value]. */
+
   let reverse: (t 'a) => (t 'a);
+  /** [reverse deque] returns a new Deque with [deque]'s elements reversed.
+   *
+   *  Complexity: O(1)
+   */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f deque] returns true if the predicate [f] returns true for any element in [deque], otherwise false.
+   *  If [deque] is empty, returns false.
+   */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq deque] returns a Seq of the elements in [deque] in order. */
+
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  /** [toSeqReversed deque] returns a Seq of the elements in [deque] in reverse order. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [tryFind f deque] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFirst: (t 'a) => option 'a;
+  /** [tryFirst deque] returns first element in [deque] or None. */
+
   let tryLast: (t 'a) => option 'a;
+  /** [tryLast deque] returns the last element in [deque] or None. */
 }
 
 and TransientDeque: {
+/** A temporarily mutable double-ended queue. Once persisted, any further operations on a
+ *  TransientDeque instance will throw. Intended for implementing bulk mutation operations efficiently.
+ */
+
   type t 'a;
+  /** The TransientDeque type. */
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value transient] prepends [value] to [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let addLast: 'a => (t 'a) => (t 'a);
+  /** [addLast value transient] appends [value] to [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let count: (t 'a) => int;
+  /** [count transient] returns the number of elements in [transient]. */
+
   let empty: unit => (t 'a);
+  /** [empty ()] returns a new empty TransientDeque. */
+
   let first: (t 'a) => 'a;
+  /** [first transient] returns the first element in [transient] or throws. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty transient] returns true if [transient] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+
   let last: (t 'a) => 'a;
+  /** [last transient] returns the last element in [transient] or throws. */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll transient] removes all elements from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst transient] removes the first element from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let removeLast: (t 'a) => (t 'a);
+  /** [removeLast transient] removes the last element from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let reverse: (t 'a) => (t 'a);
+  /** [reverse transient] reverse [transient]'s elements.
+   *
+   *  Complexity: O(1)
+   */
+
   let tryFirst: (t 'a) => option 'a;
+  /** [tryFirst transient] returns first element in [transient] or None. */
+
   let tryLast: (t 'a) => option 'a;
+  /** [tryLast transient] returns the last element in [transient] or None. */
 };
 
 let module rec HashMap: {
@@ -1525,38 +1728,152 @@ and TransientIntSet: {
 };
 
 let module List: {
+/** OCaml singly-linked list */
+
   type t 'a = list 'a;
+  /** The List type. */
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value list] returns a new List with [value] prepended.
+   *
+   *  Complexity: O(1)
+   */
+
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll seq list] returns a new List with the values in [seq] prepended.
+   *
+   *  Complexity: O(N) the number of elements in [seq].
+   */
+
   let compare: (Comparator.t (t 'a));
+  /** A comparator that compares two Lists
+   *  using structural comparison to compare elements.
+   */
+
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  /** [compareWith comparator] returns a Comparator that compares two Lists
+   *  using [comparator] to compare elements.
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value list] returns true if any element in [list] is equal to [value]
+   *  using structural equality, otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
+  /** [containsWith equals list] returns true if any element in [list] is equal to [a]
+   *  using the equality function [equals], otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let count: (t 'a) => int;
+  /** [count list] returns the number of elements in [list].
+   *
+   *  Complexity: O(N)
+   */
+
   let empty: (t 'a);
+  /** The empty List. */
+
   let equals: (Equality.t (t 'a));
+  /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
+  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let every: ('a => bool) => (t 'a) => bool;
-  let first: (t 'a) => 'a;
+  /** [every f list] returns true if the predicate [f] returns true for every
+   *  element in [list], otherwise false. If [list] is empty, returns true.
+   */
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f list] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
+  let first: (t 'a) => 'a;
+  /** [first list] returns the first element in [list] or throws. */
+
   let forEach: ('a => unit) => (t 'a) => unit;
+  /** [forEach f list] iterates through [list], invoking [f] for each element. */
+
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new List containing the values in [seq]
+   *  in reverse order.
+   *
+   * Complexity: O(N) the number of elements in [seq].
+   */
+
   let hash: (Hash.t (t 'a));
+  /** [hash list] hashes [list], hashing elements using structural hashing. */
+
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash list] hashes [list], hashing elements using [hash]. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty list] returns true if [list] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty list] returns true if [list] contains at least one element. */
+
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverse f list] returns a new List applying the
+   *  function [f] to each element in [list], reversing the result.
+   */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f list] returns true if the predicate [f] returns false for every
+   *  elements in [list], otherwise true. If [list] is empty, returns true.
+   */
+
   let reduce: ('acc => 'a => 'acc ) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc list] applies the accumulator function [f] to each element in [list]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll list] returns the empty List.
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst list] returns a new List without the first element.
+   *
+   *  Complexity: O(1)
+   */
+
   let return: 'a => (t 'a);
+  /** [return value] returns a new List containing a single element, [value]. */
+
   let reverse: (t 'a) => (t 'a);
+  /** [reverse list] returns a new List with [list]'s elements reversed.
+   *
+   *  Complexity: O(N)
+   */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f list] returns true if the predicate [f] returns true for any element in [list], otherwise false.
+   *  If [list] is empty, returns false.
+   */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq list] returns a Seq of the elements in [list] in order. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [tryFind f list] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFirst: (t 'a) => (option 'a);
+  /** [tryFirst list] returns first element in [list] or None. */
 };
 
 let module Option: {
@@ -1691,40 +2008,159 @@ let module SortedSet: {
 };
 
 let module Stack: {
+/** A singly-linked stack with an O(1) count operation. */
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value stack] returns a new Stack with [value] prepended.
+   *
+   *  Complexity: O(1)
+   */
+
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll seq stack] returns a new Stack with the values in [seq] prepended.
+   *
+   *  Complexity: O(N) the number of elements in [seq].
+   */
+
   let compare: (Comparator.t (t 'a));
+  /** A comparator that compares two Stacks
+   *  using structural comparison to compare elements.
+   */
+
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  /** [compareWith comparator] returns a Comparator that compares two Stacks
+   *  using [comparator] to compare elements.
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value stack] returns true if any element in [stack] is equal to [value]
+   *  using structural equality, otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
+  /** [containsWith equals stack] returns true if any element in [stack] is equal to [a]
+   *  using the equality function [equals], otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let count: (t 'a) => int;
+  /** [count stack] returns the number of elements in [stack].
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: (t 'a);
+  /** The empty Stack. */
+
   let equals: (Equality.t (t 'a));
+  /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
+  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let every: ('a => bool) => (t 'a) => bool;
+  /** [every f stack] returns true if the predicate [f] returns true for every
+   *  element in [stack], otherwise false. If [stack] is empty, returns true.
+   */
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f stack] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let first: (t 'a) => 'a;
+  /** [first stack] returns the first element in [stack] or throws. */
+
   let forEach: ('a => unit) => (t 'a) => unit;
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
-  let hash: (Hash.t (t 'a));
-  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-  let isEmpty: (t 'a) => bool;
-  let isNotEmpty: (t 'a) => bool;
+  /** [forEach f stack] iterates through [stack], invoking [f] for each element. */
+
   let fromList: (list 'a) => (t 'a);
+  /** [fromList list] returns a Stack backed by [list].
+   *
+   *  Complexity: O(N)
+   */
+
+  let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new Stack containing the values in [seq]
+   *  in reverse order.
+   *
+   * Complexity: O(N) the number of elements in [seq].
+   */
+
+  let hash: (Hash.t (t 'a));
+  /** [hash stack] hashes [stack], hashing elements using structural hashing. */
+
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash stack] hashes [stack], hashing elements using [hash]. */
+
+  let isEmpty: (t 'a) => bool;
+  /** [isEmpty stack] returns true if [stack] contains no elements. */
+
+  let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty stack] returns true if [stack] contains at least one element. */
+
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverse f stack] returns a new Stack applying the
+   *  function [f] to each element in [stack], reversing the result.
+   */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f stack] returns true if the predicate [f] returns false for every
+   *  elements in [stack], otherwise true. If [stack] is empty, returns true.
+   */
+
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc stack] applies the accumulator function [f] to each element in [stack]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll stack] returns the empty Stack.
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst stack] returns a new Stack without the first element.
+   *
+   *  Complexity: O(1)
+   */
+
   let return: 'a => (t 'a);
+  /** [return value] returns a new Stack containing a single element, [value]. */
+
   let reverse: (t 'a) => (t 'a);
+  /** [reverse stack] returns a new Stack with [stack]'s elements reversed.
+   *
+   *  Complexity: O(N)
+   */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f stack] returns true if the predicate [f] returns true for any element in [stack], otherwise false.
+   *  If [stack] is empty, returns false.
+   */
+
   let toList: (t 'a) => (list 'a);
+  /** [toList stack] returns the underlying List backing the stack */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq stack] returns a Seq of the elements in [stack] in order. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [tryFind f stack] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFirst: (t 'a) => (option 'a);
+  /** [tryFirst stack] returns first element in [stack] or None. */
 };
 
 let module StackMultimap: {
