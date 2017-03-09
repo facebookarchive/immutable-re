@@ -188,7 +188,7 @@ let module Seq: {
    */
 
   let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
-  /** An alias for [flatMap] */
+  /** [flatmap f seq] is the equivalent of [seq |> map f |> concatAll] */
 
   let flatten: (t (t 'a)) => (t 'a);
   /** An alias for [concatAll] */
@@ -1884,39 +1884,131 @@ let module List: {
 };
 
 let module Option: {
+  /** OCaml option type. Can be considered a collection of zero or one elements.
+   *  All operations have a complexity of O(1).
+   */
+
   type t 'a = option 'a;
+  /** The Option type. */
 
   let compare: (Comparator.t (t 'a));
+  /** A comparator that compares two Options using structural comparison to compare elements. */
+
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  /** [compareWith comparator] returns a Comparator that compares two Deques
+   *  using [comparator] to compare elements.
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value option] returns true if any element in [option] is equal to [value]
+   *  using structural equality, otherwise false.
+   */
+
   let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
+  /** [containsWith equals option] returns true if any element in [option] is equal to [a]
+   *  using the equality function [equals], otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let count: (t 'a) => int;
+  /** [count option] returns the number of elements in [option]. */
+
   let empty: (t 'a);
+  /** The empty Option, None. */
+
   let equals: (Equality.t (t 'a));
+  /** [equals this that] compares [this] and [that] for equality using
+   *  structural equality to equate elements.
+   */
+
   let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
+  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let every: ('a => bool) => (t 'a) => bool;
+  /** [every f option] returns true if the predicate [f] returns true for every
+   *  element in [option], otherwise false. If [option] is empty, returns true.
+   */
+
   let filter: ('a => bool) => (t 'a) => (t 'a);
+  /** [filter f option] returns an option that only includes elements that satisfy the predicate [f]. */
+
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f option] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let first: (t 'a) => 'a;
+  /** [first option] returns the first element in [option] or throws. */
+
   let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
+  /** [flatMap f option] returns the result of applying f if [option] is Some, or None. */
+
   let flatten: (t (t 'a)) => (t 'a);
+  /** [flatten option] unboxes a boxed Option */
+
   let forEach: ('a => unit) => (t 'a) => unit;
+  /** [forEach f option] iterates through [option], invoking [f] for each element. */
+
   let hash: (Hash.t (t 'a));
+  /** [hash option] hashes [option], hashing elements using structural hashing. */
+
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash option] hashes [option], hashing elements using [hash]. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty option] returns true if [option] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty option] returns true if [option] contains at least one element. */
+
   let last: (t 'a) => 'a;
+  /** [last option] returns the last element in [option] or throws. */
+
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f option] returns the result of applying f if [option] is Some,
+   *  boxing the result in an Option, or None.
+   */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f option] returns true if the predicate [f] returns false for every
+   *  elements in [option], otherwise true. If [option] is empty, returns true.
+   */
+
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc option] applies the accumulator function [f] to each element in [option]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let return: 'a => (t 'a);
+  /** [return value] returns [Some value]. */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f option] returns true if the predicate [f] returns true for any element in [option], otherwise false.
+   *  If [option] is empty, returns false.
+   */
+
   let toCollection: (option 'a) => (Collection.t 'a);
+  /* [toCollection option] returns a Collection view of the option using structural equality equate values. */
+
   let toCollectionWith: (Equality.t 'a) => (option 'a) => (Collection.t 'a);
+  /* [toCollectionWith equals option] returns a Collection view of the option using [equals] equate values. */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /* [toSeq option] returns a Seq of the values in [option]. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [find f option] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFirst: (t 'a) => (option 'a);
+  /** [tryFirst option] returns first element in [option] or None. */
+
   let tryLast: (t 'a) => (option 'a);
+  /** [tryLast option] returns the last element in [option] or None. */
 };
 
 let module SortedMap: {
@@ -2617,6 +2709,7 @@ and TransientVector: {
   /** [first transient] returns the first element in [transient] or throws. */
 
   let get: int => (t 'a) => 'a;
+  /** [get index transient] returns the element at [index]. Throws if index is out of bounds. */
 
   let insertAt: int => 'a => (t 'a) => (t 'a);
   /** [insertAt index value transient] inserts value into [transient] at [index].
