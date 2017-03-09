@@ -1553,52 +1553,201 @@ and TransientHashMultiset: {
 };
 
 let module rec HashSet: {
+  /** A set implementation that utilizes hashing and comparison
+   *  or equality for collision resolution.
+   */
+
   type t 'a;
+  /** The HashSet type. */
 
   let add: 'a => (t 'a) => (t 'a);
+  /** [add value set] returns a new HashSet with [value], if [set] does not already contain [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addAll values set] returns a new HashSet with all elements in [values] added.
+   *
+   *  Complexity: O(N log32 N)
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value set] returns true if any element in [set] is equal to [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let count: (t 'a) => int;
+  /** [count set] returns the number of elements in [set].
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: (t 'a);
+  /** The empty HashSet with HashStrategy.structuralCompare hash strategy. */
+
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
+  /** [emptyWith strategy] returns an empty HashSet with [strategy]. */
+
   let equals: (t 'a) => (t 'a) => bool;
+  /** [equals this that] compares [this] and [that] for equality. */
+
   let every: ('a => bool) => (t 'a) => bool;
+  /** [every f set] returns true if the predicate [f] returns true for every
+   *  element in [set], otherwise false. If [set] is empty, returns true.
+   */
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f set] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let forEach: ('a => unit) => (t 'a) => unit;
+  /** [forEach f set] iterates through [set], invoking [f] for each element until [seq] completes. */
+
   let fromSeq: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns an HashSet including the values in [seq]. */
+
   let fromSeqWith: (HashStrategy.t 'a)  => (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns an HashSet including the values in [seq]. */
+
   let hash: (Hash.t (t 'a));
+  /** [hash set] hashes [set], hashing elements using structural hashing. */
+
   let intersect: (t 'a) => (t 'a) => (t 'a);
+  /** [intersect this that] returns a new HashSet containing only elements that appear in
+   *  both [this] and [that].
+   *
+   *  Complexity: Currently O(N), ideally O(log32 N) if [this] and [that] use the same HashStrategy.
+   */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty set] returns true if [set] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty set] returns true if [set] contains at least one element. */
+
   let mutate: (t 'a) => (TransientHashSet.t 'a);
+  /** [mutate set] returns a TransientHashSet containing the same elements as [set].
+   *
+   *  Complexity: O(1)
+   */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f set] returns true if the predicate [f] returns false for every
+   *  elements in [set], otherwise true. If [set] is empty, returns true.
+   */
+
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc set] applies the accumulator function [f] to each element in [set]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let remove: 'a => (t 'a) => (t 'a);
+  /** [remove value set] returns a new HashSet without [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll set] returns the empty HashSet.
+   *
+   *  Complexity: O(1)
+   */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f set] returns true if the predicate [f] returns true for any element in [set], otherwise false.
+   *  If [set] is empty, returns false.
+   */
+
   let subtract: (t 'a) => (t 'a) => (t 'a);
+  /** [substract this that] returns a new HashSet with the elements of [that] removed from [this].
+   *
+   *  Complexity: O(N) currently, ideally O(log32 N) if [this] and [that] use the same HashStrategy.
+   */
+
   let toCollection: (t 'a) => (Collection.t 'a);
+  /** [toCollection set] returns a Collection view of [set] */
+
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
+  /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq set] returns a Seq of the values in [set]. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
+
   let union: (t 'a) => (t 'a) => (t 'a);
+  /** [union this that] returns a new HashSet containing all the elements in
+   *  both [this] and [that].
+   *
+   *  Complexity: currently O(N), ideally O(log32 N) if [this] and [that] use the same HashStrategy.
+   */
 }
 
 and TransientHashSet: {
+  /** A temporarily mutable HashSet. Once persisted, any further operations on a
+   *  TransientHashSet instance will throw. Intended for implementing bulk mutation
+   *  operations efficiently.
+   */
+
   type t 'a;
+  /** The TransientHashSet type. */
 
   let add: 'a => (t 'a) => (t 'a);
+  /** [add value transient] adds [value] to [transient].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addAll values transient] adds all elements in [values] to [transient].
+   *
+   *  Complexity: O(N log32 N)
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value transient] returns true if any element in [transient] is equal to [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let count: (t 'a) => int;
+  /** [count transient] returns the number of elements in [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: unit => (t 'a);
+  /** [empty ()] return a new empty TransientHashSet with the HashStrategy.structuralCompare hash strategy. */
+
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
+  /** [emptyWith strategy]  return a new empty TransientHashSet with the [strategy] hash strategy */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty transient] returns true if [transient] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+
   let persist: (t 'a) => (HashSet.t 'a);
+  /** [persist transient] returns a persisted HashSet. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
+
   let remove: 'a => (t 'a) => (t 'a);
+  /** [remove value transient] removes [value] from [transient].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll transient] removes all values from [transient].
+   *
+   *  Complexity: O(1)
+   */
 };
 
 let module HashSetMultimap: {
@@ -1713,7 +1862,7 @@ let module rec IntSet: {
    */
 
   let count: t => int;
-  /** [count set] returns the number of elements in the set.
+  /** [count set] returns the number of elements in [set].
    *
    *  Complexity: O(1)
    */
@@ -1747,7 +1896,7 @@ let module rec IntSet: {
   /** [intersect this that] returns a new IntSet containing only elements that appear in
    *  both [this] and [that].
    *
-   *  Complexity: Currently O(N),ideally O(log32 N).
+   *  Complexity: Currently O(N), ideally O(log32 N).
    */
 
   let isEmpty: t => bool;
@@ -1757,6 +1906,10 @@ let module rec IntSet: {
   /** [isNotEmpty set] returns true if [set] contains at least one element. */
 
   let mutate: t => TransientIntSet.t;
+  /** [mutate set] returns a TransientIntSet containing the same elements as [set].
+   *
+   *  Complexity: O(1)
+   */
 
   let none: (int => bool) => t => bool;
   /** [none f set] returns true if the predicate [f] returns false for every
@@ -1818,6 +1971,7 @@ and TransientIntSet: {
    */
 
   type t;
+  /** The TransientIntSet type. */
 
   let add: int => t => t;
   /** [add value transient] adds [value] to [transient].
@@ -2804,9 +2958,9 @@ let module rec Vector: {
 
   let mutate: (t 'a) => (TransientVector.t 'a);
   /** [mutate vec] returns a TransientVector containing the same elements as [vec].
-    *
-    *  Complexity: O(1)
-    */
+   *
+   *  Complexity: O(1)
+   */
 
   let none: ('a => bool) => (t 'a) => bool;
   /** [none f vec] returns true if the predicate [f] returns false for every
