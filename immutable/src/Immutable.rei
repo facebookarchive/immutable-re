@@ -1,5 +1,5 @@
 let module Hash: {
-/** Hash functions for common types. */
+  /** Hash functions for common types. */
 
   type t 'a = 'a => int;
   /** The Hash function type */
@@ -21,7 +21,7 @@ let module Hash: {
 };
 
 let module Equality: {
-/** Equality functions for common types. */
+  /** Equality functions for common types. */
 
   type t 'a = 'a => 'a => bool;
   /** The Equality function type. */
@@ -53,7 +53,7 @@ let module Ordering: {
 };
 
 let module Comparator: {
-/** Comparison functions for common types. */
+  /** Comparison functions for common types. */
 
   type t 'a = 'a => 'a => Ordering.t;
   /** The Comparator function type. */
@@ -81,7 +81,7 @@ let module Comparator: {
 };
 
 let module Seq: {
-/** Functional sequence iterators. */
+  /** Functional sequence iterators. */
 
   type t 'a;
   /** The Seq type. */
@@ -353,10 +353,10 @@ let module Seq: {
 };
 
 let module rec Collection: {
-/** A read only view of an underlying set of unique values. The intent of this type is to enable
- *  interop between alternative concrete implementations such as [SortedSet] and [HashSet].
- *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
- */
+  /** A read only view of an underlying set of unique values. The intent of this type is to enable
+   *  interop between alternative concrete implementations such as [SortedSet] and [HashSet].
+   *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
+   */
 
   type t 'a;
   /** The Collection type. */
@@ -444,10 +444,10 @@ let module rec Collection: {
 }
 
 and Keyed: {
-/** A read only view of an underlying set of key value pairs. The intent of this type is to enable
- *  interop between alternative concrete implementations such as [SortedMap] and [HashMap].
- *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
- */
+  /** A read only view of an underlying set of key value pairs. The intent of this type is to enable
+   *  interop between alternative concrete implementations such as [SortedMap] and [HashMap].
+   *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
+   */
 
   type t 'k 'v;
   /** The keyed type. */
@@ -559,7 +559,7 @@ and Keyed: {
 };
 
 let module HashStrategy: {
-/** Strategies for hashing values and resolving conflicts either using equality or comparison. */
+  /** Strategies for hashing values and resolving conflicts either using equality or comparison. */
 
   type t 'a;
   /** The HashStrategy type. */
@@ -585,7 +585,7 @@ let module HashStrategy: {
 };
 
 let module rec BiMap: {
-/** A hashed Keyed collection preserving the uniqueness of keys to values, and values to keys. */
+  /** A hashed Keyed collection preserving the uniqueness of keys to values, and values to keys. */
 
   type t 'k 'v;
   /** The BiMap type. */
@@ -750,10 +750,10 @@ let module rec BiMap: {
 }
 
 and TransientBiMap: {
-/** A temporarily mutable hashed Keyed collection preserving the uniqueness of keys to values,
- *  and values to keys. Once persisted, any further operations on a TransientBiMap instance
- *  will throw. Intended for implementing bulk mutation operations efficiently.
- */
+  /** A temporarily mutable hashed Keyed collection preserving the uniqueness of keys to values,
+   *  and values to keys. Once persisted, any further operations on a TransientBiMap instance
+   *  will throw. Intended for implementing bulk mutation operations efficiently.
+   */
 
   type t 'k 'v;
   /** The TransientBiMap type. */
@@ -827,7 +827,7 @@ and TransientBiMap: {
 };
 
 let module CopyOnWriteArray: {
-/** Opaque wrapper around an underlying array instance that provides copy on write semantics */
+  /** Opaque wrapper around an underlying array instance that provides copy on write semantics */
 
   type t 'a;
   /** The CopyOnWriteArray type. */
@@ -868,9 +868,9 @@ let module CopyOnWriteArray: {
    */
 
   let concat: (list (t 'a)) => (t 'a);
-  /** [conat cows] returns a new CopyOnWriteArray concatenating the CopyOnWriteArrays in [cows].
+  /** [concat cows] returns a new CopyOnWriteArray by concatenating the CopyOnWriteArrays in [cows].
    *
-   * Complexity: O(N)
+   * Complexity: O(N * m)
    */
 
   let contains: 'a => (t 'a) => bool;
@@ -973,7 +973,7 @@ let module CopyOnWriteArray: {
 
   let indexOfWithIndex: (int => 'a => bool) => (t 'a) => int;
   /** [indexOfWithIndex f cow] returns the index of the first index/element pair in [cow] for
-   *  which the predicate [f] returns true. If no value is found, an exception is thrown.
+   *  which the predicate [f] returns true. If no pair is found, an exception is thrown.
    */
 
   let init: int => (int => 'a) => (t 'a);
@@ -1124,6 +1124,7 @@ let module CopyOnWriteArray: {
   /** [tryFind f cow] returns the first value for which the predicate [f] returns true or None. */
 
   let tryFindWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
+  /** [tryFindWithIndex f cow] returns the first value for which the predicate [f] returns true or None. */
 
   let tryFirst: (t 'a) => option 'a;
   /** [tryFirst cow] returns first element in [cow] or None. */
@@ -1132,7 +1133,7 @@ let module CopyOnWriteArray: {
   /** [tryGet index cow] returns the element at [index] or None if [index] is out of bounds. */
 
   let tryIndexOf: ('a => bool) => (t 'a) => (option int);
-  /** [find f cow] returns the index of the first element for which the predicate [f] returns true.
+  /** [tryIndexOf f cow] returns the index of the first element for which the predicate [f] returns true.
    *  If no value is found, returns None.
    */
 
@@ -1153,7 +1154,7 @@ let module CopyOnWriteArray: {
 
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
   /** [updateAll f cow] returns a new CopyOnWriteArray updating each element
-   *  in the CopyOnWriteArray with result of applying the function [f] to each index/element pair.
+   *  in [cow] with result of applying the function [f] to each index/element pair.
    *
    *  Complexity: O(N)
    */
@@ -1167,11 +1168,12 @@ let module CopyOnWriteArray: {
 };
 
 let module rec Deque: {
-/** A double-ended queue with efficient appends [addLast] and prepends [addFirst]
- *  and removals from either end of the queue [removeFirst] [removeFirst].
- */
+  /** A double-ended queue with efficient appends [addLast], prepends [addFirst]
+   *  and removals from either end of the queue [removeFirst] [removeLast].
+   */
 
   type t 'a;
+  /** The Deque type. */
 
   let addFirst: 'a => (t 'a) => (t 'a);
   /** [addFirst value deque] returns a new Deque with [value] prepended.
@@ -1366,9 +1368,9 @@ let module rec Deque: {
 }
 
 and TransientDeque: {
-/** A temporarily mutable double-ended queue. Once persisted, any further operations on a
- *  TransientDeque instance will throw. Intended for implementing bulk mutation operations efficiently.
- */
+  /** A temporarily mutable double-ended queue. Once persisted, any further operations on a
+   *  TransientDeque instance will throw. Intended for implementing bulk mutation operations efficiently.
+   */
 
   type t 'a;
   /** The TransientDeque type. */
@@ -1402,6 +1404,11 @@ and TransientDeque: {
 
   let last: (t 'a) => 'a;
   /** [last transient] returns the last element in [transient] or throws. */
+
+  let persist: (t 'a) => (Deque.t 'a);
+  /** [persist transient] returns a persisted Deque. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
 
   let removeAll: (t 'a) => (t 'a);
   /** [removeAll transient] removes all elements from [transient].
@@ -1728,7 +1735,7 @@ and TransientIntSet: {
 };
 
 let module List: {
-/** OCaml singly-linked list */
+  /** OCaml singly-linked list */
 
   type t 'a = list 'a;
   /** The List type. */
@@ -2008,7 +2015,7 @@ let module SortedSet: {
 };
 
 let module Stack: {
-/** A singly-linked stack with an O(1) count operation. */
+  /** A singly-linked stack with an O(1) count operation. */
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
@@ -2232,102 +2239,468 @@ let module Table: {
 };
 
 let module rec Vector: {
+  /** Indexed type that supports efficient operations for
+   * prepend, appends, indexing, conctentation, and splits.
+   */
+
   type t 'a;
+  /** The vector type */
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value vec] returns a new Vector with [value] added at index [0]
+   *  and all other values shifted right.
+   *
+   *  Complexity: O(1)
+   */
+
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll seq vec] returns a new Vector with the values in [seq] prepended.
+   *
+   *  Complexity: O(N) the number of elements in [seq].
+   */
+
   let addLast: 'a => (t 'a) => (t 'a);
+  /** [addLast value vec] returns a new CopyOnWriteArray with [value] added at index [count vec].
+   *
+   *  Complexity: O(1)
+   */
+
   let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addLastAll seq vec] returns a new Vector with the values in [seq] appended.
+   *
+   *  Complexity: O(N) the number of elements in [seq].
+   */
+
   let compare: (Comparator.t (t 'a));
+  /** A comparator that compares two Vectors
+   *  using structural comparison to compare elements.
+   */
+
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  /** [compareWith comparator] returns a Comparator that compares two Vectors
+   *  using [comparator] to compare elements.
+   */
+
   let concat: (list (t 'a)) => (t 'a);
+  /** [concat vecs] returns a new Vector by concatenating the Vectors in [vec].
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log32 N * m)
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value vec] returns true if any element in [vec] is equal to [value]
+   *  using structural equality, otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
+  /** [containsWith equals vec] returns true if any element in [vec] is equal to [a]
+   *  using the equality function [equals], otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let count: (t 'a) => int;
+  /** [count vec] returns the number of elements in [vec]. */
+
   let empty: (t 'a);
+  /** The empty Vector. */
+
   let equals: (Equality.t (t 'a));
+  /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
+  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let every: ('a => bool) => (t 'a) => bool;
+  /** [every f vec] returns true if the predicate [f] returns true for every
+   *  element in [vec], otherwise false. If [vec] is empty, returns true.
+   */
+
   let everyWithIndex: (int => 'a => bool) => (t 'a) => bool;
+  /** [everyWithIndex f vec] returns true if the predicate [f] returns true for every
+   *  index/element pair in [vec], otherwise false. If [vec] is empty, returns true.
+   */
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f vec] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let findWithIndex: (int => 'a => bool) => (t 'a) => 'a;
+  /** [findWithIndex f vec] returns the first index/element pair in [vec] for
+   *  which the predicate [f] returns true. If no value is found, an exception is thrown.
+   */
+
   let first: (t 'a) => 'a;
+  /** [first vec] returns the first element in [vec] or throws. */
+
   let forEach: ('a => unit) => (t 'a) => unit;
+  /** [forEach f vec] iterates through [vec], invoking [f] for each element. */
+
   let forEachReverse: ('a => unit) => (t 'a) => unit;
+  /** [forEachReverse f vec] iterates through [vec] in reverser order,
+   *  invoking [f] for each element.
+   */
+
   let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
+  /** [forEachWithIndex f vec] iterates through [vec], invoking [f] on each index/element pair. */
+
   let forEachReverseWithIndex: (int => 'a => unit) => (t 'a) => unit;
+  /** [forEachWithIndex f vec] iterates through [vec] in reverser order,
+   *  invoking [f] on each index/element pair.
+   */
+
   let fromSeq: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new Vector containing the values in [seq].
+   *
+   * Complexity: O(N) the number of elements in [seq].
+   */
+
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new Vector containing the values in [seq]
+   *  in reverse order.
+   *
+   * Complexity: O(N) the number of elements in [seq].
+   */
+
   let get: int => (t 'a) => 'a;
+  /** [get index vec] returns the element at [index]. Throws if index is out of bounds. */
+
   let hash: (Hash.t (t 'a));
+  /** [hash vec] hashes [vec], hashing elements using structural hashing. */
+
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash vec] hashes [vec], hashing elements using [hash]. */
+
   let indexOf: ('a => bool) => (t 'a) => int;
+  /** [find f vec] returns the index of the first element for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let indexOfWithIndex: (int => 'a => bool) => (t 'a) => int;
+  /** [indexOfWithIndex f vec] returns the index of the first index/element pair in [vec] for
+   *  which the predicate [f] returns true. If no pair is found, an exception is thrown.
+   */
+
   let init: int => (int => 'a) => (t 'a);
+  /** [init n f] returns a new Vector of length [n],
+   *  with element number [i] initialized to the result of [f i].
+   */
+
   let insertAt: int => 'a => (t 'a) => (t 'a);
+  /** [insertAt index value vec] returns a new Vector with [value] inserted at [index].
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty vec] returns true if [vec] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty vec] returns true if [vec] contains at least one element. */
+
   let last: (t 'a) => 'a;
+  /** [last vec] returns the last element in [vec] or throws. */
+
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f vec] returns a new Vector applying the function [f] to each element in [vec]. */
+
   let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
+  /** [map f vec] returns a new Vector applying the
+   *  function [f] to each index/element pair in [vec].
+   */
+
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverse f vec] returns a new Vector applying the
+   *  function [f] to each element in [vec], reversing the result.
+   */
+
   let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverseWithIndex f vec] returns a new Vector applying the
+   *  function [f] to each index/element pair in [vec], reversing the result.
+   */
+
   let mutate: (t 'a) => (TransientVector.t 'a);
+  /** [mutate vec] returns a TransientVector containing the same elements as [vec].
+    *
+    *  Complexity: O(1)
+    */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f vec] returns true if the predicate [f] returns false for every
+   *  elements in [vec], otherwise true. If [vec] is empty, returns true.
+   */
+
   let noneWithIndex: (int => 'a => bool) => (t 'a) => bool;
+  /** [noneWithIndex f vec] returns true if the predicate [f] returns false for every
+   *  index/element pair in [vec], otherwise true. If [vec] is empty, returns true.
+   */
+
   let range: int => (option int) => (t 'a) => (t 'a);
+  /** [range startIndex count vec] returns a new Vector that is a range of
+   *  elements in [vec] starting at [startIndex] and [count] elements. If [count] is None,
+   *  all elements in [vec] after [startIndex] are returned.
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc vec] applies the accumulator function [f] to each element in [vec]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceWithIndex f acc vec] applies the accumulator function [f] to each
+   *  index/element pair in [vec] with the specified seed value [acc], returning
+   *  the final accumulated value.
+   */
+
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceRight f acc vec] applies the accumulator function [f] to each element in [vec]
+   *  in reverse order with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceRightWithIndex f acc vec] applies the accumulator function [f] to each
+   *  index/element pair in [vec] in reverse order with the specified seed value [acc],
+   *  returning the final accumulated value.
+   */
+
   let removeAt: int => (t 'a) => (t 'a);
+  /** [removeAt index vec] returns a new Vector with the element at [index] removed.
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll vec] returns the empty Vector.
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst vec] returns a new Vector without the first element.
+   *
+   *  Complexity: O(1)
+   */
+
   let removeLast: (t 'a) => (t 'a);
+  /** [removeLast vec] returns a new CopyOnWriteArray without the last element.
+   *
+   *  Complexity: O(1)
+   */
+
   let return: 'a => (t 'a);
+  /** [return value] returns a new Vector containing a single element, [value]. */
+
   let reverse: (t 'a) => (t 'a);
+  /** [reverse vec] returns a new Vector with [vec]'s elements reversed.
+   *
+   *  Complexity: O(N)
+   */
+
   let skip: int => (t 'a) => (t 'a);
+  /** [skip count vec] returns a new Vector that removes the first [count] elements in [vec]. */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f vec] returns true if the predicate [f] returns true for any element in [vec], otherwise false.
+   *  If [vec] is empty, returns false.
+   */
+
   let someWithIndex: (int => 'a => bool) => (t 'a) => bool;
+  /** [some f vec] returns true if the predicate [f] returns true for any index/element pair
+   *  in [vec], otherwise false. If [vec] is empty, returns false.
+   */
+
   let take: int => (t 'a) => (t 'a);
+  /** [take count vec] returns a new Vector that includes the first [count] elements in [vec]. */
+
   let toKeyed: (t 'a) => (Keyed.t int 'a);
+  /** [toKeyed vec] returns a Keyed view of [vec] */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq vec] returns a Seq of the elements in [vec] in order. */
+
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  /** [toSeqReversed vec] returns a Seq of the elements in [vec] in reverse order. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [tryFind f vec] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFindWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
+  /** [tryFindWithIndex f vec] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFirst: (t 'a) => option 'a;
+  /** [tryFirst vec] returns first element in [vec] or None. */
+
   let tryGet: int => (t 'a) => (option 'a);
+  /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
+
   let tryIndexOf: ('a => bool) => (t 'a) => (option int);
+  /** [tryIndexOf f vec] returns the index of the first element for which the predicate [f] returns true.
+   *  If no value is found, returns None.
+   */
+
   let tryIndexOfWithIndex: (int => 'a => bool) => (t 'a) => (option int);
+  /** [indexOfWithIndex f vec] returns the index of the first index/element pair in [vec] for
+   *  which the predicate [f] returns true. If no value is found, returns None.
+   */
+
   let tryLast: (t 'a) => option 'a;
+  /** [tryLast vec] returns the last element in [vec] or None.
+   *
+   *  Complexity: O(1)
+   */
+
   let update: int => 'a => (t 'a) => (t 'a);
+  /** [update index value cow] returns a new Vector with [value]
+   *  replacing the element at [index].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+  /** [updateAll f vec] returns a new Vector updating each element
+   *  in [vec] with result of applying the function [f] to each index/element pair.
+   *
+   *  Complexity: O(N)
+   */
+
   let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+  /** [updateWith index f cow] returns a new Vector updating the element
+   *  at [index] with the result of applying the function [f] to the element.
+   *
+   *  Complexity: O(log32 N)
+   */
 }
 
 and TransientVector: {
+  /** A temporarily mutable Vector. Once persisted, any further operations on a
+   *  TransientVector instance will throw. Intended for implementing bulk mutation operations efficiently.
+   */
   type t 'a;
+  /** The TransientVector type. */
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value transient] prepends [value] to [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let addLast: 'a => (t 'a) => (t 'a);
+  /** [addLast value transient] appends [value] to [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let count: (t 'a) => int;
+  /** [count transient] returns the number of elements in [transient]. */
+
   let empty: unit => (t 'a);
+  /** [empty ()] returns a new empty TransientVector. */
+
   let first: (t 'a) => 'a;
+  /** [first transient] returns the first element in [transient] or throws. */
+
   let get: int => (t 'a) => 'a;
+
   let insertAt: int => 'a => (t 'a) => (t 'a);
+  /** [insertAt index value transient] inserts value into [transient] at [index].
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty transient] returns true if [transient] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+
   let last: (t 'a) => 'a;
+  /** [last transient] returns the last element in [transient] or throws. */
+
   let persist: (t 'a) => (Vector.t 'a);
+  /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
+
   let removeAt: int => (t 'a) => (t 'a);
+  /** [removeAt index transient] removes the element at [index].
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll transient] removes all elements from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst transient] removes the first element from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let removeLast: (t 'a) => (t 'a);
+  /** [removeLast transient] removes the last element from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let reverse: (t 'a) => (t 'a);
+  /** [reverse transient] reverse [transient]'s elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let tryFirst: (t 'a) => option 'a;
+  /** [tryFirst transient] returns first element in [transient] or None. */
+
   let tryGet: int => (t 'a) => (option 'a);
-  let tryLast: (t 'a) => option 'a;
+  /** [tryGet index transient] returns the element at [index] or None if [index] is out of bounds. */
+
+  let tryLast: (t 'a) => (option 'a);
+  /** [tryLast transient] returns the last element in [transient] or None.
+   *
+   *  Complexity: O(1)
+   */
+
   let update: int => 'a => (t 'a) => (t 'a);
+  /** [update index value transient] replaces the element at [index] with [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+  /** [updateAll f transient] updates each element in [transient] with result of applying
+   *  the function [f] to each index/element pair.
+   *
+   *  Complexity: O(N)
+   */
+
   let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+  /** [updateWith index f transient] updates the element at [index] with the result
+   *  of applying the function [f] to the element.
+   *
+   *  Complexity: O(log32 N)
+   */
 };
