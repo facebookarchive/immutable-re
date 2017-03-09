@@ -215,6 +215,15 @@ let module TransientBiMap = {
     transient
   };
 
+  let removeValue (value: 'v) ({ map, inverse } as transient: transientBiMap 'k 'v): (transientBiMap 'k 'v) => {
+    inverse |> TransientHashMap.tryGet value >>| (fun key => {
+      map |> TransientHashMap.remove key |> ignore;
+      inverse |> TransientHashMap.remove value |> ignore;
+    }) |? ();
+
+    transient
+  };
+
   let tryGet (key: 'k) ({ map }: transientBiMap 'k 'v): (option 'v) =>
     map |> TransientHashMap.tryGet key;
 

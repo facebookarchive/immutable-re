@@ -228,6 +228,7 @@ let module TransientBiMap = {
   let putAll = TransientBiMap.putAll;
   let remove = TransientBiMap.remove;
   let removeAll = TransientBiMap.removeAll;
+  let removeValue = TransientBiMap.removeValue;
   let tryGet = TransientBiMap.tryGet;
   let tryPut = TransientBiMap.tryPut;
 };

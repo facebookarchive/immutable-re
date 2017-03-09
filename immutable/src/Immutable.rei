@@ -118,7 +118,7 @@ let module Seq: {
    */
 
   let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
-  /** [contains equals seq] returns true if any element in [seq] is equal to [a]
+  /** [containsWith equals seq] returns true if any element in [seq] is equal to [a]
    *  using the equality function [equals], otherwise false.
    *
    *  Complexity: O(N)
@@ -150,20 +150,20 @@ let module Seq: {
   /** The empty Seq. */
 
   let equals: (Equality.t (t 'a));
-  /** [equals this that] compares this and that for equality using structural equality to equate elements.
+  /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
    *
    *  Complexity: O(N)
    */
 
   let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
-  /** [equalsWith equals this that] compares this and that for equality using [equals] to equate elements.
+  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
    *
    *  Complexity: O(N)
    */
 
   let every: ('a => bool) => (t 'a) => bool;
   /** [every f seq] returns true if the predicate [f] returns true for every
-   * element in [seq], otherwise false. If [seq] is empty, returns true.
+   *  element in [seq], otherwise false. If [seq] is empty, returns true.
    *
    *  Complexity: O(N)
    */
@@ -176,7 +176,7 @@ let module Seq: {
 
   let find: ('a => bool) => (t 'a) => 'a;
   /** [find f seq] returns the first value for which the predicate [f] returns true.
-   *  If no value is found, and exception is thrown.
+   *  If no value is found, an exception is thrown.
    *
    *  Complexity: O(N)
    */
@@ -316,7 +316,7 @@ let module Seq: {
    */
 
   let tryLast: (t 'a) => (option 'a);
-  /** [last seq] returns the last element in [seq] or None.
+  /** [tryLast seq] returns the last element in [seq] or None.
    *
    *  Complexity: O(N)
    */
@@ -382,7 +382,7 @@ let module rec Collection: {
 
   let find: ('a => bool) => (t 'a) => 'a;
   /** [find f collection] returns the first value for which the predicate [f] returns true.
-   *  If no value is found, and exception is thrown.
+   *  If no value is found, an exception is thrown.
    */
 
   let forEach: ('a => unit) => (t 'a) => unit;
@@ -808,6 +808,9 @@ and TransientBiMap: {
    *  Complexity: O(1)
    */
 
+  let removeValue: 'v => (t 'k 'v) => (t 'k 'v);
+  /** [removeValue value transient] removes from [transient] any mappings to [value]. */
+
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key transient] returns the value associated with [key] or None
    *
@@ -824,77 +827,343 @@ and TransientBiMap: {
 };
 
 let module CopyOnWriteArray: {
+/** Opaque wrapper around an underlying array instance that provides copy on write semantics */
+
   type t 'a;
+  /** The CopyOnWriteArray type. */
 
   let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value cow] returns a new CopyOnWriteArray with [value] added at index [0]
+   *  and all other values shifted right.
+   *
+   *  Complexity: O(N)
+   */
+
   let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll seq cow] returns a new CopyOnWriteArray with the values in [seq] prepended.
+   *
+   * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
+   */
+
   let addLast: 'a => (t 'a) => (t 'a);
+  /** [addLast value cow] returns a new CopyOnWriteArray with [value] added at index [count cow].
+   *
+   *  Complexity: O(N)
+   */
+
   let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addLastAll seq cow] returns a new CopyOnWriteArray with the values in [seq] appended.
+   *
+   * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
+   */
+
   let compare: (Comparator.t (t 'a));
+  /** A comparator that compares two CopyOnWriteArray instances
+   *  using structural comparison to compare elements.
+   */
+
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
+  /** [compareWith comparator] returns a Comparator that compares two CopyOnWriteArray instances
+   *  using [comparator] to compare elements.
+   */
+
   let concat: (list (t 'a)) => (t 'a);
+  /** [conat cows] returns a new CopyOnWriteArray concatenating the CopyOnWriteArrays in [cows].
+   *
+   * Complexity: O(N)
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value cow] returns true if any element in [cow] is equal to [value]
+   *  using structural equality, otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
+  /** [containsWith equals cow] returns true if any element in [cow] is equal to [a]
+   *  using the equality function [equals], otherwise false.
+   *
+   *  Complexity: O(N)
+   */
+
   let count: (t 'a) => int;
+  /** [count cow] returns the number of elements in [cow]. */
+
   let empty: (t 'a);
+  /** The empty CopyOnWriteArray. */
+
   let equals: (Equality.t (t 'a));
+  /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
+  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
+   *
+   *  Complexity: O(N)
+   */
+
   let every: ('a => bool) => (t 'a) => bool;
+  /** [every f cow] returns true if the predicate [f] returns true for every
+   *  element in [cow], otherwise false. If [cow] is empty, returns true.
+   */
+
   let everyWithIndex: (int => 'a => bool) => (t 'a) => bool;
+  /** [everyWithIndex f cow] returns true if the predicate [f] returns true for every
+   *  index/element pair in [cow], otherwise false. If [cow] is empty, returns true.
+   */
+
   let find: ('a => bool) => (t 'a) => 'a;
+  /** [find f cow] returns the first value for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let findWithIndex: (int => 'a => bool) => (t 'a) => 'a;
+  /** [findWithIndex f cow] returns the first index/element pair in [cow] for
+   *  which the predicate [f] returns true. If no value is found, an exception is thrown.
+   */
+
   let first: (t 'a) => 'a;
+  /** [first cow] returns the first element in [cow] or throws. */
+
   let forEach: ('a => unit) => (t 'a) => unit;
+  /** [forEach f cow] iterates through [cow], invoking [f] for each element. */
+
   let forEachReverse: ('a => unit) => (t 'a) => unit;
+  /** [forEachReverse f cow] iterates through [cow] in reverser order,
+   *  invoking [f] for each element.
+   */
+
   let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
+  /** [forEachWithIndex f cow] iterates through [cow], invoking [f] on each index/element pair. */
+
   let forEachReverseWithIndex: (int => 'a => unit) => (t 'a) => unit;
+  /** [forEachWithIndex f cow] iterates through [cow] in reverser order,
+   *  invoking [f] on each index/element pair.
+   */
+
   let fromSeq: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new CopyOnWriteArray containing the values in [seq].
+   *
+   * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
+   */
+
   let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns a new CopyOnWriteArray containing the values in [seq]
+   *  in reverse order.
+   *
+   * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
+   */
+
   let get: int => (t 'a) => 'a;
+  /** [get index cow] returns the element at [index]. Throws if index is out of bounds. */
+
   let hash: (Hash.t (t 'a));
+  /** [hash cow] hashes [cow], hashing elements using structural hashing. */
+
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash cow] hashes [cow], hashing elements using [hash]. */
+
   let indexOf: ('a => bool) => (t 'a) => int;
+  /** [find f cow] returns the index of the first element for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let indexOfWithIndex: (int => 'a => bool) => (t 'a) => int;
+  /** [indexOfWithIndex f cow] returns the index of the first index/element pair in [cow] for
+   *  which the predicate [f] returns true. If no value is found, an exception is thrown.
+   */
+
   let init: int => (int => 'a) => (t 'a);
+  /** [init n f] returns a new CopyOnWriteArray of length [n],
+   *  with element number [i] initialized to the result of [f i].
+   *  Throws if [n] is less than 0 or greater than max array length.
+   */
+
   let insertAt: int => 'a => (t 'a) => (t 'a);
+  /** [insertAt index value cow] inserts value into [cow] at the index [index].
+   *
+   *  Complexity: O(N)
+   */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty cow] returns true if [cow] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty cow] returns true if [cow] contains at least one element. */
+
   let last: (t 'a) => 'a;
+  /** [last cow] returns the last element in [cow] or throws. */
+
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f cow] returns a new CopyOnWriteArray applying the function [f] to each element in [cow]. */
+
   let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
+  /** [map f cow] returns a new CopyOnWriteArray applying the
+   *  function [f] to each index/element pair in [cow].
+   */
+
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverse f cow] returns a new CopyOnWriteArray applying the
+   *  function [f] to each element in [cow], in reverse order.
+   */
+
   let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverseWithIndex f cow] returns a new CopyOnWriteArray applying the
+   *  function [f] to each index/element pair in [cow], in reverse order.
+   */
+
   let none: ('a => bool) => (t 'a) => bool;
+  /** [none f cow] returns true if the predicate [f] returns false for every
+   *  elements in [cow], otherwise true. If [cow] is empty, returns true.
+   */
+
   let noneWithIndex: (int => 'a => bool) => (t 'a) => bool;
+  /** [noneWithIndex f cow] returns true if the predicate [f] returns false for every
+   *  index/element pair in [cow], otherwise true. If [cow] is empty, returns true.
+   */
+
   let ofUnsafe: (array 'a) => (t 'a);
+  /** [unsafe arr] returns a CopyOnWriteArray backed by [arr]. Note, it is the caller's
+   *  responsibility to ensure that [arr] is not subsequently mutated.
+   *
+   *  Complexity: O(1)
+   */
+
   let range: int => (option int) => (t 'a) => (t 'a);
+  /** [range startIndex count cow] returns a new CopyOnWriteArray that is a range of
+   *  elements in [cow] starting at [startIndex] and [count] elements. If [count] is None,
+   *  all elements in [cow] after [startIndex] are returned.
+   *
+   *  Complexity: O(N)
+   */
+
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc cow] applies the accumulator function [f] to each element in [cow]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceWithIndex f acc cow] applies the accumulator function [f] to each
+   *  index/element pair in [cow] with the specified seed value [acc], returning
+   *  the final accumulated value.
+   */
+
   let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceRight f acc cow] applies the accumulator function [f] to each element in [cow]
+   *  in reverse order with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceRightWithIndex f acc cow] applies the accumulator function [f] to each
+   *  index/element pair in [cow] in reverse order with the specified seed value [acc],
+   *  returning the final accumulated value.
+   */
+
   let removeAt: int => (t 'a) => (t 'a);
+  /** [removeAt index cow] returns a new CopyOnWriteArray with the element at [index] removed.
+   *
+   *  Complexity: O(N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll cow] returns the empty CopyOnWriteArray.
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'a) => (t 'a);
+  /** [removeFirst cow] returns a new CopyOnWriteArray without the first element.
+   *
+   *  Complexity: O(N)
+   */
+
   let removeLast: (t 'a) => (t 'a);
+  /** [removeFirst cow] returns a new CopyOnWriteArray without the last element.
+   *
+   *  Complexity: O(N)
+   */
+
   let return: 'a => (t 'a);
+  /** [return value] returns a new CopyOnWriteArray containing a single element, [value]. */
+
   let reverse: (t 'a) => (t 'a);
+  /** [reverse cow] returns a new CopyOnWriteArray with [cow]'s elements reversed.
+   *
+   *  Complexity: O(N)
+   */
+
   let skip: int => (t 'a) => (t 'a);
+  /** [skip count cow] returns a new CopyOnWriteArray that removes the first [count] elements in [cow]. */
+
   let some: ('a => bool) => (t 'a) => bool;
+  /** [some f cow] returns true if the predicate [f] returns true for any element in [cow], otherwise false.
+   *  If [cow] is empty, returns false.
+   */
+
   let someWithIndex: (int => 'a => bool) => (t 'a) => bool;
+  /** [some f cow] returns true if the predicate [f] returns true for any index/element pair
+   *  in [cow], otherwise false. If [cow] is empty, returns false.
+   */
+
   let take: int => (t 'a) => (t 'a);
+  /** [take count cow] returns a new CopyOnWriteArray that includes the first [count] elements in [cow]. */
+
   let toKeyed: (t 'a) => (Keyed.t int 'a);
+  /** [toKeyed cow] returns a Keyed view of [cow] */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq cow] returns a Seq of the elements in [cow] in order. */
+
   let toSeqReversed: (t 'a) => (Seq.t 'a);
+  /** [toSeqReversed cow] returns a Seq of the elements in [cow] in reverse order. */
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
+  /** [tryFind f cow] returns the first value for which the predicate [f] returns true or None. */
+
   let tryFindWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
+
   let tryFirst: (t 'a) => option 'a;
+  /** [tryFirst cow] returns first element in [cow] or None. */
+
   let tryGet: int => (t 'a) => (option 'a);
+  /** [tryGet index cow] returns the element at [index] or None if [index] is out of bounds. */
+
   let tryIndexOf: ('a => bool) => (t 'a) => (option int);
+  /** [find f cow] returns the index of the first element for which the predicate [f] returns true.
+   *  If no value is found, returns None.
+   */
+
   let tryIndexOfWithIndex: (int => 'a => bool) => (t 'a) => (option int);
+  /** [indexOfWithIndex f cow] returns the index of the first index/element pair in [cow] for
+   *  which the predicate [f] returns true. If no value is found, returns None.
+   */
+
   let tryLast: (t 'a) => option 'a;
+  /** [tryLast cow] returns the last element in [cow] or None. */
+
   let update: int => 'a => (t 'a) => (t 'a);
+  /** [update index value cow] returns a new CopyOnWriteArray with [value]
+   *  replacing the element at [index].
+   *
+   *  Complexity: O(N)
+   */
+
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+  /** [updateAll f cow] returns a new CopyOnWriteArray updating each element
+   *  in the CopyOnWriteArray with result of applying the function [f] to each index/element pair.
+   *
+   *  Complexity: O(N)
+   */
+
   let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+  /** [updateWith index f cow] returns a new CopyOnWriteArray updating the element
+   *  at [index] with the result of applying the function [f] to the element.
+   *
+   *  Complexity: O(N)
+   */
 };
 
 let module rec Deque: {
