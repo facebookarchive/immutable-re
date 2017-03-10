@@ -1,4 +1,4 @@
-open Collection;
+open Set;
 open Comparator;
 open Equality;
 open Hash;

@@ -108,8 +108,8 @@ let test = describe "Option" [
     expect (Some 1 |> Option.some Functions.alwaysTrue) |> toBeEqualToTrue;
     expect (Some 1 |> Option.some Functions.alwaysFalse) |> toBeEqualToFalse;
   }),
-  describe "toCollection" [
-    /* The collection functions are straight pass through */
+  describe "toSet" [
+    /* The set functions are straight pass through */
   ],
   it "toSeq" (fun () => {
     let emptySeq = None |> Option.toSeq;

@@ -1,4 +1,4 @@
-open Collection;
+open Set;
 open Equality;
 open Functions;
 open Keyed;
@@ -114,7 +114,7 @@ let toSeq ({ map }: hashMultiset 'a): (seq 'a) =>
 let tryFind (f: 'a => int => bool) ({ map }: hashMultiset 'a): (option ('a, int)) =>
   map |> HashMap.tryFind f;
 
-let values ({ map }: hashMultiset 'a): (collection 'a) =>
+let values ({ map }: hashMultiset 'a): (set 'a) =>
   map |> HashMap.keys;
 
 type transientHashMultiset 'a = {

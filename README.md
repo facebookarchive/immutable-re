@@ -3,7 +3,7 @@ Immutable Collections For Reason
 
 # Views
   * Seq: Lazy iterators.
-  * Collection: Set like collections of unique values.
+  * Set: Collections of unique values.
   * Keyed: Values indexed by hashed and compared keys.
 
 # Concrete Collection Types
@@ -11,7 +11,7 @@ Immutable Collections For Reason
   * CopyOnWriteArray: An opaque wrapper around arrays that provides copy on write operations. Good for small lists of values.
   * Deque: Double-ended queue, with amortized O(1) appends/prepends and head/tail access.
   * HashMap: Keyed data, utilizing key hashing and key comparison or equality for collision handling.
-  * HashMultiset: Collection of values that maintains a count of the number of times a value has been added to the collection.
+  * HashMultiset: Collection of values that maintains a count of the number of times a value has been added.
   * HashSet: Persistent immutable set of values, utilizing value hashing and key comparison or equality for collision handling.
   * HashSetMultimap: A map of keys to a unique set of values.
   * IntMap: Immutable mapping of sparse ints to values.

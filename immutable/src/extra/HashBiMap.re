@@ -1,5 +1,5 @@
 open Equality;
-open Collection;
+open Set;
 open Keyed;
 open HashMap;
 open HashStrategy;
@@ -51,7 +51,7 @@ let get (key: 'k) ({ map }: hashBiMap 'k 'v): 'v =>
 let hash ({ map, inverse }: hashBiMap 'k 'v): int =>
   map |> HashMap.hashWith (HashStrategy.hash inverse.strategy);
 
-let keys ({ map }: hashBiMap 'k 'v): (collection 'k) =>
+let keys ({ map }: hashBiMap 'k 'v): (set 'k) =>
   map |> HashMap.keys;
 
 let inverse ({ map, inverse }: hashBiMap 'k 'v): hashBiMap 'v 'k => {
@@ -112,9 +112,9 @@ let removeValue (value: 'v) ({ map, inverse } as hashBiMap: hashBiMap 'k 'v): (h
 let some (f: 'k => 'v => bool) ({ map }: hashBiMap 'k 'v): bool =>
   map |> HashMap.some f;
 
-let toCollection ({ map, inverse }: hashBiMap 'k 'v): (collection ('k, 'v)) =>
+let toSet ({ map, inverse }: hashBiMap 'k 'v): (set ('k, 'v)) =>
   /* Kind of cheating */
-  map |> HashMap.toCollectionWith (HashStrategy.equals inverse.strategy);
+  map |> HashMap.toSetWith (HashStrategy.equals inverse.strategy);
 
 let toInverseMap ({ inverse }: hashBiMap 'k 'v): (hashMap 'k 'k) => inverse;
 
@@ -141,7 +141,7 @@ let tryPut
       })
   };
 
-let values ({ inverse }: hashBiMap 'k 'v): (collection 'v) =>
+let values ({ inverse }: hashBiMap 'k 'v): (set 'v) =>
   inverse |> HashMap.keys;
 
 type transientHashBiMap 'k 'v = {

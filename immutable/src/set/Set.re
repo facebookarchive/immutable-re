@@ -4,7 +4,7 @@ open Functions.Operators;
 open Hash;
 open Seq;
 
-type collection 'a = {
+type set 'a = {
   contains: 'a => bool,
   count: int,
   every: ('a => bool) => bool,
@@ -17,16 +17,16 @@ type collection 'a = {
   tryFind: ('a => bool) => (option 'a),
 };
 
-let contains (value: 'a) ({ contains }: collection 'a): bool =>
+let contains (value: 'a) ({ contains }: set 'a): bool =>
   contains value;
 
-let count ({ count }: collection 'a): int => count;
+let count ({ count }: set 'a): int => count;
 
-let empty: (collection 'a) = {
+let empty: (set 'a) = {
   contains: fun _ => false,
   count: 0,
   every: fun f => false,
-  find: fun _ => failwith "collection is empty",
+  find: fun _ => failwith "set is empty",
   forEach: fun _ => (),
   none: fun _ => true,
   reduce: fun _ acc => acc,
@@ -35,27 +35,27 @@ let empty: (collection 'a) = {
   tryFind: Functions.alwaysNone,
 };
 
-let equals (that: collection 'a) (this: collection 'a): bool =>
+let equals (that: set 'a) (this: set 'a): bool =>
   (this === that) ? true :
   (this.count != that.count) ? false :
   this.every that.contains;
 
-let every (f: 'a => bool) ({ every }: collection 'a): bool =>
+let every (f: 'a => bool) ({ every }: set 'a): bool =>
   every f;
 
-let find (f: 'a => bool) ({ find }: collection 'a): 'a =>
+let find (f: 'a => bool) ({ find }: set 'a): 'a =>
   find f;
 
-let forEach (f: 'a => unit) ({ forEach }: collection 'a): unit =>
+let forEach (f: 'a => unit) ({ forEach }: set 'a): unit =>
   forEach f;
 
-let hashWith (hash: hash 'a) ({ reduce }: collection 'a): int =>
+let hashWith (hash: hash 'a) ({ reduce }: set 'a): int =>
   reduce (fun acc next => acc + hash next) 0;
 
-let hash (collection: collection 'a): int =>
-  hashWith Hash.structural collection;
+let hash (set: set 'a): int =>
+  hashWith Hash.structural set;
 
-let inRange (start: int) (count: int) (step: int): (collection int) => {
+let inRange (start: int) (count: int) (step: int): (set int) => {
   Preconditions.failIf "step must be greater or less than 0" (step == 0);
 
   let toSeq = Seq.inRange start (Some count) step;
@@ -84,19 +84,19 @@ let inRange (start: int) (count: int) (step: int): (collection int) => {
   }
 };
 
-let intersect (this: collection 'a) (that: collection 'a): (seq 'a) =>
+let intersect (this: set 'a) (that: set 'a): (seq 'a) =>
   this.toSeq |> Seq.filter (that.contains);
 
-let isEmpty ({ count }: collection 'a): bool =>
+let isEmpty ({ count }: set 'a): bool =>
   count == 0;
 
-let isNotEmpty ({ count }: collection 'a): bool =>
+let isNotEmpty ({ count }: set 'a): bool =>
   count != 0;
 
-let none (f: 'a => bool) ({ none }: collection 'a): bool =>
+let none (f: 'a => bool) ({ none }: set 'a): bool =>
   none f;
 
-let ofOptionWith (equals: equality 'a) (opt: option 'a): (collection 'a) => {
+let ofOptionWith (equals: equality 'a) (opt: option 'a): (set 'a) => {
   contains: fun v => Option.containsWith equals v opt,
   count: Option.count opt,
   every: fun f => Option.every f opt,
@@ -109,24 +109,24 @@ let ofOptionWith (equals: equality 'a) (opt: option 'a): (collection 'a) => {
   tryFind: fun f => Option.tryFind f opt,
 };
 
-let ofOption (opt: option 'a): (collection 'a) =>
+let ofOption (opt: option 'a): (set 'a) =>
   ofOptionWith Equality.structural opt;
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ reduce }: collection 'a): 'acc =>
+let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ reduce }: set 'a): 'acc =>
   reduce f acc;
 
-let some (f: 'a => bool) ({ some }: collection 'a): bool =>
+let some (f: 'a => bool) ({ some }: set 'a): bool =>
   some f;
 
-let subtract (this: collection 'a) (that: collection 'a): (seq 'a) =>
+let subtract (this: set 'a) (that: set 'a): (seq 'a) =>
   this.toSeq |> Seq.filter (that.contains >> not);
 
-let toSeq ({ toSeq }: collection 'a): (seq 'a) => toSeq;
+let toSeq ({ toSeq }: set 'a): (seq 'a) => toSeq;
 
-let tryFind (f: 'a => bool) ({ tryFind }: collection 'a): (option 'a) =>
+let tryFind (f: 'a => bool) ({ tryFind }: set 'a): (option 'a) =>
   tryFind f;
 
-let union (this: collection 'a) (that: collection 'a): (seq 'a) => Seq.concat [
+let union (this: set 'a) (that: set 'a): (seq 'a) => Seq.concat [
   this.toSeq,
   subtract that this,
 ];

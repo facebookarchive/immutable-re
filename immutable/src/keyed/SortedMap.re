@@ -1,5 +1,5 @@
 open AVLTreeMap;
-open Collection;
+open Set;
 open Comparator;
 open Equality;
 open Hash;
@@ -209,14 +209,14 @@ let hash (map: sortedMap 'k 'v): int =>
 let hashWith (keyHash: hash 'k) (valueHash: hash 'v) (map: sortedMap 'k 'v): int =>
   map |> toKeyed |> Keyed.hashWith keyHash valueHash;
 
-let keys (map: sortedMap 'k 'v): (collection 'k) =>
+let keys (map: sortedMap 'k 'v): (set 'k) =>
   map |> toKeyed |> Keyed.keys;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: sortedMap 'k 'v)
     (map: sortedMap 'k 'vAcc): (sortedMap 'k 'vAcc) =>
-  Collection.union (keys map) (keys next) |> Seq.reduce (
+  Set.union (keys map) (keys next) |> Seq.reduce (
     fun acc key => {
       let result = f key (map |> tryGet key) (next |> tryGet key);
       switch result {
@@ -227,8 +227,8 @@ let merge
   )
   map;
 
-let toCollectionWith (equality: equality 'v) (map: sortedMap 'k 'v): (collection ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toCollectionWith equality;
+let toSetWith (equality: equality 'v) (map: sortedMap 'k 'v): (set ('k, 'v)) =>
+  map |> toKeyed |> Keyed.toSetWith equality;
 
-let toCollection (map: sortedMap 'k 'v): (collection ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toCollection;
+let toSet (map: sortedMap 'k 'v): (set ('k, 'v)) =>
+  map |> toKeyed |> Keyed.toSet;

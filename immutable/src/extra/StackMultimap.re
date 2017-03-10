@@ -1,4 +1,4 @@
-open Collection;
+open Set;
 open Equality;
 open Keyed;
 open Hash;
@@ -107,7 +107,7 @@ let isEmpty ({ map }: stackMultimap 'k 'v): bool =>
 let isNotEmpty ({ map }: stackMultimap 'k 'v): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: stackMultimap 'k 'v): (collection 'k) =>
+let keys ({ map }: stackMultimap 'k 'v): (set 'k) =>
   map |> HashMap.keys;
 
 let none (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): bool => {

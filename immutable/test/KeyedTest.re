@@ -77,31 +77,31 @@ let test = describe "Keyed" [
     it "contains" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.contains 0) |> toBeEqualToTrue;
-      expect (keys |> Collection.contains (-1)) |> toBeEqualToFalse;
+      expect (keys |> Set.contains 0) |> toBeEqualToTrue;
+      expect (keys |> Set.contains (-1)) |> toBeEqualToFalse;
     }),
     it "count" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.count) |> toBeEqualToInt 3;
+      expect (keys |> Set.count) |> toBeEqualToInt 3;
     }),
     it "every" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.every (fun _ => true)) |> toBeEqualToTrue;
-      expect (keys |> Collection.every (fun _ => false)) |> toBeEqualToFalse;
+      expect (keys |> Set.every (fun _ => true)) |> toBeEqualToTrue;
+      expect (keys |> Set.every (fun _ => false)) |> toBeEqualToFalse;
     }),
     it "find" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.find (fun _ => true)) |> toBeEqualToInt 0;
-      defer (fun () => keys |> Collection.find (fun _ => false)) |> throws;
+      expect (keys |> Set.find (fun _ => true)) |> toBeEqualToInt 0;
+      defer (fun () => keys |> Set.find (fun _ => false)) |> throws;
     }),
     it "forEach" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
       let prev = ref (-1);
-      keys |> Collection.forEach (fun i => {
+      keys |> Set.forEach (fun i => {
         expect i |> toBeEqualToInt (!prev + 1);
         prev := !prev + 1;
       });
@@ -109,31 +109,31 @@ let test = describe "Keyed" [
     it "none" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.none (fun _ => true)) |> toBeEqualToFalse;
-      expect (keys |> Collection.none (fun _ => false)) |> toBeEqualToTrue;
+      expect (keys |> Set.none (fun _ => true)) |> toBeEqualToFalse;
+      expect (keys |> Set.none (fun _ => false)) |> toBeEqualToTrue;
     }),
     it "reduce" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      let reduced = keys |> Collection.reduce (fun acc next => acc + next) 0;
+      let reduced = keys |> Set.reduce (fun acc next => acc + next) 0;
       expect reduced |> toBeEqualToInt 3;
     }),
     it "some" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.some (fun _ => true)) |> toBeEqualToTrue;
-      expect (keys |> Collection.some (fun _ => false)) |> toBeEqualToFalse;
+      expect (keys |> Set.some (fun _ => true)) |> toBeEqualToTrue;
+      expect (keys |> Set.some (fun _ => false)) |> toBeEqualToFalse;
     }),
     it "toSeq" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.toSeq) |> toBeEqualToSeqOfInt (List.toSeq [0, 1, 2]);
+      expect (keys |> Set.toSeq) |> toBeEqualToSeqOfInt (List.toSeq [0, 1, 2]);
     }),
     it "tryFind" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
       let keys = keyed |> Keyed.keys;
-      expect (keys |> Collection.tryFind (fun _ => true)) |> toBeEqualToSomeOfInt 0;
-      expect (keys |> Collection.tryFind (fun _ => false)) |> toBeEqualToNoneOfInt;
+      expect (keys |> Set.tryFind (fun _ => true)) |> toBeEqualToSomeOfInt 0;
+      expect (keys |> Set.tryFind (fun _ => false)) |> toBeEqualToNoneOfInt;
     }),
   ],
   describe "map"  [
@@ -219,65 +219,65 @@ let test = describe "Keyed" [
       expect (mapped |> Keyed.values) |> toBeEqualToSeqOfInt (List.toSeq [3, 4, 5]);
     }),
   ],
-  describe "toCollection" [
+  describe "toSet" [
     it "contains" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.contains (0, 0)) |> toBeEqualToTrue;
-      expect (collection |> Collection.contains (0, 1)) |> toBeEqualToFalse;
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.contains (0, 0)) |> toBeEqualToTrue;
+      expect (set |> Set.contains (0, 1)) |> toBeEqualToFalse;
     }),
     it "count" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.count) |> toBeEqualToInt 3;
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.count) |> toBeEqualToInt 3;
     }),
     it "every" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.every (fun _ => true)) |> toBeEqualToTrue;
-      expect (collection |> Collection.every (fun _ => false)) |> toBeEqualToFalse;
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.every (fun _ => true)) |> toBeEqualToTrue;
+      expect (set |> Set.every (fun _ => false)) |> toBeEqualToFalse;
     }),
     it "find" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.find (fun _ => true)) |> toBeEqualTo (fun _ => "") (0, 0);
-      defer (fun () => collection |> Collection.find (fun _ => false)) |> throws;
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.find (fun _ => true)) |> toBeEqualTo (fun _ => "") (0, 0);
+      defer (fun () => set |> Set.find (fun _ => false)) |> throws;
     }),
     it "forEach" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      collection |> Collection.forEach (fun (k, v) => {
+      let set = keyed |> Keyed.toSet;
+      set |> Set.forEach (fun (k, v) => {
         expect k |> toBeEqualToInt v;
       });
     }),
     it "none" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.none (fun _ => true)) |> toBeEqualToFalse;
-      expect (collection |> Collection.none (fun _ => false)) |> toBeEqualToTrue;
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.none (fun _ => true)) |> toBeEqualToFalse;
+      expect (set |> Set.none (fun _ => false)) |> toBeEqualToTrue;
     }),
     it "reduce" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      let reduced = collection |> Collection.reduce (fun acc (k, v) => acc + k + v) 0;
+      let set = keyed |> Keyed.toSet;
+      let reduced = set |> Set.reduce (fun acc (k, v) => acc + k + v) 0;
       expect reduced |> toBeEqualToInt 6;
     }),
     it "some" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.some (fun _ => true)) |> toBeEqualToTrue;
-      expect (collection |> Collection.some (fun _ => false)) |> toBeEqualToFalse;
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.some (fun _ => true)) |> toBeEqualToTrue;
+      expect (set |> Set.some (fun _ => false)) |> toBeEqualToFalse;
     }),
     it "toSeq" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.toSeq) |> toBeEqualToSeq (fun _ => "") (List.toSeq [(0, 0), (1, 1), (2, 2)]);
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.toSeq) |> toBeEqualToSeq (fun _ => "") (List.toSeq [(0, 0), (1, 1), (2, 2)]);
     }),
     it "tryFind" (fun () => {
       let keyed = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toKeyed;
-      let collection = keyed |> Keyed.toCollection;
-      expect (collection |> Collection.tryFind (fun _ => true)) |> toBeEqualToSome (fun _ => "") (0, 0);
-      expect (collection |> Collection.tryFind (fun _ => false)) |> toBeEqualToNone (fun _ => "");
+      let set = keyed |> Keyed.toSet;
+      expect (set |> Set.tryFind (fun _ => true)) |> toBeEqualToSome (fun _ => "") (0, 0);
+      expect (set |> Set.tryFind (fun _ => false)) |> toBeEqualToNone (fun _ => "");
     }),
   ],
 ];

@@ -1,4 +1,4 @@
-open Collection;
+open Set;
 open Comparator;
 open Equality;
 open Functions;
@@ -96,7 +96,7 @@ let isEmpty ({ count }: keyed 'k 'v): bool =>
 let isNotEmpty ({ count }: keyed 'k 'v): bool =>
   count != 0;
 
-let keys (keyed: keyed 'k 'v): (collection 'k) => {
+let keys (keyed: keyed 'k 'v): (set 'k) => {
   contains: keyed.containsKey,
   count: keyed.count,
   every: fun f => keyed.every (fun k _ => f k),
@@ -138,24 +138,24 @@ let map (m: 'k => 'a => 'b) (keyed: keyed 'k 'a): (keyed 'k 'b) => {
 let none (f: 'k => 'v => bool) ({ none }: keyed 'k 'v): bool =>
   none f;
 
-let ofCollection (collection: collection 'a): (keyed 'a 'a) => {
-  containsWith: fun equals k v => collection |> Collection.contains k ? equals k v : false,
-  containsKey: fun k => collection |> Collection.contains k,
-  count: Collection.count collection,
-  every: fun f => collection |> Collection.every (fun k => f k k),
+let ofSet (set: set 'a): (keyed 'a 'a) => {
+  containsWith: fun equals k v => set |> Set.contains k ? equals k v : false,
+  containsKey: fun k => set |> Set.contains k,
+  count: Set.count set,
+  every: fun f => set |> Set.every (fun k => f k k),
   find: fun f => {
-    let k = collection |> Collection.find (fun k => f k k);
+    let k = set |> Set.find (fun k => f k k);
     (k, k)
   },
-  forEach: fun f => collection |> Collection.forEach (fun k => f k k),
-  get: fun k => collection |> Collection.contains k ? k : failwith "not found",
-  none: fun f => collection |> Collection.none (fun k => f k k),
-  reduce: fun f acc => collection |> Collection.reduce (fun acc k => f acc k k) acc,
-  some: fun f => collection |> Collection.some (fun k => f k k),
-  toSeq: toSeq collection |> Seq.map (fun k => (k, k)),
-  tryFind: fun f => collection |> Collection.tryFind (fun k => f k k) >>| (fun k => (k, k)),
-  tryGet: fun k => collection |> Collection.contains k ? Some k : None,
-  values: toSeq collection,
+  forEach: fun f => set |> Set.forEach (fun k => f k k),
+  get: fun k => set |> Set.contains k ? k : failwith "not found",
+  none: fun f => set |> Set.none (fun k => f k k),
+  reduce: fun f acc => set |> Set.reduce (fun acc k => f acc k k) acc,
+  some: fun f => set |> Set.some (fun k => f k k),
+  toSeq: toSeq set |> Seq.map (fun k => (k, k)),
+  tryFind: fun f => set |> Set.tryFind (fun k => f k k) >>| (fun k => (k, k)),
+  tryGet: fun k => set |> Set.contains k ? Some k : None,
+  values: toSeq set,
 };
 
 let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ reduce }: keyed 'k 'v): 'acc =>
@@ -164,9 +164,9 @@ let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ reduce }: keyed 'k 'v): 
 let some (f: 'k => 'v => bool) ({ some }: keyed 'k 'v): bool =>
   some f;
 
-let toCollectionWith
+let toSetWith
     (equals: equality 'v)
-    (keyed: keyed 'k 'v): (collection ('k, 'v)) => {
+    (keyed: keyed 'k 'v): (set ('k, 'v)) => {
   contains: fun (k, v) => keyed.tryGet k >>| equals v |? false,
   count: keyed.count,
   every: fun f => keyed.every (fun k v => f (k, v)),
@@ -179,8 +179,8 @@ let toCollectionWith
   tryFind: fun f => keyed.tryFind (fun k v => f (k, v)),
 };
 
-let toCollection (keyed: keyed 'k 'v): (collection ('k, 'v)) =>
-  toCollectionWith Equality.structural keyed;
+let toSet (keyed: keyed 'k 'v): (set ('k, 'v)) =>
+  toSetWith Equality.structural keyed;
 
 let toSeq ({ toSeq }: keyed 'k 'v): (seq ('k, 'v)) => toSeq;
 

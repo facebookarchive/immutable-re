@@ -352,51 +352,51 @@ let module Seq: {
    */
 };
 
-let module rec Collection: {
+let module rec Set: {
   /** A read only view of an underlying set of unique values. The intent of this type is to enable
    *  interop between alternative concrete implementations such as [SortedSet] and [HashSet].
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
   type t 'a;
-  /** The Collection type. */
+  /** The Set type. */
 
   let contains: 'a => (t 'a) => bool;
-  /** [contains value collection] returns true if [collection] contains the element [value]. */
+  /** [contains value set] returns true if [set] contains the element [value]. */
 
   let count: (t 'a) => int;
-  /** [count collection] returns the number of elements in [collection]. */
+  /** [count set] returns the number of elements in [set]. */
 
   let empty: (t 'a);
-  /** The empty Collection. */
+  /** The empty Set. */
 
   let equals: (t 'a) => (t 'a) => bool;
-  /** [equals this that] equates [this] and [that] ensuring that the Collections have the same count
+  /** [equals this that] equates [this] and [that] ensuring that the Sets have the same count
    *  and contains the same elements.
    */
 
   let every: ('a => bool) => (t 'a) => bool;
-  /** [every f collection] returns true if the predicate [f] returns true for every
-   *  element in [collection], otherwise false. If [collection] is empty, returns true.
+  /** [every f set] returns true if the predicate [f] returns true for every
+   *  element in [set], otherwise false. If [set] is empty, returns true.
    */
 
   let find: ('a => bool) => (t 'a) => 'a;
-  /** [find f collection] returns the first value for which the predicate [f] returns true.
+  /** [find f set] returns the first value for which the predicate [f] returns true.
    *  If no value is found, an exception is thrown.
    */
 
   let forEach: ('a => unit) => (t 'a) => unit;
-  /** [forEach f collection] iterates through [collection], invoking [f] for each element in the Collection. */
+  /** [forEach f set] iterates through [set], invoking [f] for each element in the Set. */
 
   let hash: (Hash.t (t 'a));
-  /** [hash collection] hashes [collection], hashing elements using structural hashing. */
+  /** [hash set] hashes [set], hashing elements using structural hashing. */
 
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-  /** [hashWith hash collection] hashes [collection], hashing elements using [hash]. */
+  /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
 
   let inRange: int => int => int => (t int);
-  /** [inRange start count step] returns an integer Collection starting with [start]
-   *  with [count] elements, with an interval of [step] between elements in the Collection.
+  /** [inRange start count step] returns an integer Set starting with [start]
+   *  with [count] elements, with an interval of [step] between elements in the Set.
    */
 
   let intersect: (t 'a) => (t 'a) => (Seq.t 'a);
@@ -405,24 +405,24 @@ let module rec Collection: {
    */
 
   let isEmpty: (t 'a) => bool;
-  /** [isEmpty collection] returns true if [collection] contains no elements. */
+  /** [isEmpty set] returns true if [set] contains no elements. */
 
   let isNotEmpty: (t 'a) => bool;
-  /** [isNotEmpty collection] returns true if [collection] contains at least one element. */
+  /** [isNotEmpty set] returns true if [set] contains at least one element. */
 
   let none: ('a => bool) => (t 'a) => bool;
-  /** [none f collection] returns true if the predicate [f] returns false for
-   *  every elements in [collection], otherwise true. If [collection] is empty, returns true.
+  /** [none f set] returns true if the predicate [f] returns false for
+   *  every elements in [set], otherwise true. If [set] is empty, returns true.
    */
 
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  /** [reduce f acc collection] applies the accumulator function [f] to each element in [collection]
+  /** [reduce f acc set] applies the accumulator function [f] to each element in [set]
    *  with the specified seed value [acc], returning the final accumulated value.
    */
 
   let some: ('a => bool) => (t 'a) => bool;
-  /** [some f collection] returns true if the predicate [f] returns true for
-   *  any element in [collection], otherwise false. If [collection] is empty, returns false.
+  /** [some f set] returns true if the predicate [f] returns true for
+   *  any element in [set], otherwise false. If [set] is empty, returns false.
    */
 
   let subtract: (t 'a) => (t 'a) => (Seq.t 'a);
@@ -431,13 +431,13 @@ let module rec Collection: {
    */
 
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
-  /** [toKeyed collection] returns a Keyed collection view of [collection] as a mapping of values to themselves. */
+  /** [toKeyed set] returns a Keyed collection view of [set] as a mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq collection] returns a Seq of the values in [collection]. */
+  /** [toSeq set] returns a Seq of the values in [set]. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
-  /** [find f collection] returns the first value for which the predicate [f] returns true or None. */
+  /** [find f set] returns the first value for which the predicate [f] returns true or None. */
 
   let union: (t 'a) => (t 'a) => (Seq.t 'a);
   /** [union this that] returns a Seq of unique elements which occur in either [this] or [that]. */
@@ -511,8 +511,8 @@ and Keyed: {
   let isNotEmpty: t 'k 'v => bool;
   /** [isNotEmpty keyed] returns true if [keyed] contains at least one key/value pair. */
 
-  let keys: (t 'k 'v) => (Collection.t 'k);
-  /** [keys keyed] returns a Collection view of keys in [keyed]. */
+  let keys: (t 'k 'v) => (Set.t 'k);
+  /** [keys keyed] returns a Set view of keys in [keyed]. */
 
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
   /** [map f keyed] returns a Keyed collection whose values are the result of
@@ -535,13 +535,13 @@ and Keyed: {
    *  any key/value pair in [keyed], otherwise false. If [keyed] is empty, returns false.
    */
 
-  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollection keyed] returns a Collection view of key/value pairs in [keyed], using structural equality
+  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
+  /** [toSet keyed] returns a Set view of key/value pairs in [keyed], using structural equality
    *  to equate values.
    */
 
-  let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollectionWith equals keyed] returns a Collection view of key/value pairs in [keyed],
+  let toSetWith: (Equality.t 'v) => (t 'k 'v) => (Set.t ('k, 'v));
+  /** [toSetWith equals keyed] returns a Set view of key/value pairs in [keyed],
    *  using [equals] to equate values.
    */
 
@@ -1282,8 +1282,8 @@ let module rec HashBiMap: {
   let isNotEmpty: (t 'k 'v) => bool;
   /** [isNotEmpty bimap] returns true if [bimap] contains at least one key/value pair. */
 
-  let keys: (t 'k 'v) => (Collection.t 'k);
-  /** [keys bimap] returns a Collection view of keys in [bimap]. */
+  let keys: (t 'k 'v) => (Set.t 'k);
+  /** [keys bimap] returns a Set view of keys in [bimap]. */
 
   let mutate: (t 'k 'v) => (TransientHashBiMap.t 'k 'v);
   /** [mutate bimap] returns a TransientHashBiMap containing the same key/values pairs as [bimap].
@@ -1333,8 +1333,8 @@ let module rec HashBiMap: {
    *  any key/value pair in [bimap], otherwise false. If [bimap] is empty, returns false.
    */
 
-  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollection bimap] returns a Collection view of the key/value pairs in [bimap]. */
+  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
+  /** [toSet bimap] returns a Set view of the key/value pairs in [bimap]. */
 
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
   /** [toKeyed bimap] returns a Keyed collection view of [bimap]. */
@@ -1360,8 +1360,8 @@ let module rec HashBiMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let values: (t 'k 'v) => (Collection.t 'v);
-  /** [values bimap] returns a Collection of unique values in the HashBiMap. */
+  let values: (t 'k 'v) => (Set.t 'v);
+  /** [values bimap] returns a Set of unique values in the HashBiMap. */
 }
 
 and TransientHashBiMap: {
@@ -1537,8 +1537,8 @@ let module rec HashMap: {
   let isNotEmpty: t 'k 'v => bool;
   /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
-  let keys: (t 'k 'v) => (Collection.t 'k);
-  /** [keys map] returns a Collection view of keys in [map]. */
+  let keys: (t 'k 'v) => (Set.t 'k);
+  /** [keys map] returns a Set view of keys in [map]. */
 
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
   /** [map f map] returns a new HashMap whose values are the result of
@@ -1596,13 +1596,13 @@ let module rec HashMap: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
-  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollection map] returns a Collection view of key/value pairs in [map], using structural equality
+  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
+  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
    *  to equate values.
    */
 
-  let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollectionWith equals map] returns a Collection view of key/value pairs in [map],
+  let toSetWith: (Equality.t 'v) => (t 'k 'v) => (Set.t ('k, 'v));
+  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
    *  using [equals] to equate values.
    */
 
@@ -1693,8 +1693,8 @@ and TransientHashMap: {
 };
 /*
 let module rec HashMultiset: {
-  /** A Collection implementation that tracks the number of times an element has been
-   *  added to the Collection. Also known as a Bag.
+  /** A Set implementation that tracks the number of times an element has been
+   *  added to the Set. Also known as a Bag.
    */
 
   type t 'a;
@@ -1819,8 +1819,8 @@ let module rec HashMultiset: {
    *  the predicate [f] returns true or None.
    */
 
-  let values: (t 'a) => (Collection.t 'a);
-  /** [values set] returns a Collection of values in [set] */
+  let values: (t 'a) => (Set.t 'a);
+  /** [values set] returns a Set of values in [set] */
 }
 
 and TransientHashMultiset: {
@@ -2015,8 +2015,8 @@ let module rec HashSet: {
    *  Complexity: O(N) currently, ideally O(log32 N) if [this] and [that] use the same HashStrategy.
    */
 
-  let toCollection: (t 'a) => (Collection.t 'a);
-  /** [toCollection set] returns a Collection view of [set] */
+  let toSet: (t 'a) => (Set.t 'a);
+  /** [toSet set] returns a Set view of [set] */
 
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
   /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
@@ -2114,7 +2114,7 @@ let module HashSetMultimap: {
   let hash: (Hash.t (t 'k 'v));
   let isEmpty: (t 'k 'v) => bool;
   let isNotEmpty: (t 'k 'v) => bool;
-  let keys: (t 'k 'v) => (Collection.t 'k);
+  let keys: (t 'k 'v) => (Set.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
   let putAllValues: 'k => (Seq.t 'v) => (t 'k 'v) => (t 'k 'v);
@@ -2122,7 +2122,7 @@ let module HashSetMultimap: {
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
+  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   let values: (t 'k 'v) => (Seq.t 'v);
@@ -2208,8 +2208,8 @@ let module rec IntMap: {
   let isNotEmpty: (t 'a) => bool;
   /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
-  let keys: (t 'a) => (Collection.t int);
-  /** [keys map] returns a Collection view of keys in [map]. */
+  let keys: (t 'a) => (Set.t int);
+  /** [keys map] returns a Set view of keys in [map]. */
 
   let map: (int => 'a => 'b) => (t 'a) => (t 'b);
   /** [map f map] returns a new IntMap whose values are the result of
@@ -2267,13 +2267,13 @@ let module rec IntMap: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
-  let toCollection: (t 'a) => (Collection.t (int, 'a));
-  /** [toCollection map] returns a Collection view of key/value pairs in [map], using structural equality
+  let toSet: (t 'a) => (Set.t (int, 'a));
+  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
    *  to equate values.
    */
 
-  let toCollectionWith: (Equality.t 'a) => (t 'a) => (Collection.t (int, 'a));
-  /** [toCollectionWith equals map] returns a Collection view of key/value pairs in [map],
+  let toSetWith: (Equality.t 'a) => (t 'a) => (Set.t (int, 'a));
+  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
    *  using [equals] to equate values.
    */
 
@@ -2459,8 +2459,8 @@ let module rec IntSet: {
    *  Complexity: O(N) currently, ideally O(log32 N).
    */
 
-  let toCollection: t => (Collection.t int);
-  /** [toCollection set] returns a Collection view of [set] */
+  let toSet: t => (Set.t int);
+  /** [toSet set] returns a Set view of [set] */
 
   let toKeyed: t => (Keyed.t int int);
   /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
@@ -2689,7 +2689,7 @@ let module List: {
 };
 
 let module Option: {
-  /** OCaml option type. Can be considered a collection of zero or one elements.
+  /** OCaml option type. Can be considered a set of zero or one elements.
    *  All operations have a complexity of O(1).
    */
 
@@ -2797,11 +2797,11 @@ let module Option: {
    *  If [option] is empty, returns false.
    */
 
-  let toCollection: (option 'a) => (Collection.t 'a);
-  /* [toCollection option] returns a Collection view of the option using structural equality equate values. */
+  let toSet: (option 'a) => (Set.t 'a);
+  /* [toSet option] returns a Set view of the option using structural equality equate values. */
 
-  let toCollectionWith: (Equality.t 'a) => (option 'a) => (Collection.t 'a);
-  /* [toCollectionWith equals option] returns a Collection view of the option using [equals] equate values. */
+  let toSetWith: (Equality.t 'a) => (option 'a) => (Set.t 'a);
+  /* [toSetWith equals option] returns a Set view of the option using [equals] equate values. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /* [toSeq option] returns a Seq of the values in [option]. */
@@ -2933,8 +2933,8 @@ let module SortedMap: {
   let isNotEmpty: t 'k 'v => bool;
   /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
-  let keys: (t 'k 'v) => (Collection.t 'k);
-  /** [keys map] returns a Collection view of keys in [map]. */
+  let keys: (t 'k 'v) => (Set.t 'k);
+  /** [keys map] returns a Set view of keys in [map]. */
 
   let last: (t 'k 'v) => ('k, 'v);
   /** [last map] returns the last key/value pair in [set] or throws. */
@@ -3006,13 +3006,13 @@ let module SortedMap: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
-  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollection map] returns a Collection view of key/value pairs in [map], using structural equality
+  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
+  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
    *  to equate values.
    */
 
-  let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollectionWith equals map] returns a Collection view of key/value pairs in [map],
+  let toSetWith: (Equality.t 'v) => (t 'k 'v) => (Set.t ('k, 'v));
+  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
    *  using [equals] to equate values.
    */
 
@@ -3039,7 +3039,7 @@ let module SortedMap: {
 };
 
 let module SortedSet: {
-  /** AVL tree based Collection implementation. */
+  /** AVL tree based Set implementation. */
 
   type t 'a;
   /** The SortedSet type */
@@ -3190,8 +3190,8 @@ let module SortedSet: {
    *  the same comparator (NOT IMPLEMENTED).
    */
 
-  let toCollection: (t 'a) => (Collection.t 'a);
-  /** [toCollection set] returns a Collection view of [set] */
+  let toSet: (t 'a) => (Set.t 'a);
+  /** [toSet set] returns a Set view of [set] */
 
   let toKeyed: (t 'a) => (Keyed.t 'a 'a);
   /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
@@ -3402,7 +3402,7 @@ let module StackMultimap: {
   let hashWith: (Hash.t 'v) => (Hash.t (t 'k 'v));
   let isEmpty: t 'k 'v => bool;
   let isNotEmpty: t 'k 'v => bool;
-  let keys: (t 'k 'v) => (Collection.t 'k);
+  let keys: (t 'k 'v) => (Set.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
@@ -3441,7 +3441,7 @@ let module Table: {
   let remove: 'row => 'column => (t 'row 'column 'value) => (t 'row 'column 'value);
   let removeAll: (t 'row 'column 'value) => (t 'row 'column 'value);
   let removeRow: 'row => (t 'row 'column 'value) => (t 'row 'column 'value);
-  let rows: (t 'row 'column 'value) => (Collection.t 'row);
+  let rows: (t 'row 'column 'value) => (Set.t 'row);
   let some: ('row => 'column => 'value=> bool) => (t 'row 'column 'value) => bool;
   let toSeq: (t 'row 'column 'value) => (Seq.t ('row, 'column, 'value));
   let tryFind: ('row => 'column => 'value => bool) => (t 'row 'column 'value) => (option ('row, 'column, 'value));

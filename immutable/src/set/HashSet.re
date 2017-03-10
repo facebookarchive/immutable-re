@@ -1,5 +1,5 @@
 open AVLTreeSet;
-open Collection;
+open Set;
 open EqualitySet;
 open HashStrategy;
 open Keyed;
@@ -220,7 +220,7 @@ let some (f: 'a => bool) (set: hashSet 'a): bool =>
 let tryFind (f: 'a => bool) (set: hashSet 'a): (option 'a) =>
   set |> toSeq |> Seq.tryFind f;
 
-let toCollection (set: hashSet 'a): (collection 'a) => {
+let toSet (set: hashSet 'a): (set 'a) => {
   contains: fun v => contains v set,
   count: count set,
   every: fun f => set |> every f,
@@ -234,13 +234,13 @@ let toCollection (set: hashSet 'a): (collection 'a) => {
 };
 
 let equals (this: hashSet 'a) (that: hashSet 'a): bool =>
-  Collection.equals (toCollection this) (toCollection that);
+  Set.equals (toSet this) (toSet that);
 
 let hash ({ strategy } as set: hashSet 'a): int =>
-  set |> toCollection |> Collection.hashWith (HashStrategy.hash strategy);
+  set |> toSet |> Set.hashWith (HashStrategy.hash strategy);
 
 let toKeyed (set: hashSet 'a): (keyed 'a 'a) =>
-  set |> toCollection |> Keyed.ofCollection;
+  set |> toSet |> Keyed.ofSet;
 
 type transientHashSet 'a = transient (hashSet 'a);
 
@@ -334,10 +334,10 @@ let fromSeqWith (strategy: hashStrategy 'a) (seq: seq 'a): (hashSet 'a) =>
   emptyWith strategy |> addAll seq;
 
 let intersect ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
-  Collection.intersect (toCollection this) (toCollection that) |> fromSeqWith strategy;
+  Set.intersect (toSet this) (toSet that) |> fromSeqWith strategy;
 
 let subtract ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
-  Collection.subtract (toCollection this) (toCollection that) |> fromSeqWith strategy;
+  Set.subtract (toSet this) (toSet that) |> fromSeqWith strategy;
 
 let union ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
-  Collection.union (toCollection this) (toCollection that) |> fromSeqWith strategy;
+  Set.union (toSet this) (toSet that) |> fromSeqWith strategy;

@@ -2,7 +2,6 @@ open ReUnit;
 open ReUnit.Test;
 
 ReUnit.run (describe "Immutable.re" [
-  CollectionTest.test,
   CopyOnWriteArrayTest.test,
   DequeTest.test,
   FunctionsTest.test,/*
@@ -14,7 +13,8 @@ ReUnit.run (describe "Immutable.re" [
   IntMapTest.test,*/
   KeyedTest.test,
   OptionTest.test,/*
-  SeqTest.test,
+  SeqTest.test,*/
+  SetTest.test,/*
   SortedMapTest.test,*/
   SortedSetTest.test,
   StackTest.test,/*

@@ -1,5 +1,5 @@
 open AVLTreeMap;
-open Collection;
+open Set;
 open Equality;
 open EqualityMap;
 open Hash;
@@ -493,14 +493,14 @@ let hash (map: hashMap 'k 'v): int =>
 let hashWith (valueHash: hash 'v) ({ strategy } as map: hashMap 'k 'v): int =>
   map |> toKeyed |> Keyed.hashWith (HashStrategy.hash strategy) valueHash;
 
-let keys (map: hashMap 'k 'v): (collection 'k) =>
+let keys (map: hashMap 'k 'v): (set 'k) =>
   map |> toKeyed |> Keyed.keys;
 
-let toCollection (map: hashMap 'k 'v): (collection ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toCollection;
+let toSet (map: hashMap 'k 'v): (set ('k, 'v)) =>
+  map |> toKeyed |> Keyed.toSet;
 
-let toCollectionWith (equality: equality 'v) (map: hashMap 'k 'v): (collection ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toCollectionWith equality;
+let toSetWith (equality: equality 'v) (map: hashMap 'k 'v): (set ('k, 'v)) =>
+  map |> toKeyed |> Keyed.toSetWith equality;
 
 type transientHashMap 'k 'v = transient (hashMap 'k 'v);
 
@@ -606,7 +606,7 @@ let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: hashMap 'k 'v)
     (map: hashMap 'k 'vAcc): (hashMap 'k 'vAcc) =>
-  Collection.union (keys map) (keys next)
+  Set.union (keys map) (keys next)
     |> Seq.reduce (
         fun acc key => {
           let result = f key (map |> tryGet key) (next |> tryGet key);

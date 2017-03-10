@@ -608,7 +608,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
       }),
       it "keys" (fun () => {
         let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.keys |> Collection.toSeq) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+        expect (keyed |> Keyed.keys |> Set.toSeq) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
       }),
       it "none" (fun () => {
         let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;

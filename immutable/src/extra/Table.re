@@ -1,4 +1,4 @@
-open Collection;
+open Set;
 open Equality;
 open Functions.Operators;
 open Keyed;
@@ -16,7 +16,7 @@ type table 'row 'column 'value = {
 };
 
 let columns ({ map }: table 'row 'column 'value): (seq 'column) =>
-  map |> HashMap.values |> Seq.flatMap (HashMap.keys >> Collection.toSeq);
+  map |> HashMap.values |> Seq.flatMap (HashMap.keys >> Set.toSeq);
 
 let contains (row: 'row) (column: 'column) (value: 'value) ({ map }: table 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.contains column value) |? false;
@@ -85,7 +85,7 @@ let isEmpty ({ map }: table 'row 'column 'value): bool =>
 let isNotEmpty ({ map }: table 'row 'column 'value): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: table 'row 'column 'value): (collection 'k) =>
+let keys ({ map }: table 'row 'column 'value): (set 'k) =>
   map |> HashMap.keys;
 
 let map
@@ -167,7 +167,7 @@ let removeRow
     columnStrategy,
   })) |? table;
 
-let rows ({ map }: table 'row 'column 'value): (collection 'row) =>
+let rows ({ map }: table 'row 'column 'value): (set 'row) =>
   map |> HashMap.keys;
 
 let some (f: 'row => 'column => 'value => bool) ({ map }: table 'row 'column 'value): bool => {

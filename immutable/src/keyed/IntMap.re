@@ -1,4 +1,4 @@
-open Collection;
+open Set;
 open CopyOnWriteArray;
 open Equality;
 open Functions;
@@ -304,14 +304,14 @@ let hash (map: intMap 'a): int =>
 let hashWith (hash: hash 'a) (map: intMap 'a): int =>
   map |> toKeyed |> Keyed.hashWith Hash.structural hash;
 
-let keys (map: intMap 'a): (collection int) =>
+let keys (map: intMap 'a): (set int) =>
   map |> toKeyed |> Keyed.keys;
 
-let toCollection (map: intMap 'a): (collection (int, 'a)) =>
-  map |> toKeyed |> Keyed.toCollection;
+let toSet (map: intMap 'a): (set (int, 'a)) =>
+  map |> toKeyed |> Keyed.toSet;
 
-let toCollectionWith (equality: equality 'a) (map: intMap 'a): (collection (int, 'a)) =>
-  map |> toKeyed |> Keyed.toCollectionWith equality;
+let toSetWith (equality: equality 'a) (map: intMap 'a): (set (int, 'a)) =>
+  map |> toKeyed |> Keyed.toSetWith equality;
 
 type transientIntMap 'a = transient (intMap 'a);
 
@@ -401,7 +401,7 @@ let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: intMap 'v)
     (map: intMap 'vAcc): (intMap 'vAcc) =>
-  Collection.union (keys map) (keys next)
+  Set.union (keys map) (keys next)
     |> Seq.reduce (
         fun acc key => {
           let result = f key (map |> tryGet key) (next |> tryGet key);

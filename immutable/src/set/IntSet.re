@@ -1,4 +1,4 @@
-open Collection;
+open Set;
 open Keyed;
 open Seq;
 open Transient;
@@ -150,7 +150,7 @@ let some (f: int => bool) (set: intSet): bool =>
 let tryFind (f: int => bool) (set: intSet): (option int) =>
   set |> toSeq |> Seq.tryFind f;
 
-let toCollection (set: intSet): (collection int) => {
+let toSet (set: intSet): (set int) => {
   contains: fun v => contains v set,
   count: count set,
   every: fun f => set |> every f,
@@ -164,13 +164,13 @@ let toCollection (set: intSet): (collection int) => {
 };
 
 let equals (this: intSet) (that: intSet): bool =>
-  Collection.equals (toCollection this) (toCollection that);
+  Set.equals (toSet this) (toSet that);
 
 let hash (set: intSet): int =>
-  set |> toCollection |> Collection.hash;
+  set |> toSet |> Set.hash;
 
 let toKeyed (set: intSet): (keyed int int) =>
-  set |> toCollection |> Keyed.ofCollection;
+  set |> toSet |> Keyed.ofSet;
 
 type transientIntSet = transient intSet;
 
@@ -254,10 +254,10 @@ let fromSeq (seq: seq int): intSet =>
   empty |> addAll seq;
 
 let intersect (this: intSet) (that: intSet): intSet =>
-  Collection.intersect (toCollection this) (toCollection that) |> fromSeq;
+  Set.intersect (toSet this) (toSet that) |> fromSeq;
 
 let subtract (this: intSet) (that: intSet): intSet =>
-  Collection.subtract (toCollection this) (toCollection that) |> fromSeq;
+  Set.subtract (toSet this) (toSet that) |> fromSeq;
 
 let union (this: intSet) (that: intSet): intSet =>
-  Collection.union (toCollection this) (toCollection that) |> fromSeq;
+  Set.union (toSet this) (toSet that) |> fromSeq;

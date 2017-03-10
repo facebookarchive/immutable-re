@@ -1,5 +1,5 @@
 open AVLTreeSet;
-open Collection;
+open Set;
 open Comparator;
 open Equality;
 open Functions;
@@ -127,7 +127,7 @@ let tryFirst ({ tree }: sortedSet 'a): (option 'a) =>
 let tryLast ({ tree }: sortedSet 'a): (option 'a) =>
   AVLTreeSet.tryLast tree;
 
-let toCollection (set: sortedSet 'a): (collection 'a) => {
+let toSet (set: sortedSet 'a): (set 'a) => {
   contains: fun a => contains a set,
   count: count set,
   every: fun f => every f set,
@@ -161,10 +161,10 @@ let toKeyed (set: sortedSet 'a): (keyed 'a 'a) => {
 };
 
 let intersect ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  Collection.intersect (toCollection this) (toCollection that) |> fromSeqWith comparator;
+  Set.intersect (toSet this) (toSet that) |> fromSeqWith comparator;
 
 let subtract ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  Collection.subtract (toCollection this) (toCollection that) |> fromSeqWith comparator;
+  Set.subtract (toSet this) (toSet that) |> fromSeqWith comparator;
 
 let union ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  Collection.union (toCollection this) (toCollection that) |> fromSeqWith comparator;
+  Set.union (toSet this) (toSet that) |> fromSeqWith comparator;
