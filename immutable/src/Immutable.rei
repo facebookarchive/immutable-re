@@ -1198,7 +1198,7 @@ and TransientDeque: {
   let tryLast: (t 'a) => option 'a;
   /** [tryLast transient] returns the last element in [transient] or None. */
 };
-
+/*
 let module rec HashBiMap: {
   /** A hashed Keyed collection preserving the uniqueness of keys to values, and values to keys. */
 
@@ -1439,7 +1439,7 @@ and TransientHashBiMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 };
-
+*/
 let module rec HashMap: {
   /** A hashed Keyed collection. */
 
@@ -1691,7 +1691,7 @@ and TransientHashMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 };
-
+/*
 let module rec HashMultiset: {
   /** A Collection implementation that tracks the number of times an element has been
    *  added to the Collection. Also known as a Bag.
@@ -1897,7 +1897,7 @@ and TransientHashMultiset: {
    *  Complexity: O(log32 N)
    */
 };
-
+*/
 let module rec HashSet: {
   /** A set implementation that utilizes hashing and comparison
    *  or equality for collision resolution.
@@ -2097,7 +2097,7 @@ and TransientHashSet: {
    *  Complexity: O(1)
    */
 };
-
+/*
 let module HashSetMultimap: {
   type t 'k 'v;
 
@@ -2127,7 +2127,7 @@ let module HashSetMultimap: {
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   let values: (t 'k 'v) => (Seq.t 'v);
 };
-
+*/
 let module rec IntMap: {
   /** A Keyed collection optimized for integer keys. */
 
@@ -3380,7 +3380,7 @@ let module Stack: {
   let tryFirst: (t 'a) => (option 'a);
   /** [tryFirst stack] returns first element in [stack] or None. */
 };
-
+/*
 let module StackMultimap: {
   type t 'k 'v;
 
@@ -3448,7 +3448,7 @@ let module Table: {
   let tryGet: 'row => 'column => (t 'row 'column 'value) => (option 'value);
   let values: (t 'row 'column 'value) => (Seq.t 'value);
 };
-
+*/
 let module rec Vector: {
   /** Indexed type that supports efficient operations for
    * prepend, appends, indexing, conctentation, and splits.
