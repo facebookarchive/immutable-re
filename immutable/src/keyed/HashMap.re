@@ -604,12 +604,12 @@ let fromKeyed (keyed: keyed 'k 'v): (hashMap 'k 'v) =>
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (next: keyed 'k 'v)
+    (next: hashMap 'k 'v)
     (map: hashMap 'k 'vAcc): (hashMap 'k 'vAcc) =>
-  Collection.union (map |> toKeyed |> Keyed.keys) (next |> Keyed.keys)
+  Collection.union (map |> toKeyed |> Keyed.keys) (keys next)
     |> Seq.reduce (
         fun acc key => {
-          let result = f key (map |> tryGet key) (next |> Keyed.tryGet key);
+          let result = f key (map |> tryGet key) (next |> tryGet key);
           switch result {
             | None => acc |> TransientHashMap.remove key
             | Some value => acc |> TransientHashMap.put key value

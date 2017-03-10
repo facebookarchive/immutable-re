@@ -444,7 +444,7 @@ let module rec Collection: {
 }
 
 and Keyed: {
-  /** A read only view of an underlying set of key value pairs. The intent of this type is to enable
+  /** A read only view of an underlying set of key/value pairs. The intent of this type is to enable
    *  interop between alternative concrete implementations such as [SortedMap] and [HashMap].
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
@@ -466,33 +466,33 @@ and Keyed: {
   /** [containsKey key keyed] returns true if [keyed] contains an entry with the key [key]. */
 
   let count: (t 'k 'v) => int;
-  /** [count keyed] returns the number of key value pairs in the Keyed collection. */
+  /** [count keyed] returns the number of key/value pairs in [keyed]. */
 
   let empty: (t 'k 'v);
   /** The empty Keyed collection. */
 
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
   /** [equals this that] equates [this] and [that] ensuring that the Keyed collections have the same count
-   *  and contains the same key value pairs. Structural equality is used to equate values.
+   *  and contains the same key/value pairs. Structural equality is used to equate values.
    */
 
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
   /** [equalsWith equals this that] equates [this] and [that] ensuring that the Keyed collections
-   *  have the same count, and contains the same key value pairs. [equals] is used to equate values.
+   *  have the same count, and contains the same key/value pairs. [equals] is used to equate values.
    */
 
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
   /** [every f keyed] returns true if the predicate [f] returns true for every
-   *  key value pair in [keyed], otherwise false. If [keyed] is empty, returns true.
+   *  key/value pair in [keyed], otherwise false. If [keyed] is empty, returns true.
    */
 
   let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  /** [find f keyed] returns the first key value pair for which the predicate [f] returns true.
+  /** [find f keyed] returns the first key/value pair for which the predicate [f] returns true.
    *  If no value is found, an exception is thrown.
    */
 
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-  /** [forEach f keyed] iterates through [keyed], invoking [f] for each key value pair. */
+  /** [forEach f keyed] iterates through [keyed], invoking [f] for each key/value pair. */
 
   let get: 'k => (t 'k 'v) => 'v;
   /** [get key keyed] returns the value associated with [key] or throws */
@@ -506,56 +506,56 @@ and Keyed: {
    */
 
   let isEmpty: t 'k 'v => bool;
-  /** [isEmpty keyed] returns true if [keyed] contains no key value pairs. */
+  /** [isEmpty keyed] returns true if [keyed] contains no key/value pairs. */
 
   let isNotEmpty: t 'k 'v => bool;
-  /** [isNotEmpty keyed] returns true if [keyed] contains at least one key value pair. */
+  /** [isNotEmpty keyed] returns true if [keyed] contains at least one key/value pair. */
 
   let keys: (t 'k 'v) => (Collection.t 'k);
-  /** [keys keyed] returns a Collection view of keys in the [keyed]. */
+  /** [keys keyed] returns a Collection view of keys in [keyed]. */
 
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
   /** [map f keyed] returns a Keyed collection whose values are the result of
-   *  applying [f] each key value pair in [keyed] lazily. Note: The results of
+   *  applying [f] each key/value pair in [keyed] lazily. Note: The results of
    *  applying [f] are not memoized, therefore [f] must be pure.
    */
 
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   /** [none f keyed] returns true if the predicate [f] returns false for
-   *  every key value pair in [keyed], otherwise true. If [keyed] is empty, returns true.
+   *  every key/value pair in [keyed], otherwise true. If [keyed] is empty, returns true.
    */
 
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  /** [reduce f acc keyed] applies the accumulator function [f] to each key value pair in [keyed]
+  /** [reduce f acc keyed] applies the accumulator function [f] to each key/value pair in [keyed]
    *  with the specified seed value [acc], returning the final accumulated value.
    */
 
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   /** [some f keyed] returns true if the predicate [f] returns true for
-   *  any key value pair in [keyed], otherwise false. If [keyed] is empty, returns false.
+   *  any key/value pair in [keyed], otherwise false. If [keyed] is empty, returns false.
    */
 
   let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollection keyed] returns a Collection view of key value pairs in [keyed], using structural equality
+  /** [toCollection keyed] returns a Collection view of key/value pairs in [keyed], using structural equality
    *  to equate values.
    */
 
   let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollectionWith equals keyed] returns a Collection view of key value pairs in [keyed],
+  /** [toCollectionWith equals keyed] returns a Collection view of key/value pairs in [keyed],
    *  using [equals] to equate values.
    */
 
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq keyed] returns a Seq of the key value pairs in [keyed]. */
+  /** [toSeq keyed] returns a Seq of the key/value pairs in [keyed]. */
 
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  /** [find f keyed] returns the first key value pair for which the predicate [f] returns true or None. */
+  /** [find f keyed] returns the first key/value pair for which the predicate [f] returns true or None. */
 
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key keyed] returns the value associated with [key] or None */
 
   let values: (t 'k 'v) => (Seq.t 'v);
-  /** [values keyed] returns a Seq of non-unique values in the Keyed collection. */
+  /** [values keyed] returns a Seq of non-unique values in [keyed]. */
 };
 
 let module HashStrategy: {
@@ -591,7 +591,7 @@ let module rec BiMap: {
   /** The BiMap type. */
 
   let contains: 'k => 'v => (t 'k 'v) => bool;
-  /** [contains key value bimap] returns true if [bimap] contains the [key] [value] pair.
+  /** [contains key/value bimap] returns true if [bimap] contains the [key] [value] pair.
    *
    *  Complexity: O(log32 N), effectively O(1)
    */
@@ -603,13 +603,13 @@ let module rec BiMap: {
    */
 
   let count: (t 'k 'v) => int;
-  /** [count bimap] returns the number of key value pairs in [bimap].
+  /** [count bimap] returns the number of key/value pairs in [bimap].
    *
    *  Complexity: O(1)
    */
 
   let empty: (t 'k 'v);
-  /** The empty BiMap. */
+  /** The empty BiMap using the structuralCompare HashStrategy. */
 
   let emptyWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (t 'k 'v);
   /** [emptyWith keyStrategy valueStrategy] returns an empty BiMap using the provided
@@ -618,33 +618,33 @@ let module rec BiMap: {
 
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
   /** [equals this that] equates [this] and [that] ensuring that the bimaps have the same count
-   *  and contains the same key value pairs.
+   *  and contains the same key/value pairs.
    */
 
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
   /** [every f bimap] returns true if the predicate [f] returns true for every
-   *  key value pair in [bimap], otherwise false. If [bimap] is empty, returns true.
+   *  key/value pair in [bimap], otherwise false. If [bimap] is empty, returns true.
    */
 
   let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  /** [find f bimap] returns the first key value pair for which the predicate [f] returns true.
+  /** [find f bimap] returns the first key/value pair for which the predicate [f] returns true.
    *  If no value is found, an exception is thrown.
    */
 
   let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeq seq] returns a BiMap including the key value pairs in [seq]. If
-   *  [seq] includes duplicate keys or values, the last key value pair with the duplicate
+  /** [fromSeq seq] returns a BiMap including the key/value pairs in [seq]. If
+   *  [seq] includes duplicate keys or values, the last key/value pair with the duplicate
    *  key or value is added to the BiMap.
    */
 
   let fromSeqWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeqWith keyStrategy valueStrategy seq] returns a BiMap including the key value
+  /** [fromSeqWith keyStrategy valueStrategy seq] returns a BiMap including the key/value
    *  pairs in [seq] using the provided key and value [HashStrategy]'s. If [seq] includes duplicate
-   *  keys or values, the last key value pair with the duplicate key or value is added to the BiMap.
+   *  keys or values, the last key/value pair with the duplicate key or value is added to the BiMap.
    */
 
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-  /** [forEach f bimap] iterates through [bimap], invoking [f] for each key value pair. */
+  /** [forEach f bimap] iterates through [bimap], invoking [f] for each key/value pair. */
 
   let get: 'k => (t 'k 'v) => 'v;
   /** [get key bimap] returns the value associated with [key] or throws
@@ -662,23 +662,23 @@ let module rec BiMap: {
    */
 
   let isEmpty: (t 'k 'v) => bool;
-  /** [isEmpty bimap] returns true if [bimap] contains no key value pairs. */
+  /** [isEmpty bimap] returns true if [bimap] contains no key/value pairs. */
 
   let isNotEmpty: (t 'k 'v) => bool;
-  /** [isNotEmpty bimap] returns true if [bimap] contains at least one key value pair. */
+  /** [isNotEmpty bimap] returns true if [bimap] contains at least one key/value pair. */
 
   let keys: (t 'k 'v) => (Collection.t 'k);
   /** [keys bimap] returns a Collection view of keys in [bimap]. */
 
   let mutate: (t 'k 'v) => (TransientBiMap.t 'k 'v);
-  /** [mutate bimap] returns a TransientBiMap containing the same key values pairs as [bimap].
+  /** [mutate bimap] returns a TransientBiMap containing the same key/values pairs as [bimap].
    *
    *  Complexity: O(1)
    */
 
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   /** [none f bimap] returns true if the predicate [f] returns false for
-   *  every key value pair in [bimap], otherwise true. If [bimap] is empty, returns true.
+   *  every key/value pair in [bimap], otherwise true. If [bimap] is empty, returns true.
    */
 
   let put: 'k => 'v => (t 'k 'v) => t 'k 'v;
@@ -689,12 +689,12 @@ let module rec BiMap: {
    */
 
   let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll seq bimap] returns a new BiMap including the key value pairs in [seq].
+  /** [putAll seq bimap] returns a new BiMap including the key/value pairs in [seq].
    *  Key value pairs in seq replace existing mappings in [bimap].
    */
 
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  /** [reduce f acc bimap] applies the accumulator function [f] to each key value pair in [bimap]
+  /** [reduce f acc bimap] applies the accumulator function [f] to each key/value pair in [bimap]
    *  with the specified seed value [acc], returning the final accumulated value.
    */
 
@@ -715,20 +715,20 @@ let module rec BiMap: {
 
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   /** [some f bimap] returns true if the predicate [f] returns true for
-   *  any key value pair in [bimap], otherwise false. If [bimap] is empty, returns false.
+   *  any key/value pair in [bimap], otherwise false. If [bimap] is empty, returns false.
    */
 
   let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollection bimap] returns a Collection view of the key value pairs in [bimap]. */
+  /** [toCollection bimap] returns a Collection view of the key/value pairs in [bimap]. */
 
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
   /** [toKeyed bimap] returns a Keyed collection view of [bimap]. */
 
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq bimap] returns a Seq of the key value pairs in [bimap]. */
+  /** [toSeq bimap] returns a Seq of the key/value pairs in [bimap]. */
 
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  /** [tryFind f bimap] returns the first key value pair for which the predicate [f] returns true.
+  /** [tryFind f bimap] returns the first key/value pair for which the predicate [f] returns true.
    *  If no value is found, an exception is thrown.
    */
 
@@ -750,8 +750,7 @@ let module rec BiMap: {
 }
 
 and TransientBiMap: {
-  /** A temporarily mutable hashed Keyed collection preserving the uniqueness of keys to values,
-   *  and values to keys. Once persisted, any further operations on a TransientBiMap instance
+  /** A temporarily mutable BiMap. Once persisted, any further operations on a TransientBiMap instance
    *  will throw. Intended for implementing bulk mutation operations efficiently.
    */
 
@@ -759,7 +758,7 @@ and TransientBiMap: {
   /** The TransientBiMap type. */
 
   let count: (t 'k 'v) => int;
-  /** [count transient] returns the number of key value pairs in [transient].
+  /** [count transient] returns the number of key/value pairs in [transient].
    *
    *  Complexity: O(1)
    */
@@ -773,10 +772,10 @@ and TransientBiMap: {
    */
 
   let isEmpty: t 'k 'v => bool;
-  /** [isEmpty transient] returns true if [transient] contains no key value pairs. */
+  /** [isEmpty transient] returns true if [transient] contains no key/value pairs. */
 
   let isNotEmpty: t 'k 'v => bool;
-  /** [isNotEmpty transient] returns true if [transient] contains at least one key value pair. */
+  /** [isNotEmpty transient] returns true if [transient] contains at least one key/value pair. */
 
   let persist: (t 'k 'v) => (BiMap.t 'k 'v);
   /** [persist transient] returns a persisted BiMap. Further attempts to access or mutate [transient]
@@ -792,7 +791,7 @@ and TransientBiMap: {
    */
 
   let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll seq transient] adds the key value pairs in [seq] to [transient].
+  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
    *  Key value pairs in seq replace existing mappings in [transient].
    */
 
@@ -1368,7 +1367,7 @@ let module rec Deque: {
 }
 
 and TransientDeque: {
-  /** A temporarily mutable double-ended queue. Once persisted, any further operations on a
+  /** A temporarily mutable Deque. Once persisted, any further operations on a
    *  TransientDeque instance will throw. Intended for implementing bulk mutation operations efficiently.
    */
 
@@ -1442,47 +1441,185 @@ and TransientDeque: {
 };
 
 let module rec HashMap: {
+  /** A hashed Keyed collection. */
+
   type t 'k 'v;
+  /** The HashMap type. */
 
   let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [alter key f map] enables efficient deep updates to an existing
+   *  mapping from [key] in [map]. If [map] already has a mapping from [key],
+   *  [f] will be called with Some, otherwise it will be called with None.
+   *  If [f] returns None, alter returns a new HashMap without a mapping from [key].
+   *  If [f] returns Some, alter returns a new HashMap with an updated
+   *  mapping from [key].
+   */
+
   let contains: 'k => 'v => (t 'k 'v) => bool;
+  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
+   *  using structural equality to equate [value].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
+  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
+   *  using [equals] to equate [value].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let containsKey: 'k => (t 'k 'v) => bool;
+  /** [containsKey key map] returns true if [map] contains a mapping from [key]. */
+
   let count: (t 'k 'v) => int;
+  /** [count map] returns the number of key/value pairs in [map]. */
+
   let empty: (t 'k 'v);
+  /** The empty HashMap using the structuralCompare HashStrategy. */
+
   let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
+  /** [emptyWith strategy] returns an empty HashMap using the HashStrategy [strategy]. */
+
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
+  /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
+
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
+  /** [equalsWith equals this that] equates [this] and [that] ensuring.
+   *  [equals] is used to equate values.
+   */
+
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [every f map] returns true if the predicate [f] returns true for every
+   *  key/value pair in [map], otherwise false. If [map] is empty, returns true.
+   */
+
   let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+  /** [find f map] returns the first key/value pair for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
+  /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
+
   let fromKeyed: (Keyed.t 'k 'v) => (t 'k 'v);
+  /** [fromKeyed keyed] returns a HashMap including the key/value pairs in [keyed]
+   *  using the structuralCompare HashStrategy.
+   */
+
   let fromKeyedWith: (HashStrategy.t 'k) => (Keyed.t 'k 'v) => (t 'k 'v);
+  /** [fromSeqWith strategy keyed] returns a HashMap including the key/value pairs in [keyed]
+   *  using the provided HashStrategy [strategy].
+   */
+
   let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
+  /** [fromSeq seq] returns a HashMap including the key/value pairs in [seq]
+   *  using the structuralCompare HashStrategy.
+   */
+
   let fromSeqWith: (HashStrategy.t 'k) => (Seq.t ('k, 'v)) => (t 'k 'v);
+  /** [fromSeqWith strategy seq] returns a HashMap including the key/value pairs in [seq]
+   *  using the provided HashStrategy [strategy].
+   */
+
   let get: 'k => (t 'k 'v) => 'v;
+  /** [get key map] returns the value associated with [key] or throws */
+
   let hash: (Hash.t (t 'k 'v));
+  /** [hash map] hashes [map], hashing values using structural hashing. */
+
   let hashWith: (Hash.t 'v) => (Hash.t (t 'k 'v));
-  let keys: (t 'k 'v) => (Collection.t 'k);
+  /** [hashWith hash map] hashes [map], hashing values using [hash]. */
+
   let isEmpty: t 'k 'v => bool;
+  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
   let isNotEmpty: t 'k 'v => bool;
+  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
+  let keys: (t 'k 'v) => (Collection.t 'k);
+  /** [keys map] returns a Collection view of keys in [map]. */
+
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (Keyed.t 'k 'v) => (t 'k 'vAcc)  => (t 'k 'vAcc);
+  /** [map f map] returns a new HashMap whose values are the result of
+   *  applying [f] each key/value pair in [map].
+   */
+
+  let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'v) => (t 'k 'vAcc) => (t 'k 'vAcc);
+  /** [merge f next acc] returns a new HashMap that is the result of applying [f] to
+   *  the union of keys in [next] and [acc]. For each key, [f] is called with the mapped
+   *  values in [next] and [acc] or None. If [f] returns Some the value is added to the returned Map.
+   */
+
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
+  /** [mutate map] returns a TransientHahsMap containing the same key/values pairs as [map].
+   *
+   *  Complexity: O(1)
+   */
+
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [none f map] returns true if the predicate [f] returns false for
+   *  every key/value pair in [map], otherwise true. If [map] is empty, returns true.
+   */
+
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+  /** [put key value map] returns a new HashMap containing a mapping from [key] to [value].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll key values map] returns a new HashMap containing the key/value pairs in [values].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  /** [reduce f acc map] applies the accumulator function [f] to each key/value pair in [map]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
+  /** [remove key map] returns a new HashMap without any mapping from [key].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let removeAll: (t 'k 'v) => (t 'k 'v);
+  /** [removeAll map] returns an empty HashMap with the same key HashStrategy as [map].
+   *
+   *  Complexity: O(1)
+   */
+
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [some f map] returns true if the predicate [f] returns true for
+   *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
+   */
+
   let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
+  /** [toCollection map] returns a Collection view of key/value pairs in [map], using structural equality
+   *  to equate values.
+   */
+
   let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
+  /** [toCollectionWith equals map] returns a Collection view of key/value pairs in [map],
+   *  using [equals] to equate values.
+   */
+
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
+  /** [toKeyed map] returns a Keyed collection view of [map]. */
+
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+  /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
+
   let tryGet: 'k => (t 'k 'v) => (option 'v);
+  /** [tryGet key map] returns the value associated with [key] or None */
+
   let values: (t 'k 'v) => (Seq.t 'v);
+  /** [values map] returns a Seq of non-unique values in [map]. */
 }
 
 and TransientHashMap: {
@@ -1939,6 +2076,8 @@ let module HashSetMultimap: {
 };
 
 let module rec IntMap: {
+  /** A Keyed datastructure that is optimized for integer keys. */
+
   type t 'a;
 
   let alter: int => ((option 'a) => (option 'a)) => (t 'a) => (t 'a);
