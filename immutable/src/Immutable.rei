@@ -1485,7 +1485,7 @@ let module rec HashMap: {
   /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
 
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equalsWith equals this that] equates [this] and [that] ensuring.
+  /** [equalsWith equals this that] equates [this] and [that].
    *  [equals] is used to equate values.
    */
 
@@ -1552,7 +1552,7 @@ let module rec HashMap: {
    */
 
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
-  /** [mutate map] returns a TransientHahsMap containing the same key/values pairs as [map].
+  /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map].
    *
    *  Complexity: O(1)
    */
@@ -1623,20 +1623,73 @@ let module rec HashMap: {
 }
 
 and TransientHashMap: {
+  /** A temporarily mutable HashMap. Once persisted, any further operations on a
+   *  TransientHashSet instance will throw. Intended for implementing bulk mutation
+   *  operations efficiently.
+   */
+
   type t 'k 'v;
+  /** The TransientHashMap type. */
 
   let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [alter key f transient] enables efficient deep updates to an existing
+   *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
+   *  [f] will be called with Some, otherwise it will be called with None.
+   *  If [f] returns None, alter removes any mapping from [key] in [transient].
+   *  If [f] returns Some, alter returns add or updates the mapping
+   *  from [key] in [transient].
+   */
+
   let count: (t 'k 'v) => int;
+  /** [count map] returns the number of key/value pairs in [map]. */
+
   let empty: unit => (t 'k 'v);
+  /** [empty ()] returns a new empty TransientHashMap. */
+
   let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
+  /** [emptyWith strategy] returns an empty TransientHashMap using the provided
+ *  key HashStrategy.
+ */
+
   let isEmpty: (t 'k 'v) => bool;
+  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
   let isNotEmpty: (t 'k 'v) => bool;
+  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
   let persist: (t 'k 'v) => (HashMap.t 'k 'v);
+  /** [persist transient] returns a persisted HashMap. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
+
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+  /** [put key value transient] adds the mapping of [key] to [value] to [transient].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
+   *  Key value pairs in seq replace existing mappings in [transient].
+   */
+
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
+  /** [remove key transient] removes from [transient] any mappings from [key].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let removeAll: (t 'k 'v) => (t 'k 'v);
+  /** [removeAll transient] removes all mappings from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let tryGet: 'k => (t 'k 'v) => (option 'v);
+  /** [tryGet key transient] returns the value associated with [key] or None
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
 };
 
 let module rec HashMultiset: {
@@ -2076,62 +2129,227 @@ let module HashSetMultimap: {
 };
 
 let module rec IntMap: {
-  /** A Keyed datastructure that is optimized for integer keys. */
+  /** A Keyed collection optimized for integer keys. */
 
   type t 'a;
+  /** The IntMap type. */
 
   let alter: int => ((option 'a) => (option 'a)) => (t 'a) => (t 'a);
+  /** [alter key f map] enables efficient deep updates to an existing
+   *  mapping from [key] in [map]. If [map] already has a mapping from [key],
+   *  [f] will be called with Some, otherwise it will be called with None.
+   *  If [f] returns None, alter returns a new IntMap without a mapping from [key].
+   *  If [f] returns Some, alter returns a new IntMap with an updated
+   *  mapping from [key].
+   */
+
   let contains: int => 'a => (t 'a) => bool;
+  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
+   *  using structural equality to equate [value].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let containsWith: (Equality.t 'a) => int => 'a => (t 'a) => bool;
+  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
+   *  using [equals] to equate [value].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let containsKey: int => (t 'a) => bool;
+  /** [containsKey key map] returns true if [map] contains a mapping from [key]. */
+
   let count: (t 'a) => int;
+  /** [count map] returns the number of key/value pairs in [map]. */
+
   let empty: (t 'a);
+  /** The empty IntMap. */
+
   let equals: (t 'a) => (t 'a) => bool;
+  /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
+
   let equalsWith: (Equality.t 'a) => (t 'a) => (t 'a) => bool;
+  /** [equalsWith equals this that] equates [this] and [that].
+   *  [equals] is used to equate values.
+   */
+
   let every: (int => 'a => bool) => (t 'a) => bool;
+  /** [every f map] returns true if the predicate [f] returns true for every
+   *  key/value pair in [map], otherwise false. If [map] is empty, returns true.
+   */
+
   let find: (int => 'a => bool) => (t 'a) => (int, 'a);
+  /** [find f map] returns the first key/value pair for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let forEach: (int => 'a => unit) => (t 'a) => unit;
+  /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
+
   let fromKeyed: (Keyed.t int 'a) => (t 'a);
+  /** [fromKeyed keyed] returns an IntMap including the key/value pairs in [keyed]. */
+
   let fromSeq: (Seq.t (int, 'a)) => (t 'a);
+  /** [fromSeq seq] returns an IntMap including the key/value pairs in [seq]. */
+
   let get: int => (t 'a) => 'a;
+  /** [get key map] returns the value associated with [key] or throws */
+
   let hash: (Hash.t (t 'a));
+  /** [hash map] hashes [map], hashing values using structural hashing. */
+
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  /** [hashWith hash map] hashes [map], hashing values using [hash]. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
   let keys: (t 'a) => (Collection.t int);
+  /** [keys map] returns a Collection view of keys in [map]. */
+
   let map: (int => 'a => 'b) => (t 'a) => (t 'b);
-  let merge: (int => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (Keyed.t int 'v) => (t 'vAcc)  => (t 'vAcc);
+  /** [map f map] returns a new IntMap whose values are the result of
+   *  applying [f] each key/value pair in [map].
+   */
+
+  let merge: (int => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'v) => (t 'vAcc) => (t 'vAcc);
+  /** [merge f next acc] returns a new IntMap that is the result of applying [f] to
+   *  the union of keys in [next] and [acc]. For each key, [f] is called with the mapped
+   *  values in [next] and [acc] or None. If [f] returns Some the value is added to the returned Map.
+   */
+
   let mutate: (t 'a) => (TransientIntMap.t 'a);
+  /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map].
+   *
+   *  Complexity: O(1)
+   */
+
   let none: (int => 'a => bool) => (t 'a) => bool;
+  /** [none f map] returns true if the predicate [f] returns false for
+   *  every key/value pair in [map], otherwise true. If [map] is empty, returns true.
+   */
+
   let put: int => 'a => (t 'a) => (t 'a);
+  /** [put key value map] returns a new IntMap containing a mapping from [key] to [value].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let putAll: (Seq.t (int, 'a)) => (t 'a) => (t 'a);
+  /** [putAll key values map] returns a new IntMap containing the key/value pairs in [values].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let reduce: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc map] applies the accumulator function [f] to each key/value pair in [map]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let remove: int => (t 'a) => (t 'a);
+  /** [remove key map] returns a new IntMap without any mapping from [key].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll map] returns an empty IntMap with the same key HashStrategy as [map].
+   *
+   *  Complexity: O(1)
+   */
+
   let some: (int => 'a => bool) => (t 'a) => bool;
+  /** [some f map] returns true if the predicate [f] returns true for
+   *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
+   */
+
   let toCollection: (t 'a) => (Collection.t (int, 'a));
+  /** [toCollection map] returns a Collection view of key/value pairs in [map], using structural equality
+   *  to equate values.
+   */
+
   let toCollectionWith: (Equality.t 'a) => (t 'a) => (Collection.t (int, 'a));
+  /** [toCollectionWith equals map] returns a Collection view of key/value pairs in [map],
+   *  using [equals] to equate values.
+   */
+
   let toKeyed: (t 'a) => (Keyed.t int 'a);
+  /** [toKeyed map] returns a Keyed collection view of [map]. */
+
   let toSeq: (t 'a) => (Seq.t ((int, 'a)));
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
   let tryFind: (int => 'a => bool) => (t 'a) => (option (int, 'a));
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
   let tryGet: int => (t 'a) => (option 'a);
+  /** [tryGet key map] returns the value associated with [key] or None */
+
   let values: (t 'a) => (Seq.t 'a);
+  /** [values map] returns a Seq of non-unique values in [map]. */
 }
 
 and TransientIntMap: {
   type t 'a;
 
   let alter: int => ((option 'a) => (option 'a)) => (t 'a) => (t 'a);
+  /** [alter key f transient] enables efficient deep updates to an existing
+   *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
+   *  [f] will be called with Some, otherwise it will be called with None.
+   *  If [f] returns None, alter removes any mapping from [key] in [transient].
+   *  If [f] returns Some, alter returns add or updates the mapping
+   *  from [key] in [transient].
+   */
+
   let count: (t 'a) => int;
+  /** [count map] returns the number of key/value pairs in [map]. */
+
   let empty: unit => (t 'a);
+  /** [empty ()] returns a new empty TransientIntMap. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
   let persist: (t 'a) => (IntMap.t 'a);
+  /** [persist transient] returns a persisted HashBiMap. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
+
   let put: int => 'a => (t 'a) => (t 'a);
+  /** [put key value transient] adds the mapping of [key] to [value] to [transient].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let putAll: (Seq.t (int, 'a)) => (t 'a) => (t 'a);
+  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
+   *  Key value pairs in seq replace existing mappings in [transient].
+   */
+
   let remove: int => (t 'a) => (t 'a);
+  /** [remove key transient] removes from [transient] any mappings from [key].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll transient] removes all mappings from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let tryGet: int => (t 'a) => (option 'a);
+  /** [tryGet key transient] returns the value associated with [key] or None
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
 };
 
 let module rec IntSet: {

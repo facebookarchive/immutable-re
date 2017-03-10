@@ -399,12 +399,12 @@ let fromKeyed (keyed: keyed int 'a): (intMap 'a) => keyed
 
 let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (next: keyed int 'v)
+    (next: intMap 'v)
     (map: intMap 'vAcc): (intMap 'vAcc) =>
-  Collection.union (map |> toKeyed |> Keyed.keys) (next |> Keyed.keys)
+  Collection.union (keys map) (keys next)
     |> Seq.reduce (
         fun acc key => {
-          let result = f key (map |> tryGet key) (next |> Keyed.tryGet key);
+          let result = f key (map |> tryGet key) (next |> tryGet key);
           switch result {
             | None => acc |> TransientIntMap.remove key
             | Some value => acc |> TransientIntMap.put key value
