@@ -1503,53 +1503,209 @@ and TransientHashMap: {
 };
 
 let module rec HashMultiset: {
+  /** A Collection implementation that tracks the number of times an element has been
+   *  added to the Collection. Also known as a Bag.
+   */
+
   type t 'a;
+  /* The HashMultiset type. */
 
   let add: 'a => (t 'a) => (t 'a);
+  /** [add value set] returns a new HashMultiset with [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addAll values set] returns a new HashMultiset with all elements in [values] added.
+   *
+   *  Complexity: O(N log32 N)
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value set] returns true if any element in [set] is equal to [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let count: (t 'a) => int;
+  /** [count set] returns the number of elements in [set].
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: (t 'a);
+  /** The empty HashMultiset using [strategy] for hashing and collision resolution. */
+
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
+  /** [emptyWith strategy] returns an empty HashMultiset using [strategy]
+   *  for hashing and collision resolution.
+   */
+
   let equals: (t 'a) => (t 'a) => bool;
+  /** [equals this that] compares [this] and [that] for equality. */
+
   let every: ('a => int => bool) => (t 'a) => bool;
+  /** [every f set] returns true if the predicate [f] returns true for every
+   *  value/count pair in [set], otherwise false. If [set] is empty, returns true.
+   */
+
   let find: ('a => int => bool) => (t 'a) => ('a, int);
+  /** [find f set] returns the first value/count pair  for which the predicate [f] returns true.
+   *  If no pair is found, an exception is thrown.
+   */
+
   let forEach: ('a => int => unit) => (t 'a) => unit;
+  /** [forEach f set] iterates through [set], invoking [f] for each value/count pair. */
+
   let fromSeq: (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns an HashMultiset including the values in [seq]. */
+
   let fromSeqWith: (HashStrategy.t 'a) => (Seq.t 'a) => (t 'a);
+  /** [fromSeq seq] returns an HashMultiset including the values in [seq]. */
+
   let get: 'a => (t 'a) => int;
+  /** [get value set] returns the number of times [value] has been added to [set] or 0. */
+
   let hash: (Hash.t (t 'a));
+  /** [hash set] hashes [set]. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty set] returns true if [set] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty set] returns true if [set] contains at least one element. */
+
   let mutate: (t 'a) => (TransientHashMultiset.t 'a);
+  /** [mutate set] returns a TransientHashMultiset containing the same elements as [set].
+   *
+   *  Complexity: O(1)
+   */
+
   let none: ('a => int => bool) => (t 'a) => bool;
+  /** [none f set] returns true if the predicate [f] returns false for every
+   *  value/count pair in [set], otherwise true. If [set] is empty, returns true.
+   */
+
   let reduce: ('acc => 'a => int => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce f acc set] applies the accumulator function [f] to each value/count pair in [set]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let remove: 'a => (t 'a) => (t 'a);
+  /** [remove value set] returns a new HashMultiset without any instances of [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll set] returns the empty HashMultiset using the same HashStrategy as [set].
+   *
+   *  Complexity: O(1)
+   */
+
   let set: 'a => int => (t 'a) => (t 'a);
+  /** [set value count set] return a new HashMultiset containing [count]
+   *  instances of [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let some: ('a => int => bool) => (t 'a) => bool;
+  /** [some f set] returns true if the predicate [f] returns true for any
+   *  value/count pair in [set], otherwise false.  If [set] is empty, returns false.
+   */
+
   let toKeyed: (t 'a) => (Keyed.t 'a int);
+  /** [toKeyed set] returns a Keyed view of [set] mapping values to their count */
+
   let toSeq: (t 'a) => (Seq.t 'a);
+  /** [toSeq set] returns a Seq of the values in [set]. If the HashMultiset contains more than
+   *  one instance of a value, it will occur in the Seq multiple times.
+   */
+
   let tryFind: ('a => int => bool) => (t 'a) => (option ('a, int));
+  /** [tryFind f set] returns the first value/count pair for which
+   *  the predicate [f] returns true or None.
+   */
+
   let values: (t 'a) => (Collection.t 'a);
+  /** [values set] returns a Collection of values in [set] */
 }
 
 and TransientHashMultiset: {
+  /** A temporarily mutable HashMultiset. Once persisted, any further operations on a
+   *  TransientHashMultiset instance will throw. Intended for implementing bulk mutation
+   *  operations efficiently.
+   */
+
   type t 'a;
+  /** The TransientHashMultiset type. */
 
   let add: 'a => (t 'a) => (t 'a);
+  /** [add value transient] adds an instance of [value] to [transient].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  /** [addAll values transient] adds all elements in [values] to [transient].
+   *
+   *  Complexity: O(N log32 N)
+   */
+
   let contains: 'a => (t 'a) => bool;
+  /** [contains value transient] returns true if any element in [transient] is equal to [value].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let count: (t 'a) => int;
+  /** [count transient] returns the number of elements in [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let empty: unit => (t 'a);
+  /** [empty ()] returns a new empty TransientHashMultiset using
+   *  HashStrategy.structuralCompare for hashing and collision resolution.
+   */
+
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
+  /** [empty ()] returns a new empty TransientHashMultiset using [strategy]
+   *  for hashing and collision resolution.
+   */
+
   let get: 'a => (t 'a) => int;
+  /** [get value transient] returns the number of times [value] has been added to [transient] or 0. */
+
   let isEmpty: (t 'a) => bool;
+  /** [isEmpty transient] returns true if [transient] contains no elements. */
+
   let isNotEmpty: (t 'a) => bool;
+  /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+
   let persist: (t 'a) => (HashMultiset.t 'a);
+  /** [persist transient] returns a persisted HashMultiset. Further attempts to access
+   *  or mutate [transient] will throw.
+   */
+
   let remove: 'a => (t 'a) => (t 'a);
+  /** [remove value transient] removes all instances of [value] from [transient].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAll: (t 'a) => (t 'a);
+  /** [removeAll transient] removes all elements from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
   let set: 'a => int => (t 'a) => (t 'a);
+  /** [set value count transient] updates [transient] with [count] instances of [value].
+   *  Complexity: O(log32 N)
+   */
 };
 
 let module rec HashSet: {
@@ -1588,7 +1744,9 @@ let module rec HashSet: {
   /** The empty HashSet with HashStrategy.structuralCompare hash strategy. */
 
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
-  /** [emptyWith strategy] returns an empty HashSet with [strategy]. */
+  /** [emptyWith strategy] returns an empty HashSet using [strategy]
+   *  for hashing and collision resolution.
+   */
 
   let equals: (t 'a) => (t 'a) => bool;
   /** [equals this that] compares [this] and [that] for equality. */
@@ -1604,7 +1762,7 @@ let module rec HashSet: {
    */
 
   let forEach: ('a => unit) => (t 'a) => unit;
-  /** [forEach f set] iterates through [set], invoking [f] for each element until [seq] completes. */
+  /** [forEach f set] iterates through [set], invoking [f] for each element. */
 
   let fromSeq: (Seq.t 'a) => (t 'a);
   /** [fromSeq seq] returns an HashSet including the values in [seq]. */
@@ -1613,7 +1771,7 @@ let module rec HashSet: {
   /** [fromSeq seq] returns an HashSet including the values in [seq]. */
 
   let hash: (Hash.t (t 'a));
-  /** [hash set] hashes [set], hashing elements using structural hashing. */
+  /** [hash set] hashes [set]. */
 
   let intersect: (t 'a) => (t 'a) => (t 'a);
   /** [intersect this that] returns a new HashSet containing only elements that appear in
@@ -1651,7 +1809,7 @@ let module rec HashSet: {
    */
 
   let removeAll: (t 'a) => (t 'a);
-  /** [removeAll set] returns the empty HashSet.
+  /** [removeAll set] returns the empty HashSet using the same HashStrategy as [set].
    *
    *  Complexity: O(1)
    */
@@ -2354,7 +2512,7 @@ let module SortedMap: {
 };
 
 let module SortedSet: {
-  /** AVL tree based Set implementation. */
+  /** AVL tree based Collection implementation. */
 
   type t 'a;
   /** The SortedSet type */
@@ -2540,7 +2698,9 @@ let module SortedSet: {
 
 let module Stack: {
   /** A singly-linked stack with an O(1) count operation. */
+
   type t 'a;
+  /** The Stack type. */
 
   let addFirst: 'a => (t 'a) => (t 'a);
   /** [addFirst value stack] returns a new Stack with [value] prepended.
