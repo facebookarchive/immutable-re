@@ -1,6 +1,6 @@
-open BiMap;
 open Deque;
 open Equality;
+open HashBiMap;
 open HashMap;
 open HashMultiset;
 open HashSet;
@@ -177,62 +177,6 @@ let module HashStrategy = {
   let structuralEquality = HashStrategy.structuralEquality;
 };
 
-let module BiMap = {
-  type t 'k 'v = biMap 'k 'v;
-
-  let contains = BiMap.contains;
-  let containsKey = BiMap.containsKey;
-  let count = BiMap.count;
-  let empty = BiMap.empty;
-  let emptyWith = BiMap.emptyWith;
-  let equals = BiMap.equals;
-  let every = BiMap.every;
-  let find = BiMap.find;
-  let get = BiMap.get;
-  let hash = BiMap.hash;
-  let isEmpty = BiMap.isEmpty;
-  let isNotEmpty = BiMap.isNotEmpty;
-  let forEach = BiMap.forEach;
-  let fromSeq = BiMap.fromSeq;
-  let fromSeqWith = BiMap.fromSeqWith;
-  let inverse = BiMap.inverse;
-  let keys = BiMap.keys;
-  let mutate = BiMap.mutate;
-  let none = BiMap.none;
-  let put = BiMap.put;
-  let putAll = BiMap.putAll;
-  let reduce = BiMap.reduce;
-  let remove = BiMap.remove;
-  let removeAll = BiMap.removeAll;
-  let removeValue = BiMap.removeValue;
-  let some = BiMap.some;
-  let toCollection = BiMap.toCollection;
-  let toKeyed = BiMap.toKeyed;
-  let toSeq = BiMap.toSeq;
-  let tryFind = BiMap.tryFind;
-  let tryGet = BiMap.tryGet;
-  let tryPut = BiMap.tryPut;
-  let values = BiMap.values;
-};
-
-let module TransientBiMap = {
-  type t 'k 'v = transientBiMap 'k 'v;
-
-  let count = TransientBiMap.count;
-  let empty = TransientBiMap.empty;
-  let emptyWith = TransientBiMap.emptyWith;
-  let isEmpty = TransientBiMap.isEmpty;
-  let isNotEmpty = TransientBiMap.isNotEmpty;
-  let persist = TransientBiMap.persist;
-  let put = TransientBiMap.put;
-  let putAll = TransientBiMap.putAll;
-  let remove = TransientBiMap.remove;
-  let removeAll = TransientBiMap.removeAll;
-  let removeValue = TransientBiMap.removeValue;
-  let tryGet = TransientBiMap.tryGet;
-  let tryPut = TransientBiMap.tryPut;
-};
-
 let module CopyOnWriteArray = {
   type t 'a = CopyOnWriteArray.copyOnWriteArray 'a;
 
@@ -371,6 +315,63 @@ let module TransientDeque = {
   let reverse = TransientDeque.reverse;
   let tryFirst = TransientDeque.tryFirst;
   let tryLast = TransientDeque.tryLast;
+};
+
+
+let module HashBiMap = {
+  type t 'k 'v = hashBiMap 'k 'v;
+
+  let contains = HashBiMap.contains;
+  let containsKey = HashBiMap.containsKey;
+  let count = HashBiMap.count;
+  let empty = HashBiMap.empty;
+  let emptyWith = HashBiMap.emptyWith;
+  let equals = HashBiMap.equals;
+  let every = HashBiMap.every;
+  let find = HashBiMap.find;
+  let get = HashBiMap.get;
+  let hash = HashBiMap.hash;
+  let isEmpty = HashBiMap.isEmpty;
+  let isNotEmpty = HashBiMap.isNotEmpty;
+  let forEach = HashBiMap.forEach;
+  let fromSeq = HashBiMap.fromSeq;
+  let fromSeqWith = HashBiMap.fromSeqWith;
+  let inverse = HashBiMap.inverse;
+  let keys = HashBiMap.keys;
+  let mutate = HashBiMap.mutate;
+  let none = HashBiMap.none;
+  let put = HashBiMap.put;
+  let putAll = HashBiMap.putAll;
+  let reduce = HashBiMap.reduce;
+  let remove = HashBiMap.remove;
+  let removeAll = HashBiMap.removeAll;
+  let removeValue = HashBiMap.removeValue;
+  let some = HashBiMap.some;
+  let toCollection = HashBiMap.toCollection;
+  let toKeyed = HashBiMap.toKeyed;
+  let toSeq = HashBiMap.toSeq;
+  let tryFind = HashBiMap.tryFind;
+  let tryGet = HashBiMap.tryGet;
+  let tryPut = HashBiMap.tryPut;
+  let values = HashBiMap.values;
+};
+
+let module TransientHashBiMap = {
+  type t 'k 'v = transientHashBiMap 'k 'v;
+
+  let count = TransientHashBiMap.count;
+  let empty = TransientHashBiMap.empty;
+  let emptyWith = TransientHashBiMap.emptyWith;
+  let isEmpty = TransientHashBiMap.isEmpty;
+  let isNotEmpty = TransientHashBiMap.isNotEmpty;
+  let persist = TransientHashBiMap.persist;
+  let put = TransientHashBiMap.put;
+  let putAll = TransientHashBiMap.putAll;
+  let remove = TransientHashBiMap.remove;
+  let removeAll = TransientHashBiMap.removeAll;
+  let removeValue = TransientHashBiMap.removeValue;
+  let tryGet = TransientHashBiMap.tryGet;
+  let tryPut = TransientHashBiMap.tryPut;
 };
 
 let module HashMap = {

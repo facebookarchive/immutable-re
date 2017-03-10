@@ -584,247 +584,6 @@ let module HashStrategy: {
   /** A HashStrategy using structural hashing and structural equality. */
 };
 
-let module rec BiMap: {
-  /** A hashed Keyed collection preserving the uniqueness of keys to values, and values to keys. */
-
-  type t 'k 'v;
-  /** The BiMap type. */
-
-  let contains: 'k => 'v => (t 'k 'v) => bool;
-  /** [contains key/value bimap] returns true if [bimap] contains the [key] [value] pair.
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let containsKey: 'k => (t 'k 'v) => bool;
-  /** [containsKey key bimap] returns true if [bimap] contains an entry with the key [key].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let count: (t 'k 'v) => int;
-  /** [count bimap] returns the number of key/value pairs in [bimap].
-   *
-   *  Complexity: O(1)
-   */
-
-  let empty: (t 'k 'v);
-  /** The empty BiMap using the structuralCompare HashStrategy. */
-
-  let emptyWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (t 'k 'v);
-  /** [emptyWith keyStrategy valueStrategy] returns an empty BiMap using the provided
-   *  key and value [HashStrategy]'s.
-   */
-
-  let equals: (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equals this that] equates [this] and [that] ensuring that the bimaps have the same count
-   *  and contains the same key/value pairs.
-   */
-
-  let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [every f bimap] returns true if the predicate [f] returns true for every
-   *  key/value pair in [bimap], otherwise false. If [bimap] is empty, returns true.
-   */
-
-  let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  /** [find f bimap] returns the first key/value pair for which the predicate [f] returns true.
-   *  If no value is found, an exception is thrown.
-   */
-
-  let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeq seq] returns a BiMap including the key/value pairs in [seq]. If
-   *  [seq] includes duplicate keys or values, the last key/value pair with the duplicate
-   *  key or value is added to the BiMap.
-   */
-
-  let fromSeqWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeqWith keyStrategy valueStrategy seq] returns a BiMap including the key/value
-   *  pairs in [seq] using the provided key and value [HashStrategy]'s. If [seq] includes duplicate
-   *  keys or values, the last key/value pair with the duplicate key or value is added to the BiMap.
-   */
-
-  let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-  /** [forEach f bimap] iterates through [bimap], invoking [f] for each key/value pair. */
-
-  let get: 'k => (t 'k 'v) => 'v;
-  /** [get key bimap] returns the value associated with [key] or throws
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let hash: (Hash.t (t 'k 'v));
-  /** [hash bimap] hashes [bimap] */
-
-  let inverse: (t 'k 'v) => (t 'v 'k);
-  /** [inverse bimap] returns a BiMap of value key pairs in [bimap]
-   *
-   *  Complexity: O(1)
-   */
-
-  let isEmpty: (t 'k 'v) => bool;
-  /** [isEmpty bimap] returns true if [bimap] contains no key/value pairs. */
-
-  let isNotEmpty: (t 'k 'v) => bool;
-  /** [isNotEmpty bimap] returns true if [bimap] contains at least one key/value pair. */
-
-  let keys: (t 'k 'v) => (Collection.t 'k);
-  /** [keys bimap] returns a Collection view of keys in [bimap]. */
-
-  let mutate: (t 'k 'v) => (TransientBiMap.t 'k 'v);
-  /** [mutate bimap] returns a TransientBiMap containing the same key/values pairs as [bimap].
-   *
-   *  Complexity: O(1)
-   */
-
-  let none: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [none f bimap] returns true if the predicate [f] returns false for
-   *  every key/value pair in [bimap], otherwise true. If [bimap] is empty, returns true.
-   */
-
-  let put: 'k => 'v => (t 'k 'v) => t 'k 'v;
-  /** [put key value bimap] returns a new BiMap containing ([key], [value]). If [bimap] contains and existing
-   *  mapping of [key] to a different value or, [value] to a different key, those mappings are removed.
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll seq bimap] returns a new BiMap including the key/value pairs in [seq].
-   *  Key value pairs in seq replace existing mappings in [bimap].
-   */
-
-  let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  /** [reduce f acc bimap] applies the accumulator function [f] to each key/value pair in [bimap]
-   *  with the specified seed value [acc], returning the final accumulated value.
-   */
-
-  let remove: 'k => (t 'k 'v) => (t 'k 'v);
-  /** [remove key bimap] returns a new BiMap without any mapping from [key].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let removeAll: (t 'k 'v) => (t 'k 'v);
-  /** [removeAll bimap] returns an empty BiMap with the same key and value HashStrategy's as [bimap].
-   *
-   *  Complexity: O(1)
-   */
-
-  let removeValue: 'v => (t 'k 'v) => (t 'k 'v);
-  /** [removeValue value bimap] returns a new BiMap without any mapping from [value]. */
-
-  let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [some f bimap] returns true if the predicate [f] returns true for
-   *  any key/value pair in [bimap], otherwise false. If [bimap] is empty, returns false.
-   */
-
-  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
-  /** [toCollection bimap] returns a Collection view of the key/value pairs in [bimap]. */
-
-  let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
-  /** [toKeyed bimap] returns a Keyed collection view of [bimap]. */
-
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq bimap] returns a Seq of the key/value pairs in [bimap]. */
-
-  let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  /** [tryFind f bimap] returns the first key/value pair for which the predicate [f] returns true.
-   *  If no value is found, an exception is thrown.
-   */
-
-  let tryGet: 'k => (t 'k 'v) => (option 'v);
-  /** [tryGet key bimap] returns the value associated with [key] or None
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let tryPut: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  /** [tryPut key value bimap] returns a new BiMap containing ([key], [value]). If [bimap] contains and existing
-   *  mapping of [key] to a different value or, [value] to a different key, [bimap] is returned unchanged.
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let values: (t 'k 'v) => (Collection.t 'v);
-  /** [values bimap] returns a Collection of unique values in the BiMap. */
-}
-
-and TransientBiMap: {
-  /** A temporarily mutable BiMap. Once persisted, any further operations on a TransientBiMap instance
-   *  will throw. Intended for implementing bulk mutation operations efficiently.
-   */
-
-  type t 'k 'v;
-  /** The TransientBiMap type. */
-
-  let count: (t 'k 'v) => int;
-  /** [count transient] returns the number of key/value pairs in [transient].
-   *
-   *  Complexity: O(1)
-   */
-
-  let empty: unit => (t 'k 'v);
-  /** [empty ()] returns a new empty TransientBiMap. */
-
-  let emptyWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (t 'k 'v);
-  /** [emptyWith keyStrategy valueStrategy] returns an empty TransientBiMap using the provided
-   *  key and value [HashStrategy]'s.
-   */
-
-  let isEmpty: t 'k 'v => bool;
-  /** [isEmpty transient] returns true if [transient] contains no key/value pairs. */
-
-  let isNotEmpty: t 'k 'v => bool;
-  /** [isNotEmpty transient] returns true if [transient] contains at least one key/value pair. */
-
-  let persist: (t 'k 'v) => (BiMap.t 'k 'v);
-  /** [persist transient] returns a persisted BiMap. Further attempts to access or mutate [transient]
-   *  will throw.
-   */
-
-  let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  /** [put key value transient] adds the mapping of [key] to [value] to [transient]. If [transient]
-   *  contains and existing mapping of [key] to a different value or, [value] to a different key,
-   *  those mappings are removed.
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
-   *  Key value pairs in seq replace existing mappings in [transient].
-   */
-
-  let remove: 'k => (t 'k 'v) => (t 'k 'v);
-  /** [remove key transient] removes from [transient] any mappings from [key].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let removeAll: (t 'k 'v) => (t 'k 'v);
-  /** [removeAll transient] removes all mappings from [transient].
-   *
-   *  Complexity: O(1)
-   */
-
-  let removeValue: 'v => (t 'k 'v) => (t 'k 'v);
-  /** [removeValue value transient] removes from [transient] any mappings to [value]. */
-
-  let tryGet: 'k => (t 'k 'v) => (option 'v);
-  /** [tryGet key transient] returns the value associated with [key] or None
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let tryPut: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  /** [tryPut key value bimap] attempts to add a mapping from [key] to [value]. If [transient]
-   *  contains an existing mapping of [key] to a different value or, [value] to a different key,
-   *  [transient] is unchanged.
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-};
-
 let module CopyOnWriteArray: {
   /** Opaque wrapper around an underlying array instance that provides copy on write semantics */
 
@@ -1438,6 +1197,247 @@ and TransientDeque: {
 
   let tryLast: (t 'a) => option 'a;
   /** [tryLast transient] returns the last element in [transient] or None. */
+};
+
+let module rec HashBiMap: {
+  /** A hashed Keyed collection preserving the uniqueness of keys to values, and values to keys. */
+
+  type t 'k 'v;
+  /** The HashBiMap type. */
+
+  let contains: 'k => 'v => (t 'k 'v) => bool;
+  /** [contains key/value bimap] returns true if [bimap] contains the [key] [value] pair.
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let containsKey: 'k => (t 'k 'v) => bool;
+  /** [containsKey key bimap] returns true if [bimap] contains an entry with the key [key].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let count: (t 'k 'v) => int;
+  /** [count bimap] returns the number of key/value pairs in [bimap].
+   *
+   *  Complexity: O(1)
+   */
+
+  let empty: (t 'k 'v);
+  /** The empty HashBiMap using the structuralCompare HashStrategy. */
+
+  let emptyWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (t 'k 'v);
+  /** [emptyWith keyStrategy valueStrategy] returns an empty HashBiMap using the provided
+   *  key and value [HashStrategy]'s.
+   */
+
+  let equals: (t 'k 'v) => (t 'k 'v) => bool;
+  /** [equals this that] equates [this] and [that] ensuring that the bimaps have the same count
+   *  and contains the same key/value pairs.
+   */
+
+  let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [every f bimap] returns true if the predicate [f] returns true for every
+   *  key/value pair in [bimap], otherwise false. If [bimap] is empty, returns true.
+   */
+
+  let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+  /** [find f bimap] returns the first key/value pair for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
+  let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
+  /** [fromSeq seq] returns a HashBiMap including the key/value pairs in [seq]. If
+   *  [seq] includes duplicate keys or values, the last key/value pair with the duplicate
+   *  key or value is added to the HashBiMap.
+   */
+
+  let fromSeqWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (Seq.t ('k, 'v)) => (t 'k 'v);
+  /** [fromSeqWith keyStrategy valueStrategy seq] returns a HashBiMap including the key/value
+   *  pairs in [seq] using the provided key and value [HashStrategy]'s. If [seq] includes duplicate
+   *  keys or values, the last key/value pair with the duplicate key or value is added to the HashBiMap.
+   */
+
+  let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
+  /** [forEach f bimap] iterates through [bimap], invoking [f] for each key/value pair. */
+
+  let get: 'k => (t 'k 'v) => 'v;
+  /** [get key bimap] returns the value associated with [key] or throws
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let hash: (Hash.t (t 'k 'v));
+  /** [hash bimap] hashes [bimap] */
+
+  let inverse: (t 'k 'v) => (t 'v 'k);
+  /** [inverse bimap] returns a HashBiMap of value key pairs in [bimap]
+   *
+   *  Complexity: O(1)
+   */
+
+  let isEmpty: (t 'k 'v) => bool;
+  /** [isEmpty bimap] returns true if [bimap] contains no key/value pairs. */
+
+  let isNotEmpty: (t 'k 'v) => bool;
+  /** [isNotEmpty bimap] returns true if [bimap] contains at least one key/value pair. */
+
+  let keys: (t 'k 'v) => (Collection.t 'k);
+  /** [keys bimap] returns a Collection view of keys in [bimap]. */
+
+  let mutate: (t 'k 'v) => (TransientHashBiMap.t 'k 'v);
+  /** [mutate bimap] returns a TransientHashBiMap containing the same key/values pairs as [bimap].
+   *
+   *  Complexity: O(1)
+   */
+
+  let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [none f bimap] returns true if the predicate [f] returns false for
+   *  every key/value pair in [bimap], otherwise true. If [bimap] is empty, returns true.
+   */
+
+  let put: 'k => 'v => (t 'k 'v) => t 'k 'v;
+  /** [put key value bimap] returns a new HashBiMap containing ([key], [value]). If [bimap] contains and existing
+   *  mapping of [key] to a different value or, [value] to a different key, those mappings are removed.
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll seq bimap] returns a new HashBiMap including the key/value pairs in [seq].
+   *  Key value pairs in seq replace existing mappings in [bimap].
+   */
+
+  let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  /** [reduce f acc bimap] applies the accumulator function [f] to each key/value pair in [bimap]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
+  let remove: 'k => (t 'k 'v) => (t 'k 'v);
+  /** [remove key bimap] returns a new HashBiMap without any mapping from [key].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let removeAll: (t 'k 'v) => (t 'k 'v);
+  /** [removeAll bimap] returns an empty HashBiMap with the same key and value HashStrategy's as [bimap].
+   *
+   *  Complexity: O(1)
+   */
+
+  let removeValue: 'v => (t 'k 'v) => (t 'k 'v);
+  /** [removeValue value bimap] returns a new HashBiMap without any mapping from [value]. */
+
+  let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [some f bimap] returns true if the predicate [f] returns true for
+   *  any key/value pair in [bimap], otherwise false. If [bimap] is empty, returns false.
+   */
+
+  let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
+  /** [toCollection bimap] returns a Collection view of the key/value pairs in [bimap]. */
+
+  let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
+  /** [toKeyed bimap] returns a Keyed collection view of [bimap]. */
+
+  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  /** [toSeq bimap] returns a Seq of the key/value pairs in [bimap]. */
+
+  let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+  /** [tryFind f bimap] returns the first key/value pair for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
+  let tryGet: 'k => (t 'k 'v) => (option 'v);
+  /** [tryGet key bimap] returns the value associated with [key] or None
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let tryPut: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+  /** [tryPut key value bimap] returns a new HashBiMap containing ([key], [value]). If [bimap] contains and existing
+   *  mapping of [key] to a different value or, [value] to a different key, [bimap] is returned unchanged.
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let values: (t 'k 'v) => (Collection.t 'v);
+  /** [values bimap] returns a Collection of unique values in the HashBiMap. */
+}
+
+and TransientHashBiMap: {
+  /** A temporarily mutable HashBiMap. Once persisted, any further operations on a TransientHashBiMap instance
+   *  will throw. Intended for implementing bulk mutation operations efficiently.
+   */
+
+  type t 'k 'v;
+  /** The TransientHashBiMap type. */
+
+  let count: (t 'k 'v) => int;
+  /** [count transient] returns the number of key/value pairs in [transient].
+   *
+   *  Complexity: O(1)
+   */
+
+  let empty: unit => (t 'k 'v);
+  /** [empty ()] returns a new empty TransientHashBiMap. */
+
+  let emptyWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (t 'k 'v);
+  /** [emptyWith keyStrategy valueStrategy] returns an empty TransientHashBiMap using the provided
+   *  key and value [HashStrategy]'s.
+   */
+
+  let isEmpty: t 'k 'v => bool;
+  /** [isEmpty transient] returns true if [transient] contains no key/value pairs. */
+
+  let isNotEmpty: t 'k 'v => bool;
+  /** [isNotEmpty transient] returns true if [transient] contains at least one key/value pair. */
+
+  let persist: (t 'k 'v) => (HashBiMap.t 'k 'v);
+  /** [persist transient] returns a persisted HashBiMap. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
+
+  let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+  /** [put key value transient] adds the mapping of [key] to [value] to [transient]. If [transient]
+   *  contains and existing mapping of [key] to a different value or, [value] to a different key,
+   *  those mappings are removed.
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
+   *  Key value pairs in seq replace existing mappings in [transient].
+   */
+
+  let remove: 'k => (t 'k 'v) => (t 'k 'v);
+  /** [remove key transient] removes from [transient] any mappings from [key].
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let removeAll: (t 'k 'v) => (t 'k 'v);
+  /** [removeAll transient] removes all mappings from [transient].
+   *
+   *  Complexity: O(1)
+   */
+
+  let removeValue: 'v => (t 'k 'v) => (t 'k 'v);
+  /** [removeValue value transient] removes from [transient] any mappings to [value]. */
+
+  let tryGet: 'k => (t 'k 'v) => (option 'v);
+  /** [tryGet key transient] returns the value associated with [key] or None
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let tryPut: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+  /** [tryPut key value bimap] attempts to add a mapping from [key] to [value]. If [transient]
+   *  contains an existing mapping of [key] to a different value or, [value] to a different key,
+   *  [transient] is unchanged.
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
 };
 
 let module rec HashMap: {

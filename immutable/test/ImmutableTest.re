@@ -2,11 +2,11 @@ open ReUnit;
 open ReUnit.Test;
 
 ReUnit.run (describe "Immutable.re" [
-/*  BiMapTest.test,*/
   CollectionTest.test,
   CopyOnWriteArrayTest.test,
   DequeTest.test,
   FunctionsTest.test,/*
+  HashBiMapTest.test,
   HashMapTest.test,
   HashMultisetTest.test,*/
   HashSetTest.test,/*
