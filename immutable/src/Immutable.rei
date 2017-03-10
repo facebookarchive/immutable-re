@@ -2817,55 +2817,225 @@ let module Option: {
 };
 
 let module SortedMap: {
+  /** AVL tree based Keyed collection. */
+
   type t 'k 'v;
+  /** The SortedMap type. */
 
   let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [alter key f map] enables efficient deep updates to an existing
+   *  mapping from [key] in [map]. If [map] already has a mapping from [key],
+   *  [f] will be called with Some, otherwise it will be called with None.
+   *  If [f] returns None, alter returns a new SortedMap without a mapping from [key].
+   *  If [f] returns Some, alter returns a new SortedMap with an updated
+   *  mapping from [key].
+   */
+
   let compare: (Comparator.t (t 'k 'v));
+  /** A comparator that compares two SortedMap instances, comparing values using structural
+   *  comparison. [compare this that] will throw if [this] and [that] do not use the
+   *  same key comparison function.
+   */
+
   let compareWith: (Comparator.t 'v) => (Comparator.t (t 'k 'v));
+  /** [compareWith comparator this that] returns a comparator that compares two SortedMap instances,
+   *  comparing values with [comparator]. Throws if [this] and [that] do not use the
+   *  same key comparison function.
+   */
+
   let contains: 'k => 'v => (t 'k 'v) => bool;
+  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
+   *  using structural equality to equate [value].
+   *
+   *  Complexity: O(log N)
+   */
+
   let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
+  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
+   *  using [equals] to equate [value].
+   *
+   *  Complexity: O(log N)
+   */
+
   let containsKey: 'k => (t 'k 'v) => bool;
+  /** [containsKey key map] returns true if [map] contains a mapping from [key].
+   *
+   *  Complexity: O(log N)
+   */
+
   let count: (t 'k 'v) => int;
+  /** [count map] returns the number of key/value pairs in [map]. */
+
   let empty: (t 'k 'v);
+  /** The empty SortedMap using the structural comparator. */
+
   let emptyWith: (Comparator.t 'k) => (t 'k 'v);
+  /** [emptyWith comparator] returns an empty SortedMap using the provided comparator. */
+
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
+  /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
+
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
+  /** [equalsWith equals this that] equates [this] and [that].
+   *  [equals] is used to equate values.
+   */
+
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [every f map] returns true if the predicate [f] returns true for every
+   *  key/value pair in [map], otherwise false. If [map] is empty, returns true.
+   */
+
   let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+  /** [find f map] returns the first key/value pair for which the predicate [f] returns true.
+   *  If no value is found, an exception is thrown.
+   */
+
   let first: (t 'k 'v) => ('k, 'v);
+  /** [first map] returns the first key/value pair in [set] or throws. */
+
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
+  /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
+
   let fromKeyed: (Keyed.t 'k 'v) => (t 'k 'v);
+  /** [fromKeyed keyed] returns a SortedMap including the key/value pairs in [keyed]
+   *  using the structural comparison.
+   */
+
   let fromKeyedWith: (Comparator.t 'k) => (Keyed.t 'k 'v) => (t 'k 'v);
+  /** [fromSeqWith comparator keyed] returns a SortedMap including the key/value pairs in [keyed]
+   *  using the provided Comparator.
+   */
+
   let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
+  /** [fromSeq seq] returns a SortedMap including the key/value pairs in [seq]
+   *  using the structural comparison.
+   */
+
   let fromSeqWith: (Comparator.t 'k) => (Seq.t ('k, 'v)) => (t 'k 'v);
+  /** [fromSeqWith comparator seq] returns a SortedMap including the key/value pairs in [seq]
+   *  using the provided Comparator.
+   */
+
   let get: 'k => (t 'k 'v) => 'v;
+  /** [get key map] returns the value associated with [key] or throws */
+
   let hash: (Hash.t (t 'k 'v));
+  /** [hash map] hashes [map], hashing keys and values using structural hashing. */
+
   let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
+  /** [hashWith keyHash valueHash map] hashes [map], hashing keys and
+   *  values using [keyHash] and [valueHash] respectively.
+   */
+
   let isEmpty: t 'k 'v => bool;
+  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
   let isNotEmpty: t 'k 'v => bool;
+  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
   let keys: (t 'k 'v) => (Collection.t 'k);
+  /** [keys map] returns a Collection view of keys in [map]. */
+
   let last: (t 'k 'v) => ('k, 'v);
+  /** [last map] returns the last key/value pair in [set] or throws. */
+
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (Keyed.t 'k 'v) => (t 'k 'vAcc)  => (t 'k 'vAcc);
+  /** [map f map] returns a new SortedMap whose values are the result of
+   *  applying [f] each key/value pair in [map].
+   */
+
+  let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'v) => (t 'k 'vAcc)  => (t 'k 'vAcc);
+  /** [merge f next acc] returns a new SortedMap that is the result of applying [f] to
+   *  the union of keys in [next] and [acc]. For each key, [f] is called with the mapped
+   *  values in [next] and [acc] or None. If [f] returns Some the value is added to the returned Map.
+   */
+
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [none f map] returns true if the predicate [f] returns false for
+   *  every key/value pair in [map], otherwise true. If [map] is empty, returns true.
+   */
+
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+  /** [put key value map] returns a new SortedMap containing a mapping from [key] to [value].
+   *
+   *  Complexity: O(log N)
+   */
+
   let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll key values map] returns a new SortedMap containing the key/value pairs in [values].
+   *
+   *  Complexity: O(log N)
+   */
+
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  /** [reduce f acc map] applies the accumulator function [f] to each key/value pair in [map]
+   *  with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let reduceRight: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  /** [reduceRight f acc map] applies the accumulator function [f] to each key/value pair in [map]
+   *  in reverse order with the specified seed value [acc], returning the final accumulated value.
+   */
+
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
+  /** [remove key map] returns a new SortedMap without any mapping from [key].
+   *
+   *  Complexity: O(log N)
+   */
+
   let removeAll: (t 'k 'v) => (t 'k 'v);
+  /** [removeAll map] returns an empty SortedMap with the same key Comparator as [map].
+   *
+   *  Complexity: O(1)
+   */
+
   let removeFirst: (t 'k 'v) => (t 'k 'v);
+  /** [removeFirst map] returns a new SortedMap without the first element.
+   *
+   *  Complexity: O(log N)
+   */
+
   let removeLast: (t 'k 'v) => (t 'k 'v);
+  /** [removeLast map] returns a new SortedMap without the last element.
+   *
+   *  Complexity: O(log N)
+   */
+
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+  /** [some f map] returns true if the predicate [f] returns true for
+   *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
+   */
+
   let toCollection: (t 'k 'v) => (Collection.t ('k, 'v));
+  /** [toCollection map] returns a Collection view of key/value pairs in [map], using structural equality
+   *  to equate values.
+   */
+
   let toCollectionWith: (Equality.t 'v) => (t 'k 'v) => (Collection.t ('k, 'v));
+  /** [toCollectionWith equals map] returns a Collection view of key/value pairs in [map],
+   *  using [equals] to equate values.
+   */
+
   let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
+  /** [toKeyed map] returns a Keyed collection view of [map]. */
+
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+  /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
+
   let tryFirst: (t 'k 'v) => (option ('k, 'v));
+  /** [tryFirst map] returns the first key/value pair in [set] or None. */
+
   let tryLast: (t 'k 'v) => (option ('k, 'v));
+  /** [tryLast map] returns the last key/value pair in [set] or None. */
+
   let tryGet: 'k => (t 'k 'v) => (option 'v);
+  /** [tryGet key map] returns the value associated with [key] or None */
+
   let values: (t 'k 'v) => (Seq.t 'v);
+  /** [values map] returns a Seq of non-unique values in [map]. */
 };
 
 let module SortedSet: {

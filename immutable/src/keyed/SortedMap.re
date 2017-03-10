@@ -175,10 +175,14 @@ let toKeyed (map: sortedMap 'k 'v): (keyed 'k 'v) => {
 
 let compareWith
     (compareValue: comparator 'v)
-    ({ comparator } as this: sortedMap 'k 'v)
-    (that: sortedMap 'k 'v): ordering =>
-  Seq.compareWith (fun (k1, v1) (k2, v2) => {
-    let cmp = comparator k1 k2;
+    ({ comparator: thisComparator } as this: sortedMap 'k 'v)
+    ({ comparator: thatComparator } as that: sortedMap 'k 'v): ordering =>
+  if (thisComparator !== thatComparator) { failwith "Maps must use the same comparator" }
+  /* FIXME: Should be possible to make this more efficient
+   * by recursively walking the tree.
+   */
+  else Seq.compareWith (fun (k1, v1) (k2, v2) => {
+    let cmp = thisComparator k1 k2;
     if (cmp === Equal) (compareValue v1 v2)
     else cmp
   }) (toSeq this) (toSeq that);
@@ -210,11 +214,11 @@ let keys (map: sortedMap 'k 'v): (collection 'k) =>
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (next: keyed 'k 'v)
+    (next: sortedMap 'k 'v)
     (map: sortedMap 'k 'vAcc): (sortedMap 'k 'vAcc) =>
-  Collection.union (map |> toKeyed |> Keyed.keys) (next |> Keyed.keys) |> Seq.reduce (
+  Collection.union (keys map) (keys next) |> Seq.reduce (
     fun acc key => {
-      let result = f key (map |> tryGet key) (next |> Keyed.tryGet key);
+      let result = f key (map |> tryGet key) (next |> tryGet key);
       switch result {
         | None => acc |> remove key
         | Some value => acc |> put key value
