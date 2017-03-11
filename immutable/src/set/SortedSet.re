@@ -5,7 +5,7 @@ open Equality;
 open Functions;
 open Functions.Operators;
 open Hash;
-open Keyed;
+open ImmMap;
 open Option.Operators;
 open Ordering;
 open Seq;
@@ -140,7 +140,7 @@ let toSet (set: sortedSet 'a): (set 'a) => {
   tryFind: fun f => tryFind f set,
 };
 
-let toKeyed (set: sortedSet 'a): (keyed 'a 'a) => {
+let toMap (set: sortedSet 'a): (map 'a 'a) => {
   containsWith: fun equals k v => set |> contains k ? equals k v : false,
   containsKey: fun k => set |> contains k,
   count: count set,

@@ -1,6 +1,5 @@
-open Hash;
+let module CamlMap = Map;
 open Immutable;
-open Map;
 open Printf;
 open ReUnit;
 open ReUnit.Expect;
@@ -49,7 +48,7 @@ let generateTests
   }),
 ];
 
-let module CamlIntMap = Map.Make {
+let module CamlIntMap = CamlMap.Make {
   type t = int;
   let compare = Pervasives.compare;
 };

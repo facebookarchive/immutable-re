@@ -2,7 +2,7 @@ open Comparator;
 open Equality;
 open Functions;
 open Hash;
-open Keyed;
+open ImmMap;
 open Option.Operators;
 open Ordering;
 open Preconditions;
@@ -483,7 +483,7 @@ let updateWith (index: int) (f: 'a => 'a) (arr: copyOnWriteArray 'a): (copyOnWri
   clone
 };
 
-let toKeyed (arr: copyOnWriteArray 'a): (keyed int 'a) => {
+let toMap (arr: copyOnWriteArray 'a): (map int 'a) => {
   containsWith: fun equals index value => index >= 0 && index < count arr
     ? equals arr.(index) value
     : false,

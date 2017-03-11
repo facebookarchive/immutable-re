@@ -3,7 +3,7 @@ open CopyOnWriteArray;
 open Equality;
 open Functions;
 open Hash;
-open Keyed;
+open ImmMap;
 open Option;
 open Option.Operators;
 open Seq;
@@ -275,7 +275,7 @@ let tryGet (key: int) ({ root }: intMap 'a): (option 'a) =>
 let values ({ root }: intMap 'a): (seq 'a) =>
   root |> BitmapTrieIntMap.values;
 
-let toKeyed (map: intMap 'a): (keyed int 'a) => {
+let toMap (map: intMap 'a): (map int 'a) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
@@ -293,25 +293,25 @@ let toKeyed (map: intMap 'a): (keyed int 'a) => {
 };
 
 let equals (this: intMap 'a) (that: intMap 'a): bool =>
-  Keyed.equals (toKeyed this) (toKeyed that);
+  ImmMap.equals (toMap this) (toMap that);
 
 let equalsWith (equality: equality 'a) (this: intMap 'a) (that: intMap 'a): bool =>
-  Keyed.equalsWith equality (toKeyed this) (toKeyed that);
+  ImmMap.equalsWith equality (toMap this) (toMap that);
 
 let hash (map: intMap 'a): int =>
-  map |> toKeyed |> Keyed.hash;
+  map |> toMap |> ImmMap.hash;
 
 let hashWith (hash: hash 'a) (map: intMap 'a): int =>
-  map |> toKeyed |> Keyed.hashWith Hash.structural hash;
+  map |> toMap |> ImmMap.hashWith Hash.structural hash;
 
 let keys (map: intMap 'a): (set int) =>
-  map |> toKeyed |> Keyed.keys;
+  map |> toMap |> ImmMap.keys;
 
 let toSet (map: intMap 'a): (set (int, 'a)) =>
-  map |> toKeyed |> Keyed.toSet;
+  map |> toMap |> ImmMap.toSet;
 
 let toSetWith (equality: equality 'a) (map: intMap 'a): (set (int, 'a)) =>
-  map |> toKeyed |> Keyed.toSetWith equality;
+  map |> toMap |> ImmMap.toSetWith equality;
 
 type transientIntMap 'a = transient (intMap 'a);
 
@@ -393,8 +393,8 @@ let map (f: int => 'a => 'b) (map: intMap 'a): (intMap 'b) => map
 
 let fromSeq (seq: seq (int, 'a)): (intMap 'a) => putAll seq empty;
 
-let fromKeyed (keyed: keyed int 'a): (intMap 'a) => keyed
-  |> Keyed.reduce (fun acc k v => acc |> TransientIntMap.put k v) (mutate empty)
+let fromMap (map: map int 'a): (intMap 'a) => map
+  |> ImmMap.reduce (fun acc k v => acc |> TransientIntMap.put k v) (mutate empty)
   |> TransientIntMap.persist;
 
 let merge

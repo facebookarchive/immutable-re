@@ -1,7 +1,7 @@
 open Set;
 open Equality;
 open Functions;
-open Keyed;
+open ImmMap;
 open HashMap;
 open HashStrategy;
 open Option.Operators;
@@ -106,7 +106,7 @@ let set (value: 'a) (valueCount: int) ({ count, map } as multiset: hashMultiset 
 let some (f: 'a => int => bool) ({ map }: hashMultiset 'a): bool =>
   map |> HashMap.some f;
 
-let toKeyed ({ map }: hashMultiset 'a): (keyed 'a int) => map |> HashMap.toKeyed;
+let toMap ({ map }: hashMultiset 'a): (map 'a int) => map |> HashMap.toMap;
 
 let toSeq ({ map }: hashMultiset 'a): (seq 'a) =>
   map |> HashMap.toSeq |> Seq.flatMap (fun (v, i) => Seq.repeat v (Some i));

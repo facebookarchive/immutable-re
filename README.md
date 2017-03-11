@@ -4,20 +4,20 @@ Immutable Collections For Reason
 # Views
   * Seq: Lazy iterators.
   * Set: Collections of unique values.
-  * Keyed: Values indexed by hashed and compared keys.
+  * Map: Mapped key value pairs.
 
 # Concrete Collection Types
-  * BiMap: Bi-directional maps that maintain a unique key to value relationship.
   * CopyOnWriteArray: An opaque wrapper around arrays that provides copy on write operations. Good for small lists of values.
   * Deque: Double-ended queue, with amortized O(1) appends/prepends and head/tail access.
-  * HashMap: Keyed data, utilizing key hashing and key comparison or equality for collision handling.
+  * HashBiMap: Bi-directional maps that maintain a unique key to value relationship.
+  * HashMap: Mapped key value pairs, utilizing key hashing and key comparison or equality for collision handling.
   * HashMultiset: Collection of values that maintains a count of the number of times a value has been added.
   * HashSet: Persistent immutable set of values, utilizing value hashing and key comparison or equality for collision handling.
   * HashSetMultimap: A map of keys to a unique set of values.
   * IntMap: Immutable mapping of sparse ints to values.
   * List: Standard functions for working with OCaml list values.
   * Option: Standard functions for working OCaml option values.
-  * SortedMap: Keyed data that is sorted using a comparator function on the keys.
+  * SortedMap: Mapped key value pairs that are sorted using a comparator function on the keys.
   * SortedSet: Collection of values, sorted using a comparator function.
   * Stack: A FIFO stack, similar to a list, that maintains a count of items in the stack.
   * StackMultimap: A map of keys to the a stack of added values.

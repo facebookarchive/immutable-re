@@ -2,7 +2,7 @@ open Set;
 open Comparator;
 open Equality;
 open Hash;
-open Keyed;
+open Map;
 open Ordering;
 open Seq;
 

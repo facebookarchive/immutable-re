@@ -2,7 +2,7 @@ open AVLTreeSet;
 open Set;
 open EqualitySet;
 open HashStrategy;
-open Keyed;
+open ImmMap;
 open Ordering;
 open Seq;
 open SortedSet;
@@ -239,8 +239,8 @@ let equals (this: hashSet 'a) (that: hashSet 'a): bool =>
 let hash ({ strategy } as set: hashSet 'a): int =>
   set |> toSet |> Set.hashWith (HashStrategy.hash strategy);
 
-let toKeyed (set: hashSet 'a): (keyed 'a 'a) =>
-  set |> toSet |> Keyed.ofSet;
+let toMap (set: hashSet 'a): (map 'a 'a) =>
+  set |> toSet |> ImmMap.ofSet;
 
 type transientHashSet 'a = transient (hashSet 'a);
 

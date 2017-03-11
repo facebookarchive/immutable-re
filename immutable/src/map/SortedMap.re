@@ -3,7 +3,7 @@ open Set;
 open Comparator;
 open Equality;
 open Hash;
-open Keyed;
+open ImmMap;
 open Ordering;
 open Seq;
 
@@ -94,11 +94,11 @@ let fromSeqWith (comparator: comparator 'k) (seq: seq ('k, 'v)): (sortedMap 'k '
 let fromSeq (seq: seq ('k, 'v)): (sortedMap 'k 'v) =>
   fromSeqWith (Comparator.structural) seq;
 
-let fromKeyedWith (comparator: comparator 'k) (keyed: keyed 'k 'v): (sortedMap 'k 'v) =>
-  keyed |> Keyed.reduce (fun acc k v => acc |> put k v) (emptyWith comparator);
+let fromMapWith (comparator: comparator 'k) (map: map 'k 'v): (sortedMap 'k 'v) =>
+  map |> ImmMap.reduce (fun acc k v => acc |> put k v) (emptyWith comparator);
 
-let fromKeyed (keyed: keyed 'k 'v): (sortedMap 'k 'v) =>
-  fromKeyedWith Comparator.structural keyed;
+let fromMap (map: map 'k 'v): (sortedMap 'k 'v) =>
+  fromMapWith Comparator.structural map;
 
 let get (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): 'v =>
   tree |> AVLTreeMap.get comparator key;
@@ -156,7 +156,7 @@ let tryLast ({ tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
 let values ({ tree }: sortedMap 'k 'v): (seq 'v) =>
   tree |> AVLTreeMap.values;
 
-let toKeyed (map: sortedMap 'k 'v): (keyed 'k 'v) => {
+let toMap (map: sortedMap 'k 'v): (map 'k 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
@@ -204,13 +204,13 @@ let equals (this: sortedMap 'k 'v) (that: sortedMap 'k 'v): bool =>
   equalsWith Equality.structural this that;
 
 let hash (map: sortedMap 'k 'v): int =>
-  map |> toKeyed |> Keyed.hash;
+  map |> toMap |> ImmMap.hash;
 
 let hashWith (keyHash: hash 'k) (valueHash: hash 'v) (map: sortedMap 'k 'v): int =>
-  map |> toKeyed |> Keyed.hashWith keyHash valueHash;
+  map |> toMap |> ImmMap.hashWith keyHash valueHash;
 
 let keys (map: sortedMap 'k 'v): (set 'k) =>
-  map |> toKeyed |> Keyed.keys;
+  map |> toMap |> ImmMap.keys;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
@@ -228,7 +228,7 @@ let merge
   map;
 
 let toSetWith (equality: equality 'v) (map: sortedMap 'k 'v): (set ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toSetWith equality;
+  map |> toMap |> ImmMap.toSetWith equality;
 
 let toSet (map: sortedMap 'k 'v): (set ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toSet;
+  map |> toMap |> ImmMap.toSet;

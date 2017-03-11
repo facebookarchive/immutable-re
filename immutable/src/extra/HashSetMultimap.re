@@ -1,6 +1,5 @@
 open Set;
 open Equality;
-open Keyed;
 open HashMap;
 open HashStrategy;
 open Option.Operators;

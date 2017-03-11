@@ -1,5 +1,5 @@
 open Set;
-open Keyed;
+open ImmMap;
 open Seq;
 open Transient;
 
@@ -169,8 +169,8 @@ let equals (this: intSet) (that: intSet): bool =>
 let hash (set: intSet): int =>
   set |> toSet |> Set.hash;
 
-let toKeyed (set: intSet): (keyed int int) =>
-  set |> toSet |> Keyed.ofSet;
+let toMap (set: intSet): (map int int) =>
+  set |> toSet |> ImmMap.ofSet;
 
 type transientIntSet = transient intSet;
 

@@ -4,7 +4,7 @@ open Equality;
 open EqualityMap;
 open Hash;
 open HashStrategy;
-open Keyed;
+open ImmMap;
 open Ordering;
 open Seq;
 open SortedMap;
@@ -457,7 +457,7 @@ let tryGet (key: 'k) ({ strategy, root }: hashMap 'k 'v): (option 'v) => {
 let values ({ root }: hashMap 'k 'v): (seq 'v) =>
   root |> BitmapTrieMap.values;
 
-let toKeyed (map: hashMap 'k 'v): (keyed 'k 'v) => {
+let toMap (map: hashMap 'k 'v): (map 'k 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
@@ -488,19 +488,19 @@ let equals (this: hashMap 'k 'v) (that: hashMap 'k 'v): bool =>
   equalsWith Equality.structural this that;
 
 let hash (map: hashMap 'k 'v): int =>
-  map |> toKeyed |> Keyed.hash;
+  map |> toMap |> ImmMap.hash;
 
 let hashWith (valueHash: hash 'v) ({ strategy } as map: hashMap 'k 'v): int =>
-  map |> toKeyed |> Keyed.hashWith (HashStrategy.hash strategy) valueHash;
+  map |> toMap |> ImmMap.hashWith (HashStrategy.hash strategy) valueHash;
 
 let keys (map: hashMap 'k 'v): (set 'k) =>
-  map |> toKeyed |> Keyed.keys;
+  map |> toMap |> ImmMap.keys;
 
 let toSet (map: hashMap 'k 'v): (set ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toSet;
+  map |> toMap |> ImmMap.toSet;
 
 let toSetWith (equality: equality 'v) (map: hashMap 'k 'v): (set ('k, 'v)) =>
-  map |> toKeyed |> Keyed.toSetWith equality;
+  map |> toMap |> ImmMap.toSetWith equality;
 
 type transientHashMap 'k 'v = transient (hashMap 'k 'v);
 
@@ -595,12 +595,12 @@ let fromSeqWith (strategy: hashStrategy 'k) (seq: seq ('k, 'v)): (hashMap 'k 'v)
 let fromSeq (seq: seq ('k, 'v)): (hashMap 'k 'v) =>
   fromSeqWith (HashStrategy.structuralCompare) seq;
 
-let fromKeyedWith (strategy: hashStrategy 'k) (keyed: keyed 'k 'v): (hashMap 'k 'v) =>
-  Keyed.reduce (fun acc k v => acc |> TransientHashMap.put k v) (emptyWith strategy |> mutate) keyed
+let fromMapWith (strategy: hashStrategy 'k) (map: map 'k 'v): (hashMap 'k 'v) =>
+  ImmMap.reduce (fun acc k v => acc |> TransientHashMap.put k v) (emptyWith strategy |> mutate) map
   |> TransientHashMap.persist;
 
-let fromKeyed (keyed: keyed 'k 'v): (hashMap 'k 'v) =>
-  fromKeyedWith HashStrategy.structuralCompare keyed;
+let fromMap (map: map 'k 'v): (hashMap 'k 'v) =>
+  fromMapWith HashStrategy.structuralCompare map;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))

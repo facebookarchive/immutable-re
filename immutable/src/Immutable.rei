@@ -430,8 +430,8 @@ let module rec Set: {
    *  which occur in [this] but not in [that].
    */
 
-  let toKeyed: (t 'a) => (Keyed.t 'a 'a);
-  /** [toKeyed set] returns a Keyed collection view of [set] as a mapping of values to themselves. */
+  let toMap: (t 'a) => (Map.t 'a 'a);
+  /** [toMap set] returns a Map view of [set] as a mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq set] returns a Seq of the values in [set]. */
@@ -443,119 +443,119 @@ let module rec Set: {
   /** [union this that] returns a Seq of unique elements which occur in either [this] or [that]. */
 }
 
-and Keyed: {
+and Map: {
   /** A read only view of an underlying set of key/value pairs. The intent of this type is to enable
    *  interop between alternative concrete implementations such as [SortedMap] and [HashMap].
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
   type t 'k 'v;
-  /** The keyed type. */
+  /** The map type. */
 
   let contains: 'k => 'v => (t 'k 'v) => bool;
-  /** [contains key value keyed] returns true if [keyed] contains the [key] [value] pair,
+  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
    *  using structural equality to equate [value].
    */
 
   let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
-  /** [containsWith equals key value keyed] returns true if [keyed] contains the [key] [value] pair,
+  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
    *  using [equals] to equate [value].
    */
 
   let containsKey: 'k => (t 'k 'v) => bool;
-  /** [containsKey key keyed] returns true if [keyed] contains an entry with the key [key]. */
+  /** [containsKey key map] returns true if [map] contains an entry with the key [key]. */
 
   let count: (t 'k 'v) => int;
-  /** [count keyed] returns the number of key/value pairs in [keyed]. */
+  /** [count map] returns the number of key/value pairs in [map]. */
 
   let empty: (t 'k 'v);
-  /** The empty Keyed collection. */
+  /** The empty Map. */
 
   let equals: (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equals this that] equates [this] and [that] ensuring that the Keyed collections have the same count
+  /** [equals this that] equates [this] and [that] ensuring that the Maps have the same count
    *  and contains the same key/value pairs. Structural equality is used to equate values.
    */
 
   let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equalsWith equals this that] equates [this] and [that] ensuring that the Keyed collections
+  /** [equalsWith equals this that] equates [this] and [that] ensuring that the Maps
    *  have the same count, and contains the same key/value pairs. [equals] is used to equate values.
    */
 
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [every f keyed] returns true if the predicate [f] returns true for every
-   *  key/value pair in [keyed], otherwise false. If [keyed] is empty, returns true.
+  /** [every f map] returns true if the predicate [f] returns true for every
+   *  key/value pair in [map], otherwise false. If [map] is empty, returns true.
    */
 
   let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  /** [find f keyed] returns the first key/value pair for which the predicate [f] returns true.
+  /** [find f map] returns the first key/value pair for which the predicate [f] returns true.
    *  If no value is found, an exception is thrown.
    */
 
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-  /** [forEach f keyed] iterates through [keyed], invoking [f] for each key/value pair. */
+  /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
   let get: 'k => (t 'k 'v) => 'v;
-  /** [get key keyed] returns the value associated with [key] or throws */
+  /** [get key map] returns the value associated with [key] or throws */
 
   let hash: (Hash.t (t 'k 'v));
-  /** [hash keyed] hashes [keyed], hashing keys and values using structural hashing. */
+  /** [hash map] hashes [map], hashing keys and values using structural hashing. */
 
   let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
-  /** [hashWith keyHash valueHash keyed] hashes [keyed], hashing keys using [keyHash]
+  /** [hashWith keyHash valueHash map] hashes [map], hashing keys using [keyHash]
    *  and values using [valueHash].
    */
 
   let isEmpty: t 'k 'v => bool;
-  /** [isEmpty keyed] returns true if [keyed] contains no key/value pairs. */
+  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
 
   let isNotEmpty: t 'k 'v => bool;
-  /** [isNotEmpty keyed] returns true if [keyed] contains at least one key/value pair. */
+  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
   let keys: (t 'k 'v) => (Set.t 'k);
-  /** [keys keyed] returns a Set view of keys in [keyed]. */
+  /** [keys map] returns a Set view of keys in [map]. */
 
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  /** [map f keyed] returns a Keyed collection whose values are the result of
-   *  applying [f] each key/value pair in [keyed] lazily. Note: The results of
+  /** [map f map] returns a Map whose values are the result of
+   *  applying [f] each key/value pair in [map] lazily. Note: The results of
    *  applying [f] are not memoized, therefore [f] must be pure.
    */
 
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [none f keyed] returns true if the predicate [f] returns false for
-   *  every key/value pair in [keyed], otherwise true. If [keyed] is empty, returns true.
+  /** [none f map] returns true if the predicate [f] returns false for
+   *  every key/value pair in [map], otherwise true. If [map] is empty, returns true.
    */
 
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  /** [reduce f acc keyed] applies the accumulator function [f] to each key/value pair in [keyed]
+  /** [reduce f acc map] applies the accumulator function [f] to each key/value pair in [map]
    *  with the specified seed value [acc], returning the final accumulated value.
    */
 
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [some f keyed] returns true if the predicate [f] returns true for
-   *  any key/value pair in [keyed], otherwise false. If [keyed] is empty, returns false.
+  /** [some f map] returns true if the predicate [f] returns true for
+   *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSet keyed] returns a Set view of key/value pairs in [keyed], using structural equality
+  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
    *  to equate values.
    */
 
   let toSetWith: (Equality.t 'v) => (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSetWith equals keyed] returns a Set view of key/value pairs in [keyed],
+  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
    *  using [equals] to equate values.
    */
 
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq keyed] returns a Seq of the key/value pairs in [keyed]. */
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
 
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  /** [find f keyed] returns the first key/value pair for which the predicate [f] returns true or None. */
+  /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
 
   let tryGet: 'k => (t 'k 'v) => (option 'v);
-  /** [tryGet key keyed] returns the value associated with [key] or None */
+  /** [tryGet key map] returns the value associated with [key] or None */
 
   let values: (t 'k 'v) => (Seq.t 'v);
-  /** [values keyed] returns a Seq of non-unique values in [keyed]. */
+  /** [values map] returns a Seq of non-unique values in [map]. */
 };
 
 let module HashStrategy: {
@@ -869,8 +869,8 @@ let module CopyOnWriteArray: {
   let take: int => (t 'a) => (t 'a);
   /** [take count cow] returns a new CopyOnWriteArray that includes the first [count] elements in [cow]. */
 
-  let toKeyed: (t 'a) => (Keyed.t int 'a);
-  /** [toKeyed cow] returns a Keyed view of [cow] */
+  let toMap: (t 'a) => (Map.t int 'a);
+  /** [toMap cow] returns a Map view of [cow] */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq cow] returns a Seq of the elements in [cow] in order. */
@@ -1200,7 +1200,7 @@ and TransientDeque: {
 };
 /*
 let module rec HashBiMap: {
-  /** A hashed Keyed collection preserving the uniqueness of keys to values, and values to keys. */
+  /** A hashed Map preserving the uniqueness of keys to values, and values to keys. */
 
   type t 'k 'v;
   /** The HashBiMap type. */
@@ -1336,8 +1336,8 @@ let module rec HashBiMap: {
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet bimap] returns a Set view of the key/value pairs in [bimap]. */
 
-  let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
-  /** [toKeyed bimap] returns a Keyed collection view of [bimap]. */
+  let toMap: (t 'k 'v) => (Map.t 'k 'v);
+  /** [toMap bimap] returns a Map view of [bimap]. */
 
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   /** [toSeq bimap] returns a Seq of the key/value pairs in [bimap]. */
@@ -1441,7 +1441,7 @@ and TransientHashBiMap: {
 };
 */
 let module rec HashMap: {
-  /** A hashed Keyed collection. */
+  /** A hashed Map. */
 
   type t 'k 'v;
   /** The HashMap type. */
@@ -1502,13 +1502,13 @@ let module rec HashMap: {
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let fromKeyed: (Keyed.t 'k 'v) => (t 'k 'v);
-  /** [fromKeyed keyed] returns a HashMap including the key/value pairs in [keyed]
+  let fromMap: (Map.t 'k 'v) => (t 'k 'v);
+  /** [fromMap map] returns a HashMap including the key/value pairs in [map]
    *  using the structuralCompare HashStrategy.
    */
 
-  let fromKeyedWith: (HashStrategy.t 'k) => (Keyed.t 'k 'v) => (t 'k 'v);
-  /** [fromSeqWith strategy keyed] returns a HashMap including the key/value pairs in [keyed]
+  let fromMapWith: (HashStrategy.t 'k) => (Map.t 'k 'v) => (t 'k 'v);
+  /** [fromSeqWith strategy map] returns a HashMap including the key/value pairs in [map]
    *  using the provided HashStrategy [strategy].
    */
 
@@ -1606,8 +1606,8 @@ let module rec HashMap: {
    *  using [equals] to equate values.
    */
 
-  let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
-  /** [toKeyed map] returns a Keyed collection view of [map]. */
+  let toMap: (t 'k 'v) => (Map.t 'k 'v);
+  /** [toMap map] returns a Map view of [map]. */
 
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
@@ -1806,8 +1806,8 @@ let module rec HashMultiset: {
    *  value/count pair in [set], otherwise false.  If [set] is empty, returns false.
    */
 
-  let toKeyed: (t 'a) => (Keyed.t 'a int);
-  /** [toKeyed set] returns a Keyed view of [set] mapping values to their count */
+  let toMap: (t 'a) => (Map.t 'a int);
+  /** [toMap set] returns a Map view of [set] mapping values to their count */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq set] returns a Seq of the values in [set]. If the HashMultiset contains more than
@@ -2018,8 +2018,8 @@ let module rec HashSet: {
   let toSet: (t 'a) => (Set.t 'a);
   /** [toSet set] returns a Set view of [set] */
 
-  let toKeyed: (t 'a) => (Keyed.t 'a 'a);
-  /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
+  let toMap: (t 'a) => (Map.t 'a 'a);
+  /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq set] returns a Seq of the values in [set]. */
@@ -2129,7 +2129,7 @@ let module HashSetMultimap: {
 };
 */
 let module rec IntMap: {
-  /** A Keyed collection optimized for integer keys. */
+  /** A Map optimized for integer keys. */
 
   type t 'a;
   /** The IntMap type. */
@@ -2187,8 +2187,8 @@ let module rec IntMap: {
   let forEach: (int => 'a => unit) => (t 'a) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let fromKeyed: (Keyed.t int 'a) => (t 'a);
-  /** [fromKeyed keyed] returns an IntMap including the key/value pairs in [keyed]. */
+  let fromMap: (Map.t int 'a) => (t 'a);
+  /** [fromMap map] returns an IntMap including the key/value pairs in [map]. */
 
   let fromSeq: (Seq.t (int, 'a)) => (t 'a);
   /** [fromSeq seq] returns an IntMap including the key/value pairs in [seq]. */
@@ -2277,8 +2277,8 @@ let module rec IntMap: {
    *  using [equals] to equate values.
    */
 
-  let toKeyed: (t 'a) => (Keyed.t int 'a);
-  /** [toKeyed map] returns a Keyed collection view of [map]. */
+  let toMap: (t 'a) => (Map.t int 'a);
+  /** [toMap map] returns a Map view of [map]. */
 
   let toSeq: (t 'a) => (Seq.t ((int, 'a)));
   /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
@@ -2462,8 +2462,8 @@ let module rec IntSet: {
   let toSet: t => (Set.t int);
   /** [toSet set] returns a Set view of [set] */
 
-  let toKeyed: t => (Keyed.t int int);
-  /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
+  let toMap: t => (Map.t int int);
+  /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
   let toSeq: t => (Seq.t int);
   /** [toSeq set] returns a Seq of the values in [set]. */
@@ -2817,7 +2817,7 @@ let module Option: {
 };
 
 let module SortedMap: {
-  /** AVL tree based Keyed collection. */
+  /** AVL tree based Map. */
 
   type t 'k 'v;
   /** The SortedMap type. */
@@ -2896,13 +2896,13 @@ let module SortedMap: {
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let fromKeyed: (Keyed.t 'k 'v) => (t 'k 'v);
-  /** [fromKeyed keyed] returns a SortedMap including the key/value pairs in [keyed]
+  let fromMap: (Map.t 'k 'v) => (t 'k 'v);
+  /** [fromMap map] returns a SortedMap including the key/value pairs in [map]
    *  using the structural comparison.
    */
 
-  let fromKeyedWith: (Comparator.t 'k) => (Keyed.t 'k 'v) => (t 'k 'v);
-  /** [fromSeqWith comparator keyed] returns a SortedMap including the key/value pairs in [keyed]
+  let fromMapWith: (Comparator.t 'k) => (Map.t 'k 'v) => (t 'k 'v);
+  /** [fromSeqWith comparator map] returns a SortedMap including the key/value pairs in [map]
    *  using the provided Comparator.
    */
 
@@ -3016,8 +3016,8 @@ let module SortedMap: {
    *  using [equals] to equate values.
    */
 
-  let toKeyed: (t 'k 'v) => (Keyed.t 'k 'v);
-  /** [toKeyed map] returns a Keyed collection view of [map]. */
+  let toMap: (t 'k 'v) => (Map.t 'k 'v);
+  /** [toMap map] returns a Map view of [map]. */
 
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
@@ -3193,8 +3193,8 @@ let module SortedSet: {
   let toSet: (t 'a) => (Set.t 'a);
   /** [toSet set] returns a Set view of [set] */
 
-  let toKeyed: (t 'a) => (Keyed.t 'a 'a);
-  /** [toKeyed set] returns a Keyed collection view of [set] as mapping of values to themselves. */
+  let toMap: (t 'a) => (Map.t 'a 'a);
+  /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq set] returns a Seq of the values in [set]. */
@@ -3740,8 +3740,8 @@ let module rec Vector: {
   let take: int => (t 'a) => (t 'a);
   /** [take count vec] returns a new Vector that includes the first [count] elements in [vec]. */
 
-  let toKeyed: (t 'a) => (Keyed.t int 'a);
-  /** [toKeyed vec] returns a Keyed view of [vec] */
+  let toMap: (t 'a) => (Map.t int 'a);
+  /** [toMap vec] returns a Map view of [vec] */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq vec] returns a Seq of the elements in [vec] in order. */

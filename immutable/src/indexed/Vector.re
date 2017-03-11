@@ -4,7 +4,7 @@ open Equality;
 open Functions;
 open Hash;
 open Hash;
-open Keyed;
+open ImmMap;
 open Option;
 open Option.Operators;
 open Ordering;
@@ -1863,7 +1863,7 @@ let tryIndexOfWithIndex (f: int => 'a => bool) (vec: vector 'a): (option int) =>
   !index >= 0 ? Some !index : None;
 };
 
-let toKeyed (vec: vector 'a): (keyed int 'a) => {
+let toMap (vec: vector 'a): (map int 'a) => {
   containsWith: fun equals index value => index >= 0 && index < count vec
     ? equals (get index vec) value
     : false,

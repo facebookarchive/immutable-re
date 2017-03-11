@@ -61,7 +61,7 @@ module type Vector = {
   let skip: int => (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
   let someWithIndex: (int => 'a => bool) => (t 'a) => bool;
-  let toKeyed: (t 'a) => (Keyed.t int 'a);
+  let toMap: (t 'a) => (Map.t int 'a);
   let toSeq: (t 'a) => (Seq.t 'a);
   let toSeqReversed: (t 'a) => (Seq.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
@@ -552,44 +552,44 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
       expect (Vector.tryIndexOfWithIndex (f (count / 2)) vec) |> toBeEqualToSomeOfInt (count / 2);
       expect (Vector.tryIndexOfWithIndex (f (-1)) vec) |> toBeEqualToNoneOfInt;
     }),
-    describe (sprintf "toKeyed with %i elements" count) [
+    describe (sprintf "toMap with %i elements" count) [
       it "containsWith" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
         Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-          expect (keyed |> Keyed.contains i i) |> toBeEqualToTrue;
+          expect (map |> Map.contains i i) |> toBeEqualToTrue;
         });
 
-        expect (keyed |> Keyed.contains (-1) (-1)) |> toBeEqualToFalse;
-        expect (keyed |> Keyed.contains count count) |> toBeEqualToFalse;
-        expect (keyed |> Keyed.contains 0 1) |> toBeEqualToFalse;
+        expect (map |> Map.contains (-1) (-1)) |> toBeEqualToFalse;
+        expect (map |> Map.contains count count) |> toBeEqualToFalse;
+        expect (map |> Map.contains 0 1) |> toBeEqualToFalse;
       }),
       it "containsKey" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
         Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-          expect (keyed |> Keyed.containsKey i) |> toBeEqualToTrue;
+          expect (map |> Map.containsKey i) |> toBeEqualToTrue;
         });
 
-        expect (keyed |> Keyed.containsKey (-1)) |> toBeEqualToFalse;
-        expect (keyed |> Keyed.containsKey count) |> toBeEqualToFalse;
+        expect (map |> Map.containsKey (-1)) |> toBeEqualToFalse;
+        expect (map |> Map.containsKey count) |> toBeEqualToFalse;
       }),
       it "count" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.count) |> toBeEqualToInt count;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.count) |> toBeEqualToInt count;
       }),
       it "every" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.every (fun i v => i == v)) |> toBeEqualToTrue;
-        expect (keyed |> Keyed.every (fun i v => i != v)) |> toBeEqualToFalse;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.every (fun i v => i == v)) |> toBeEqualToTrue;
+        expect (map |> Map.every (fun i v => i != v)) |> toBeEqualToFalse;
       }),
       it "find" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.find (fun i v => i == v)) |> toBeEqualTo (fun _ => "") (0, 0);
-        defer (fun () => keyed |> Keyed.find (fun i v => i != v)) |> throws;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.find (fun i v => i == v)) |> toBeEqualTo (fun _ => "") (0, 0);
+        defer (fun () => map |> Map.find (fun i v => i != v)) |> throws;
       }),
       it "forEach" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
         let loopCount = ref 0;
-        keyed |> Keyed.forEach (fun i v => {
+        map |> Map.forEach (fun i v => {
           expect i |> toBeEqualToInt !loopCount;
           expect i |> toBeEqualToInt v;
           loopCount := !loopCount + 1;
@@ -598,56 +598,56 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect !loopCount |> toBeEqualToInt count;
       }),
       it "get" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
         Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-          expect (keyed |> Keyed.get i) |> toBeEqualToInt i;
+          expect (map |> Map.get i) |> toBeEqualToInt i;
         });
 
-        defer (fun () => keyed |> Keyed.get (-1)) |> throws;
-        defer (fun () => keyed |> Keyed.get count) |> throws;
+        defer (fun () => map |> Map.get (-1)) |> throws;
+        defer (fun () => map |> Map.get count) |> throws;
       }),
       it "keys" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.keys |> Set.toSeq) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.keys |> Set.toSeq) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
       }),
       it "none" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.none (fun i v => i != v)) |> toBeEqualToTrue;
-        expect (keyed |> Keyed.none (fun i v => i == v)) |> toBeEqualToFalse;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.none (fun i v => i != v)) |> toBeEqualToTrue;
+        expect (map |> Map.none (fun i v => i == v)) |> toBeEqualToFalse;
       }),
       it "reduce" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        let reduced = keyed |> Keyed.reduce (fun acc i v => acc + 1) 0;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        let reduced = map |> Map.reduce (fun acc i v => acc + 1) 0;
         expect reduced |> toBeEqualToInt count;
       }),
       it "some" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.some (fun i v => i == v)) |> toBeEqualToTrue;
-        expect (keyed |> Keyed.some (fun i v => i != v)) |> toBeEqualToFalse;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.some (fun i v => i == v)) |> toBeEqualToTrue;
+        expect (map |> Map.some (fun i v => i != v)) |> toBeEqualToFalse;
       }),
       it "toSeq" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        keyed |> Keyed.toSeq |> Seq.forEach (fun (i, v) => {
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        map |> Map.toSeq |> Seq.forEach (fun (i, v) => {
           expect i |> toBeEqualToInt v;
         });
       }),
       it "tryFind" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.tryFind (fun i v => i == v)) |> toBeEqualToSome (fun _ => "") (0, 0);
-        expect (keyed |> Keyed.tryFind (fun i v => i != v)) |> toBeEqualToNone (fun _ => "");
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.tryFind (fun i v => i == v)) |> toBeEqualToSome (fun _ => "") (0, 0);
+        expect (map |> Map.tryFind (fun i v => i != v)) |> toBeEqualToNone (fun _ => "");
       }),
       it "tryGet" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
         Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-          expect (keyed |> Keyed.tryGet i) |> toBeEqualToSomeOfInt i;
+          expect (map |> Map.tryGet i) |> toBeEqualToSomeOfInt i;
         });
 
-        expect (keyed |> Keyed.tryGet (-1)) |> toBeEqualToNoneOfInt;
-        expect (keyed |> Keyed.tryGet count) |> toBeEqualToNoneOfInt;
+        expect (map |> Map.tryGet (-1)) |> toBeEqualToNoneOfInt;
+        expect (map |> Map.tryGet count) |> toBeEqualToNoneOfInt;
       }),
       it "values" (fun () => {
-        let keyed = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toKeyed;
-        expect (keyed |> Keyed.values) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+        let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
+        expect (map |> Map.values) |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
       }),
     ],
     ...dequeTests

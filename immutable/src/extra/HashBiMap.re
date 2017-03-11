@@ -1,6 +1,6 @@
 open Equality;
 open Set;
-open Keyed;
+open ImmMap;
 open HashMap;
 open HashStrategy;
 open Option.Operators;
@@ -118,7 +118,7 @@ let toSet ({ map, inverse }: hashBiMap 'k 'v): (set ('k, 'v)) =>
 
 let toInverseMap ({ inverse }: hashBiMap 'k 'v): (hashMap 'k 'k) => inverse;
 
-let toKeyed ({ map }: hashBiMap 'k 'v): (keyed 'k 'v) => map |> HashMap.toKeyed;
+let toMap ({ map }: hashBiMap 'k 'v): (map 'k 'v) => map |> HashMap.toMap;
 
 let toSeq ({ map }: hashBiMap 'k 'v): (seq ('k, 'v)) => map |> HashMap.toSeq;
 

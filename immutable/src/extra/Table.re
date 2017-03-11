@@ -1,7 +1,6 @@
 open Set;
 open Equality;
 open Functions.Operators;
-open Keyed;
 open Hash;
 open HashMap;
 open HashStrategy;

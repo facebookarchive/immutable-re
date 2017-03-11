@@ -1,6 +1,5 @@
 open Set;
 open Equality;
-open Keyed;
 open Hash;
 open HashMap;
 open HashStrategy;

@@ -28,7 +28,7 @@ module type SetImpl = {
   let some: (int => bool) => t => bool;
   let subtract: t => t => t;
   let toSet: t => (Set.t int);
-  let toKeyed: t => (Keyed.t int int);
+  let toMap: t => (Map.t int int);
   let toSeq: t => (Seq.t int);
   let tryFind: (int => bool) => t => (option int);
   let union: t => t => t;
@@ -377,46 +377,46 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
 
     ],
   ],
-  describe "toKeyed" [
+  describe "toMap" [
     it (sprintf "containsWith with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
       Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-        expect (keyed |> Keyed.contains i i) |> toBeEqualToTrue;
+        expect (map |> Map.contains i i) |> toBeEqualToTrue;
       });
 
-      expect (keyed |> Keyed.contains (-1) (-1)) |> toBeEqualToFalse;
-      expect (keyed |> Keyed.contains count count) |> toBeEqualToFalse;
-      expect (keyed |> Keyed.contains 0 1) |> toBeEqualToFalse;
+      expect (map |> Map.contains (-1) (-1)) |> toBeEqualToFalse;
+      expect (map |> Map.contains count count) |> toBeEqualToFalse;
+      expect (map |> Map.contains 0 1) |> toBeEqualToFalse;
     }),
     it (sprintf "containsKey with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
       Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-        expect (keyed |> Keyed.containsKey i) |> toBeEqualToTrue;
+        expect (map |> Map.containsKey i) |> toBeEqualToTrue;
       });
 
-      expect (keyed |> Keyed.containsKey (-1)) |> toBeEqualToFalse;
-      expect (keyed |> Keyed.containsKey count) |> toBeEqualToFalse;
+      expect (map |> Map.containsKey (-1)) |> toBeEqualToFalse;
+      expect (map |> Map.containsKey count) |> toBeEqualToFalse;
     }),
     it (sprintf "count with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      expect (keyed |> Keyed.count) |> toBeEqualToInt count;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      expect (map |> Map.count) |> toBeEqualToInt count;
     }),
     it (sprintf "every with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      expect (keyed |> Keyed.every (fun i v => i == v)) |> toBeEqualToTrue;
-      expect (keyed |> Keyed.every (fun i v => i != v)) |> toBeEqualToFalse;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      expect (map |> Map.every (fun i v => i == v)) |> toBeEqualToTrue;
+      expect (map |> Map.every (fun i v => i != v)) |> toBeEqualToFalse;
     }),
     it (sprintf "find with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      expect (keyed |> Keyed.find (fun i v =>
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      expect (map |> Map.find (fun i v =>
         (i == (count - 1)) && (v == (count - 1))
       )) |> toBeEqualTo intTupleToString (count - 1, count - 1);
-      defer (fun () => keyed |> Keyed.find (fun i v => i != v)) |> throws;
+      defer (fun () => map |> Map.find (fun i v => i != v)) |> throws;
     }),
     it (sprintf "forEach with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
       let loopCount = ref 0;
-      keyed |> Keyed.forEach (fun i v => {
+      map |> Map.forEach (fun i v => {
         expect i |> toBeEqualToInt v;
         loopCount := !loopCount + 1;
       });
@@ -424,60 +424,60 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       expect !loopCount |> toBeEqualToInt count;
     }),
     it (sprintf "get with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
       Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-        expect (keyed |> Keyed.get i) |> toBeEqualToInt i;
+        expect (map |> Map.get i) |> toBeEqualToInt i;
       });
 
-      defer (fun () => keyed |> Keyed.get (-1)) |> throws;
-      defer (fun () => keyed |> Keyed.get count) |> throws;
+      defer (fun () => map |> Map.get (-1)) |> throws;
+      defer (fun () => map |> Map.get count) |> throws;
     }),
     it (sprintf "keys with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      keyed
-        |> Keyed.keys
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      map
+        |> Map.keys
         |> Set.equals (Set.inRange 0 count 1)
         |> expect
         |> toBeEqualToTrue;
     }),
     it (sprintf "none with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      expect (keyed |> Keyed.none (fun i v => i != v)) |> toBeEqualToTrue;
-      expect (keyed |> Keyed.none (fun i v => i == v)) |> toBeEqualToFalse;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      expect (map |> Map.none (fun i v => i != v)) |> toBeEqualToTrue;
+      expect (map |> Map.none (fun i v => i == v)) |> toBeEqualToFalse;
     }),
     it (sprintf "reduce with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      let reduced = keyed |> Keyed.reduce (fun acc i v => acc + 1) 0;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let reduced = map |> Map.reduce (fun acc i v => acc + 1) 0;
       expect reduced |> toBeEqualToInt count;
     }),
     it (sprintf "some with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      expect (keyed |> Keyed.some (fun i v => i == v)) |> toBeEqualToTrue;
-      expect (keyed |> Keyed.some (fun i v => i != v)) |> toBeEqualToFalse;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      expect (map |> Map.some (fun i v => i == v)) |> toBeEqualToTrue;
+      expect (map |> Map.some (fun i v => i != v)) |> toBeEqualToFalse;
     }),
     describe "toSeq" [
 
     ],
     it (sprintf "tryFind with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      expect (keyed |> Keyed.tryFind (fun i v =>
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      expect (map |> Map.tryFind (fun i v =>
         (i == (count - 1)) && (v == (count - 1))
       )) |> toBeEqualToSome intTupleToString (count - 1, count - 1);
-      expect (keyed |> Keyed.tryFind (fun i v => i != v)) |> toBeEqualToNone intTupleToString;
+      expect (map |> Map.tryFind (fun i v => i != v)) |> toBeEqualToNone intTupleToString;
     }),
     it (sprintf "tryGet with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
       Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
-        expect (keyed |> Keyed.tryGet i) |> toBeEqualToSomeOfInt i;
+        expect (map |> Map.tryGet i) |> toBeEqualToSomeOfInt i;
       });
 
-      expect (keyed |> Keyed.tryGet (-1)) |> toBeEqualToNoneOfInt;
-      expect (keyed |> Keyed.tryGet count) |> toBeEqualToNoneOfInt;
+      expect (map |> Map.tryGet (-1)) |> toBeEqualToNoneOfInt;
+      expect (map |> Map.tryGet count) |> toBeEqualToNoneOfInt;
     }),
     it (sprintf "values with %i elements" count) (fun () => {
-      let keyed = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toKeyed;
-      keyed
-        |> Keyed.values
+      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      map
+        |> Map.values
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.equals (Set.inRange 0 count 1)
