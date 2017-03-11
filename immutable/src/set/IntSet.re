@@ -1,5 +1,5 @@
-open Set;
 open ImmMap;
+open ImmSet;
 open Seq;
 open Transient;
 
@@ -164,10 +164,10 @@ let toSet (set: intSet): (set int) => {
 };
 
 let equals (this: intSet) (that: intSet): bool =>
-  Set.equals (toSet this) (toSet that);
+  ImmSet.equals (toSet this) (toSet that);
 
 let hash (set: intSet): int =>
-  set |> toSet |> Set.hash;
+  set |> toSet |> ImmSet.hash;
 
 let toMap (set: intSet): (map int int) =>
   set |> toSet |> ImmMap.ofSet;
@@ -254,10 +254,10 @@ let fromSeq (seq: seq int): intSet =>
   empty |> addAll seq;
 
 let intersect (this: intSet) (that: intSet): intSet =>
-  Set.intersect (toSet this) (toSet that) |> fromSeq;
+  ImmSet.intersect (toSet this) (toSet that) |> fromSeq;
 
 let subtract (this: intSet) (that: intSet): intSet =>
-  Set.subtract (toSet this) (toSet that) |> fromSeq;
+  ImmSet.subtract (toSet this) (toSet that) |> fromSeq;
 
 let union (this: intSet) (that: intSet): intSet =>
-  Set.union (toSet this) (toSet that) |> fromSeq;
+  ImmSet.union (toSet this) (toSet that) |> fromSeq;

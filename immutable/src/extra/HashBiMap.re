@@ -1,8 +1,8 @@
 open Equality;
-open Set;
-open ImmMap;
 open HashMap;
 open HashStrategy;
+open ImmMap;
+open ImmSet;
 open Option.Operators;
 open Seq;
 

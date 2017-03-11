@@ -1,9 +1,9 @@
 open AVLTreeMap;
-open Set;
 open Comparator;
 open Equality;
 open Hash;
 open ImmMap;
+open ImmSet;
 open Ordering;
 open Seq;
 
@@ -216,7 +216,7 @@ let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: sortedMap 'k 'v)
     (map: sortedMap 'k 'vAcc): (sortedMap 'k 'vAcc) =>
-  Set.union (keys map) (keys next) |> Seq.reduce (
+  ImmSet.union (keys map) (keys next) |> Seq.reduce (
     fun acc key => {
       let result = f key (map |> tryGet key) (next |> tryGet key);
       switch result {

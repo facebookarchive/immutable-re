@@ -1,9 +1,10 @@
 open Set;
 open Equality;
 open Functions;
-open ImmMap;
 open HashMap;
 open HashStrategy;
+open ImmMap;
+open ImmSet;
 open Option.Operators;
 open Seq;
 

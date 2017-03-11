@@ -1,3 +1,4 @@
+let module CamlSet = Set;
 open Immutable;
 open Printf;
 open ReUnit;
@@ -42,7 +43,7 @@ let generateTests
   }),
 ];
 
-let module CamlIntSet = Set.Make {
+let module CamlIntSet = CamlSet.Make {
   type t = int;
   let compare = Pervasives.compare;
 };
@@ -141,7 +142,7 @@ let test (n: int) (count: int): Test.t => {
           count
       ),
     ],
-        
+
     describe "IntSet" (
       generateTests
         (fun () => intSet)

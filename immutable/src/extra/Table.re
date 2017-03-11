@@ -1,9 +1,9 @@
-open Set;
 open Equality;
 open Functions.Operators;
 open Hash;
 open HashMap;
 open HashStrategy;
+open ImmSet;
 open Option.Operators;
 open Pair;
 open Seq;
@@ -15,7 +15,7 @@ type table 'row 'column 'value = {
 };
 
 let columns ({ map }: table 'row 'column 'value): (seq 'column) =>
-  map |> HashMap.values |> Seq.flatMap (HashMap.keys >> Set.toSeq);
+  map |> HashMap.values |> Seq.flatMap (HashMap.keys >> ImmSet.toSeq);
 
 let contains (row: 'row) (column: 'column) (value: 'value) ({ map }: table 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.contains column value) |? false;

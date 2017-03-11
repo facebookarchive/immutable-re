@@ -1,8 +1,8 @@
 open AVLTreeSet;
-open Set;
 open EqualitySet;
 open HashStrategy;
 open ImmMap;
+open ImmSet;
 open Ordering;
 open Seq;
 open SortedSet;
@@ -234,10 +234,10 @@ let toSet (set: hashSet 'a): (set 'a) => {
 };
 
 let equals (this: hashSet 'a) (that: hashSet 'a): bool =>
-  Set.equals (toSet this) (toSet that);
+  ImmSet.equals (toSet this) (toSet that);
 
 let hash ({ strategy } as set: hashSet 'a): int =>
-  set |> toSet |> Set.hashWith (HashStrategy.hash strategy);
+  set |> toSet |> ImmSet.hashWith (HashStrategy.hash strategy);
 
 let toMap (set: hashSet 'a): (map 'a 'a) =>
   set |> toSet |> ImmMap.ofSet;
@@ -334,10 +334,10 @@ let fromSeqWith (strategy: hashStrategy 'a) (seq: seq 'a): (hashSet 'a) =>
   emptyWith strategy |> addAll seq;
 
 let intersect ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
-  Set.intersect (toSet this) (toSet that) |> fromSeqWith strategy;
+  ImmSet.intersect (toSet this) (toSet that) |> fromSeqWith strategy;
 
 let subtract ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
-  Set.subtract (toSet this) (toSet that) |> fromSeqWith strategy;
+  ImmSet.subtract (toSet this) (toSet that) |> fromSeqWith strategy;
 
 let union ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>
-  Set.union (toSet this) (toSet that) |> fromSeqWith strategy;
+  ImmSet.union (toSet this) (toSet that) |> fromSeqWith strategy;

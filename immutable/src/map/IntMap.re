@@ -4,6 +4,7 @@ open Equality;
 open Functions;
 open Hash;
 open ImmMap;
+open ImmSet;
 open Option;
 open Option.Operators;
 open Seq;
@@ -401,7 +402,7 @@ let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: intMap 'v)
     (map: intMap 'vAcc): (intMap 'vAcc) =>
-  Set.union (keys map) (keys next)
+  ImmSet.union (keys map) (keys next)
     |> Seq.reduce (
         fun acc key => {
           let result = f key (map |> tryGet key) (next |> tryGet key);

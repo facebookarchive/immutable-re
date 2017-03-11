@@ -2,6 +2,7 @@ open Set;
 open Equality;
 open HashMap;
 open HashStrategy;
+open ImmSet;
 open Option.Operators;
 open Pair;
 open Seq;

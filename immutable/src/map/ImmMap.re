@@ -1,8 +1,8 @@
-open Set;
 open Comparator;
 open Equality;
 open Functions;
 open Hash;
+open ImmSet;
 open Option.Operators;
 open Ordering;
 open Pair;
@@ -139,22 +139,22 @@ let none (f: 'k => 'v => bool) ({ none }: map 'k 'v): bool =>
   none f;
 
 let ofSet (set: set 'a): (map 'a 'a) => {
-  containsWith: fun equals k v => set |> Set.contains k ? equals k v : false,
-  containsKey: fun k => set |> Set.contains k,
-  count: Set.count set,
-  every: fun f => set |> Set.every (fun k => f k k),
+  containsWith: fun equals k v => set |> ImmSet.contains k ? equals k v : false,
+  containsKey: fun k => set |> ImmSet.contains k,
+  count: ImmSet.count set,
+  every: fun f => set |> ImmSet.every (fun k => f k k),
   find: fun f => {
-    let k = set |> Set.find (fun k => f k k);
+    let k = set |> ImmSet.find (fun k => f k k);
     (k, k)
   },
-  forEach: fun f => set |> Set.forEach (fun k => f k k),
-  get: fun k => set |> Set.contains k ? k : failwith "not found",
-  none: fun f => set |> Set.none (fun k => f k k),
-  reduce: fun f acc => set |> Set.reduce (fun acc k => f acc k k) acc,
-  some: fun f => set |> Set.some (fun k => f k k),
+  forEach: fun f => set |> ImmSet.forEach (fun k => f k k),
+  get: fun k => set |> ImmSet.contains k ? k : failwith "not found",
+  none: fun f => set |> ImmSet.none (fun k => f k k),
+  reduce: fun f acc => set |> ImmSet.reduce (fun acc k => f acc k k) acc,
+  some: fun f => set |> ImmSet.some (fun k => f k k),
   toSeq: toSeq set |> Seq.map (fun k => (k, k)),
-  tryFind: fun f => set |> Set.tryFind (fun k => f k k) >>| (fun k => (k, k)),
-  tryGet: fun k => set |> Set.contains k ? Some k : None,
+  tryFind: fun f => set |> ImmSet.tryFind (fun k => f k k) >>| (fun k => (k, k)),
+  tryGet: fun k => set |> ImmSet.contains k ? Some k : None,
   values: toSeq set,
 };
 

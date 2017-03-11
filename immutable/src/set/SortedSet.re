@@ -1,11 +1,11 @@
 open AVLTreeSet;
-open Set;
 open Comparator;
 open Equality;
 open Functions;
 open Functions.Operators;
 open Hash;
 open ImmMap;
+open ImmSet;
 open Option.Operators;
 open Ordering;
 open Seq;
@@ -161,10 +161,10 @@ let toMap (set: sortedSet 'a): (map 'a 'a) => {
 };
 
 let intersect ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  Set.intersect (toSet this) (toSet that) |> fromSeqWith comparator;
+  ImmSet.intersect (toSet this) (toSet that) |> fromSeqWith comparator;
 
 let subtract ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  Set.subtract (toSet this) (toSet that) |> fromSeqWith comparator;
+  ImmSet.subtract (toSet this) (toSet that) |> fromSeqWith comparator;
 
 let union ({ comparator } as this: sortedSet 'a) (that: sortedSet 'a): (sortedSet 'a) =>
-  Set.union (toSet this) (toSet that) |> fromSeqWith comparator;
+  ImmSet.union (toSet this) (toSet that) |> fromSeqWith comparator;
