@@ -1,3 +1,4 @@
+let module SeqInternal = Seq;
 let module TransientDequeInternal = Deque.TransientDeque;
 let module TransientHashBiMapInternal = HashBiMap.TransientHashBiMap;
 let module TransientHashMapInternal = HashMap.TransientHashMap;
@@ -5,7 +6,7 @@ let module TransientHashMultisetInternal = HashMultiset.TransientHashMultiset;
 let module TransientHashSetInternal = HashSet.TransientHashSet;
 let module TransientIntMapInternal = IntMap.TransientIntMap;
 let module TransientIntSetInternal = IntSet.TransientIntSet;
-open Vector;
+let module TransientVectorInternal = Vector.TransientVector;
 
 let module Hash = {
   type t 'a = Hash.t 'a;
@@ -50,7 +51,6 @@ let module Comparator = {
   let structural = Comparator.structural;
 };
 
-let module SeqInternal = Seq;
 let module Seq = {
   type t 'a = Seq.t 'a;
 
@@ -935,7 +935,7 @@ let module Table = {
 };
 
 let module Vector = {
-  type t 'a = Vector.vector 'a;
+  type t 'a = Vector.t 'a;
 
   let addFirst = Vector.addFirst;
   let addFirstAll = Vector.addFirstAll;
@@ -1009,28 +1009,28 @@ let module Vector = {
 };
 
 let module TransientVector = {
-  type t 'a = transientVector 'a;
+  type t 'a = TransientVectorInternal.t 'a;
 
-  let addFirst = TransientVector.addFirst;
-  let addLast = TransientVector.addLast;
-  let count = TransientVector.count;
-  let empty = TransientVector.empty;
-  let first = TransientVector.first;
-  let get = TransientVector.get;
-  let insertAt = TransientVector.insertAt;
-  let isEmpty = TransientVector.isEmpty;
-  let isNotEmpty = TransientVector.isNotEmpty;
-  let last = TransientVector.last;
-  let persist = TransientVector.persist;
-  let removeAll = TransientVector.removeAll;
-  let removeAt = TransientVector.removeAt;
-  let removeFirst = TransientVector.removeFirst;
-  let removeLast = TransientVector.removeLast;
-  let reverse = TransientVector.reverse;
-  let tryFirst = TransientVector.tryFirst;
-  let tryGet = TransientVector.tryGet;
-  let tryLast = TransientVector.tryLast;
-  let update = TransientVector.update;
-  let updateAll = TransientVector.updateAll;
-  let updateWith = TransientVector.updateWith;
+  let addFirst = TransientVectorInternal.addFirst;
+  let addLast = TransientVectorInternal.addLast;
+  let count = TransientVectorInternal.count;
+  let empty = TransientVectorInternal.empty;
+  let first = TransientVectorInternal.first;
+  let get = TransientVectorInternal.get;
+  let insertAt = TransientVectorInternal.insertAt;
+  let isEmpty = TransientVectorInternal.isEmpty;
+  let isNotEmpty = TransientVectorInternal.isNotEmpty;
+  let last = TransientVectorInternal.last;
+  let persist = TransientVectorInternal.persist;
+  let removeAll = TransientVectorInternal.removeAll;
+  let removeAt = TransientVectorInternal.removeAt;
+  let removeFirst = TransientVectorInternal.removeFirst;
+  let removeLast = TransientVectorInternal.removeLast;
+  let reverse = TransientVectorInternal.reverse;
+  let tryFirst = TransientVectorInternal.tryFirst;
+  let tryGet = TransientVectorInternal.tryGet;
+  let tryLast = TransientVectorInternal.tryLast;
+  let update = TransientVectorInternal.update;
+  let updateAll = TransientVectorInternal.updateAll;
+  let updateWith = TransientVectorInternal.updateWith;
 };

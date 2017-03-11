@@ -1,9 +1,8 @@
 open Option.Operators;
-open Vector;
 
 type t 'a =
-  | Ascending (vector 'a)
-  | Descending (vector 'a);
+  | Ascending (Vector.t 'a)
+  | Descending (Vector.t 'a);
 
 let empty: (t 'a) = Ascending Vector.empty;
 
@@ -153,11 +152,13 @@ let contains (value: 'a) (deque: t 'a): bool =>
   containsWith Equality.structural value deque;
 
 let module TransientDeque = {
+  let module TransientVector = Vector.TransientVector;
+
   type deque 'a = t 'a;
 
   type transientDequeImpl 'a =
-    | Ascending (transientVector 'a)
-    | Descending (transientVector 'a);
+    | Ascending (TransientVector.t 'a)
+    | Descending (TransientVector.t 'a);
 
   type t 'a = Transient.t (transientDequeImpl 'a);
 
