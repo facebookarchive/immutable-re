@@ -1,659 +1,5 @@
 open Option.Operators;
 
-let module Trie = {
-  type t 'a =
-    | Empty
-    | Leaf (option Transient.Owner.t) (array 'a)
-    | Level int (ref int) (option Transient.Owner.t) (array (t 'a));
-
-  let bits = 5;
-  let width = 1 lsl 5;
-
-  let count (trie: t 'a): int => switch trie {
-    | Empty => 0
-    | Leaf _ values => CopyOnWriteArray.count values;
-    | Level _ count _ _ => !count;
-  };
-
-  let rec every (f: 'a => bool) (trie: t 'a): bool => switch trie {
-    | Empty => true
-    | Leaf _ values =>
-        values |> CopyOnWriteArray.every f
-    | Level _ _ _ nodes =>
-        nodes |> CopyOnWriteArray.every (every f);
-  };
-
-  let rec none (f: 'a => bool) (trie: t 'a): bool => switch trie {
-    | Empty => true
-    | Leaf _ values =>
-        values |> CopyOnWriteArray.none f
-    | Level _ _ _ nodes =>
-        nodes |> CopyOnWriteArray.every (none f);
-  };
-
-  let rec some (f: 'a => bool) (trie: t 'a): bool => switch trie {
-    | Empty => false
-    | Leaf _ values =>
-        values |> CopyOnWriteArray.some f
-    | Level _ _ _ nodes =>
-        nodes |> CopyOnWriteArray.some (some f);
-  };
-
-  let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
-    | Empty => acc
-    | Leaf _ values => values |> CopyOnWriteArray.reduce f acc
-    | Level _ _ _ nodes =>
-        let reducer acc node => node |> reduce f acc;
-        nodes |> CopyOnWriteArray.reduce reducer acc
-  };
-
-  let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
-    | Empty => acc
-    | Leaf _ values => values |> CopyOnWriteArray.reduceRight f acc
-    | Level _ _ _ nodes =>
-        let reducer acc node => node |> reduceRight f acc;
-        nodes |> CopyOnWriteArray.reduceRight reducer acc
-  };
-
-  let rec toSeq (trie: t 'a): (Seq.t 'a) => switch trie {
-    | Empty => Seq.empty
-    | Leaf _ values => values |> CopyOnWriteArray.toSeq
-    | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
-  };
-
-  let rec toSeqReversed (trie: t 'a): (Seq.t 'a) => switch trie {
-    | Empty => Seq.empty
-    | Leaf _ values => values |> CopyOnWriteArray.toSeqReversed
-    | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeqReversed |> Seq.flatMap toSeqReversed
-  };
-
-  let rec tryFind (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
-    | Empty => None
-    | Leaf _ values =>
-        values |> CopyOnWriteArray.tryFind f
-    | Level _ _ _ nodes =>
-        let nodesCount = CopyOnWriteArray.count nodes;
-        let rec loop index => index < nodesCount
-          ? switch (tryFind f nodes.(index)) {
-              | Some _ as result => result
-              | _ => loop (index + 1)
-            }
-          : None;
-        loop 0
-  };
-
-  let depth (trie: t 'a): int => switch trie {
-    | Empty => failwith "invalid state"
-    | Leaf _ _ => 0
-    | Level depth _ _ _ => depth
-  };
-
-  let depthCapacity (depth: int): int =>
-    width lsl (depth * bits);
-
-  let capacity (trie: t 'a): int =>
-    depthCapacity (depth trie);
-
-  let childCapacity (trie: t 'a): int =>
-    depthCapacity (depth trie - 1);
-
-  let empty = Empty;
-
-  let isEmpty (trie: t 'a) =>
-    (count trie) == 0;
-
-  let rec tryAddFirstLeafToTrieUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
-      (values: array 'a)
-      (Level levelDepth levelCount owner tries as trie: t 'a): (option (t 'a)) => {
-    let firstIndex = 0;
-    let firstChild = tries |> CopyOnWriteArray.first;
-    let firstChildCount = count firstChild;
-    let firstChildDepth = depth firstChild;
-    let triesWidth = CopyOnWriteArray.count tries;
-    let valuesCount = CopyOnWriteArray.count values;
-
-    switch firstChild {
-      | Leaf _ _ when firstChildDepth < (levelDepth - 1) =>
-          let newFirstChildLevelCount = firstChildCount + valuesCount;
-          let newFirstChild = Level 1 (ref newFirstChildLevelCount) owner [| Leaf owner values, firstChild |];
-          let newLevelCount = !levelCount - firstChildCount + newFirstChildLevelCount;
-          updateLevel newLevelCount firstIndex newFirstChild trie |> Option.return;
-      | Leaf _ _ when triesWidth < width =>
-          let newLevelCount = !levelCount + valuesCount;
-          Level levelDepth (ref newLevelCount) owner (tries |> CopyOnWriteArray.addFirst (Leaf owner values)) |> Option.return;
-      | Level childLevelDepth _ _ _ => switch (firstChild |> tryAddFirstLeafToTrieUsingMutator updateLevel owner values) {
-          | Some newFirstChild =>
-              let newLevelCount = !levelCount - firstChildCount + (count newFirstChild);
-              updateLevel newLevelCount firstIndex newFirstChild trie |> Option.return;
-          | None when firstChildDepth < (levelDepth - 1) =>
-              let newFirstChildLevelCount = ref (firstChildCount + valuesCount);
-              let newFirstChild = Level (childLevelDepth + 1) newFirstChildLevelCount owner [| Leaf owner values, firstChild |];
-              let newLevelCount = !levelCount + valuesCount;
-              updateLevel newLevelCount firstIndex newFirstChild trie |> Option.return;
-          | None when triesWidth < width =>
-              let newLevelCount = ref (!levelCount + valuesCount);
-              Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addFirst (Leaf owner values)) |> Option.return;
-          | None => None
-        }
-      | _ => None
-    };
-  };
-
-  let addFirstLeafUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
-      (values: array 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Empty =>
-        Leaf owner values
-    | Leaf _ _ =>
-        let levelCount = count trie + CopyOnWriteArray.count values;
-        Level 1 (ref levelCount) owner [| Leaf owner values, trie |];
-    | Level levelDepth _ _ _ => switch (trie |> tryAddFirstLeafToTrieUsingMutator updateLevel owner values) {
-      | Some trie => trie
-      | None =>
-          let levelCount = count trie + CopyOnWriteArray.count values;
-          let levelDepth = levelDepth + 1;
-          Level levelDepth (ref levelCount) owner [| Leaf owner values, trie |];
-    }
-  };
-
-  let rec tryAddLastLeafToTrieUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
-      (values: array 'a)
-      (Level levelDepth levelCount owner tries as trie: t 'a): (option (t 'a)) => {
-    let lastIndex = tries |> CopyOnWriteArray.lastIndex;
-    let lastChild = tries |> CopyOnWriteArray.last;
-    let lastChildCount = count lastChild;
-    let lastChildDepth = depth lastChild;
-    let triesWidth = CopyOnWriteArray.count tries;
-    let valuesCount = CopyOnWriteArray.count values;
-
-    switch lastChild {
-      | Leaf _ _ when lastChildDepth < (levelDepth - 1) =>
-          let newLastChildLevelCount = lastChildCount + valuesCount;
-          let newLastChild = Level 1 (ref newLastChildLevelCount) owner [| lastChild, Leaf owner values |];
-          let newLevelCount = !levelCount - lastChildCount + newLastChildLevelCount;
-          updateLevel newLevelCount lastIndex newLastChild trie |> Option.return;
-      | Leaf _ when triesWidth < width =>
-          let newLevelCount = ref (!levelCount + valuesCount);
-          Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addLast (Leaf owner values)) |> Option.return;
-      | Level childLevelDepth _ _ _ => switch (lastChild |> tryAddLastLeafToTrieUsingMutator updateLevel owner values) {
-          | Some newLastChild =>
-              let newLevelCount = !levelCount - lastChildCount + (count newLastChild);
-              updateLevel newLevelCount lastIndex newLastChild trie |> Option.return;
-          | None when lastChildDepth < (levelDepth - 1) =>
-              let newLastChildLevelCount = ref (lastChildCount + valuesCount);
-              let newLastChild = Level (childLevelDepth + 1) newLastChildLevelCount owner [| lastChild, Leaf owner values |];
-              let newLevelCount = !levelCount + valuesCount;
-              updateLevel newLevelCount lastIndex newLastChild trie |> Option.return;
-          | None when triesWidth < width =>
-              let newLevelCount = ref (!levelCount + valuesCount);
-              Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addLast (Leaf owner values)) |> Option.return;
-          | None => None
-        }
-      | _ => None
-    }
-  };
-
-  let addLastLeafUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
-      (values: array 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Empty =>
-        Leaf owner values
-    | Leaf _ _ =>
-        let levelCount = count trie + CopyOnWriteArray.count values;
-        Level 1 (ref levelCount) owner [| trie, Leaf owner values |];
-    | Level levelDepth _ _ _ => switch (trie |> tryAddLastLeafToTrieUsingMutator updateLevel owner values) {
-      | Some trie => trie
-      | None =>
-          let levelCount = count trie + CopyOnWriteArray.count values;
-          let levelDepth = levelDepth + 1;
-          Level levelDepth (ref levelCount) owner [| trie, Leaf owner values |];
-    }
-  };
-
-  let rec removeFirstLeafUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
-      (trie: t 'a): (t 'a, t 'a) => switch trie {
-    | Leaf _ _ => (trie, Empty);
-    | Level levelDepth levelCount _ tries when levelDepth > 1 =>
-        let triesWidth = CopyOnWriteArray.count tries;
-        let firstChildIndex = 0;
-        let firstChild = tries |> CopyOnWriteArray.first;
-        let (firstLeaf, newFirstChild) = firstChild |> removeFirstLeafUsingMutator updateLevel owner;
-
-        switch newFirstChild {
-          | Empty when triesWidth > 2 =>
-              let newLevelCount = !levelCount - (count firstLeaf);
-              let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeFirst tries);
-              (firstLeaf, newTrie)
-          | Empty =>
-              (firstLeaf, CopyOnWriteArray.last tries)
-          | _ =>
-              let newLevelCount = !levelCount - (count firstLeaf);
-              (firstLeaf, updateLevel newLevelCount firstChildIndex newFirstChild trie)
-        };
-    | Level 1 levelCount _ tries =>
-        let triesWidth = CopyOnWriteArray.count tries;
-        let firstChild = tries |> CopyOnWriteArray.first;
-
-        triesWidth > 2 ? {
-          let newLevelCount = !levelCount - (count firstChild);
-          (firstChild, Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeFirst tries))
-        } : {
-          (firstChild, CopyOnWriteArray.last tries)
-        };
-    | _ => failwith "invalid state"
-  };
-
-  let rec removeLastLeafUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
-      (trie: t 'a): (t 'a, t 'a) => switch trie {
-    | Leaf _ _ => (Empty, trie);
-    | Level levelDepth levelCount _ tries when levelDepth > 1 =>
-        let triesWidth = CopyOnWriteArray.count tries;
-        let lastChildIndex = tries |> CopyOnWriteArray.lastIndex;
-        let lastChild = tries |> CopyOnWriteArray.last;
-        let (newLastChild, lastLeaf) = lastChild |> removeLastLeafUsingMutator updateLevel owner;
-
-        switch newLastChild {
-          | Empty when triesWidth > 2 =>
-              let newLevelCount = !levelCount - (count lastLeaf);
-              let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries);
-              (newTrie, lastLeaf)
-          | Empty =>
-              (CopyOnWriteArray.first tries, lastLeaf)
-          | _ =>
-              let newLevelCount = !levelCount - (count lastLeaf);
-              (updateLevel newLevelCount lastChildIndex newLastChild trie, lastLeaf)
-        };
-    | Level 1 levelCount _ tries =>
-        let triesWidth = CopyOnWriteArray.count tries;
-        let lastChild = tries |> CopyOnWriteArray.last;
-
-        triesWidth > 2 ? {
-          let newLevelCount = !levelCount - (count lastChild);
-          (Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries), lastChild)
-        } : {
-          (CopyOnWriteArray.first tries, lastChild)
-        };
-    | _ => failwith "invalid state"
-  };
-
-  let computeIndexUsingRadixSearch (depth: int) (index: int): int => {
-    let mask = width - 1;
-    let level = depth * bits;
-    (index lsr level) land mask;
-  };
-
-  let canRadixSearch (trie: t 'a): bool => switch trie {
-    | Empty => failwith "invalid state"
-    | Leaf _ _ => true
-    | Level depth count _ tries =>
-        let childCapacity = depthCapacity (depth - 1);
-        let triesCount = CopyOnWriteArray.count tries;
-        !count == (triesCount * childCapacity)
-  };
-
-  type leveIndexContinuation 'a 'b =
-    (/* parent */ t 'a) => (/* effective index */ int => (/* childIndex */ int) => 'b);
-
-  let computeLevelIndexUsingRadixSearch
-      (index: int)
-      (f: leveIndexContinuation 'a 'b)
-      (Level depth _ _ _ as trie: t 'a): 'b => {
-    let childIndex = computeIndexUsingRadixSearch depth index;
-    f trie index childIndex;
-  };
-
-  let computeLevelIndexUsingCountSearch
-      (index: int)
-      (f: leveIndexContinuation 'a 'b)
-      (Level _ _ _ tries as trie: t 'a): 'b => {
-    let rec loop index childIndex => {
-      let childNode = tries.(childIndex);
-      let childCount = count childNode;
-
-      index < childCount
-        ? f trie index childIndex
-        : loop (index - childCount) (childIndex + 1);
-    };
-
-    loop index 0;
-  };
-
-  let getImplLevelContinuation
-      (get: int => (t 'a) => 'a)
-      (Level _ _ _ tries: t 'a)
-      (effectiveIndex: int)
-      (childIndex: int): 'a => {
-    let childNode = tries |> CopyOnWriteArray.get childIndex;
-    childNode |> get effectiveIndex;
-  };
-
-  let getImpl
-      (computeLevelIndex: int => (leveIndexContinuation 'a 'a) => (t 'a) => 'a)
-      (get: int => (t 'a) => 'a)
-      (index: int)
-      (trie: t 'a): 'a => switch trie {
-    | Leaf _ values =>
-        values.(computeIndexUsingRadixSearch 0 index)
-    | Level _ _ _ _ =>
-        trie |> computeLevelIndex index (getImplLevelContinuation get);
-    | Empty => failwith "invalid state"
-  };
-
-  let rec getUsingRadixSearch (index: int) (trie: t 'a): 'a => getImpl
-    computeLevelIndexUsingRadixSearch
-    getUsingRadixSearch
-    index
-    trie;
-
-  let rec get (index: int) (trie: t 'a): 'a => switch trie {
-    | Level _ _ _ _ when not @@ canRadixSearch @@ trie => getImpl
-        computeLevelIndexUsingCountSearch
-        get
-        index
-        trie
-    | _ => trie |> getUsingRadixSearch index
-  };
-
-  let skipImpl
-      (computeLevelIndex: int => (leveIndexContinuation 'a (array 'a, t 'a)) => (t 'a) => (array 'a, t 'a))
-      (skip:
-        (option Transient.Owner.t) =>
-        int =>
-        (t 'a) =>
-        (array 'a, t 'a)
-      )
-      (owner: option Transient.Owner.t)
-      (skipCount: int)
-      (trie: t 'a): (array 'a, t 'a) => switch trie {
-    | Leaf _ nodes =>
-      let skipCount = computeIndexUsingRadixSearch 0 (skipCount - 1) + 1;
-      let result = CopyOnWriteArray.skip skipCount nodes;
-      (result, empty)
-    | Level _ _ _ _ =>
-      trie |> computeLevelIndex (skipCount - 1) (fun (Level depth _ _ tries) _ childIndex => {
-        let triesLastIndex = CopyOnWriteArray.lastIndex tries;
-        let childNode = tries.(childIndex);
-        let (tail, newChildNode) as childResult = childNode |> skip owner skipCount;
-
-        switch newChildNode {
-          | Empty when childIndex == triesLastIndex => childResult
-          | Empty when childIndex == (triesLastIndex - 1) =>
-            (tail, tries |> CopyOnWriteArray.last)
-          | Empty =>
-            let newTries = tries |> CopyOnWriteArray.skip (childIndex + 1);
-            let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
-            (tail, Level depth (ref levelCount) owner newTries)
-          | _ =>
-            let newTries = tries |> CopyOnWriteArray.skip childIndex;
-            newTries.(0) = newChildNode;
-            let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
-            (tail, Level depth (ref levelCount) owner newTries)
-        }
-      });
-    | Empty => failwith "invalid state"
-  };
-
-  let rec skipUsingRadixSearch
-      (owner: option Transient.Owner.t)
-      (skipCount: int)
-      (trie: t 'a): (array 'a, t 'a) => skipImpl
-    computeLevelIndexUsingRadixSearch
-    skipUsingRadixSearch
-    owner
-    skipCount
-    trie;
-
-  let rec skip
-      (owner: option Transient.Owner.t)
-      (count: int)
-      (trie: t 'a): (array 'a, t 'a) => switch trie {
-    | Level _ _ _ _ when not @@ canRadixSearch @@ trie => skipImpl
-       computeLevelIndexUsingCountSearch
-       skip
-       owner
-       count
-       trie
-    | _ => skipUsingRadixSearch
-       owner
-       count
-       trie
-  };
-
-  let takeImpl
-      (computeLevelIndex: int => (leveIndexContinuation 'a (t 'a, array 'a)) => (t 'a) => (t 'a, array 'a))
-      (take:
-        (option Transient.Owner.t) =>
-        int =>
-        (t 'a) =>
-        (t 'a, array 'a)
-      )
-      (owner: option Transient.Owner.t)
-      (takeCount: int)
-      (trie: t 'a): (t 'a, array 'a) => switch trie {
-    | Leaf _ nodes =>
-      let takeCount = computeIndexUsingRadixSearch 0 (takeCount - 1) + 1;
-      let result = CopyOnWriteArray.take takeCount nodes;
-      (empty, result)
-    | Level _ _ _ tries =>
-      trie |> computeLevelIndex (takeCount - 1) (fun (Level depth _ _ tries) effectiveIndex childIndex => {
-        let childNode = tries.(childIndex);
-        let (newChildNode, tail) as childResult = childNode |> take owner (effectiveIndex + 1);
-
-        switch newChildNode {
-          | Empty when childIndex == 0 => childResult
-          | Empty when childIndex == 1 => (tries.(0), tail)
-          | Empty =>
-            let newTries = tries |> CopyOnWriteArray.take childIndex;
-            let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
-            (Level depth (ref levelCount) owner newTries, tail)
-          | _ =>
-            let newTries = tries |> CopyOnWriteArray.take (childIndex + 1);
-            newTries.(childIndex) = newChildNode;
-            let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
-            (Level depth (ref levelCount) owner newTries, tail)
-        };
-      });
-    | Empty => failwith "invalid state"
-  };
-
-  let rec takeUsingRadixSearch
-      (owner: option Transient.Owner.t)
-      (takeCount: int)
-      (trie: t 'a): (t 'a, array 'a) => takeImpl
-    computeLevelIndexUsingRadixSearch
-    takeUsingRadixSearch
-    owner
-    takeCount
-    trie;
-
-  let rec take
-      (owner: option Transient.Owner.t)
-      (count: int)
-      (trie: t 'a): (t 'a, array 'a) => switch trie {
-   | Level _ _ _ _ when not @@ canRadixSearch @@ trie => takeImpl
-       computeLevelIndexUsingCountSearch
-       take
-       owner
-       count
-       trie
-    | _ => takeUsingRadixSearch
-       owner
-       count
-       trie
-  };
-
-  let updateUsingMutatorImpl
-      (computeLevelIndex: int => (leveIndexContinuation 'a (t 'a)) => (t 'a) => (t 'a))
-      (updateUsingMutator:
-        (int => int => (t 'a) => (t 'a) => (t 'a)) =>
-        (int => 'a => (t 'a) => (t 'a)) =>
-        int =>
-        'a =>
-        (t 'a) =>
-        (t 'a)
-      )
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (updateLeaf: int => 'a => (t 'a) => (t 'a))
-      (index: int)
-      (value: 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Empty => failwith "invalid state"
-    | Leaf _ _ => trie |> updateLeaf (computeIndexUsingRadixSearch 0 index) value;
-    | Level _ _ _ _ =>
-        trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
-          let childNode = tries |> CopyOnWriteArray.get childIndex;
-          let newChildNode = childNode |> updateUsingMutator updateLevel updateLeaf index value;
-          childNode === newChildNode
-            ? trie
-            : trie |> updateLevel !count childIndex newChildNode;
-        });
-  };
-
-  let rec updateUsingRadixSearchUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (updateLeaf: int => 'a => (t 'a) => (t 'a))
-      (index: int)
-      (value: 'a)
-      (trie: t 'a): (t 'a) => updateUsingMutatorImpl
-    computeLevelIndexUsingRadixSearch
-    updateUsingRadixSearchUsingMutator
-    updateLevel
-    updateLeaf
-    index
-    value
-    trie;
-
-  let rec updateUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (updateLeaf: int => 'a => (t 'a) => (t 'a))
-      (index: int)
-      (value: 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Level _ _ _ _ when not @@ canRadixSearch @@ trie => updateUsingMutatorImpl
-       computeLevelIndexUsingCountSearch
-       updateUsingMutator
-       updateLevel
-       updateLeaf
-       index
-       value
-       trie;
-    | _ => updateUsingRadixSearchUsingMutator
-        updateLevel
-        updateLeaf
-        index
-        value
-        trie;
-  };
-
-  let rec updateAllUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (updateLeaf: int => 'a => (t 'a) => (t 'a))
-      (f: 'a => 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Empty => Empty
-    | Leaf _ values =>
-        let valuesCount = CopyOnWriteArray.count values;
-        let rec loop index trie => index < valuesCount ? {
-          let newValue = f values.(index);
-          let newTrie = trie |> updateLeaf index newValue;
-          loop (index + 1) newTrie;
-        } : trie;
-
-        loop 0 trie;
-    | Level _ count _ tries =>
-        let triesCount = CopyOnWriteArray.count tries;
-
-        let rec loop index trie => index < triesCount ? {
-          let childNode = tries.(index);
-          let newChildNode = childNode |> updateAllUsingMutator updateLevel updateLeaf f;
-          let newTrie = childNode === newChildNode
-            ? trie
-            : trie |> updateLevel !count index newChildNode;
-          loop (index + 1) newTrie;
-        }: trie;
-
-        loop 0 trie;
-  };
-
-  let updateWithUsingMutatorImpl
-      (computeLevelIndex: int => (leveIndexContinuation 'a (t 'a)) => (t 'a) => (t 'a))
-      (updateUsingMutator:
-        (int => int => (t 'a) => (t 'a) => (t 'a)) =>
-        (int => 'a => (t 'a) => (t 'a)) =>
-        int =>
-        ('a => 'a) =>
-        (t 'a) =>
-        (t 'a)
-      )
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (updateLeaf: int => 'a => (t 'a) => (t 'a))
-      (index: int)
-      (f: 'a => 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Empty => failwith "invalid state"
-    | Leaf _ values =>
-        let arrIndex = (computeIndexUsingRadixSearch 0 index);
-        let newValue = f values.(arrIndex);
-        trie |> updateLeaf arrIndex newValue;
-    | Level _ _ _ _ =>
-        trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
-          let childNode = tries |> CopyOnWriteArray.get childIndex;
-          let newChildNode = childNode |> updateUsingMutator updateLevel updateLeaf index f;
-          childNode === newChildNode
-            ? trie
-            : trie |> updateLevel !count childIndex newChildNode;
-        });
-  };
-
-  let rec updateWithUsingRadixSearchUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (updateLeaf: int => 'a => (t 'a) => (t 'a))
-      (index: int)
-      (f: 'a => 'a)
-      (trie: t 'a): (t 'a) => updateWithUsingMutatorImpl
-    computeLevelIndexUsingRadixSearch
-    updateWithUsingRadixSearchUsingMutator
-    updateLevel
-    updateLeaf
-    index
-    f
-    trie;
-
-  let rec updateWithUsingMutator
-      (updateLevel: int => int => (t 'a) => (t 'a) => (t 'a))
-      (updateLeaf: int => 'a => (t 'a) => (t 'a))
-      (index: int)
-      (f: 'a => 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Level _ _ _ _ when not @@ canRadixSearch @@ trie => updateWithUsingMutatorImpl
-       computeLevelIndexUsingCountSearch
-       updateWithUsingMutator
-       updateLevel
-       updateLeaf
-       index
-       f
-       trie;
-    | _ => updateWithUsingRadixSearchUsingMutator
-        updateLevel
-        updateLeaf
-        index
-        f
-        trie;
-  };
-};
-
 let module VectorImpl = {
   module type VectorBase = {
     type t 'a;
@@ -752,26 +98,19 @@ let module VectorImpl = {
 
 type t 'a = {
   left: array 'a,
-  middle: Trie.t 'a,
+  middle: IndexedTrie.t 'a,
   right: array 'a,
 };
-
-let updateLevelPersistent
-    (count: int)
-    (index: int)
-    (child: Trie.t 'a)
-    (Trie.Level depth _ _ tries: Trie.t 'a): (Trie.t 'a) =>
-  Trie.Level depth (ref count) None (CopyOnWriteArray.update index child tries);
 
 let module PersistentVector = VectorImpl.Make {
   type nonrec t 'a = t 'a;
 
-  let tailIsFull (arr: array 'a): bool => (CopyOnWriteArray.count arr) == Trie.width;
-  let tailIsNotFull (arr: array 'a): bool => (CopyOnWriteArray.count arr) != Trie.width;
+  let tailIsFull (arr: array 'a): bool => (CopyOnWriteArray.count arr) == IndexedTrie.width;
+  let tailIsNotFull (arr: array 'a): bool => (CopyOnWriteArray.count arr) != IndexedTrie.width;
 
   let count ({ left, middle, right }: t 'a): int => {
     let leftCount = CopyOnWriteArray.count left;
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
     let rightCount = CopyOnWriteArray.count right;
 
     leftCount + middleCount + rightCount;
@@ -779,20 +118,16 @@ let module PersistentVector = VectorImpl.Make {
 
   let empty = {
     left: [||],
-    middle: Trie.empty,
+    middle: IndexedTrie.empty,
     right: [||],
   };
 
-  let updateLeaf
-      (index: int)
-      (value: 'a)
-      (Trie.Leaf _ values: Trie.t 'a): (Trie.t 'a) =>
-    Trie.Leaf None (values |> CopyOnWriteArray.update index value);
+
 
   let addFirst (_: option Transient.Owner.t) (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
     (tailIsFull left) && (CopyOnWriteArray.isNotEmpty right) ? {
       left: [| value |],
-      middle: Trie.addFirstLeafUsingMutator updateLevelPersistent None left middle,
+      middle: IndexedTrie.addFirstLeafUsingMutator IndexedTrie.updateLevelPersistent None left middle,
       right,
     } :
 
@@ -824,13 +159,13 @@ let module PersistentVector = VectorImpl.Make {
 
     {
       left,
-      middle: Trie.addLastLeafUsingMutator updateLevelPersistent None right middle,
+      middle: IndexedTrie.addLastLeafUsingMutator IndexedTrie.updateLevelPersistent None right middle,
       right: [| value |],
     };
 
   let removeFirst (_: option Transient.Owner.t) ({ left, middle, right }: t 'a): (t 'a) => {
     let leftCount = CopyOnWriteArray.count left;
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
     let rightCount = CopyOnWriteArray.count right;
 
     leftCount > 1 ? {
@@ -840,7 +175,8 @@ let module PersistentVector = VectorImpl.Make {
     } :
 
     middleCount > 0 ? {
-      let (Trie.Leaf _ left, middle) = Trie.removeFirstLeafUsingMutator updateLevelPersistent None middle;
+      let (IndexedTrie.Leaf _ left, middle) =
+        IndexedTrie.removeFirstLeafUsingMutator IndexedTrie.updateLevelPersistent None middle;
       { left, middle, right };
     } :
 
@@ -857,7 +193,7 @@ let module PersistentVector = VectorImpl.Make {
 
   let removeLast (_: option Transient.Owner.t) ({ left, middle, right }: t 'a): (t 'a) => {
     let leftCount = CopyOnWriteArray.count left;
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
     let rightCount = CopyOnWriteArray.count right;
 
     rightCount > 1 ? {
@@ -867,7 +203,8 @@ let module PersistentVector = VectorImpl.Make {
     } :
 
     middleCount > 0 ? {
-      let (middle, Trie.Leaf _ right) = Trie.removeLastLeafUsingMutator updateLevelPersistent None middle;
+      let (middle, IndexedTrie.Leaf _ right) =
+        IndexedTrie.removeLastLeafUsingMutator IndexedTrie.updateLevelPersistent None middle;
       { left, middle, right };
     } :
 
@@ -888,7 +225,7 @@ let module PersistentVector = VectorImpl.Make {
 
   let getUnsafe (index: int) ({ left, middle, right }: t 'a): 'a => {
     let leftCount = CopyOnWriteArray.count left;
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
 
     let rightIndex = index - middleCount - leftCount;
 
@@ -896,7 +233,7 @@ let module PersistentVector = VectorImpl.Make {
     rightIndex >= 0 ? right.(rightIndex) :
     {
       let index = index - leftCount;
-      middle |> Trie.get index;
+      middle |> IndexedTrie.get index;
     }
   };
 
@@ -906,7 +243,7 @@ let module PersistentVector = VectorImpl.Make {
       (value: 'a)
       ({ left, middle, right }: t 'a): (t 'a) => {
     let leftCount = CopyOnWriteArray.count left;
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
 
     let rightIndex = index - middleCount - leftCount;
 
@@ -924,7 +261,8 @@ let module PersistentVector = VectorImpl.Make {
 
     {
       let index = (index - leftCount);
-      let middle = middle |> Trie.updateUsingMutator updateLevelPersistent updateLeaf index value;
+      let middle = middle
+        |> IndexedTrie.updateUsingMutator IndexedTrie.updateLevelPersistent IndexedTrie.updateLeafPersistent index value;
       { left, middle, right }
     };
   };
@@ -935,7 +273,7 @@ let module PersistentVector = VectorImpl.Make {
       (f: 'a => 'a)
       ({ left, middle, right }: t 'a): (t 'a) => {
     let leftCount = CopyOnWriteArray.count left;
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
 
     let rightIndex = index - middleCount - leftCount;
 
@@ -953,7 +291,9 @@ let module PersistentVector = VectorImpl.Make {
 
     {
       let index = (index - leftCount);
-      let middle = middle |> Trie.updateWithUsingMutator updateLevelPersistent updateLeaf index f;
+      let middle = middle
+        |> IndexedTrie.updateWithUsingMutator IndexedTrie.updateLevelPersistent IndexedTrie.updateLeafPersistent index f;
+
       { left, middle, right }
     };
   };
@@ -962,57 +302,29 @@ let module PersistentVector = VectorImpl.Make {
 type transientVectorImpl 'a = {
   left: array 'a,
   leftCount: int,
-  middle: Trie.t 'a,
+  middle: IndexedTrie.t 'a,
   right: array 'a,
   rightCount: int,
 };
 
 let tailCopyAndExpand (arr: array 'a): (array 'a) => {
   let arrCount = CopyOnWriteArray.count arr;
-  let retval = Array.make Trie.width arr.(0);
-  Array.blit arr 0 retval 0 (min arrCount Trie.width);
+  let retval = Array.make IndexedTrie.width arr.(0);
+  Array.blit arr 0 retval 0 (min arrCount IndexedTrie.width);
   retval;
-};
-
-let updateLevelTransient
-    (owner: Transient.Owner.t)
-    (count: int)
-    (index: int)
-    (child: Trie.t 'a)
-    (trie: Trie.t 'a): (Trie.t 'a) => switch trie {
-  | Trie.Level _ trieCount (Some trieOwner) tries when trieOwner === owner =>
-      tries.(index) = child;
-      trieCount := count;
-      trie
-  | Trie.Level depth _ _ tries =>
-      Trie.Level depth (ref count) (Some owner) (CopyOnWriteArray.update index child tries)
-  | _ => failwith "Invalid state"
-};
-
-let updateLeafTransient
-    (owner: Transient.Owner.t)
-    (index: int)
-    (value: 'a)
-    (trie: Trie.t 'a): (Trie.t 'a) => switch trie {
-  | Trie.Leaf (Some trieOwner) values when trieOwner === owner =>
-      values.(index) = value;
-      trie
-  | Trie.Leaf _ values =>
-      Trie.Leaf (Some owner) (values |> CopyOnWriteArray.update index value)
-  | _ => failwith "Invalid state"
 };
 
 let module TransientVectorImpl = VectorImpl.Make {
   type t 'a = transientVectorImpl 'a;
 
   let tailIsEmpty (count: int): bool => count == 0;
-  let tailIsFull (count: int): bool => count == Trie.width;
+  let tailIsFull (count: int): bool => count == IndexedTrie.width;
   let tailIsNotEmpty (count: int): bool => count != 0;
-  let tailIsNotFull (count: int): bool => count != Trie.width;
+  let tailIsNotFull (count: int): bool => count != IndexedTrie.width;
 
   let tailAddFirst (value: 'a) (arr: array 'a): (array 'a) => {
     let arr = (CopyOnWriteArray.count arr) == 0
-      ? Array.make Trie.width value
+      ? Array.make IndexedTrie.width value
       : arr;
 
     let rec loop index => index > 0 ? {
@@ -1037,7 +349,7 @@ let module TransientVectorImpl = VectorImpl.Make {
 
   let tailUpdate (index: int) (value: 'a) (arr: array 'a): (array 'a) => {
     let arr = (CopyOnWriteArray.count arr) == 0
-      ? Array.make Trie.width value
+      ? Array.make IndexedTrie.width value
       : arr;
 
     arr.(index) = value;
@@ -1045,14 +357,14 @@ let module TransientVectorImpl = VectorImpl.Make {
   };
 
   let count ({ leftCount, middle, rightCount }: transientVectorImpl 'a): int => {
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
     leftCount + middleCount + rightCount;
   };
 
   let empty = {
     left: [||],
     leftCount: 0,
-    middle: Trie.empty,
+    middle: IndexedTrie.empty,
     right: [||],
     rightCount: 0,
   };
@@ -1068,15 +380,15 @@ let module TransientVectorImpl = VectorImpl.Make {
         rightCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) =>
     (tailIsFull leftCount) && (tailIsNotEmpty rightCount) ? {
-      left: Array.make Trie.width value,
+      left: Array.make IndexedTrie.width value,
       leftCount: 1,
-      middle: Trie.addFirstLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner left middle,
+      middle: IndexedTrie.addFirstLeafUsingMutator (IndexedTrie.updateLevelTransient @@ Option.first @@ owner) owner left middle,
       right,
       rightCount,
     } :
 
     (tailIsFull leftCount) && (tailIsEmpty rightCount) ? {
-      left: Array.make Trie.width value,
+      left: Array.make IndexedTrie.width value,
       leftCount: 1,
       middle,
       right: left,
@@ -1121,8 +433,8 @@ let module TransientVectorImpl = VectorImpl.Make {
     {
       left,
       leftCount,
-      middle: Trie.addLastLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner right middle,
-      right: Array.make Trie.width value,
+      middle: IndexedTrie.addLastLeafUsingMutator (IndexedTrie.updateLevelTransient @@ Option.first @@ owner) owner right middle,
+      right: Array.make IndexedTrie.width value,
       rightCount: 1,
     };
 
@@ -1143,14 +455,14 @@ let module TransientVectorImpl = VectorImpl.Make {
       rightCount,
     } :
 
-    (Trie.count middle) > 0 ? {
-      let (Trie.Leaf leftOwner left, middle) = middle
-        |> Trie.removeFirstLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner;
+    (IndexedTrie.count middle) > 0 ? {
+      let (IndexedTrie.Leaf leftOwner left, middle) = middle
+        |> IndexedTrie.removeFirstLeafUsingMutator (IndexedTrie.updateLevelTransient @@ Option.first @@ owner) owner;
       let leftCount = CopyOnWriteArray.count left;
 
       let owner = Option.first owner;
       let left = switch leftOwner {
-        | Some leftOwner when leftOwner === owner && leftCount == Trie.width => left
+        | Some leftOwner when leftOwner === owner && leftCount == IndexedTrie.width => left
         | _ => tailCopyAndExpand left
       };
 
@@ -1167,7 +479,7 @@ let module TransientVectorImpl = VectorImpl.Make {
       left: right,
       leftCount: rightCount,
       middle,
-      right: Array.make Trie.width right.(0),
+      right: Array.make IndexedTrie.width right.(0),
       rightCount: 0,
     } :
 
@@ -1198,14 +510,14 @@ let module TransientVectorImpl = VectorImpl.Make {
       rightCount: rightCount - 1,
     } :
 
-    (Trie.count middle) > 0 ? {
-      let (middle, Trie.Leaf rightOwner right) = middle
-        |> Trie.removeLastLeafUsingMutator (updateLevelTransient @@ Option.first @@ owner) owner;
+    (IndexedTrie.count middle) > 0 ? {
+      let (middle, IndexedTrie.Leaf rightOwner right) = middle
+        |> IndexedTrie.removeLastLeafUsingMutator (IndexedTrie.updateLevelTransient @@ Option.first @@ owner) owner;
       let rightCount = CopyOnWriteArray.count right;
 
       let owner = Option.first owner;
       let right = switch rightOwner {
-        | Some rightOwner when rightOwner === owner && rightCount == Trie.width => right
+        | Some rightOwner when rightOwner === owner && rightCount == IndexedTrie.width => right
         | _ => tailCopyAndExpand right
       };
 
@@ -1239,7 +551,7 @@ let module TransientVectorImpl = VectorImpl.Make {
         right,
         _,
       }: transientVectorImpl 'a): 'a => {
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
     let rightIndex = index - middleCount - leftCount;
 
     index < leftCount ? left.(index) :
@@ -1248,7 +560,7 @@ let module TransientVectorImpl = VectorImpl.Make {
 
     {
       let index = index - leftCount;
-      middle |> Trie.get index;
+      middle |> IndexedTrie.get index;
     }
   };
 
@@ -1263,7 +575,7 @@ let module TransientVectorImpl = VectorImpl.Make {
         right,
         rightCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) => {
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
 
     let rightIndex = index - middleCount - leftCount;
 
@@ -1285,9 +597,9 @@ let module TransientVectorImpl = VectorImpl.Make {
 
     {
       let index = (index - leftCount);
-      let middle = middle |> Trie.updateUsingMutator
-        (updateLevelTransient @@ Option.first @@ owner)
-        (updateLeafTransient @@ Option.first @@ owner)
+      let middle = middle |> IndexedTrie.updateUsingMutator
+        (IndexedTrie.updateLevelTransient @@ Option.first @@ owner)
+        (IndexedTrie.updateLeafTransient @@ Option.first @@ owner)
         index
         value;
 
@@ -1306,7 +618,7 @@ let module TransientVectorImpl = VectorImpl.Make {
         right,
         rightCount,
       }: transientVectorImpl 'a): (transientVectorImpl 'a) => {
-    let middleCount = Trie.count middle;
+    let middleCount = IndexedTrie.count middle;
 
     let rightIndex = index - middleCount - leftCount;
 
@@ -1328,9 +640,9 @@ let module TransientVectorImpl = VectorImpl.Make {
 
     {
       let index = (index - leftCount);
-      let middle = middle |> Trie.updateWithUsingMutator
-        (updateLevelTransient @@ Option.first @@ owner)
-        (updateLeafTransient @@ Option.first @@ owner)
+      let middle = middle |> IndexedTrie.updateWithUsingMutator
+        (IndexedTrie.updateLevelTransient @@ Option.first @@ owner)
+        (IndexedTrie.updateLeafTransient @@ Option.first @@ owner)
         index
         f;
 
@@ -1480,9 +792,9 @@ module TransientVector = {
 
       for i in 0 to (leftCount - 1) { left.(i) = updater left.(i) };
 
-      let middle = middle |> Trie.updateAllUsingMutator
-        (updateLevelTransient owner)
-        (updateLeafTransient owner)
+      let middle = middle |> IndexedTrie.updateAllUsingMutator
+        (IndexedTrie.updateLevelTransient owner)
+        (IndexedTrie.updateLeafTransient owner)
         updater;
 
       for i in 0 to (rightCount - 1) { right.(i) = updater right.(i) };
@@ -1514,7 +826,7 @@ let addLastAll (seq: Seq.t 'a) (vec: t 'a): (t 'a) => vec
   |> TransientVector.persist;
 
 let every (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
-  (CopyOnWriteArray.every f left) && (Trie.every f middle) && (CopyOnWriteArray.every f right);
+  (CopyOnWriteArray.every f left) && (IndexedTrie.every f middle) && (CopyOnWriteArray.every f right);
 
 let everyWithIndex (f: int => 'a => bool) (vec: t 'a): bool => {
   /* kind of a hack, but a lot less code to write */
@@ -1536,7 +848,7 @@ let equalsWith
   (count this) != (count that) ? false :
   CopyOnWriteArray.equalsWith valueEquals thisLeft thatLeft &&
   /* Perhaps could make this more efficient by avoiding use of Seq */
-  Seq.equalsWith valueEquals (Trie.toSeq thisMiddle) (Trie.toSeq thatMiddle) &&
+  Seq.equalsWith valueEquals (IndexedTrie.toSeq thisMiddle) (IndexedTrie.toSeq thatMiddle) &&
   CopyOnWriteArray.equalsWith valueEquals thisRight thatRight;
 
 let equals (this: t 'a) (that: t 'a): bool =>
@@ -1546,7 +858,7 @@ let find (f: 'a => bool) ({ left, middle, right }: t 'a): 'a =>
   /* FIXME: Add an operator to Option for this use case */
   switch (left |> CopyOnWriteArray.tryFind f) {
     | Some v => v
-    | _ => switch (middle |> Trie.tryFind f) {
+    | _ => switch (middle |> IndexedTrie.tryFind f) {
       | Some v => v
       | _ => right |> CopyOnWriteArray.find f
     }
@@ -1599,7 +911,7 @@ let init (count: int) (f: int => 'a): (t 'a) => Seq.inRange 0 (Some count) 1
   |> TransientVector.persist;
 
 let none (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
-  (CopyOnWriteArray.none f left) && (Trie.none f middle) && (CopyOnWriteArray.none f right);
+  (CopyOnWriteArray.none f left) && (IndexedTrie.none f middle) && (CopyOnWriteArray.none f right);
 
 let noneWithIndex (f: int => 'a => bool) (vec: t 'a): bool => {
   /* kind of a hack, but a lot less code to write */
@@ -1614,7 +926,7 @@ let noneWithIndex (f: int => 'a => bool) (vec: t 'a): bool => {
 };
 
 let some (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
-  (CopyOnWriteArray.some f left) || (Trie.some f middle) || (CopyOnWriteArray.some f right);
+  (CopyOnWriteArray.some f left) || (IndexedTrie.some f middle) || (CopyOnWriteArray.some f right);
 
 let containsWith (valueEquals: Equality.t 'a) (value: 'a) (vec: t 'a): bool =>
   some (valueEquals value) vec;
@@ -1636,7 +948,7 @@ let someWithIndex (f: int => 'a => bool) (vec: t 'a): bool => {
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = left |> CopyOnWriteArray.reduce f acc;
-  let acc = middle |> Trie.reduce f acc;
+  let acc = middle |> IndexedTrie.reduce f acc;
   let acc = right |> CopyOnWriteArray.reduce f acc;
   acc;
 };
@@ -1661,7 +973,7 @@ let forEachWithIndex (f: int => 'a => unit) (vec: t 'a): unit =>
 
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
-  let acc = middle |> Trie.reduceRight f acc;
+  let acc = middle |> IndexedTrie.reduceRight f acc;
   let acc = left |> CopyOnWriteArray.reduceRight f acc;
   acc;
 };
@@ -1726,7 +1038,7 @@ let reverse (vector: t 'a): (t 'a) => vector
 let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   let vectorCount = count vec;
   let leftCount = CopyOnWriteArray.count left;
-  let middleCount = Trie.count middle;
+  let middleCount = IndexedTrie.count middle;
 
   skipCount >= vectorCount ? empty :
 
@@ -1737,13 +1049,14 @@ let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   } :
 
   skipCount == leftCount ? {
-    let (Trie.Leaf _ left, middle) = Trie.removeFirstLeafUsingMutator updateLevelPersistent None middle;
+    let (IndexedTrie.Leaf _ left, middle) =
+      IndexedTrie.removeFirstLeafUsingMutator IndexedTrie.updateLevelPersistent None middle;
     { left, middle, right }
   } :
 
   skipCount - leftCount < middleCount ? {
     let skipCount = skipCount - leftCount;
-    let (left, middle) = Trie.skip None skipCount middle;
+    let (left, middle) = IndexedTrie.skip None skipCount middle;
     { left, middle, right }
   } :
 
@@ -1751,7 +1064,7 @@ let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
     let skipCount = skipCount - leftCount - middleCount;
     {
       left:  right |> CopyOnWriteArray.skip skipCount,
-      middle: Trie.empty,
+      middle: IndexedTrie.empty,
       right: [||],
     }
   }
@@ -1760,23 +1073,24 @@ let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
 let take (takeCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   let vectorCount = count vec;
   let leftCount = CopyOnWriteArray.count left;
-  let middleCount = Trie.count middle;
+  let middleCount = IndexedTrie.count middle;
 
   takeCount >= vectorCount ? vec :
   takeCount <= leftCount ? {
     left: left |> CopyOnWriteArray.take takeCount,
-    middle: Trie.empty,
+    middle: IndexedTrie.empty,
     right: [||],
   } :
 
   takeCount - leftCount < middleCount ? {
     let takeCount = takeCount - leftCount;
-    let (middle, right) = Trie.take None takeCount middle;
+    let (middle, right) = IndexedTrie.take None takeCount middle;
     { left, middle, right }
   } :
 
   takeCount - leftCount == middleCount ? {
-    let (middle, Trie.Leaf _ right) = Trie.removeLastLeafUsingMutator updateLevelPersistent None middle;
+    let (middle, IndexedTrie.Leaf _ right) =
+      IndexedTrie.removeLastLeafUsingMutator IndexedTrie.updateLevelPersistent None middle;
     { left, middle, right }
   } :
 
@@ -1792,7 +1106,7 @@ let range (startIndex: int) (takeCount: option int) (vec: t 'a): (t 'a) =>
 
 let toSeq ({ left, middle, right }: t 'a): (Seq.t 'a) => Seq.concat [
   CopyOnWriteArray.toSeq left,
-  Trie.toSeq middle,
+  IndexedTrie.toSeq middle,
   CopyOnWriteArray.toSeq right,
 ];
 
@@ -1807,7 +1121,7 @@ let compare (this: t 'a) (that: t 'a): Ordering.t =>
 
 let toSeqReversed ({ left, middle, right }: t 'a): (Seq.t 'a) => Seq.concat [
   CopyOnWriteArray.toSeqReversed right,
-  Trie.toSeqReversed middle,
+  IndexedTrie.toSeqReversed middle,
   CopyOnWriteArray.toSeqReversed left,
 ];
 
@@ -1815,7 +1129,7 @@ let tryFind (f: 'a => bool) ({ left, middle, right }: t 'a): (option 'a) =>
   /* FIXME: Add an operator to Option for this use case */
   switch (left |> CopyOnWriteArray.tryFind f) {
     | Some _ as v => v
-    | _ => switch (middle |> Trie.tryFind f) {
+    | _ => switch (middle |> IndexedTrie.tryFind f) {
       | Some _ as v => v
       | _ => right |> CopyOnWriteArray.tryFind f
     }
@@ -1883,28 +1197,6 @@ let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
   |> TransientVector.updateAll f
   |> TransientVector.persist;
-
-let validateTree ({ middle }: t 'a) => {
-  let rec validate tree => switch tree {
-    | Trie.Empty => ()
-    | Trie.Leaf _ v => if ((CopyOnWriteArray.count v) != 32) (failwith "arr too small")
-    | Trie.Level depth count _ tries =>
-        print_string "depth: "; print_int depth; print_newline ();
-        print_string "count: "; print_int !count; print_newline ();
-        print_string "triesWidth: "; print_int (CopyOnWriteArray.count tries); print_newline ();
-        print_newline ();
-        let firstTrie = tries |> CopyOnWriteArray.first;
-        if (depth != ((firstTrie |> Trie.depth) + 1)) (failwith "parent level higher than child");
-        if ((firstTrie |> Trie.count) != (firstTrie |> Trie.capacity)) {
-          print_string "firstTrie count: "; print_int (firstTrie |> Trie.count); print_newline ();
-          print_string "firstTrie capacity: "; print_int (firstTrie |> Trie.capacity); print_newline ();
-          failwith " first Trie isn't full";
-        };
-        tries |> CopyOnWriteArray.forEach validate;
-  };
-
-  validate middle;
-};
 
 /* Unimplemented functions */
 let concat (vectors: list (t 'a)): (t 'a) =>

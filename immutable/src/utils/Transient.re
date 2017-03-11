@@ -3,6 +3,8 @@ let module Owner = {
   type t = ref ownerT;
 
   let create () => ref Owner;
+
+  let none = ref Owner;
 };
 
 type t 'a = {
