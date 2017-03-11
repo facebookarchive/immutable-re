@@ -476,7 +476,7 @@ let updateWith (index: int) (f: 'a => 'a) (arr: copyOnWriteArray 'a): (copyOnWri
   clone
 };
 
-let toMap (arr: copyOnWriteArray 'a): (map int 'a) => {
+let toMap (arr: copyOnWriteArray 'a): (ImmMap.t int 'a) => {
   containsWith: fun equals index value => index >= 0 && index < count arr
     ? equals arr.(index) value
     : false,

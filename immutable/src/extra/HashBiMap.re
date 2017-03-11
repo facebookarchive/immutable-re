@@ -1,6 +1,4 @@
 open HashMap;
-open ImmMap;
-open ImmSet;
 open Option.Operators;
 
 type hashBiMap 'k 'v = {
@@ -48,7 +46,7 @@ let get (key: 'k) ({ map }: hashBiMap 'k 'v): 'v =>
 let hash ({ map, inverse }: hashBiMap 'k 'v): int =>
   map |> HashMap.hashWith (HashStrategy.hash inverse.strategy);
 
-let keys ({ map }: hashBiMap 'k 'v): (set 'k) =>
+let keys ({ map }: hashBiMap 'k 'v): (ImmSet.t 'k) =>
   map |> HashMap.keys;
 
 let inverse ({ map, inverse }: hashBiMap 'k 'v): hashBiMap 'v 'k => {
@@ -109,13 +107,13 @@ let removeValue (value: 'v) ({ map, inverse } as hashBiMap: hashBiMap 'k 'v): (h
 let some (f: 'k => 'v => bool) ({ map }: hashBiMap 'k 'v): bool =>
   map |> HashMap.some f;
 
-let toSet ({ map, inverse }: hashBiMap 'k 'v): (set ('k, 'v)) =>
+let toSet ({ map, inverse }: hashBiMap 'k 'v): (ImmSet.t ('k, 'v)) =>
   /* Kind of cheating */
   map |> HashMap.toSetWith (HashStrategy.equals inverse.strategy);
 
 let toInverseMap ({ inverse }: hashBiMap 'k 'v): (hashMap 'k 'k) => inverse;
 
-let toMap ({ map }: hashBiMap 'k 'v): (map 'k 'v) => map |> HashMap.toMap;
+let toMap ({ map }: hashBiMap 'k 'v): (ImmMap.t 'k 'v) => map |> HashMap.toMap;
 
 let toSeq ({ map }: hashBiMap 'k 'v): (Seq.t ('k, 'v)) => map |> HashMap.toSeq;
 
@@ -138,7 +136,7 @@ let tryPut
       })
   };
 
-let values ({ inverse }: hashBiMap 'k 'v): (set 'v) =>
+let values ({ inverse }: hashBiMap 'k 'v): (ImmSet.t 'v) =>
   inverse |> HashMap.keys;
 
 type transientHashBiMap 'k 'v = {

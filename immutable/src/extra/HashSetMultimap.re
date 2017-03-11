@@ -1,7 +1,5 @@
 open HashMap;
-open ImmSet;
 open Option.Operators;
-open Pair;
 open HashSet;
 
 type hashSetMultimap 'k 'v = {
@@ -59,7 +57,7 @@ let isEmpty ({ map }: hashSetMultimap 'k 'v): bool =>
 let isNotEmpty ({ map }: hashSetMultimap 'k 'v): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: hashSetMultimap 'k 'v): (set 'k) =>
+let keys ({ map }: hashSetMultimap 'k 'v): (ImmSet.t 'k) =>
   map |> HashMap.keys;
 
 let none (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): bool => {
@@ -160,7 +158,7 @@ let values ({ map }: hashSetMultimap 'k 'v): (Seq.t 'v) =>
   map |> HashMap.values |> Seq.flatMap HashSet.toSeq;
 
 let toSet
-    ({ count, map, valueStrategy } as multimap: hashSetMultimap 'k 'v): (set ('k, 'v)) => {
+    ({ count, map, valueStrategy } as multimap: hashSetMultimap 'k 'v): (ImmSet.t ('k, 'v)) => {
   contains: fun (k, v) => multimap |> contains k v,
   count,
   every: fun f => multimap |> every (fun k v => f (k, v)),

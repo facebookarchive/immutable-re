@@ -1853,7 +1853,7 @@ let tryIndexOfWithIndex (f: int => 'a => bool) (vec: vector 'a): (option int) =>
   !index >= 0 ? Some !index : None;
 };
 
-let toMap (vec: vector 'a): (map int 'a) => {
+let toMap (vec: vector 'a): (ImmMap.t int 'a) => {
   containsWith: fun equals index value => index >= 0 && index < count vec
     ? equals (get index vec) value
     : false,

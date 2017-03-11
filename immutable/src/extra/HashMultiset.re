@@ -1,7 +1,5 @@
 open Set;
 open HashMap;
-open ImmMap;
-open ImmSet;
 open Option.Operators;
 
 type hashMultiset 'a = {
@@ -103,7 +101,7 @@ let set (value: 'a) (valueCount: int) ({ count, map } as multiset: hashMultiset 
 let some (f: 'a => int => bool) ({ map }: hashMultiset 'a): bool =>
   map |> HashMap.some f;
 
-let toMap ({ map }: hashMultiset 'a): (map 'a int) => map |> HashMap.toMap;
+let toMap ({ map }: hashMultiset 'a): (ImmMap.t 'a int) => map |> HashMap.toMap;
 
 let toSeq ({ map }: hashMultiset 'a): (Seq.t 'a) =>
   map |> HashMap.toSeq |> Seq.flatMap (fun (v, i) => Seq.repeat v (Some i));
@@ -111,7 +109,7 @@ let toSeq ({ map }: hashMultiset 'a): (Seq.t 'a) =>
 let tryFind (f: 'a => int => bool) ({ map }: hashMultiset 'a): (option ('a, int)) =>
   map |> HashMap.tryFind f;
 
-let values ({ map }: hashMultiset 'a): (set 'a) =>
+let values ({ map }: hashMultiset 'a): (ImmSet.t 'a) =>
   map |> HashMap.keys;
 
 type transientHashMultiset 'a = {

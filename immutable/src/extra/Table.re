@@ -1,8 +1,6 @@
 open Functions.Operators;
 open HashMap;
-open ImmSet;
 open Option.Operators;
-open Pair;
 
 type table 'row 'column 'value = {
   count: int,
@@ -80,7 +78,7 @@ let isEmpty ({ map }: table 'row 'column 'value): bool =>
 let isNotEmpty ({ map }: table 'row 'column 'value): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: table 'row 'column 'value): (set 'k) =>
+let keys ({ map }: table 'row 'column 'value): (ImmSet.t 'k) =>
   map |> HashMap.keys;
 
 let map
@@ -162,7 +160,7 @@ let removeRow
     columnStrategy,
   })) |? table;
 
-let rows ({ map }: table 'row 'column 'value): (set 'row) =>
+let rows ({ map }: table 'row 'column 'value): (ImmSet.t 'row) =>
   map |> HashMap.keys;
 
 let some (f: 'row => 'column => 'value => bool) ({ map }: table 'row 'column 'value): bool => {

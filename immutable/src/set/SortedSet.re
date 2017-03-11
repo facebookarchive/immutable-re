@@ -1,7 +1,5 @@
 open AVLTreeSet;
 open Functions.Operators;
-open ImmMap;
-open ImmSet;
 open Option.Operators;
 
 type sortedSet 'a = {
@@ -121,7 +119,7 @@ let tryFirst ({ tree }: sortedSet 'a): (option 'a) =>
 let tryLast ({ tree }: sortedSet 'a): (option 'a) =>
   AVLTreeSet.tryLast tree;
 
-let toSet (set: sortedSet 'a): (set 'a) => {
+let toSet (set: sortedSet 'a): (ImmSet.t 'a) => {
   contains: fun a => contains a set,
   count: count set,
   every: fun f => every f set,
@@ -134,7 +132,7 @@ let toSet (set: sortedSet 'a): (set 'a) => {
   tryFind: fun f => tryFind f set,
 };
 
-let toMap (set: sortedSet 'a): (map 'a 'a) => {
+let toMap (set: sortedSet 'a): (ImmMap.t 'a 'a) => {
   containsWith: fun equals k v => set |> contains k ? equals k v : false,
   containsKey: fun k => set |> contains k,
   count: count set,

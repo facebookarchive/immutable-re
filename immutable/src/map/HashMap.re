@@ -1,7 +1,5 @@
 open AVLTreeMap;
 open EqualityMap;
-open ImmMap;
-open ImmSet;
 open SortedMap;
 
 type bitmapTrieMap 'k 'v =
@@ -451,7 +449,7 @@ let tryGet (key: 'k) ({ strategy, root }: hashMap 'k 'v): (option 'v) => {
 let values ({ root }: hashMap 'k 'v): (Seq.t 'v) =>
   root |> BitmapTrieMap.values;
 
-let toMap (map: hashMap 'k 'v): (map 'k 'v) => {
+let toMap (map: hashMap 'k 'v): (ImmMap.t 'k 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
@@ -487,13 +485,13 @@ let hash (map: hashMap 'k 'v): int =>
 let hashWith (valueHash: Hash.t 'v) ({ strategy } as map: hashMap 'k 'v): int =>
   map |> toMap |> ImmMap.hashWith (HashStrategy.hash strategy) valueHash;
 
-let keys (map: hashMap 'k 'v): (set 'k) =>
+let keys (map: hashMap 'k 'v): (ImmSet.t 'k) =>
   map |> toMap |> ImmMap.keys;
 
-let toSet (map: hashMap 'k 'v): (set ('k, 'v)) =>
+let toSet (map: hashMap 'k 'v): (ImmSet.t ('k, 'v)) =>
   map |> toMap |> ImmMap.toSet;
 
-let toSetWith (equality: Equality.t 'v) (map: hashMap 'k 'v): (set ('k, 'v)) =>
+let toSetWith (equality: Equality.t 'v) (map: hashMap 'k 'v): (ImmSet.t ('k, 'v)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
 type transientHashMap 'k 'v = Transient.t (hashMap 'k 'v);
@@ -589,11 +587,11 @@ let fromSeqWith (strategy: HashStrategy.t 'k) (seq: Seq.t ('k, 'v)): (hashMap 'k
 let fromSeq (seq: Seq.t ('k, 'v)): (hashMap 'k 'v) =>
   fromSeqWith (HashStrategy.structuralCompare) seq;
 
-let fromMapWith (strategy: HashStrategy.t 'k) (map: map 'k 'v): (hashMap 'k 'v) =>
+let fromMapWith (strategy: HashStrategy.t 'k) (map: ImmMap.t 'k 'v): (hashMap 'k 'v) =>
   ImmMap.reduce (fun acc k v => acc |> TransientHashMap.put k v) (emptyWith strategy |> mutate) map
   |> TransientHashMap.persist;
 
-let fromMap (map: map 'k 'v): (hashMap 'k 'v) =>
+let fromMap (map: ImmMap.t 'k 'v): (hashMap 'k 'v) =>
   fromMapWith HashStrategy.structuralCompare map;
 
 let merge

@@ -1,7 +1,5 @@
 open HashMap;
-open ImmSet;
 open Option.Operators;
-open Pair;
 open Stack;
 
 type stackMultimap 'k 'v = {
@@ -102,7 +100,7 @@ let isEmpty ({ map }: stackMultimap 'k 'v): bool =>
 let isNotEmpty ({ map }: stackMultimap 'k 'v): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: stackMultimap 'k 'v): (set 'k) =>
+let keys ({ map }: stackMultimap 'k 'v): (ImmSet.t 'k) =>
   map |> HashMap.keys;
 
 let none (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): bool => {

@@ -1,6 +1,4 @@
 open AVLTreeMap;
-open ImmMap;
-open ImmSet;
 
 type sortedMap 'k 'v = {
   comparator: Comparator.t 'k,
@@ -89,10 +87,10 @@ let fromSeqWith (comparator: Comparator.t 'k) (seq: Seq.t ('k, 'v)): (sortedMap 
 let fromSeq (seq: Seq.t ('k, 'v)): (sortedMap 'k 'v) =>
   fromSeqWith (Comparator.structural) seq;
 
-let fromMapWith (comparator: Comparator.t 'k) (map: map 'k 'v): (sortedMap 'k 'v) =>
+let fromMapWith (comparator: Comparator.t 'k) (map: ImmMap.t 'k 'v): (sortedMap 'k 'v) =>
   map |> ImmMap.reduce (fun acc k v => acc |> put k v) (emptyWith comparator);
 
-let fromMap (map: map 'k 'v): (sortedMap 'k 'v) =>
+let fromMap (map: ImmMap.t 'k 'v): (sortedMap 'k 'v) =>
   fromMapWith Comparator.structural map;
 
 let get (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): 'v =>
@@ -151,7 +149,7 @@ let tryLast ({ tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
 let values ({ tree }: sortedMap 'k 'v): (Seq.t 'v) =>
   tree |> AVLTreeMap.values;
 
-let toMap (map: sortedMap 'k 'v): (map 'k 'v) => {
+let toMap (map: sortedMap 'k 'v): (ImmMap.t 'k 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
@@ -204,7 +202,7 @@ let hash (map: sortedMap 'k 'v): int =>
 let hashWith (keyHash: Hash.t 'k) (valueHash: Hash.t 'v) (map: sortedMap 'k 'v): int =>
   map |> toMap |> ImmMap.hashWith keyHash valueHash;
 
-let keys (map: sortedMap 'k 'v): (set 'k) =>
+let keys (map: sortedMap 'k 'v): (ImmSet.t 'k) =>
   map |> toMap |> ImmMap.keys;
 
 let merge
@@ -222,8 +220,8 @@ let merge
   )
   map;
 
-let toSetWith (equality: Equality.t 'v) (map: sortedMap 'k 'v): (set ('k, 'v)) =>
+let toSetWith (equality: Equality.t 'v) (map: sortedMap 'k 'v): (ImmSet.t ('k, 'v)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
-let toSet (map: sortedMap 'k 'v): (set ('k, 'v)) =>
+let toSet (map: sortedMap 'k 'v): (ImmSet.t ('k, 'v)) =>
   map |> toMap |> ImmMap.toSet;

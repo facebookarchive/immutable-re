@@ -1,7 +1,5 @@
 open AVLTreeSet;
 open EqualitySet;
-open ImmMap;
-open ImmSet;
 open SortedSet;
 
 type bitmapTrieSet 'a =
@@ -216,7 +214,7 @@ let some (f: 'a => bool) (set: hashSet 'a): bool =>
 let tryFind (f: 'a => bool) (set: hashSet 'a): (option 'a) =>
   set |> toSeq |> Seq.tryFind f;
 
-let toSet (set: hashSet 'a): (set 'a) => {
+let toSet (set: hashSet 'a): (ImmSet.t 'a) => {
   contains: fun v => contains v set,
   count: count set,
   every: fun f => set |> every f,
@@ -235,7 +233,7 @@ let equals (this: hashSet 'a) (that: hashSet 'a): bool =>
 let hash ({ strategy } as set: hashSet 'a): int =>
   set |> toSet |> ImmSet.hashWith (HashStrategy.hash strategy);
 
-let toMap (set: hashSet 'a): (map 'a 'a) =>
+let toMap (set: hashSet 'a): (ImmMap.t 'a 'a) =>
   set |> toSet |> ImmMap.ofSet;
 
 type transientHashSet 'a = Transient.t (hashSet 'a);

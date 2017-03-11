@@ -1,7 +1,5 @@
 open Set;
 open CopyOnWriteArray;
-open ImmMap;
-open ImmSet;
 open Option.Operators;
 
 type bitmapTrieIntMap 'a =
@@ -270,7 +268,7 @@ let tryGet (key: int) ({ root }: intMap 'a): (option 'a) =>
 let values ({ root }: intMap 'a): (Seq.t 'a) =>
   root |> BitmapTrieIntMap.values;
 
-let toMap (map: intMap 'a): (map int 'a) => {
+let toMap (map: intMap 'a): (ImmMap.t int 'a) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
@@ -299,13 +297,13 @@ let hash (map: intMap 'a): int =>
 let hashWith (hash: Hash.t 'a) (map: intMap 'a): int =>
   map |> toMap |> ImmMap.hashWith Hash.structural hash;
 
-let keys (map: intMap 'a): (set int) =>
+let keys (map: intMap 'a): (ImmSet.t int) =>
   map |> toMap |> ImmMap.keys;
 
-let toSet (map: intMap 'a): (set (int, 'a)) =>
+let toSet (map: intMap 'a): (ImmSet.t (int, 'a)) =>
   map |> toMap |> ImmMap.toSet;
 
-let toSetWith (equality: Equality.t 'a) (map: intMap 'a): (set (int, 'a)) =>
+let toSetWith (equality: Equality.t 'a) (map: intMap 'a): (ImmSet.t (int, 'a)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
 type transientIntMap 'a = Transient.t (intMap 'a);
@@ -388,7 +386,7 @@ let map (f: int => 'a => 'b) (map: intMap 'a): (intMap 'b) => map
 
 let fromSeq (seq: Seq.t (int, 'a)): (intMap 'a) => putAll seq empty;
 
-let fromMap (map: map int 'a): (intMap 'a) => map
+let fromMap (map: ImmMap.t int 'a): (intMap 'a) => map
   |> ImmMap.reduce (fun acc k v => acc |> TransientIntMap.put k v) (mutate empty)
   |> TransientIntMap.persist;
 

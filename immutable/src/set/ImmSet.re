@@ -1,6 +1,6 @@
 open Functions.Operators;
 
-type set 'a = {
+type t 'a = {
   contains: 'a => bool,
   count: int,
   every: ('a => bool) => bool,
@@ -13,12 +13,12 @@ type set 'a = {
   tryFind: ('a => bool) => (option 'a),
 };
 
-let contains (value: 'a) ({ contains }: set 'a): bool =>
+let contains (value: 'a) ({ contains }: t 'a): bool =>
   contains value;
 
-let count ({ count }: set 'a): int => count;
+let count ({ count }: t 'a): int => count;
 
-let empty: (set 'a) = {
+let empty: (t 'a) = {
   contains: fun _ => false,
   count: 0,
   every: fun f => false,
@@ -31,27 +31,27 @@ let empty: (set 'a) = {
   tryFind: Functions.alwaysNone,
 };
 
-let equals (that: set 'a) (this: set 'a): bool =>
+let equals (that: t 'a) (this: t 'a): bool =>
   (this === that) ? true :
   (this.count != that.count) ? false :
   this.every that.contains;
 
-let every (f: 'a => bool) ({ every }: set 'a): bool =>
+let every (f: 'a => bool) ({ every }: t 'a): bool =>
   every f;
 
-let find (f: 'a => bool) ({ find }: set 'a): 'a =>
+let find (f: 'a => bool) ({ find }: t 'a): 'a =>
   find f;
 
-let forEach (f: 'a => unit) ({ forEach }: set 'a): unit =>
+let forEach (f: 'a => unit) ({ forEach }: t 'a): unit =>
   forEach f;
 
-let hashWith (hash: Hash.t 'a) ({ reduce }: set 'a): int =>
+let hashWith (hash: Hash.t 'a) ({ reduce }: t 'a): int =>
   reduce (fun acc next => acc + hash next) 0;
 
-let hash (set: set 'a): int =>
+let hash (set: t 'a): int =>
   hashWith Hash.structural set;
 
-let inRange (start: int) (count: int) (step: int): (set int) => {
+let inRange (start: int) (count: int) (step: int): (t int) => {
   Preconditions.failIf "step must be greater or less than 0" (step == 0);
 
   let toSeq = Seq.inRange start (Some count) step;
@@ -80,19 +80,19 @@ let inRange (start: int) (count: int) (step: int): (set int) => {
   }
 };
 
-let intersect (this: set 'a) (that: set 'a): (Seq.t 'a) =>
+let intersect (this: t 'a) (that: t 'a): (Seq.t 'a) =>
   this.toSeq |> Seq.filter (that.contains);
 
-let isEmpty ({ count }: set 'a): bool =>
+let isEmpty ({ count }: t 'a): bool =>
   count == 0;
 
-let isNotEmpty ({ count }: set 'a): bool =>
+let isNotEmpty ({ count }: t 'a): bool =>
   count != 0;
 
-let none (f: 'a => bool) ({ none }: set 'a): bool =>
+let none (f: 'a => bool) ({ none }: t 'a): bool =>
   none f;
 
-let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (set 'a) => {
+let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (t 'a) => {
   contains: fun v => Option.containsWith equals v opt,
   count: Option.count opt,
   every: fun f => Option.every f opt,
@@ -105,24 +105,24 @@ let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (set 'a) => {
   tryFind: fun f => Option.tryFind f opt,
 };
 
-let ofOption (opt: option 'a): (set 'a) =>
+let ofOption (opt: option 'a): (t 'a) =>
   ofOptionWith Equality.structural opt;
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ reduce }: set 'a): 'acc =>
+let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ reduce }: t 'a): 'acc =>
   reduce f acc;
 
-let some (f: 'a => bool) ({ some }: set 'a): bool =>
+let some (f: 'a => bool) ({ some }: t 'a): bool =>
   some f;
 
-let subtract (this: set 'a) (that: set 'a): (Seq.t 'a) =>
+let subtract (this: t 'a) (that: t 'a): (Seq.t 'a) =>
   this.toSeq |> Seq.filter (that.contains >> not);
 
-let toSeq ({ toSeq }: set 'a): (Seq.t 'a) => toSeq;
+let toSeq ({ toSeq }: t 'a): (Seq.t 'a) => toSeq;
 
-let tryFind (f: 'a => bool) ({ tryFind }: set 'a): (option 'a) =>
+let tryFind (f: 'a => bool) ({ tryFind }: t 'a): (option 'a) =>
   tryFind f;
 
-let union (this: set 'a) (that: set 'a): (Seq.t 'a) => Seq.concat [
+let union (this: t 'a) (that: t 'a): (Seq.t 'a) => Seq.concat [
   this.toSeq,
   subtract that this,
 ];

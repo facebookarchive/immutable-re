@@ -1,6 +1,3 @@
-open ImmMap;
-open ImmSet;
-
 type bitmapTrieIntSet =
   | Level int32 (array bitmapTrieIntSet) (option Transient.Owner.t)
   | Entry int
@@ -148,7 +145,7 @@ let some (f: int => bool) (set: intSet): bool =>
 let tryFind (f: int => bool) (set: intSet): (option int) =>
   set |> toSeq |> Seq.tryFind f;
 
-let toSet (set: intSet): (set int) => {
+let toSet (set: intSet): (ImmSet.t int) => {
   contains: fun v => contains v set,
   count: count set,
   every: fun f => set |> every f,
@@ -167,7 +164,7 @@ let equals (this: intSet) (that: intSet): bool =>
 let hash (set: intSet): int =>
   set |> toSet |> ImmSet.hash;
 
-let toMap (set: intSet): (map int int) =>
+let toMap (set: intSet): (ImmMap.t int int) =>
   set |> toSet |> ImmMap.ofSet;
 
 type transientIntSet = Transient.t intSet;

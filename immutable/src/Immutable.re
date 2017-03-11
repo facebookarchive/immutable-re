@@ -109,7 +109,7 @@ let module Seq = {
 };
 
 let module Set = {
-  type t 'a = ImmSet.set 'a;
+  type t 'a = ImmSet.t 'a;
 
   let contains = ImmSet.contains;
   let count = ImmSet.count;
@@ -135,7 +135,7 @@ let module Set = {
 };
 
 let module Map = {
-  type t 'k 'v = ImmMap.map 'k 'v;
+  type t 'k 'v = ImmMap.t 'k 'v;
 
   let contains = ImmMap.contains;
   let containsWith = ImmMap.containsWith;
