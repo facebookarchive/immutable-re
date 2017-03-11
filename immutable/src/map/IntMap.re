@@ -1,5 +1,3 @@
-open Option.Operators;
-
 let module BitmapTrieIntMap = {
   type t 'a =
     | Level int32 (array (t 'a)) (option Transient.Owner.t)
@@ -90,7 +88,7 @@ let module BitmapTrieIntMap = {
 
         (BitmapTrie.containsNode bitmap bit) &&
         (containsKey (depth + 1) key nodes.(index));
-    | Entry entryKey entryValue => key == entryKey;
+    | Entry entryKey _ => key == entryKey;
     | Empty => false;
   };
 
@@ -178,7 +176,7 @@ let module BitmapTrieIntMap = {
   };
 
   let rec values (map: t 'a): (Seq.t 'a) => switch map {
-    | Entry key value => Seq.return value
+    | Entry _ value => Seq.return value
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap values
     | Empty => Seq.empty;
   };
@@ -239,7 +237,7 @@ let isNotEmpty ({ count }: t 'a): bool => count != 0;
 let none (f: int => 'a => bool) ({ root }: t 'a): bool =>
   root |> BitmapTrieIntMap.none f;
 
-let put (key: int) (value: 'a) ({ count, root } as map: t 'a): (t 'a) =>
+let put (key: int) (value: 'a) (map: t 'a): (t 'a) =>
   map |> alter key (Functions.return @@ Option.return @@ value);
 
 let reduce (f: 'acc => int => 'a => 'acc) (acc: 'acc) ({ root }: t 'a): 'acc =>
@@ -248,7 +246,7 @@ let reduce (f: 'acc => int => 'a => 'acc) (acc: 'acc) ({ root }: t 'a): 'acc =>
 let remove (key: int) (map: t 'a): (t 'a) =>
   map |> alter key Functions.alwaysNone;
 
-let removeAll (map: t 'a): (t 'a) => empty;
+let removeAll (_: t 'a): (t 'a) => empty;
 
 let some (f: int => 'a => bool) ({ root }: t 'a): bool =>
   root |> BitmapTrieIntMap.some f;
@@ -302,10 +300,6 @@ let toSet (map: t 'a): (ImmSet.t (int, 'a)) =>
 
 let toSetWith (equality: Equality.t 'a) (map: t 'a): (ImmSet.t (int, 'a)) =>
   map |> toMap |> ImmMap.toSetWith equality;
-
-type transientIntMap 'a = Transient.t (t 'a);
-
-let mutate (map: t 'a): (transientIntMap 'a) => Transient.create map;
 
 let module TransientIntMap = {
   type intMap 'a = t 'a;
@@ -369,7 +363,7 @@ let module TransientIntMap = {
     transient |> alter key Functions.alwaysNone;
 
   let removeAll (transient: t 'a): (t 'a) =>
-      transient |> Transient.update (fun owner map => persistentEmpty);
+      transient |> Transient.update (fun _ _ => persistentEmpty);
 
   let tryGet (key: int) (transient: t 'a): (option 'a) =>
     transient |> Transient.get |> (tryGet key);

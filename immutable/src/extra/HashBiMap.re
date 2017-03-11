@@ -28,7 +28,7 @@ let emptyWith
 let equals ({ map: thisMap, inverse: thisInverse }: t 'k 'v) ({ map: thatMap }: t 'k 'v): bool => {
   /* Open HashMap to get the access to internals of HashMap.t */
   open HashMap;
-  
+
   let { strategy: valueStrategy } = thisInverse;
   HashMap.equalsWith (HashStrategy.equals valueStrategy) thisMap thatMap;
 };
@@ -129,7 +129,7 @@ let tryPut
     ({ map, inverse } as hashBiMap: t 'k 'v): (t 'k 'v) =>
   switch (map |> HashMap.tryGet key, inverse |> HashMap.tryGet value) {
     | (Some oldValue, _) when oldValue === value => hashBiMap
-    | (_, Some oldKey) => hashBiMap
+    | (_, Some _) => hashBiMap
     | _ => ({
         map: map |> HashMap.put key value,
         inverse: inverse |> HashMap.put value key,
@@ -232,7 +232,7 @@ let module TransientHashBiMap = {
       ({ map, inverse } as transient: t 'k 'v): (t 'k 'v) => {
     switch (map |> TransientHashMap.tryGet key, inverse |> TransientHashMap.tryGet value) {
       | (Some oldValue, _) when oldValue === value => ()
-      | (_, Some oldKey) => ()
+      | (_, Some _) => ()
       | _ => {
           map |> TransientHashMap.put key value |> ignore;
           inverse |> TransientHashMap.put value key |> ignore;

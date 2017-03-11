@@ -1,5 +1,3 @@
-open Option.Operators;
-
 type t 'a =
   | Ascending (Vector.t 'a)
   | Descending (Vector.t 'a);
@@ -243,7 +241,7 @@ let module TransientDeque = {
   };
 
   let removeAll (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner _ => {
+    transient |> Transient.update (fun _ _ => {
       Ascending (Vector.empty |> Vector.mutate)
     });
 

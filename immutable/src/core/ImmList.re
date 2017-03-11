@@ -34,7 +34,7 @@ let contains (value: 'a) (list: list 'a): bool =>
   containsWith Equality.structural value list;
 
 let rec countImpl (list: list 'a) (count: int): int => switch list {
-  | [head, ...tail] => countImpl tail (count + 1)
+  | [_, ...tail] => countImpl tail (count + 1)
   | [] => count
 };
 
@@ -77,7 +77,7 @@ let rec find (f: 'a => bool) (list: list 'a): 'a => switch list {
 };
 
 let first (list: list 'a): 'a => switch list {
-  | [head, ...tail] => head
+  | [head, ..._] => head
   | [] => failwith "empty"
 };
 
@@ -106,10 +106,10 @@ let hashWith (hash: Hash.t 'a) (list: list 'a): int =>
 
 let hash (list: list 'a): int => hashWith Hash.structural list;
 
-let removeAll (list: list 'a): (list 'a) => [];
+let removeAll (_: list 'a): (list 'a) => [];
 
 let removeFirst (list: list 'a): (list 'a) => switch list {
-  | [head, ...tail] => tail
+  | [_, ...tail] => tail
   | [] => failwith "List is empty"
 };
 
@@ -134,6 +134,6 @@ let rec tryFind (f: 'a => bool) (list: list 'a): (option 'a) => switch list {
 };
 
 let tryFirst (list: list 'a): (option 'a) => switch list {
-  | [head, ...tail] => Some head
+  | [head, ..._] => Some head
   | [] => None
 };

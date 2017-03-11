@@ -1,4 +1,3 @@
-open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
 
@@ -6,7 +5,7 @@ let test = describe "Transient" [
   describe "get" [
     it "throws if persisted" (fun () => {
       let transient = Transient.create "a";
-      let persisted = transient |> Transient.persist;
+      transient |> Transient.persist |> ignore;
 
       defer (fun () => transient |> Transient.get) |> throws;
     }),
@@ -20,10 +19,10 @@ let test = describe "Transient" [
     it "throws if persisted" (fun () => {
       let aString = "a";
       let transient = Transient.create aString;
-      let persisted = transient |> Transient.persist;
+      transient |> Transient.persist |> ignore;
 
       defer (fun () =>
-        transient |> Transient.update (fun owner str => str)
+        transient |> Transient.update (fun _ str => str)
       ) |> throws;
     }),
     it "with new value" (fun () => {
@@ -31,7 +30,7 @@ let test = describe "Transient" [
       let bString = "b";
 
       let transient = Transient.create aString;
-      transient |> Transient.update (fun owner str => bString) |> ignore;
+      transient |> Transient.update (fun _ _ => bString) |> ignore;
       expect (transient |> Transient.get)
         |> toBeEqualToWith Equality.reference (fun s => s) bString;
     })

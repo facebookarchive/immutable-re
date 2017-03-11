@@ -13,7 +13,7 @@ let add (value: 'a) ({ count, map }: t 'a): (t 'a) => {
   ),
 };
 
-let contains (value: 'a) ({ count, map }: t 'a): bool =>
+let contains (value: 'a) ({ map }: t 'a): bool =>
   map |> HashMap.containsKey value;
 
 let count ({ count }: t 'a): int => count;
@@ -71,7 +71,7 @@ let remove (value: 'a) ({ count, map } as hashMultiset: t 'a): (t 'a) => {
   else { count: !newCount, map: newMap };
 };
 
-let removeAll ({ count, map }: t 'a): (t 'a) =>
+let removeAll ({ map }: t 'a): (t 'a) =>
   { count: 0, map: map |> HashMap.removeAll };
 
 let set (value: 'a) (valueCount: int) ({ count, map } as multiset: t 'a): (t 'a) => {
@@ -139,9 +139,9 @@ let module TransientHashMultiset = {
   let addAll
       (seq: Seq.t 'a)
       (transient: t 'a): (t 'a) => seq
-    |> Seq.reduce (fun acc next => transient |> add next) transient;
+    |> Seq.reduce (fun acc next => acc |> add next) transient;
 
-  let contains (value: 'a) ({ count, map }: t 'a): bool =>
+  let contains (value: 'a) ({ map }: t 'a): bool =>
     map |> TransientHashMap.tryGet value >>| Functions.alwaysTrue |? false;
 
   let count ({ count }: t 'a): int => count;

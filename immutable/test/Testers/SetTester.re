@@ -43,7 +43,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
 
     let (_, mapOfSizeN) = src
       |> Seq.scan
-        (fun (hash, acc) i => (i, acc |> SetImpl.add i))
+        (fun (_, acc) i => (i, acc |> SetImpl.add i))
         (0, SetImpl.empty ())
       |> Seq.doOnNext(fun (i, acc) =>
         expect (acc |> SetImpl.contains i) |> toBeEqualToTrue
@@ -194,7 +194,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     /* FIXME: This test could be better by not using a single repeated value. */
     Seq.inRange 0 (Some count) 1
       |> SetImpl.fromSeq
-      |> SetImpl.reduce (fun acc i => acc + 1) 0
+      |> SetImpl.reduce (fun acc _ => acc + 1) 0
       |> expect
       |> toBeEqualToInt count;
   }),
@@ -205,13 +205,13 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     /* FIMXE: Maybe add Seq.sample, Seq.filteri */
     let removed = src
       |> Seq.map (fun i => (i, i))
-      |> Seq.filter (fun (i, v) => i mod 3 == 0)
-      |> Seq.map (fun (i, v) => v);
+      |> Seq.filter (fun (i, _) => i mod 3 == 0)
+      |> Seq.map (fun (_, v) => v);
 
     let remaining = src
       |> Seq.map (fun i => (i, i))
-      |> Seq.filter (fun (i, v) => i mod 3 != 0)
-      |> Seq.map (fun (i, v) => v);
+      |> Seq.filter (fun (i, _) => i mod 3 != 0)
+      |> Seq.map (fun (_, v) => v);
 
     let mapOfSizeNdiv3 = removed |> Seq.reduce (fun acc i => acc |> SetImpl.remove i) mapOfSizeN;
 
@@ -344,7 +344,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       Seq.inRange 0 (Some count) 1
         |> SetImpl.fromSeq
         |> SetImpl.toSet
-        |> Set.reduce (fun acc i => acc + 1) 0
+        |> Set.reduce (fun acc _ => acc + 1) 0
         |> expect
         |> toBeEqualToInt count;
     }),
@@ -447,7 +447,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "reduce with %i elements" count) (fun () => {
       let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
-      let reduced = map |> Map.reduce (fun acc i v => acc + 1) 0;
+      let reduced = map |> Map.reduce (fun acc _ _ => acc + 1) 0;
       expect reduced |> toBeEqualToInt count;
     }),
     it (sprintf "some with %i elements" count) (fun () => {

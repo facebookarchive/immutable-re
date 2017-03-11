@@ -55,7 +55,7 @@ let module BitmapTrieMap = {
               alterResult := NoChange;
               map;
         });
-    | Entry entryHash entryKey entryValue => switch (f None) {
+    | Entry entryHash _ _ => switch (f None) {
         | Some newEntryValue =>
             let bitmap = BitmapTrie.bitPos entryHash depth;
             Level bitmap [| map |] owner
@@ -326,7 +326,7 @@ let module BitmapTrieMap = {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap values
     | ComparatorCollision _ entryMap => AVLTreeMap.values entryMap
     | EqualityCollision _ entryMap => EqualityMap.values entryMap;
-    | Entry _ entryKey entryValue => Seq.return entryValue;
+    | Entry _ _ entryValue => Seq.return entryValue;
     | Empty => Seq.empty;
   };
 };

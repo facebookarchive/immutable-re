@@ -80,7 +80,7 @@ let module Make = fun (X: StreamBase) => {
           skip < count ? ([next, ...(listTake (count - skip) lst)], counted, skipped) :
           ([next], 1, 1)
         ) ([], 0, 0)
-      |> X.filter (fun (lst, counted, skipped) => counted == count && skipped == skip)
+      |> X.filter (fun (_, counted, skipped) => counted == count && skipped == skip)
       |> X.map (fun (lst, _, _) => lst);
 
   let concat (streams: list (stream 'a)): (stream 'a) =>
@@ -97,7 +97,7 @@ let module Make = fun (X: StreamBase) => {
       (equality: Equality.t 'a)
       (stream: stream 'a): (stream 'a) => stream
     |> X.scan
-      (fun (accPrev, accNext) next => (accNext, Some next))
+      (fun (_, accNext) next => (accNext, Some next))
       (None, None)
     |> X.map (fun v => switch v {
         | (Some prev, Some next) when (not @@ equality prev @@ next) => Some next
@@ -147,7 +147,7 @@ let module Make = fun (X: StreamBase) => {
 
   let scan = X.scan;
 
-  let rec skip (count: int) (stream: stream 'a): (stream 'a) =>
+  let skip (count: int) (stream: stream 'a): (stream 'a) =>
     count > 0 ? stream
       |> X.scan (fun (count, _) next => count > 0
           ? (count - 1, None)

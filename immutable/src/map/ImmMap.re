@@ -101,7 +101,7 @@ let keys (map: t 'k 'v): (ImmSet.t 'k) => {
   reduce: fun f acc => map.reduce (fun acc k _ => f acc k) acc,
   some: fun f => map.some (fun k _ => f k),
   toSeq: map.toSeq |> Seq.map (fun (k, _) => k),
-  tryFind: fun f => map.tryFind (fun k _ => f k) >>| (fun (k, v) => k),
+  tryFind: fun f => map.tryFind (fun k _ => f k) >>| (fun (k, _) => k),
 };
 
 let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {

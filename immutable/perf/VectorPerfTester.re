@@ -1,7 +1,6 @@
 open Immutable;
 open Printf;
 open ReUnit;
-open ReUnit.Expect;
 open ReUnit.Test;
 
 let generateTests
@@ -55,9 +54,9 @@ let test (n: int) (count: int): Test.t => {
         (fun () => list)
         (fun () => [])
         List.addFirst
-        (fun i a v => v)
+        (fun _ _ v => v)
         List.removeFirst
-        (fun i v => None)
+        (fun _ _ => None)
         count
     ),
     describe "Stack" (
@@ -65,9 +64,9 @@ let test (n: int) (count: int): Test.t => {
         (fun () => stack)
         (fun () => Stack.empty)
         Stack.addFirst
-        (fun i a v => v)
+        (fun _ _ v => v)
         Stack.removeFirst
-        (fun i v => None)
+        (fun _ _ => None)
         count
     ),
     describe "Vector" (

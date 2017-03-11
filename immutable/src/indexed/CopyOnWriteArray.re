@@ -32,7 +32,7 @@ let addLastAll (seq: Seq.t 'a) (arr: t 'a): (t 'a) =>
    */
   seq |> Seq.reduce (fun acc next => acc |> addLast next) arr;
 
-let rec compareWith
+let compareWith
     (valueCompare: Comparator.t 'a)
     (this: t 'a)
     (that: t 'a): Ordering.t => {
@@ -57,7 +57,7 @@ let compare (this: t 'a) (that: t 'a): Ordering.t =>
 
 let empty: (t 'a) = [||];
 
-let rec equalsWith
+let equalsWith
     (valueEquals: Equality.t 'a)
     (this: t 'a)
     (that: t 'a): bool => {
@@ -299,7 +299,7 @@ let mapReverseWithIndex (f: int => 'a => 'b) (arr: t 'a): (t 'b) => isNotEmpty a
     retval;
   }: [||];
 
-let removeAll (arr: t 'a): (t 'a) => empty;
+let removeAll (_: t 'a): (t 'a) => empty;
 
 let removeLast (arr: t 'a): (t 'a) => {
   let count = count arr;

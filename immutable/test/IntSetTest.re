@@ -40,7 +40,7 @@ let transientIntSetTest (count: int): (list Test.t) => [
 
     let (_, mapOfSizeN) = src
       |> Seq.scan
-        (fun (hash, acc) i => (i, acc |> TransientIntSet.add i))
+        (fun (_, acc) i => (i, acc |> TransientIntSet.add i))
         (0, IntSet.empty |> IntSet.mutate)
       |> Seq.doOnNext(fun (i, acc) => {
         expect (acc |> TransientIntSet.contains i) |> toBeEqualToTrue;

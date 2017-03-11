@@ -1,4 +1,3 @@
-open ReUnit;
 open ReUnit.Test;
 
 ReUnit.run (describe "Immutable.re" [

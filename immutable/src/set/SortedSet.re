@@ -1,4 +1,3 @@
-open Functions.Operators;
 open Option.Operators;
 
 type t 'a = {

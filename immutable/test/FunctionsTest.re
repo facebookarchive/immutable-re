@@ -1,6 +1,5 @@
 open Functions;
 open Functions.Operators;
-open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
 
@@ -22,8 +21,8 @@ let test = describe "Functions" [
     expect (call text) |> toBeEqualToString "";
   }),
   it "compose" (fun () => {
-    let f1 a => 2;
-    let f2 a => "c";
+    let f1 _ => 2;
+    let f2 _ => "c";
     let composed = compose f1 f2;
     expect (composed "hello") |> toBeEqualToString "c";
   }),
@@ -43,8 +42,8 @@ let test = describe "Functions" [
   }),
   describe "Operators" [
     it "(>>)" (fun () => {
-      let f1 a => 2;
-      let f2 a => "c";
+      let f1 _ => 2;
+      let f2 _ => "c";
       let composed = f1 >> f2;
       expect (composed "hello") |> toBeEqualToString "c";
     }),

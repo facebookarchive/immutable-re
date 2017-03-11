@@ -1,5 +1,4 @@
 open Immutable;
-open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
 
@@ -30,7 +29,7 @@ let test = describe "Seq" [
   }),
   it "concatMap" (fun () => {
     let test = [1, 1, 1] |> List.toSeq |> Seq.concatMap (
-      fun x => [3, 3, 3] |> List.toSeq
+      fun _ => [3, 3, 3] |> List.toSeq
     );
     let expected = [3, 3, 3, 3, 3, 3, 3, 3, 3] |> List.toSeq;
     expect (test |> Seq.equals expected) |> toBeEqualToTrue;
@@ -44,7 +43,7 @@ let test = describe "Seq" [
   }),
   describe "every" [
     it "all items true" (fun () => {
-      expect ([1, 1, 1] |> List.toSeq |> Seq.every (fun x => true )) |> toBeEqualToTrue;
+      expect ([1, 1, 1] |> List.toSeq |> Seq.every (fun _ => true )) |> toBeEqualToTrue;
     }),
     it "some items false" (fun () => {
       expect ([1, 2, 1] |> List.toSeq |> Seq.every (fun x => x != 2 )) |> toBeEqualToFalse;
@@ -59,7 +58,7 @@ let test = describe "Seq" [
   }),
   it "flatMap" (fun () => {
     let test = [1, 1, 1] |> List.toSeq |> Seq.flatMap (
-      fun x => [3, 3, 3] |> List.toSeq
+      fun _ => [3, 3, 3] |> List.toSeq
     );
     let expected = [3, 3, 3, 3, 3, 3, 3, 3, 3] |> List.toSeq;
     expect (test |> Seq.equals expected) |> toBeEqualToTrue;

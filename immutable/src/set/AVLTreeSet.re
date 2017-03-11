@@ -12,7 +12,7 @@ let height (tree: t 'a): int => switch tree {
 let rec validate (tree: t 'a): (t 'a) => switch tree {
   | Empty => tree
   | Leaf _ => tree
-  | Node h left v right =>
+  | Node _ left _ right =>
       let lh = height left;
       let rh = height right;
       (lh - rh) > 2 || (lh - rh) < -2 ? failwith "invalid" : {
@@ -69,7 +69,7 @@ let rec add (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => switch
       } else if (cmp === GreaterThan) {
         Node 2 tree x Empty
       } else tree
-  | Node height left v right =>
+  | Node _ left v right =>
       let cmp = comparator x v;
       if (cmp === LessThan) {
         let newLeft = add comparator x left;
@@ -98,6 +98,7 @@ let rec first (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ Empty v _ => v
   | Node _ left _ _ => first left
+  | Empty => failwith "empty"
 };
 
 let rec forEach (f: 'a => unit) (tree: t 'a) => switch tree {
@@ -113,6 +114,7 @@ let rec last (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ _ v Empty => v
   | Node _ _ _ right => last right
+  | Empty => failwith "empty"
 };
 
 let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch tree {
@@ -137,8 +139,8 @@ let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => sw
 
 let rec removeFirst (tree: t 'a): (t 'a) => switch tree {
   | Empty => Empty
-  | Leaf v => Empty
-  | Node _ Empty v right => right
+  | Leaf _ => Empty
+  | Node _ Empty _ right => right
   | Node _ left v right => rebalance (removeFirst left) v right;
 };
 
@@ -155,8 +157,8 @@ let rec removeFirstWithValue (first: ref 'a) (tree: t 'a): (t 'a) => switch tree
 
 let rec removeLast (tree: t 'a): (t 'a) => switch tree {
   | Empty => Empty
-  | Leaf v => Empty
-  | Node _ left v Empty => left
+  | Leaf _ => Empty
+  | Node _ left _ Empty => left
   | Node _ left v right => rebalance left v (removeLast right);
 };
 

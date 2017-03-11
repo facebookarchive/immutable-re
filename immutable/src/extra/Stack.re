@@ -40,7 +40,7 @@ let contains (value: 'a) ({ list }: t 'a): bool =>
 let containsWith (valueEquals: Equality.t 'a) (value: 'a) ({ list }: t 'a): bool =>
   list |> ImmList.containsWith valueEquals value;
 
-let count ({ count, list }: t 'a): int => count;
+let count ({ count }: t 'a): int => count;
 
 let empty: t 'a = {
   count: 0,
@@ -101,7 +101,7 @@ let none (f: 'a => bool) ({ list }: t 'a): bool =>
 let reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) ({ list }: t 'a): 'acc =>
   list |> ImmList.reduce f acc;
 
-let removeAll (stack: t 'a): (t 'a) => empty;
+let removeAll (_: t 'a): (t 'a) => empty;
 
 let removeFirst ({ count, list }: t 'a): (t 'a) => ({
   count: count - 1,

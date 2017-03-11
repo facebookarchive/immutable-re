@@ -177,7 +177,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     it (sprintf "mapWithIndex %i elements" count) (fun () => {
       Seq.inRange 0 (Some count) 1
         |> Seq.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
-        |> Vector.mapWithIndex (fun i v => i + 1)
+        |> Vector.mapWithIndex (fun i _ => i + 1)
         |> Vector.toSeq
         |> expect
         |> toBeEqualToSeqOfInt (Seq.inRange 1 (Some count) 1);
@@ -186,7 +186,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     it (sprintf "mapReverseWithIndex %i elements" count) (fun () => {
       Seq.inRange 0 (Some count) 1
         |> Seq.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
-        |> Vector.mapReverseWithIndex (fun i v => i + 1)
+        |> Vector.mapReverseWithIndex (fun i _ => i + 1)
         |> Vector.toSeq
         |> expect
         |> toBeEqualToSeqOfInt (Seq.inRange count (Some count) (-1));
@@ -195,7 +195,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     it (sprintf "reduceWithIndex with %i elements" count) (fun () => {
       let result = Seq.repeat 1 (Some count)
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
-        |> Vector.reduceWithIndex (fun acc i v => acc + i) 0;
+        |> Vector.reduceWithIndex (fun acc i _ => acc + i) 0;
 
       let expected = Seq.inRange 0 (Some count) 1
         |> Seq.reduce (fun acc i => acc + i) 0;
@@ -206,7 +206,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     it (sprintf "reduceRightWithIndex %i elements" count) (fun () => {
       let result = Seq.repeat 1 (Some count)
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
-        |> Vector.reduceRightWithIndex (fun acc i v => acc + i) 0;
+        |> Vector.reduceRightWithIndex (fun acc i _ => acc + i) 0;
 
       let expected = Seq.inRange (count - 1) (Some count) (-1)
         |> Seq.reduce (fun acc i => acc + i) 0;
@@ -343,7 +343,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         v == (count / 2);
       };
 
-      let alwaysFalse i v => {
+      let alwaysFalse i _ => {
         expect i |> toBeEqualToInt (!previousIndex + 1);
         previousIndex := i;
         false;
@@ -536,7 +536,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "indexOfWithIndex with %i elements" count) (fun () => {
       let vec = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq;
-      let f pos i v => i == pos;
+      let f pos i _ => i == pos;
       expect (Vector.indexOfWithIndex (f (count / 2)) vec) |> toBeEqualToInt (count / 2);
       defer (fun () => Vector.indexOfWithIndex (f (-1)) vec) |> throws;
     }),
@@ -548,7 +548,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "tryIndexOfWithIndex with %i elements" count) (fun () => {
       let vec = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq;
-      let f pos i v => i == pos;
+      let f pos i _ => i == pos;
       expect (Vector.tryIndexOfWithIndex (f (count / 2)) vec) |> toBeEqualToSomeOfInt (count / 2);
       expect (Vector.tryIndexOfWithIndex (f (-1)) vec) |> toBeEqualToNoneOfInt;
     }),
@@ -617,7 +617,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
       }),
       it "reduce" (fun () => {
         let map = Seq.inRange 0 (Some count) 1 |> Vector.fromSeq |> Vector.toMap;
-        let reduced = map |> Map.reduce (fun acc i v => acc + 1) 0;
+        let reduced = map |> Map.reduce (fun acc _ _ => acc + 1) 0;
         expect reduced |> toBeEqualToInt count;
       }),
       it "some" (fun () => {

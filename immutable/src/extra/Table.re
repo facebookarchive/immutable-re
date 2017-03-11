@@ -127,25 +127,12 @@ let remove
     (column: 'column)
     ({ count, map, columnStrategy } as table: t 'row 'column 'value): (t 'row 'column 'value) =>
   (map |> HashMap.tryGet row >>= fun columns =>
-  columns |> HashMap.tryGet column >>| fun value =>
+  columns |> HashMap.tryGet column >>| fun _ =>
   ({
     count: count - 1,
     map: map |> HashMap.put row (columns |> HashMap.remove column),
     columnStrategy,
   })) |? table;
-
-let remove
-    (row: 'row)
-    (column: 'column)
-    ({ count, map, columnStrategy } as table: t 'row 'column 'value): (t 'row 'column 'value) =>
-  (map |> HashMap.tryGet row >>| fun oldColumns => {
-    let newColumns = oldColumns |> HashMap.remove column;
-    {
-      count: count + (newColumns |> HashMap.count) - (oldColumns |> HashMap.count),
-      map: map |> HashMap.put row newColumns,
-      columnStrategy,
-    }
-  }) |? table;
 
 let removeAll ({ map, columnStrategy }: t 'row 'column 'value): (t 'row 'column 'value) =>
   { count: 0, map: map |> HashMap.removeAll, columnStrategy };

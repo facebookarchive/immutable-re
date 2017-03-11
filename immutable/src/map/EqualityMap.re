@@ -39,7 +39,7 @@ let every (f: 'k => 'v => bool) (map: t 'k 'v): bool =>
 let find (f: 'k => 'v => bool) (map: t 'k 'v): ('k, 'v) =>
   map |> CopyOnWriteArray.find (fun (k, v) => f k v);
 
-let rec first = CopyOnWriteArray.first;
+let first = CopyOnWriteArray.first;
 
 let forEach (f: 'k => 'v => unit) (map: t 'k 'v): 'acc =>
   map |> CopyOnWriteArray.forEach (fun (k, v) => f k v);
@@ -67,7 +67,7 @@ let tryFind (f: 'k => 'v => bool) (map: t 'k 'v): (option ('k, 'v)) =>
   map |> CopyOnWriteArray.tryFind (fun (k, v) => f k v);
 
 let tryGet (equals: Equality.t 'k) (key: 'k) (map: t 'k 'v): (option 'v) =>
-  map |> CopyOnWriteArray.tryFind (entryFinder equals key) >>= (fun (k, v) => Some v);
+  map |> CopyOnWriteArray.tryFind (entryFinder equals key) >>= (fun (_, v) => Some v);
 
 let values (map: t 'k 'v): (Seq.t 'v) =>
   map |> toSeq |> Seq.map (fun (_, v) => v);

@@ -1,5 +1,4 @@
 open Immutable;
-open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
 
@@ -61,8 +60,8 @@ let test = describe "SortedSet" [
     let setShorter = Seq.inRange 0 (Some (count - 1)) 1 |> SortedSet.fromSeq;
     expect (SortedSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
 
-    let setWithRandomComparator1 = SortedSet.emptyWith (fun a b => Ordering.greaterThan);
-    let setWithRandomComparator2 = SortedSet.emptyWith (fun a b => Ordering.lessThan);
+    let setWithRandomComparator1 = SortedSet.emptyWith (fun _ _ => Ordering.greaterThan);
+    let setWithRandomComparator2 = SortedSet.emptyWith (fun _ _ => Ordering.lessThan);
     defer (fun () => SortedSet.compare setWithRandomComparator1 setWithRandomComparator2) |> throws;
   }),
   it "last and tryLast" (fun () => {

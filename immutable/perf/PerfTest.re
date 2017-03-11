@@ -1,5 +1,3 @@
-open ReUnit;
-
 ReUnit.run (SetPerfTester.test 5 1000000);
 print_newline ();
 

@@ -1,5 +1,4 @@
 open Immutable;
-open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
 
@@ -139,83 +138,83 @@ let test = describe "Map" [
   describe "map"  [
     it "containsWith" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       expect (mapped |> Map.contains 1 1) |> toBeEqualToFalse;
       expect (mapped |> Map.contains 1 4) |> toBeEqualToTrue;
     }),
     it "containsKey" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       expect (mapped |> Map.containsKey 1) |> toBeEqualToTrue;
     }),
     it "count" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       expect (mapped |> Map.count) |> toBeEqualToInt 3;
     }),
     it "every" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
-      expect (mapped |> Map.every (fun k v => v >= 3)) |> toBeEqualToTrue;
-      expect (mapped |> Map.every (fun k v => v > 3)) |> toBeEqualToFalse;
+      let mapped = map |> Map.map (fun _ v => v + 3);
+      expect (mapped |> Map.every (fun _ v => v >= 3)) |> toBeEqualToTrue;
+      expect (mapped |> Map.every (fun _ v => v > 3)) |> toBeEqualToFalse;
     }),
     it "find" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
-      expect (mapped |> Map.find (fun k v => v == 3)) |> toBeEqualTo (fun _ => "") (0, 3);
-      defer (fun () => mapped |> Map.find (fun k v => v == 1)) |> throws;
+      let mapped = map |> Map.map (fun _ v => v + 3);
+      expect (mapped |> Map.find (fun _ v => v == 3)) |> toBeEqualTo (fun _ => "") (0, 3);
+      defer (fun () => mapped |> Map.find (fun _ v => v == 1)) |> throws;
     }),
     it "forEach" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       mapped |> Map.forEach (fun k v => {
         expect (v == k + 3) |> toBeEqualToTrue;
       });
     }),
     it "get" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       expect (mapped |> Map.get 0) |> toBeEqualToInt 3;
       defer (fun () => mapped |> Map.get 3) |> throws;
     }),
     it "none" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
-      expect (mapped |> Map.none (fun k v => v < 3)) |> toBeEqualToTrue;
-      expect (mapped |> Map.none (fun k v => v > 3)) |> toBeEqualToFalse;
+      let mapped = map |> Map.map (fun _ v => v + 3);
+      expect (mapped |> Map.none (fun _ v => v < 3)) |> toBeEqualToTrue;
+      expect (mapped |> Map.none (fun _ v => v > 3)) |> toBeEqualToFalse;
     }),
     it "reduce" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
-      let reduced = mapped |> Map.reduce (fun acc k v => v + acc) 0;
+      let mapped = map |> Map.map (fun _ v => v + 3);
+      let reduced = mapped |> Map.reduce (fun acc _ v => v + acc) 0;
       expect reduced |> toBeEqualToInt 12;
     }),
     it "some" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
-      expect (mapped |> Map.some (fun k v => v < 3)) |> toBeEqualToFalse;
-      expect (mapped |> Map.some (fun k v => v > 3)) |> toBeEqualToTrue;
+      let mapped = map |> Map.map (fun _ v => v + 3);
+      expect (mapped |> Map.some (fun _ v => v < 3)) |> toBeEqualToFalse;
+      expect (mapped |> Map.some (fun _ v => v > 3)) |> toBeEqualToTrue;
     }),
     it "toSeq" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       expect (mapped |> Map.toSeq) |> toBeEqualToSeq (fun _ => "") (List.toSeq [(0, 3), (1, 4), (2, 5)]);
     }),
     it "tryFind" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
-      expect (mapped |> Map.tryFind (fun k v => v == 3)) |> toBeEqualToSome (fun _ => "") (0, 3);
-      expect (mapped |> Map.tryFind (fun k v => v == 1)) |> toBeEqualToNone (fun _ => "");
+      let mapped = map |> Map.map (fun _ v => v + 3);
+      expect (mapped |> Map.tryFind (fun _ v => v == 3)) |> toBeEqualToSome (fun _ => "") (0, 3);
+      expect (mapped |> Map.tryFind (fun _ v => v == 1)) |> toBeEqualToNone (fun _ => "");
     }),
     it "tryGet" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       expect (mapped |> Map.tryGet 0) |> toBeEqualToSomeOfInt 3;
       expect (mapped |> Map.tryGet 3) |> toBeEqualToNoneOfInt;
     }),
     it "values" (fun () => {
       let map = Vector.fromSeq @@ List.toSeq @@ [0, 1, 2] |> Vector.toMap;
-      let mapped = map |> Map.map (fun k v => v + 3);
+      let mapped = map |> Map.map (fun _ v => v + 3);
       expect (mapped |> Map.values) |> toBeEqualToSeqOfInt (List.toSeq [3, 4, 5]);
     }),
   ],

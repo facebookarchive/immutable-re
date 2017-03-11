@@ -108,7 +108,7 @@ let none (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
 };
 
 let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: t 'k 'v): 'acc => {
-  let rec reducer acc key values =>
+  let reducer acc key values =>
     values |> Stack.reduce (fun acc v => f acc key v) acc;
 
   map |> HashMap.reduce reducer acc;

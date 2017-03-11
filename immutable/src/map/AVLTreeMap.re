@@ -12,7 +12,7 @@ let height (tree: t 'k 'v): int => switch tree {
 let rec validate (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => tree
   | Leaf _ _ => tree
-  | Node h left _ _ right =>
+  | Node _ left _ _ right =>
       let lh = height left;
       let rh = height right;
       (lh - rh) > 2 || (lh - rh) < -2 ? failwith "invalid" : {
@@ -39,11 +39,11 @@ let rec containsKey
     (xK: 'k)
     (tree: t 'k 'v): bool => switch tree {
   | Empty => false
-  | Leaf k v => if (xK === k) true else {
+  | Leaf k _ => if (xK === k) true else {
       let cmp = comparator xK k;
       cmp === Equal
     }
-  | Node _ left k v right => if (xK === k) true else {
+  | Node _ left k _ right => if (xK === k) true else {
       let cmp = comparator xK k;
       if (cmp === LessThan) (containsKey comparator xK left)
       else if (cmp === GreaterThan) (containsKey comparator xK right)
@@ -51,7 +51,7 @@ let rec containsKey
     }
 };
 
-let rec contains
+let contains
     (comparator: Comparator.t 'k)
     (equality: Equality.t 'v)
     (xK: 'k)
@@ -90,6 +90,7 @@ let rec first (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Leaf k v => (k, v)
   | Node _ Empty k v _ => (k, v)
   | Node _ left _ _ _ => first left
+  | Empty => failwith "empty"
 };
 
 let rec get
@@ -114,6 +115,7 @@ let rec last (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Leaf k v => (k, v)
   | Node _ _ k v Empty => (k, v)
   | Node _ _ _ _ right => last right
+  | Empty => failwith "empty"
 };
 
 let rec none (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
@@ -265,14 +267,14 @@ let rebalance (left: t 'k 'v) (k: 'k) (v: 'v) (right: t 'k 'v): (t 'k 'v) => {
 let rec removeFirst (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => Empty
   | Leaf _ _ => Empty
-  | Node _ Empty k v right => right
+  | Node _ Empty _ _ right => right
   | Node _ left k v right => rebalance (removeFirst left) k v right;
 };
 
 let rec removeLast (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => Empty
   | Leaf _ _ => Empty
-  | Node _ left k v Empty => left
+  | Node _ left _ _ Empty => left
   | Node _ left k v right => rebalance left k v (removeLast right);
 };
 

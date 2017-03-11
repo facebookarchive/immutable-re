@@ -269,7 +269,7 @@ let tryFind (predicate: 'a => bool) (seq: t 'a): (option 'a) =>
 
 let tryFindIndex (predicate: 'a => bool) (seq: t 'a): (option int) => seq
   |> mapWithIndex Pair.create
-  |> tryFind (fun (index, value) => predicate value)
+  |> tryFind (fun (_, value) => predicate value)
   >>| fst;
 
 let get (index: int) (seq: t 'a): 'a =>
@@ -280,7 +280,7 @@ let tryGet (index: int) (seq: t 'a): (option 'a) =>
 
 let tryLast (seq: t 'a) => seq |> Stream.last |> tryFirst;
 
-let rec forEach (onNext: 'a => unit) (seq: t 'a) =>
+let forEach (onNext: 'a => unit) (seq: t 'a) =>
   seq |> Stream.doOnNext onNext |> tryLast |> ignore;
 
 let reduce (reducer: 'acc => 'a => 'acc) (initialValue: 'acc) (seq: t 'a): 'acc =>

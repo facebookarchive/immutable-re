@@ -21,7 +21,7 @@ let count ({ count }: t 'a): int => count;
 let empty: (t 'a) = {
   contains: fun _ => false,
   count: 0,
-  every: fun f => false,
+  every: fun _ => true,
   find: fun _ => failwith "set is empty",
   forEach: fun _ => (),
   none: fun _ => true,

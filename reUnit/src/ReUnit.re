@@ -1,7 +1,4 @@
 open Immutable;
-open Printexc;
-open Printf;
-open Sys;
 
 let identity a => a;
 
@@ -47,7 +44,7 @@ let module Expect = {
 
   let forEach (f: 'a => unit) (expect: t 'a): unit => switch expect {
     | Value a => (f a)
-    | Error exn => ()
+    | Error _ => ()
   };
 
   let get (expect: t 'a): 'a => switch expect {
@@ -68,10 +65,6 @@ let module Expect = {
       (fun acc next => acc ^ ", " ^ (toString next))
       ""
     ) ^ "]";
-
-  /* FIXME: ditto */
-  let stringOfList (toString: 'a => string) (list: list 'a): string =>
-    list |> List.toSeq |> stringOfSeq toString;
 
   let stringOfOption (toString: 'a => string) (opt: option 'a): string =>
     opt |> Option.reduce (fun _ => toString) "";
@@ -132,10 +125,10 @@ let module Expect = {
   let toBeEqualToTrue = toBeEqualTo string_of_bool true;
 
   let throws (expect: t 'a) => expect
-    |> forEach(fun v => Pervasives.failwith "expected exception to be thrown");
+    |> forEach(fun _ => Pervasives.failwith "expected exception to be thrown");
 };
 
-let rec run (tests: Test.t): unit => {
+let run (tests: Test.t): unit => {
   /* In theory we can swap this simple test runner with ounit */
   let execute (label, f): int => {
     let startTime = Sys.time ();

@@ -1,6 +1,4 @@
-open Option.Operators;
 open Immutable;
-open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;
 
@@ -96,7 +94,7 @@ let test = describe "Option" [
     expect (Some 1 |> Option.none Functions.alwaysFalse) |> toBeEqualToTrue;
   }),
   it "reduce" (fun () => {
-    let reducer acc next => next;
+    let reducer _ next => next;
     expect (None |> Option.reduce reducer 0) |> toBeEqualToInt 0;
     expect (Some 1 |> Option.reduce reducer 0) |> toBeEqualToInt 1;
   }),

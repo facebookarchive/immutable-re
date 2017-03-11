@@ -30,12 +30,14 @@
     "run-perf": "eval $(dependencyEnv) && ./_build/immutable/perf/PerfTest.native",
     "perf": "npm run clean && npm run build-perf && npm run run-perf",
 
-    "clean": "rm -rf ./_build",
+    "clean": "rm -rf ./_build && rm -rf ./lib",
     "top": "eval $(dependencyEnv) && rtop",
     "env": "eval $(dependencyEnv) && env",
     "editor": "eval $(dependencyEnv) && eval $EDITOR",
     "whereisocamlmerlin": "eval $(dependencyEnv) && which ocamlmerlin-reason",
-    "build-js": "bsb"
+
+    "build-js": "bsb",
+    "rebuild-js": "rm -rf ./lib && bsb"
   },
   "devDependencies": {
       "@opam-alpha/merlin": "^ 2.5.1",

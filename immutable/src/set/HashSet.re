@@ -32,30 +32,30 @@ let module BitmapTrieSet = {
     | EqualitySetCollision entryHash entrySet when hash == entryHash =>
         let newEntrySet = entrySet |> EqualitySet.add (HashStrategy.equals hashStrategy) value;
         if (newEntrySet === entrySet) set else (EqualitySetCollision entryHash newEntrySet);
-    | EqualitySetCollision entryHash entrySet =>
+    | EqualitySetCollision entryHash _ =>
         let bitmap = BitmapTrie.bitPos entryHash depth;
         Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
     | ComparatorCollision entryHash entrySet when hash == entryHash =>
         let newEntrySet = entrySet |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) value;
         if (newEntrySet === entrySet) set else (ComparatorCollision entryHash newEntrySet);
-    | ComparatorCollision entryHash entrySet =>
+    | ComparatorCollision entryHash _ =>
         let bitmap = BitmapTrie.bitPos entryHash depth;
         Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
     | Entry entryHash entryValue when hash == entryHash =>
         if ((HashStrategy.comparator hashStrategy value entryValue) === Equal) set
         else (switch hashStrategy {
-          | Comparator _ comparator =>
+          | Comparator _ _ =>
               let set = AVLTreeSet.Empty
                 |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) entryValue
                 |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) value;
               ComparatorCollision entryHash set;
-          | Equality _ equals =>
+          | Equality _ _ =>
             let set = EqualitySet.empty
               |> EqualitySet.add (HashStrategy.equals hashStrategy) entryValue
               |> EqualitySet.add (HashStrategy.equals hashStrategy) value;
             EqualitySetCollision entryHash set;
         });
-    | Entry entryHash entryValue =>
+    | Entry entryHash _ =>
         let bitmap = BitmapTrie.bitPos entryHash depth;
         Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
     | Empty => Entry hash value;
@@ -313,7 +313,7 @@ let module TransientHashSet = {
     });
 
   let removeAll  (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner ({ strategy }) => persistentEmptyWith strategy);
+    transient |> Transient.update (fun _ ({ strategy }) => persistentEmptyWith strategy);
 };
 
 let mutate = TransientHashSet.mutate;

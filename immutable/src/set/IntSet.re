@@ -240,7 +240,7 @@ let module TransientIntSet = {
     });
 
   let removeAll (transient: t): t =>
-    transient |> Transient.update (fun owner _ => persistentEmpty);
+    transient |> Transient.update (fun _ _ => persistentEmpty);
 };
 
 let mutate = TransientIntSet.mutate;

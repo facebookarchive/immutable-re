@@ -72,7 +72,7 @@ let module BadHashComparisonSet = {
   let contains = HashSet.contains;
   let count = HashSet.count;
   let empty = fun () => {
-    let badHashStrategy = HashStrategy.createWithComparator (fun i => 10) Comparator.structural;
+    let badHashStrategy = HashStrategy.createWithComparator (fun _ => 10) Comparator.structural;
     HashSet.emptyWith badHashStrategy;
   };
   let equals = HashSet.equals;
@@ -105,7 +105,7 @@ let module BadHashEqualitySet = {
   let contains = HashSet.contains;
   let count = HashSet.count;
   let empty = fun () => {
-    let badHashStrategy = HashStrategy.createWithEquality (fun i => 10) Equality.structural;
+    let badHashStrategy = HashStrategy.createWithEquality (fun _ => 10) Equality.structural;
     HashSet.emptyWith badHashStrategy;
   };
   let equals = HashSet.equals;
@@ -136,7 +136,7 @@ let transientHashSetTest (count: int): (list Test.t) => [
 
     let (_, mapOfSizeN) = src
       |> Seq.scan
-        (fun (hash, acc) i => (i, acc |> TransientHashSet.add i))
+        (fun (_, acc) i => (i, acc |> TransientHashSet.add i))
         (0, HashSet.empty |> HashSet.mutate)
       |> Seq.doOnNext(fun (i, acc) => {
         expect (acc |> TransientHashSet.contains i) |> toBeEqualToTrue;

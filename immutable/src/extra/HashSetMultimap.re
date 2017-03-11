@@ -28,7 +28,7 @@ let emptyWith
   valueStrategy,
 });
 
-let equals ({ valueStrategy } as this: t 'k 'v) (that: t 'k 'v): bool =>
+let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
   HashMap.equalsWith HashSet.equals this.map that.map;
 
 let every (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
@@ -112,7 +112,7 @@ let putAllValues
 };
 
 let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: t 'k 'v): 'acc => {
-  let rec reducer acc key values =>
+  let reducer acc key values =>
     values |> HashSet.reduce (fun acc v => f acc key v) acc;
   map |> HashMap.reduce reducer acc;
 };
@@ -156,7 +156,7 @@ let values ({ map }: t 'k 'v): (Seq.t 'v) =>
   map |> HashMap.values |> Seq.flatMap HashSet.toSeq;
 
 let toSet
-    ({ count, map, valueStrategy } as multimap: t 'k 'v): (ImmSet.t ('k, 'v)) => {
+    ({ count } as multimap: t 'k 'v): (ImmSet.t ('k, 'v)) => {
   contains: fun (k, v) => multimap |> contains k v,
   count,
   every: fun f => multimap |> every (fun k v => f (k, v)),

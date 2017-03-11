@@ -70,9 +70,10 @@ let put (key: 'k) (value: 'v) ({ comparator, count, tree } as map: t 'k 'v): (t 
   let alterResult = ref AVLTreeMap.NoChange;
   let newTree = tree |> AVLTreeMap.putWithResult comparator alterResult key value;
   switch !alterResult {
-    | Added => { comparator, count: count + 1, tree: newTree }
-    | NoChange => map
-    | Replace => { comparator, count, tree: newTree }
+    | AVLTreeMap.Added => { comparator, count: count + 1, tree: newTree }
+    | AVLTreeMap.NoChange => map
+    | AVLTreeMap.Replace => { comparator, count, tree: newTree }
+    | AVLTreeMap.Removed => failwith "invalid state"
   };
 };
 
@@ -129,10 +130,10 @@ let some (f: 'k => 'v => bool) ({ tree }: t 'k 'v): bool =>
 let toSeq ({ tree }: t 'k 'v): (Seq.t ('k, 'v)) =>
   tree |> AVLTreeMap.toSeq;
 
-let tryFind (f: 'k => 'v => bool) ({ comparator, tree }: t 'k 'v): (option ('k, 'v)) =>
+let tryFind (f: 'k => 'v => bool) ({ tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryFind f;
 
-let find (f: 'k => 'v => bool) ({ comparator, tree }: t 'k 'v): ('k, 'v) =>
+let find (f: 'k => 'v => bool) ({ tree }: t 'k 'v): ('k, 'v) =>
   tree |> AVLTreeMap.tryFind f |> Option.first;
 
 let tryFirst ({ tree }: t 'k 'v): (option ('k, 'v)) =>

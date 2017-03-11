@@ -2,7 +2,6 @@ let module CamlSet = Set;
 open Immutable;
 open Printf;
 open ReUnit;
-open ReUnit.Expect;
 open ReUnit.Test;
 
 /* Hash the indexes to ensure that results aren't skewed by continuous keys */
