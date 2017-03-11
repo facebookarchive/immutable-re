@@ -1,9 +1,8 @@
-open HashMap;
 open Option.Operators;
 
 type t 'a = {
   count: int,
-  map: (hashMap 'a int),
+  map: (HashMap.t 'a int),
 };
 
 let add (value: 'a) ({ count, map }: t 'a): (t 'a) => {
@@ -112,11 +111,13 @@ let values ({ map }: t 'a): (ImmSet.t 'a) =>
   map |> HashMap.keys;
 
 let module TransientHashMultiset = {
+  let module TransientHashMap = HashMap.TransientHashMap;
+
   type hashMultiset 'a = t 'a;
 
   type t 'a = {
     mutable count: int,
-    map: (transientHashMap 'a int),
+    map: (TransientHashMap.t 'a int),
   };
 
   let mutate ({ count, map}: hashMultiset 'a): (t 'a) => {

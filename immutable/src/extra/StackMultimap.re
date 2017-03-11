@@ -1,9 +1,8 @@
-open HashMap;
 open Option.Operators;
 
 type t 'k 'v = {
   count: int,
-  map: hashMap 'k (Stack.t 'v),
+  map: HashMap.t 'k (Stack.t 'v),
 };
 
 let add (key: 'k) (value: 'v) ({ count, map }: t 'k 'v): (t 'k 'v) => {

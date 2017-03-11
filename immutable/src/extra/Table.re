@@ -1,10 +1,9 @@
 open Functions.Operators;
-open HashMap;
 open Option.Operators;
 
 type t 'row 'column 'value = {
   count: int,
-  map: (hashMap 'row (hashMap 'column 'value)),
+  map: (HashMap.t 'row (HashMap.t 'column 'value)),
   columnStrategy: HashStrategy.t 'column,
 };
 

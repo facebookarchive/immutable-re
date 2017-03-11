@@ -1,9 +1,8 @@
-open HashMap;
 open Option.Operators;
 
 type t 'k 'v = {
-  map: hashMap 'k 'v,
-  inverse: hashMap 'v 'k
+  map: HashMap.t 'k 'v,
+  inverse: HashMap.t 'v 'k
 };
 
 let contains (key: 'k) (value: 'v) ({ map, inverse }: t 'k 'v): bool =>
@@ -27,6 +26,9 @@ let emptyWith
 };
 
 let equals ({ map: thisMap, inverse: thisInverse }: t 'k 'v) ({ map: thatMap }: t 'k 'v): bool => {
+  /* Open HashMap to get the access to internals of HashMap.t */
+  open HashMap;
+  
   let { strategy: valueStrategy } = thisInverse;
   HashMap.equalsWith (HashStrategy.equals valueStrategy) thisMap thatMap;
 };
@@ -111,8 +113,6 @@ let toSet ({ map, inverse }: t 'k 'v): (ImmSet.t ('k, 'v)) =>
   /* Kind of cheating */
   map |> HashMap.toSetWith (HashStrategy.equals inverse.strategy);
 
-let toInverseMap ({ inverse }: t 'k 'v): (hashMap 'k 'k) => inverse;
-
 let toMap ({ map }: t 'k 'v): (ImmMap.t 'k 'v) => map |> HashMap.toMap;
 
 let toSeq ({ map }: t 'k 'v): (Seq.t ('k, 'v)) => map |> HashMap.toSeq;
@@ -139,22 +139,14 @@ let tryPut
 let values ({ inverse }: t 'k 'v): (ImmSet.t 'v) =>
   inverse |> HashMap.keys;
 
-type transientHashBiMap 'k 'v = {
-  map: transientHashMap 'k 'v,
-  inverse: transientHashMap 'v 'k,
-};
-
-let mutate ({ map, inverse }: t 'k 'v): (transientHashBiMap 'k 'v) => ({
-  map: map |> HashMap.mutate,
-  inverse: inverse |> HashMap.mutate,
-});
-
 let module TransientHashBiMap = {
   type hashBiMap 'k 'v = t 'k 'v;
 
+  let module TransientHashMap = HashMap.TransientHashMap;
+
   type t 'k 'v = {
-    map: transientHashMap 'k 'v,
-    inverse: transientHashMap 'v 'k,
+    map: TransientHashMap.t 'k 'v,
+    inverse: TransientHashMap.t 'v 'k,
   };
 
   let mutate ({ map, inverse }: hashBiMap 'k 'v): (t 'k 'v) => ({

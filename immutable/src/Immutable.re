@@ -1,10 +1,10 @@
 let module TransientDequeInternal = Deque.TransientDeque;
 let module TransientHashBiMapInternal = HashBiMap.TransientHashBiMap;
-open HashMap;
+let module TransientHashMapInternal = HashMap.TransientHashMap;
 let module TransientHashMultisetInternal = HashMultiset.TransientHashMultiset;
-open HashSet;
-open IntMap;
-open IntSet;
+let module TransientHashSetInternal = HashSet.TransientHashSet;
+let module TransientIntMapInternal = IntMap.TransientIntMap;
+let module TransientIntSetInternal = IntSet.TransientIntSet;
 open Vector;
 
 let module Hash = {
@@ -373,7 +373,7 @@ let module TransientHashBiMap = {
 };
 
 let module HashMap = {
-  type t 'k 'v  = hashMap 'k 'v;
+  type t 'k 'v  = HashMap.t 'k 'v;
 
   let alter = HashMap.alter;
   let contains = HashMap.contains;
@@ -417,20 +417,20 @@ let module HashMap = {
 };
 
 let module TransientHashMap = {
-  type t 'k 'v = transientHashMap 'k 'v;
+  type t 'k 'v = TransientHashMapInternal.t 'k 'v;
 
-  let alter = TransientHashMap.alter;
-  let count = TransientHashMap.count;
-  let empty = TransientHashMap.empty;
-  let emptyWith = TransientHashMap.emptyWith;
-  let isEmpty = TransientHashMap.isEmpty;
-  let isNotEmpty = TransientHashMap.isNotEmpty;
-  let persist = TransientHashMap.persist;
-  let put = TransientHashMap.put;
-  let putAll = TransientHashMap.putAll;
-  let remove = TransientHashMap.remove;
-  let removeAll = TransientHashMap.removeAll;
-  let tryGet = TransientHashMap.tryGet;
+  let alter = TransientHashMapInternal.alter;
+  let count = TransientHashMapInternal.count;
+  let empty = TransientHashMapInternal.empty;
+  let emptyWith = TransientHashMapInternal.emptyWith;
+  let isEmpty = TransientHashMapInternal.isEmpty;
+  let isNotEmpty = TransientHashMapInternal.isNotEmpty;
+  let persist = TransientHashMapInternal.persist;
+  let put = TransientHashMapInternal.put;
+  let putAll = TransientHashMapInternal.putAll;
+  let remove = TransientHashMapInternal.remove;
+  let removeAll = TransientHashMapInternal.removeAll;
+  let tryGet = TransientHashMapInternal.tryGet;
 };
 
 let module HashMultiset = {
@@ -484,7 +484,7 @@ let module TransientHashMultiset = {
 };
 
 let module HashSet = {
-  type t 'a = hashSet 'a;
+  type t 'a = HashSet.t 'a;
 
   let add = HashSet.add;
   let addAll = HashSet.addAll;
@@ -517,19 +517,19 @@ let module HashSet = {
 };
 
 let module TransientHashSet = {
-  type t 'a = transientHashSet 'a;
+  type t 'a = TransientHashSetInternal.t 'a;
 
-  let add = TransientHashSet.add;
-  let addAll = TransientHashSet.addAll;
-  let contains = TransientHashSet.contains;
-  let count = TransientHashSet.count;
-  let empty = TransientHashSet.empty;
-  let emptyWith = TransientHashSet.emptyWith;
-  let isEmpty = TransientHashSet.isEmpty;
-  let isNotEmpty = TransientHashSet.isNotEmpty;
-  let persist = TransientHashSet.persist;
-  let remove = TransientHashSet.remove;
-  let removeAll = TransientHashSet.removeAll;
+  let add = TransientHashSetInternal.add;
+  let addAll = TransientHashSetInternal.addAll;
+  let contains = TransientHashSetInternal.contains;
+  let count = TransientHashSetInternal.count;
+  let empty = TransientHashSetInternal.empty;
+  let emptyWith = TransientHashSetInternal.emptyWith;
+  let isEmpty = TransientHashSetInternal.isEmpty;
+  let isNotEmpty = TransientHashSetInternal.isNotEmpty;
+  let persist = TransientHashSetInternal.persist;
+  let remove = TransientHashSetInternal.remove;
+  let removeAll = TransientHashSetInternal.removeAll;
 };
 
 let module HashSetMultimap = {
@@ -563,7 +563,7 @@ let module HashSetMultimap = {
 };
 
 let module IntMap = {
-  type t 'a = IntMap.intMap 'a;
+  type t 'a = IntMap.t 'a;
 
   let alter = IntMap.alter;
   let contains = IntMap.contains;
@@ -604,23 +604,23 @@ let module IntMap = {
 };
 
 let module TransientIntMap = {
-  type t 'a = transientIntMap 'a;
+  type t 'a = TransientIntMapInternal.t 'a;
 
-  let alter = TransientIntMap.alter;
-  let count = TransientIntMap.count;
-  let empty = TransientIntMap.empty;
-  let isEmpty = TransientIntMap.isEmpty;
-  let isNotEmpty = TransientIntMap.isNotEmpty;
-  let persist = TransientIntMap.persist;
-  let put = TransientIntMap.put;
-  let putAll = TransientIntMap.putAll;
-  let remove = TransientIntMap.remove;
-  let removeAll = TransientIntMap.removeAll;
-  let tryGet = TransientIntMap.tryGet;
+  let alter = TransientIntMapInternal.alter;
+  let count = TransientIntMapInternal.count;
+  let empty = TransientIntMapInternal.empty;
+  let isEmpty = TransientIntMapInternal.isEmpty;
+  let isNotEmpty = TransientIntMapInternal.isNotEmpty;
+  let persist = TransientIntMapInternal.persist;
+  let put = TransientIntMapInternal.put;
+  let putAll = TransientIntMapInternal.putAll;
+  let remove = TransientIntMapInternal.remove;
+  let removeAll = TransientIntMapInternal.removeAll;
+  let tryGet = TransientIntMapInternal.tryGet;
 };
 
 let module IntSet = {
-  type t = intSet;
+  type t = IntSet.t;
 
   let add = IntSet.add;
   let addAll = IntSet.addAll;
@@ -651,18 +651,18 @@ let module IntSet = {
 };
 
 let module TransientIntSet = {
-  type t = transientIntSet;
+  type t = TransientIntSetInternal.t;
 
-  let add = TransientIntSet.add;
-  let addAll = TransientIntSet.addAll;
-  let contains = TransientIntSet.contains;
-  let count = TransientIntSet.count;
-  let empty = TransientIntSet.empty;
-  let isEmpty = TransientIntSet.isEmpty;
-  let isNotEmpty = TransientIntSet.isNotEmpty;
-  let persist = TransientIntSet.persist;
-  let remove = TransientIntSet.remove;
-  let removeAll = TransientIntSet.removeAll;
+  let add = TransientIntSetInternal.add;
+  let addAll = TransientIntSetInternal.addAll;
+  let contains = TransientIntSetInternal.contains;
+  let count = TransientIntSetInternal.count;
+  let empty = TransientIntSetInternal.empty;
+  let isEmpty = TransientIntSetInternal.isEmpty;
+  let isNotEmpty = TransientIntSetInternal.isNotEmpty;
+  let persist = TransientIntSetInternal.persist;
+  let remove = TransientIntSetInternal.remove;
+  let removeAll = TransientIntSetInternal.removeAll;
 };
 
 let module List = {

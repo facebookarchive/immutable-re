@@ -1,17 +1,16 @@
-type bitmapTrieIntSet =
-  | Level int32 (array bitmapTrieIntSet) (option Transient.Owner.t)
-  | Entry int
-  | Empty;
-
 /* FIXME: I'm fairly certain the BitmapTrie functions can be changed to properly sort IntSet */
-
 let module BitmapTrieIntSet = {
+  type t =
+    | Level int32 (array t) (option Transient.Owner.t)
+    | Entry int
+    | Empty;
+
   let rec add
-      (updateLevelNode: int => bitmapTrieIntSet => bitmapTrieIntSet => bitmapTrieIntSet)
+      (updateLevelNode: int => t => t => t)
       (owner: option Transient.Owner.t)
       (depth: int)
       (value: int)
-      (set: bitmapTrieIntSet): bitmapTrieIntSet => switch set {
+      (set: t): t => switch set {
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos value depth;
         let index = BitmapTrie.index bitmap bit;
@@ -39,7 +38,7 @@ let module BitmapTrieIntSet = {
   let rec contains
       (depth: int)
       (value: int)
-      (set: bitmapTrieIntSet): bool => switch set {
+      (set: t): bool => switch set {
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos value depth;
         let index = BitmapTrie.index bitmap bit;
@@ -51,11 +50,11 @@ let module BitmapTrieIntSet = {
   };
 
   let rec remove
-      (updateLevelNode: int => bitmapTrieIntSet => bitmapTrieIntSet => bitmapTrieIntSet)
+      (updateLevelNode: int => t => t => t)
       (owner: option Transient.Owner.t)
       (depth: int)
       (value: int)
-      (set: bitmapTrieIntSet): bitmapTrieIntSet => switch set {
+      (set: t): t => switch set {
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos value depth;
         let index = BitmapTrie.index bitmap bit;
@@ -77,75 +76,75 @@ let module BitmapTrieIntSet = {
     | _ => set
   };
 
-  let rec toSeq (set: bitmapTrieIntSet): (Seq.t int) => switch set {
+  let rec toSeq (set: t): (Seq.t int) => switch set {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
     | Entry entryValue => Seq.return entryValue;
     | Empty => Seq.empty;
   };
 };
 
-type intSet = {
+type t = {
   count: int,
-  root: bitmapTrieIntSet,
+  root: BitmapTrieIntSet.t,
 };
 
 let updateLevelNodePersistent
     (index: int)
-    (childNode: bitmapTrieIntSet)
-    ((Level bitmap nodes _): bitmapTrieIntSet): bitmapTrieIntSet =>
+    (childNode: BitmapTrieIntSet.t)
+    ((Level bitmap nodes _): BitmapTrieIntSet.t): BitmapTrieIntSet.t =>
   Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
 
-let add (value: int) ({ count, root } as set: intSet): intSet => {
+let add (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.add updateLevelNodePersistent None 0 value;
   if (newRoot === root) set
   else { count: count + 1, root: newRoot };
 };
 
-let contains (value: int) ({ root }: intSet): bool =>
+let contains (value: int) ({ root }: t): bool =>
   root |> BitmapTrieIntSet.contains 0 value;
 
-let count ({ count }: intSet): int => count;
+let count ({ count }: t): int => count;
 
-let empty: intSet = { count: 0, root: Empty };
+let empty: t = { count: 0, root: Empty };
 
-let isEmpty ({ count }: intSet): bool => count == 0;
+let isEmpty ({ count }: t): bool => count == 0;
 
-let isNotEmpty ({ count }: intSet): bool => count != 0;
+let isNotEmpty ({ count }: t): bool => count != 0;
 
-let remove (value: int) ({ count, root } as set: intSet): intSet => {
+let remove (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.remove updateLevelNodePersistent None 0 value;
   if (newRoot === root) set
   else { count: count - 1, root: newRoot };
 };
 
-let removeAll (_: intSet): intSet =>
+let removeAll (_: t): t =>
   empty;
 
-let toSeq ({ root }: intSet): (Seq.t int) =>
+let toSeq ({ root }: t): (Seq.t int) =>
   root |> BitmapTrieIntSet.toSeq;
 
-let every (f: int => bool) (set: intSet): bool =>
+let every (f: int => bool) (set: t): bool =>
   set |> toSeq |> Seq.every f;
 
-let find (f: int => bool) (set: intSet): int =>
+let find (f: int => bool) (set: t): int =>
   set |> toSeq |> Seq.find f;
 
-let forEach (f: int => unit) (set: intSet): unit =>
+let forEach (f: int => unit) (set: t): unit =>
   set |> toSeq |> Seq.forEach f;
 
-let none (f: int => bool) (set: intSet): bool =>
+let none (f: int => bool) (set: t): bool =>
   set |> toSeq |> Seq.none f;
 
-let reduce (f: 'acc => int => 'acc) (acc: 'acc) (set: intSet): 'acc =>
+let reduce (f: 'acc => int => 'acc) (acc: 'acc) (set: t): 'acc =>
   set |> toSeq |> Seq.reduce f acc;
 
-let some (f: int => bool) (set: intSet): bool =>
+let some (f: int => bool) (set: t): bool =>
   set |> toSeq |> Seq.some f;
 
-let tryFind (f: int => bool) (set: intSet): (option int) =>
+let tryFind (f: int => bool) (set: t): (option int) =>
   set |> toSeq |> Seq.tryFind f;
 
-let toSet (set: intSet): (ImmSet.t int) => {
+let toSet (set: t): (ImmSet.t int) => {
   contains: fun v => contains v set,
   count: count set,
   every: fun f => set |> every f,
@@ -158,33 +157,35 @@ let toSet (set: intSet): (ImmSet.t int) => {
   tryFind: fun f => set |> tryFind f,
 };
 
-let equals (this: intSet) (that: intSet): bool =>
+let equals (this: t) (that: t): bool =>
   ImmSet.equals (toSet this) (toSet that);
 
-let hash (set: intSet): int =>
+let hash (set: t): int =>
   set |> toSet |> ImmSet.hash;
 
-let toMap (set: intSet): (ImmMap.t int int) =>
+let toMap (set: t): (ImmMap.t int int) =>
   set |> toSet |> ImmMap.ofSet;
 
-type transientIntSet = Transient.t intSet;
-
-let mutate (set: intSet): (transientIntSet) =>
-  Transient.create set;
-
 let module TransientIntSet = {
+  type intSet = t;
+
+  type t = Transient.t intSet;
+
+  let mutate (set: intSet): t =>
+    Transient.create set;
+
   let updateLevelNodeTransient
       (owner: Transient.Owner.t)
       (index: int)
-      (childNode: bitmapTrieIntSet)
-      ((Level bitmap nodes nodeOwner) as node: bitmapTrieIntSet): bitmapTrieIntSet => switch nodeOwner {
+      (childNode: BitmapTrieIntSet.t)
+      ((Level bitmap nodes nodeOwner) as node: BitmapTrieIntSet.t): BitmapTrieIntSet.t => switch nodeOwner {
     | Some nodeOwner when nodeOwner === owner =>
         nodes.(index) = childNode;
         node
     | _ => Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
   };
 
-  let add (value: int) (transient: transientIntSet): (transientIntSet) =>
+  let add (value: int) (transient: t): t =>
     transient |> Transient.update (fun owner ({ count, root } as set) => {
       if (set |> contains value) set
       else {
@@ -193,7 +194,7 @@ let module TransientIntSet = {
       }
     });
 
-  let addAll (seq: Seq.t int) (transient: transientIntSet): (transientIntSet) =>
+  let addAll (seq: Seq.t int) (transient: t): t =>
     transient |> Transient.update (fun owner ({ count, root } as set) => {
       let newCount = ref count;
 
@@ -211,48 +212,50 @@ let module TransientIntSet = {
       else { count: !newCount, root: newRoot };
     });
 
-  let contains (value: int) (transient: transientIntSet): bool =>
+  let contains (value: int) (transient: t): bool =>
     transient |> Transient.get |> contains value;
 
-  let count (transient: transientIntSet): int =>
+  let count (transient: t): int =>
     transient |> Transient.get |> count;
 
   let persistentEmpty = empty;
 
-  let empty (): (transientIntSet) =>
+  let empty (): t =>
     empty |> mutate;
 
-  let isEmpty (transient: transientIntSet): bool =>
+  let isEmpty (transient: t): bool =>
     transient |> Transient.get |> isEmpty;
 
-  let isNotEmpty (transient: transientIntSet): bool =>
+  let isNotEmpty (transient: t): bool =>
     transient |> Transient.get |> isNotEmpty;
 
-  let persist (transient: transientIntSet): intSet =>
+  let persist (transient: t): intSet =>
     transient |> Transient.persist;
 
-  let remove (value: int) (transient: transientIntSet): (transientIntSet) =>
+  let remove (value: int) (transient: t): t =>
     transient |> Transient.update (fun owner ({ count, root } as set) => {
       let newRoot = root |> BitmapTrieIntSet.remove  (updateLevelNodeTransient owner) None 0 value;
       if (newRoot === root) set
       else { count: count - 1, root: newRoot };
     });
 
-  let removeAll  (transient: transientIntSet): (transientIntSet) =>
+  let removeAll (transient: t): t =>
     transient |> Transient.update (fun owner _ => persistentEmpty);
 };
 
-let addAll (seq: Seq.t int) (set: intSet): intSet =>
+let mutate = TransientIntSet.mutate;
+
+let addAll (seq: Seq.t int) (set: t): t =>
   set |> mutate |> TransientIntSet.addAll seq |> TransientIntSet.persist;
 
-let fromSeq (seq: Seq.t int): intSet =>
+let fromSeq (seq: Seq.t int): t =>
   empty |> addAll seq;
 
-let intersect (this: intSet) (that: intSet): intSet =>
+let intersect (this: t) (that: t): t =>
   ImmSet.intersect (toSet this) (toSet that) |> fromSeq;
 
-let subtract (this: intSet) (that: intSet): intSet =>
+let subtract (this: t) (that: t): t =>
   ImmSet.subtract (toSet this) (toSet that) |> fromSeq;
 
-let union (this: intSet) (that: intSet): intSet =>
+let union (this: t) (that: t): t =>
   ImmSet.union (toSet this) (toSet that) |> fromSeq;

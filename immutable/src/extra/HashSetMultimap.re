@@ -1,10 +1,8 @@
-open HashMap;
-open HashSet;
 open Option.Operators;
 
 type t 'k 'v = {
   count: int,
-  map: (hashMap 'k (hashSet 'v)),
+  map: (HashMap.t 'k (HashSet.t 'v)),
   valueStrategy: HashStrategy.t 'v,
 };
 
@@ -45,7 +43,7 @@ let forEach (f: 'k => 'v => unit) ({ map }: t 'k 'v): unit => {
   map |> HashMap.forEach f';
 };
 
-let get (key: 'k) ({ map, valueStrategy }: t 'k 'v): (hashSet 'v) =>
+let get (key: 'k) ({ map, valueStrategy }: t 'k 'v): (HashSet.t 'v) =>
   map |> HashMap.tryGet key |? HashSet.emptyWith valueStrategy;
 
 let hash ({ map }: t 'k 'v): int =>
