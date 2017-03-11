@@ -3,10 +3,9 @@ open EqualityMap;
 open ImmMap;
 open ImmSet;
 open SortedMap;
-open Transient;
 
 type bitmapTrieMap 'k 'v =
-  | Level int32 (array (bitmapTrieMap 'k 'v)) (option owner)
+  | Level int32 (array (bitmapTrieMap 'k 'v)) (option Transient.Owner.t)
   | ComparatorCollision int (avlTreeMap 'k 'v)
   | EqualityCollision int (equalityMap 'k 'v)
   | Entry int 'k 'v
@@ -22,7 +21,7 @@ let module BitmapTrieMap = {
   let rec alter
       (hashStrategy: HashStrategy.t 'k)
       (updateLevelNode: int => (bitmapTrieMap 'k 'v) => (bitmapTrieMap 'k 'v) => (bitmapTrieMap 'k 'v))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (alterResult: ref alterResult)
       (depth: int)
       (hash: int)
@@ -497,14 +496,14 @@ let toSet (map: hashMap 'k 'v): (set ('k, 'v)) =>
 let toSetWith (equality: Equality.t 'v) (map: hashMap 'k 'v): (set ('k, 'v)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
-type transientHashMap 'k 'v = transient (hashMap 'k 'v);
+type transientHashMap 'k 'v = Transient.t (hashMap 'k 'v);
 
 let mutate (map: hashMap 'k 'v): (transientHashMap 'k 'v) =>
   Transient.create map;
 
 let module TransientHashMap = {
   let updateLevelNodeTransient
-      (owner: owner)
+      (owner: Transient.Owner.t)
       (index: int)
       (childNode: bitmapTrieMap 'k 'v)
       ((Level bitmap nodes nodeOwner) as node: (bitmapTrieMap 'k 'v)): (bitmapTrieMap 'k 'v) => switch nodeOwner {

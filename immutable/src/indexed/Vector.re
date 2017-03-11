@@ -1,12 +1,11 @@
 open CopyOnWriteArray;
 open ImmMap;
 open Option.Operators;
-open Transient;
 
 type trie 'a =
   | Empty
-  | Leaf (option owner) (array 'a)
-  | Level int (ref int) (option owner) (array (trie 'a));
+  | Leaf (option Transient.Owner.t) (array 'a)
+  | Level int (ref int) (option Transient.Owner.t) (array (trie 'a));
 
 let module Trie = {
   let bits = 5;
@@ -107,7 +106,7 @@ let module Trie = {
 
   let rec tryAddFirstLeafToTrieUsingMutator
       (updateLevel: int => int => (trie 'a) => (trie 'a) => (trie 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (values: array 'a)
       (Level levelDepth levelCount owner tries as trie: trie 'a): (option (trie 'a)) => {
     let firstIndex = 0;
@@ -146,7 +145,7 @@ let module Trie = {
 
   let addFirstLeafUsingMutator
       (updateLevel: int => int => (trie 'a) => (trie 'a) => (trie 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (values: array 'a)
       (trie: trie 'a): (trie 'a) => switch trie {
     | Empty =>
@@ -165,7 +164,7 @@ let module Trie = {
 
   let rec tryAddLastLeafToTrieUsingMutator
       (updateLevel: int => int => (trie 'a) => (trie 'a) => (trie 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (values: array 'a)
       (Level levelDepth levelCount owner tries as trie: trie 'a): (option (trie 'a)) => {
     let lastIndex = tries |> CopyOnWriteArray.lastIndex;
@@ -204,7 +203,7 @@ let module Trie = {
 
   let addLastLeafUsingMutator
       (updateLevel: int => int => (trie 'a) => (trie 'a) => (trie 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (values: array 'a)
       (trie: trie 'a): (trie 'a) => switch trie {
     | Empty =>
@@ -223,7 +222,7 @@ let module Trie = {
 
   let rec removeFirstLeafUsingMutator
       (updateLevel: int => int => (trie 'a) => (trie 'a) => (trie 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (trie: trie 'a): (trie 'a, trie 'a) => switch trie {
     | Leaf _ _ => (trie, Empty);
     | Level levelDepth levelCount _ tries when levelDepth > 1 =>
@@ -258,7 +257,7 @@ let module Trie = {
 
   let rec removeLastLeafUsingMutator
       (updateLevel: int => int => (trie 'a) => (trie 'a) => (trie 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (trie: trie 'a): (trie 'a, trie 'a) => switch trie {
     | Leaf _ _ => (Empty, trie);
     | Level levelDepth levelCount _ tries when levelDepth > 1 =>
@@ -372,12 +371,12 @@ let module Trie = {
   let skipImpl
       (computeLevelIndex: int => (leveIndexContinuation 'a (array 'a, trie 'a)) => (trie 'a) => (array 'a, trie 'a))
       (skip:
-        (option owner) =>
+        (option Transient.Owner.t) =>
         int =>
         (trie 'a) =>
         (array 'a, trie 'a)
       )
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (skipCount: int)
       (trie: trie 'a): (array 'a, trie 'a) => switch trie {
     | Leaf _ nodes =>
@@ -409,7 +408,7 @@ let module Trie = {
   };
 
   let rec skipUsingRadixSearch
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (skipCount: int)
       (trie: trie 'a): (array 'a, trie 'a) => skipImpl
     computeLevelIndexUsingRadixSearch
@@ -419,7 +418,7 @@ let module Trie = {
     trie;
 
   let rec skip
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (count: int)
       (trie: trie 'a): (array 'a, trie 'a) => switch trie {
     | Level _ _ _ tries when not @@ canRadixSearch @@ trie => skipImpl
@@ -437,12 +436,12 @@ let module Trie = {
   let takeImpl
       (computeLevelIndex: int => (leveIndexContinuation 'a (trie 'a, array 'a)) => (trie 'a) => (trie 'a, array 'a))
       (take:
-        (option owner) =>
+        (option Transient.Owner.t) =>
         int =>
         (trie 'a) =>
         (trie 'a, array 'a)
       )
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (takeCount: int)
       (trie: trie 'a): (trie 'a, array 'a) => switch trie {
     | Leaf _ nodes =>
@@ -472,7 +471,7 @@ let module Trie = {
   };
 
   let rec takeUsingRadixSearch
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (takeCount: int)
       (trie: trie 'a): (trie 'a, array 'a) => takeImpl
     computeLevelIndexUsingRadixSearch
@@ -482,7 +481,7 @@ let module Trie = {
     trie;
 
   let rec take
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (count: int)
       (trie: trie 'a): (trie 'a, array 'a) => switch trie {
    | Level _ _ _ tries when not @@ canRadixSearch @@ trie => takeImpl
@@ -661,24 +660,24 @@ let module VectorImpl = {
   module type VectorBase = {
     type t 'a;
 
-    let addFirst: (option owner) => 'a => (t 'a) => (t 'a);
-    let addLast: (option owner) => 'a => (t 'a) => (t 'a);
+    let addFirst: (option Transient.Owner.t) => 'a => (t 'a) => (t 'a);
+    let addLast: (option Transient.Owner.t) => 'a => (t 'a) => (t 'a);
     let count: (t 'a) => int;
     let empty: (t 'a);
     let getUnsafe: int => (t 'a) => 'a;
-    let removeFirst: (option owner) => (t 'a) => (t 'a);
-    let removeLast: (option owner) => (t 'a) => (t 'a);
-    let updateUnsafe: (option owner) => int => 'a => (t 'a) => (t 'a);
-    let updateWithUnsafe: (option owner) => int => ('a => 'a) => (t 'a) => (t 'a);
+    let removeFirst: (option Transient.Owner.t) => (t 'a) => (t 'a);
+    let removeLast: (option Transient.Owner.t) => (t 'a) => (t 'a);
+    let updateUnsafe: (option Transient.Owner.t) => int => 'a => (t 'a) => (t 'a);
+    let updateWithUnsafe: (option Transient.Owner.t) => int => ('a => 'a) => (t 'a) => (t 'a);
   };
 
   module type S = {
     type t 'a;
 
-    let addFirst: (option owner) => 'a => (t 'a) => (t 'a);
-    let addFirstAll: (option owner) => (Seq.t 'a) => (t 'a) => (t 'a);
-    let addLast: (option owner) => 'a => (t 'a) => (t 'a);
-    let addLastAll: (option owner) => (Seq.t 'a) => (t 'a) => (t 'a);
+    let addFirst: (option Transient.Owner.t) => 'a => (t 'a) => (t 'a);
+    let addFirstAll: (option Transient.Owner.t) => (Seq.t 'a) => (t 'a) => (t 'a);
+    let addLast: (option Transient.Owner.t) => 'a => (t 'a) => (t 'a);
+    let addLastAll: (option Transient.Owner.t) => (Seq.t 'a) => (t 'a) => (t 'a);
     let count: (t 'a) => int;
     let empty: (t 'a);
     let first: (t 'a) => 'a;
@@ -687,22 +686,22 @@ let module VectorImpl = {
     let isNotEmpty: (t 'a) => bool;
     let last: (t 'a) => 'a;
     let removeAll: (t 'a) => (t 'a);
-    let removeFirst: (option owner) => (t 'a) => (t 'a);
-    let removeLast: (option owner) => (t 'a) => (t 'a);
+    let removeFirst: (option Transient.Owner.t) => (t 'a) => (t 'a);
+    let removeLast: (option Transient.Owner.t) => (t 'a) => (t 'a);
     let tryFirst: (t 'a) => (option 'a);
     let tryGet: int => (t 'a) => (option 'a);
     let tryLast: (t 'a) => (option 'a);
-    let update: (option owner) => int => 'a => (t 'a) => (t 'a);
-    let updateWith: (option owner) => int => ('a => 'a) => (t 'a) => (t 'a);
+    let update: (option Transient.Owner.t) => int => 'a => (t 'a) => (t 'a);
+    let updateWith: (option Transient.Owner.t) => int => ('a => 'a) => (t 'a) => (t 'a);
   };
 
   let module Make = fun (X: VectorBase) => {
     type t 'a = X.t 'a;
 
-    let addFirstAll (owner: option owner) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
+    let addFirstAll (owner: option Transient.Owner.t) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
       |> Seq.reduce (fun acc next => acc |> X.addFirst owner next) vector;
 
-    let addLastAll (owner: option owner) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
+    let addLastAll (owner: option Transient.Owner.t) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
       |> Seq.reduce (fun acc next => acc |> X.addLast owner next) vector;
 
     let addFirst = X.addFirst;
@@ -741,12 +740,12 @@ let module VectorImpl = {
 
     let tryLast (vector: t 'a): (option 'a) => tryGet ((X.count vector) - 1) vector;
 
-    let update (owner: option owner) (index: int) (value: 'a) (vector: t 'a): (t 'a) => {
+    let update (owner: option Transient.Owner.t) (index: int) (value: 'a) (vector: t 'a): (t 'a) => {
       Preconditions.failIfOutOfRange (X.count vector) index;
       X.updateUnsafe owner index value vector;
     };
 
-    let updateWith (owner: option owner) (index: int) (f: 'a => 'a) (vector: t 'a): (t 'a) => {
+    let updateWith (owner: option Transient.Owner.t) (index: int) (f: 'a => 'a) (vector: t 'a): (t 'a) => {
       Preconditions.failIfOutOfRange (X.count vector) index;
       X.updateWithUnsafe owner index f vector;
     };
@@ -792,7 +791,7 @@ let module PersistentVector = VectorImpl.Make {
       (Leaf _ values: trie 'a): (trie 'a) =>
     Leaf None (values |> CopyOnWriteArray.update index value);
 
-  let addFirst (owner: option owner) (value: 'a) ({ left, middle, right }: vector 'a): (vector 'a) =>
+  let addFirst (owner: option Transient.Owner.t) (value: 'a) ({ left, middle, right }: vector 'a): (vector 'a) =>
     (tailIsFull left) && (CopyOnWriteArray.isNotEmpty right) ? {
       left: [| value |],
       middle: Trie.addFirstLeafUsingMutator updateLevelPersistent None left middle,
@@ -811,7 +810,7 @@ let module PersistentVector = VectorImpl.Make {
       right,
     };
 
-  let addLast (owner: option owner) (value: 'a) ({ left, middle, right }: vector 'a): (vector 'a) =>
+  let addLast (owner: option Transient.Owner.t) (value: 'a) ({ left, middle, right }: vector 'a): (vector 'a) =>
     /* If right is empty, then middle is also empty */
     (tailIsNotFull left) && (CopyOnWriteArray.isEmpty right) ? {
       left: left |> CopyOnWriteArray.addLast value,
@@ -831,7 +830,7 @@ let module PersistentVector = VectorImpl.Make {
       right: [| value |],
     };
 
-  let removeFirst (owner: option owner) ({ left, middle, right }: vector 'a): (vector 'a) => {
+  let removeFirst (owner: option Transient.Owner.t) ({ left, middle, right }: vector 'a): (vector 'a) => {
     let leftCount = CopyOnWriteArray.count left;
     let middleCount = Trie.count middle;
     let rightCount = CopyOnWriteArray.count right;
@@ -858,7 +857,7 @@ let module PersistentVector = VectorImpl.Make {
     failwith "vector is empty";
   };
 
-  let removeLast (owner: option owner) ({ left, middle, right }: vector 'a): (vector 'a) => {
+  let removeLast (owner: option Transient.Owner.t) ({ left, middle, right }: vector 'a): (vector 'a) => {
     let leftCount = CopyOnWriteArray.count left;
     let middleCount = Trie.count middle;
     let rightCount = CopyOnWriteArray.count right;
@@ -904,7 +903,7 @@ let module PersistentVector = VectorImpl.Make {
   };
 
   let updateUnsafe
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (index: int)
       (value: 'a)
       ({ left, middle, right }: vector 'a): (vector 'a) => {
@@ -933,7 +932,7 @@ let module PersistentVector = VectorImpl.Make {
   };
 
   let updateWithUnsafe
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (index: int)
       (f: 'a => 'a)
       ({ left, middle, right }: vector 'a): (vector 'a) => {
@@ -978,7 +977,7 @@ let tailCopyAndExpand (arr: array 'a): (array 'a) => {
 };
 
 let updateLevelTransient
-    (owner: owner)
+    (owner: Transient.Owner.t)
     (count: int)
     (index: int)
     (child: trie 'a)
@@ -993,7 +992,7 @@ let updateLevelTransient
 };
 
 let updateLeafTransient
-    (owner: owner)
+    (owner: Transient.Owner.t)
     (index: int)
     (value: 'a)
     (trie: trie 'a): (trie 'a) => switch trie {
@@ -1061,7 +1060,7 @@ let module TransientVectorImpl = VectorImpl.Make {
   };
 
   let addFirst
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (value: 'a)
       ({
         left,
@@ -1095,7 +1094,7 @@ let module TransientVectorImpl = VectorImpl.Make {
     };
 
   let addLast
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (value: 'a)
       ({
         left,
@@ -1130,7 +1129,7 @@ let module TransientVectorImpl = VectorImpl.Make {
     };
 
   let removeFirst
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       ({
         left,
         leftCount,
@@ -1185,7 +1184,7 @@ let module TransientVectorImpl = VectorImpl.Make {
     failwith "vector is empty";
 
   let removeLast
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       ({
         left,
         leftCount,
@@ -1256,7 +1255,7 @@ let module TransientVectorImpl = VectorImpl.Make {
   };
 
   let updateUnsafe
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (index: int)
       (value: 'a)
       ({
@@ -1299,7 +1298,7 @@ let module TransientVectorImpl = VectorImpl.Make {
   };
 
   let updateWithUnsafe
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (index: int)
       (f: 'a => 'a)
       ({
@@ -1360,7 +1359,7 @@ let tryLast = PersistentVector.tryLast;
 let update index => PersistentVector.update None index;
 let updateWith index => PersistentVector.updateWith None index;
 
-type transientVector 'a = transient (transientVectorImpl 'a);
+type transientVector 'a = Transient.t (transientVectorImpl 'a);
 
 let mutate ({ left, middle, right }: vector 'a): (transientVector 'a) => Transient.create {
   left: (CopyOnWriteArray.count left > 0) ? tailCopyAndExpand left : [||],

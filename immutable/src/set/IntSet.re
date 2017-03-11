@@ -1,9 +1,8 @@
 open ImmMap;
 open ImmSet;
-open Transient;
 
 type bitmapTrieIntSet =
-  | Level int32 (array bitmapTrieIntSet) (option owner)
+  | Level int32 (array bitmapTrieIntSet) (option Transient.Owner.t)
   | Entry int
   | Empty;
 
@@ -12,7 +11,7 @@ type bitmapTrieIntSet =
 let module BitmapTrieIntSet = {
   let rec add
       (updateLevelNode: int => bitmapTrieIntSet => bitmapTrieIntSet => bitmapTrieIntSet)
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (depth: int)
       (value: int)
       (set: bitmapTrieIntSet): bitmapTrieIntSet => switch set {
@@ -56,7 +55,7 @@ let module BitmapTrieIntSet = {
 
   let rec remove
       (updateLevelNode: int => bitmapTrieIntSet => bitmapTrieIntSet => bitmapTrieIntSet)
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (depth: int)
       (value: int)
       (set: bitmapTrieIntSet): bitmapTrieIntSet => switch set {
@@ -171,14 +170,14 @@ let hash (set: intSet): int =>
 let toMap (set: intSet): (map int int) =>
   set |> toSet |> ImmMap.ofSet;
 
-type transientIntSet = transient intSet;
+type transientIntSet = Transient.t intSet;
 
 let mutate (set: intSet): (transientIntSet) =>
   Transient.create set;
 
 let module TransientIntSet = {
   let updateLevelNodeTransient
-      (owner: owner)
+      (owner: Transient.Owner.t)
       (index: int)
       (childNode: bitmapTrieIntSet)
       ((Level bitmap nodes nodeOwner) as node: bitmapTrieIntSet): bitmapTrieIntSet => switch nodeOwner {

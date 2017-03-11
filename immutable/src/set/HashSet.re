@@ -3,10 +3,9 @@ open EqualitySet;
 open ImmMap;
 open ImmSet;
 open SortedSet;
-open Transient;
 
 type bitmapTrieSet 'a =
-  | Level int32 (array (bitmapTrieSet 'a)) (option owner)
+  | Level int32 (array (bitmapTrieSet 'a)) (option Transient.Owner.t)
   | ComparatorCollision int (avlTreeSet 'a)
   | EqualitySetCollision int (equalitySet 'a)
   | Entry int 'a
@@ -16,7 +15,7 @@ let module BitmapTrieSet = {
   let rec add
       (hashStrategy: HashStrategy.t 'a)
       (updateLevelNode: int => (bitmapTrieSet 'a) => (bitmapTrieSet 'a) => (bitmapTrieSet 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (depth: int)
       (hash: int)
       (value: 'a)
@@ -92,7 +91,7 @@ let module BitmapTrieSet = {
   let rec remove
       (hashStrategy: HashStrategy.t 'a)
       (updateLevelNode: int => (bitmapTrieSet 'a) => (bitmapTrieSet 'a) => (bitmapTrieSet 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (depth: int)
       (hash: int)
       (value: 'a)
@@ -239,14 +238,14 @@ let hash ({ strategy } as set: hashSet 'a): int =>
 let toMap (set: hashSet 'a): (map 'a 'a) =>
   set |> toSet |> ImmMap.ofSet;
 
-type transientHashSet 'a = transient (hashSet 'a);
+type transientHashSet 'a = Transient.t (hashSet 'a);
 
 let mutate (set: hashSet 'a): (transientHashSet 'a) =>
   Transient.create set;
 
 let module TransientHashSet = {
   let updateLevelNodeTransient
-      (owner: owner)
+      (owner: Transient.Owner.t)
       (index: int)
       (childNode: bitmapTrieSet 'a)
       ((Level bitmap nodes nodeOwner) as node: (bitmapTrieSet 'a)): (bitmapTrieSet 'a) => switch nodeOwner {

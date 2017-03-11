@@ -1,5 +1,4 @@
 open ReUnit;
-open Transient;
 open ReUnit.Expect;
 open ReUnit.Test;
 

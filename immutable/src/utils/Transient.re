@@ -1,34 +1,38 @@
-type ownerT = | Owner;
-type owner = ref ownerT;
+let module Owner = {
+  type ownerT = | Owner;
+  type t = ref ownerT;
 
-type transient 'a = {
-  owner: owner,
+  let create () => ref Owner;
+};
+
+type t 'a = {
+  owner: Owner.t,
   mutable editable: bool,
   mutable value: 'a,
 };
 
-let create (value: 'a): (transient 'a) => ({
-  owner: ref  Owner,
+let create (value: 'a): (t 'a) => ({
+  owner: Owner.create (),
   editable: true,
   value: value,
 });
 
-let ensureEditable ({ editable } as transient: transient 'a): (transient 'a) => (not editable)
+let ensureEditable ({ editable } as transient: t 'a): (t 'a) => (not editable)
   ? { failwith "Transient has already been persisted" }
   : transient;
 
-let get (transient: transient 'a): 'a => {
+let get (transient: t 'a): 'a => {
   let { value } = ensureEditable transient;
   value
 };
 
-let persist (transient: transient 'a): 'a =>  {
+let persist (transient: t 'a): 'a =>  {
   let transient = ensureEditable transient;
   transient.editable = false;
   transient.value
 };
 
-let update (f: owner => 'a => 'a) (transient: transient 'a): (transient 'a) => {
+let update (f: Owner.t => 'a => 'a) (transient: t 'a): (t 'a) => {
   let transient = ensureEditable transient;
   transient.value = f transient.owner transient.value;
   transient

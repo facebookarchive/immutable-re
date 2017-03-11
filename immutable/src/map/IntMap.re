@@ -3,10 +3,9 @@ open CopyOnWriteArray;
 open ImmMap;
 open ImmSet;
 open Option.Operators;
-open Transient;
 
 type bitmapTrieIntMap 'a =
-  | Level int32 (array (bitmapTrieIntMap 'a)) (option owner)
+  | Level int32 (array (bitmapTrieIntMap 'a)) (option Transient.Owner.t)
   | Entry int 'a
   | Empty;
 
@@ -20,7 +19,7 @@ let module BitmapTrieIntMap = {
 
   let rec alter
       (updateLevelNode: int => (bitmapTrieIntMap 'a) => (bitmapTrieIntMap 'a) => (bitmapTrieIntMap 'a))
-      (owner: option owner)
+      (owner: option Transient.Owner.t)
       (alterResult: ref alterResult)
       (depth: int)
       (key: int)
@@ -309,13 +308,13 @@ let toSet (map: intMap 'a): (set (int, 'a)) =>
 let toSetWith (equality: Equality.t 'a) (map: intMap 'a): (set (int, 'a)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
-type transientIntMap 'a = transient (intMap 'a);
+type transientIntMap 'a = Transient.t (intMap 'a);
 
 let mutate (map: intMap 'a): (transientIntMap 'a) => Transient.create map;
 
 let module TransientIntMap = {
   let updateLevelNodeTransient
-      (owner: owner)
+      (owner: Transient.Owner.t)
       (index: int)
       (childNode: bitmapTrieIntMap 'a)
       ((Level bitmap nodes nodeOwner) as node: (bitmapTrieIntMap 'a)): (bitmapTrieIntMap 'a) => switch nodeOwner {

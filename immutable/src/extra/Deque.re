@@ -1,6 +1,5 @@
 open CopyOnWriteArray;
 open Option.Operators;
-open Transient;
 open Vector;
 
 type deque 'a =
@@ -158,7 +157,7 @@ type transientDequeImpl 'a =
   | Ascending (transientVector 'a)
   | Descending (transientVector 'a);
 
-type transientDeque 'a = transient (transientDequeImpl 'a);
+type transientDeque 'a = Transient.t (transientDequeImpl 'a);
 
 let mutate (deque: deque 'a): (transientDeque 'a) => switch deque {
   | Ascending vector =>
