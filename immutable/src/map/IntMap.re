@@ -1,5 +1,3 @@
-open Set;
-open CopyOnWriteArray;
 open Option.Operators;
 
 type bitmapTrieIntMap 'a =

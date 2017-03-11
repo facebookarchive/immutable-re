@@ -1,22 +1,22 @@
 open HashMap;
-open Option.Operators;
 open HashSet;
+open Option.Operators;
 
-type hashSetMultimap 'k 'v = {
+type t 'k 'v = {
   count: int,
   map: (hashMap 'k (hashSet 'v)),
   valueStrategy: HashStrategy.t 'v,
 };
 
-let contains (key: 'k) (value: 'v) ({ map }: hashSetMultimap 'k 'v): bool =>
+let contains (key: 'k) (value: 'v) ({ map }: t 'k 'v): bool =>
   map |> HashMap.tryGet key >>| HashSet.contains value |? false;
 
-let containsKey (key: 'k) ({ map }: hashSetMultimap 'k 'v): bool =>
+let containsKey (key: 'k) ({ map }: t 'k 'v): bool =>
   map |> HashMap.containsKey key;
 
-let count ({ count }: hashSetMultimap 'k 'v): int => count;
+let count ({ count }: t 'k 'v): int => count;
 
-let empty: (hashSetMultimap 'k 'v) = {
+let empty: (t 'k 'v) = {
   count: 0,
   map: HashMap.empty,
   valueStrategy: HashStrategy.structuralCompare,
@@ -24,43 +24,43 @@ let empty: (hashSetMultimap 'k 'v) = {
 
 let emptyWith
     (keyStrategy: HashStrategy.t 'k)
-    (valueStrategy: HashStrategy.t 'v): (hashSetMultimap 'k 'v) => ({
+    (valueStrategy: HashStrategy.t 'v): (t 'k 'v) => ({
   count: 0,
   map: (HashMap.emptyWith keyStrategy),
   valueStrategy,
 });
 
-let equals ({ valueStrategy } as this: hashSetMultimap 'k 'v) (that: hashSetMultimap 'k 'v): bool =>
+let equals ({ valueStrategy } as this: t 'k 'v) (that: t 'k 'v): bool =>
   HashMap.equalsWith HashSet.equals this.map that.map;
 
-let every (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): bool => {
+let every (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   let f' k set =>
     set |> HashSet.every (fun v => f k v);
   map |> HashMap.every f';
 };
 
-let forEach (f: 'k => 'v => unit) ({ map }: hashSetMultimap 'k 'v): unit => {
+let forEach (f: 'k => 'v => unit) ({ map }: t 'k 'v): unit => {
   let f' k set =>
     set |> HashSet.forEach (fun v => f k v);
   map |> HashMap.forEach f';
 };
 
-let get (key: 'k) ({ map, valueStrategy }: hashSetMultimap 'k 'v): (hashSet 'v) =>
+let get (key: 'k) ({ map, valueStrategy }: t 'k 'v): (hashSet 'v) =>
   map |> HashMap.tryGet key |? HashSet.emptyWith valueStrategy;
 
-let hash ({ map }: hashSetMultimap 'k 'v): int =>
+let hash ({ map }: t 'k 'v): int =>
   map |> HashMap.hashWith HashSet.hash;
 
-let isEmpty ({ map }: hashSetMultimap 'k 'v): bool =>
+let isEmpty ({ map }: t 'k 'v): bool =>
   map |> HashMap.isEmpty;
 
-let isNotEmpty ({ map }: hashSetMultimap 'k 'v): bool =>
+let isNotEmpty ({ map }: t 'k 'v): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: hashSetMultimap 'k 'v): (ImmSet.t 'k) =>
+let keys ({ map }: t 'k 'v): (ImmSet.t 'k) =>
   map |> HashMap.keys;
 
-let none (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): bool => {
+let none (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   let f' k set =>
     set |> HashSet.none (fun v => f k v);
   map |> HashMap.every f';
@@ -69,7 +69,7 @@ let none (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): bool => {
 let put
     (key: 'k)
     (value: 'v)
-    ({ count, map, valueStrategy } as multimap: hashSetMultimap 'k 'v): (hashSetMultimap 'k 'v) => {
+    ({ count, map, valueStrategy } as multimap: t 'k 'v): (t 'k 'v) => {
   let increment = ref 0;
   let newMap = map |> HashMap.alter key (fun oldSet => switch oldSet {
     | Some oldSet =>
@@ -92,7 +92,7 @@ let put
 let putAllValues
     (key: 'k)
     (values: Seq.t 'v)
-    ({ count, map, valueStrategy } as multimap: hashSetMultimap 'k 'v): (hashSetMultimap 'k 'v) => {
+    ({ count, map, valueStrategy } as multimap: t 'k 'v): (t 'k 'v) => {
   let increment = ref 0;
   let newMap = map |> HashMap.alter key (fun oldSet => switch oldSet {
     | Some oldSet =>
@@ -113,7 +113,7 @@ let putAllValues
   };
 };
 
-let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: hashSetMultimap 'k 'v): 'acc => {
+let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: t 'k 'v): 'acc => {
   let rec reducer acc key values =>
     values |> HashSet.reduce (fun acc v => f acc key v) acc;
   map |> HashMap.reduce reducer acc;
@@ -121,28 +121,28 @@ let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: hashSetMultimap '
 
 let remove
     (key: 'k)
-    ({ map, count, valueStrategy } as multimap: hashSetMultimap 'k 'v): (hashSetMultimap 'k 'v) =>
+    ({ map, count, valueStrategy } as multimap: t 'k 'v): (t 'k 'v) =>
   map |> HashMap.tryGet key >>| (fun set => ({
     count: count - (HashSet.count set),
     map: map |> HashMap.remove key,
     valueStrategy,
   })) |? multimap;
 
-let removeAll ({ map, valueStrategy }: hashSetMultimap 'k 'v): (hashSetMultimap 'k 'v) =>
+let removeAll ({ map, valueStrategy }: t 'k 'v): (t 'k 'v) =>
   { count: 0, map: map |> HashMap.removeAll, valueStrategy };
 
-let some (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): bool => {
+let some (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   let f' k set =>
     set |> HashSet.some (fun v => f k v);
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: hashSetMultimap 'k 'v): (Seq.t ('k, 'v)) =>
+let toSeq ({ map }: t 'k 'v): (Seq.t ('k, 'v)) =>
   map |> HashMap.toSeq |> Seq.flatMap (
     fun (k, set) => set |> HashSet.toSeq |> Seq.map (Pair.create k)
   );
 
-let tryFind (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): (option ('k, 'v)) => {
+let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) => {
   let result = ref None;
   let f' k set => set |> HashSet.tryFind (
     fun v => if (f k v) { result := Some (k, v); true } else false
@@ -151,14 +151,14 @@ let tryFind (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): (option ('k,
   !result
 };
 
-let find (f: 'k => 'v => bool) (multimap: hashSetMultimap 'k 'v): ('k, 'v) =>
+let find (f: 'k => 'v => bool) (multimap: t 'k 'v): ('k, 'v) =>
   multimap |> tryFind f |> Option.first;
 
-let values ({ map }: hashSetMultimap 'k 'v): (Seq.t 'v) =>
+let values ({ map }: t 'k 'v): (Seq.t 'v) =>
   map |> HashMap.values |> Seq.flatMap HashSet.toSeq;
 
 let toSet
-    ({ count, map, valueStrategy } as multimap: hashSetMultimap 'k 'v): (ImmSet.t ('k, 'v)) => {
+    ({ count, map, valueStrategy } as multimap: t 'k 'v): (ImmSet.t ('k, 'v)) => {
   contains: fun (k, v) => multimap |> contains k v,
   count,
   every: fun f => multimap |> every (fun k v => f (k, v)),

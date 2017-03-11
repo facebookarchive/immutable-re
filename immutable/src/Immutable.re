@@ -1,7 +1,7 @@
-open Deque;
-open HashBiMap;
+let module TransientDequeInternal = Deque.TransientDeque;
+let module TransientHashBiMapInternal = HashBiMap.TransientHashBiMap;
 open HashMap;
-open HashMultiset;
+let module TransientHashMultisetInternal = HashMultiset.TransientHashMultiset;
 open HashSet;
 open IntMap;
 open IntSet;
@@ -176,7 +176,7 @@ let module HashStrategy = {
 };
 
 let module CopyOnWriteArray = {
-  type t 'a = CopyOnWriteArray.copyOnWriteArray 'a;
+  type t 'a = CopyOnWriteArray.t 'a;
 
   let addFirst = CopyOnWriteArray.addFirst;
   let addFirstAll = CopyOnWriteArray.addFirstAll;
@@ -250,7 +250,7 @@ let module CopyOnWriteArray = {
 };
 
 let module Deque = {
-  type t 'a = Deque.deque 'a;
+  type t 'a = Deque.t 'a;
 
   let addFirst = Deque.addFirst;
   let addFirstAll = Deque.addFirstAll;
@@ -296,28 +296,28 @@ let module Deque = {
 };
 
 let module TransientDeque = {
-  type t 'a = transientDeque 'a;
+  type t 'a = TransientDequeInternal.t 'a;
 
-  let addFirst = TransientDeque.addFirst;
-  let addLast = TransientDeque.addLast;
-  let count = TransientDeque.count;
-  let empty = TransientDeque.empty;
-  let first = TransientDeque.first;
-  let isEmpty = TransientDeque.isEmpty;
-  let isNotEmpty = TransientDeque.isNotEmpty;
-  let last = TransientDeque.last;
-  let persist = TransientDeque.persist;
-  let removeAll = TransientDeque.removeAll;
-  let removeFirst = TransientDeque.removeFirst;
-  let removeLast = TransientDeque.removeLast;
-  let reverse = TransientDeque.reverse;
-  let tryFirst = TransientDeque.tryFirst;
-  let tryLast = TransientDeque.tryLast;
+  let addFirst = TransientDequeInternal.addFirst;
+  let addLast = TransientDequeInternal.addLast;
+  let count = TransientDequeInternal.count;
+  let empty = TransientDequeInternal.empty;
+  let first = TransientDequeInternal.first;
+  let isEmpty = TransientDequeInternal.isEmpty;
+  let isNotEmpty = TransientDequeInternal.isNotEmpty;
+  let last = TransientDequeInternal.last;
+  let persist = TransientDequeInternal.persist;
+  let removeAll = TransientDequeInternal.removeAll;
+  let removeFirst = TransientDequeInternal.removeFirst;
+  let removeLast = TransientDequeInternal.removeLast;
+  let reverse = TransientDequeInternal.reverse;
+  let tryFirst = TransientDequeInternal.tryFirst;
+  let tryLast = TransientDequeInternal.tryLast;
 };
 
 
 let module HashBiMap = {
-  type t 'k 'v = hashBiMap 'k 'v;
+  type t 'k 'v = HashBiMap.t 'k 'v;
 
   let contains = HashBiMap.contains;
   let containsKey = HashBiMap.containsKey;
@@ -355,21 +355,21 @@ let module HashBiMap = {
 };
 
 let module TransientHashBiMap = {
-  type t 'k 'v = transientHashBiMap 'k 'v;
+  type t 'k 'v = TransientHashBiMapInternal.t 'k 'v;
 
-  let count = TransientHashBiMap.count;
-  let empty = TransientHashBiMap.empty;
-  let emptyWith = TransientHashBiMap.emptyWith;
-  let isEmpty = TransientHashBiMap.isEmpty;
-  let isNotEmpty = TransientHashBiMap.isNotEmpty;
-  let persist = TransientHashBiMap.persist;
-  let put = TransientHashBiMap.put;
-  let putAll = TransientHashBiMap.putAll;
-  let remove = TransientHashBiMap.remove;
-  let removeAll = TransientHashBiMap.removeAll;
-  let removeValue = TransientHashBiMap.removeValue;
-  let tryGet = TransientHashBiMap.tryGet;
-  let tryPut = TransientHashBiMap.tryPut;
+  let count = TransientHashBiMapInternal.count;
+  let empty = TransientHashBiMapInternal.empty;
+  let emptyWith = TransientHashBiMapInternal.emptyWith;
+  let isEmpty = TransientHashBiMapInternal.isEmpty;
+  let isNotEmpty = TransientHashBiMapInternal.isNotEmpty;
+  let persist = TransientHashBiMapInternal.persist;
+  let put = TransientHashBiMapInternal.put;
+  let putAll = TransientHashBiMapInternal.putAll;
+  let remove = TransientHashBiMapInternal.remove;
+  let removeAll = TransientHashBiMapInternal.removeAll;
+  let removeValue = TransientHashBiMapInternal.removeValue;
+  let tryGet = TransientHashBiMapInternal.tryGet;
+  let tryPut = TransientHashBiMapInternal.tryPut;
 };
 
 let module HashMap = {
@@ -434,7 +434,7 @@ let module TransientHashMap = {
 };
 
 let module HashMultiset = {
-  type t 'a = HashMultiset.hashMultiset 'a;
+  type t 'a = HashMultiset.t 'a;
 
   let add = HashMultiset.add;
   let addAll = HashMultiset.addAll;
@@ -466,21 +466,21 @@ let module HashMultiset = {
 };
 
 let module TransientHashMultiset = {
-  type t 'a = transientHashMultiset 'a;
+  type t 'a = TransientHashMultisetInternal.t 'a;
 
-  let add = TransientHashMultiset.add;
-  let addAll = TransientHashMultiset.addAll;
-  let contains = TransientHashMultiset.contains;
-  let count = TransientHashMultiset.count;
-  let empty = TransientHashMultiset.empty;
-  let emptyWith = TransientHashMultiset.emptyWith;
-  let get = TransientHashMultiset.get;
-  let isEmpty = TransientHashMultiset.isEmpty;
-  let isNotEmpty = TransientHashMultiset.isNotEmpty;
-  let persist = TransientHashMultiset.persist;
-  let remove = TransientHashMultiset.remove;
-  let removeAll = TransientHashMultiset.removeAll;
-  let set = TransientHashMultiset.set;
+  let add = TransientHashMultisetInternal.add;
+  let addAll = TransientHashMultisetInternal.addAll;
+  let contains = TransientHashMultisetInternal.contains;
+  let count = TransientHashMultisetInternal.count;
+  let empty = TransientHashMultisetInternal.empty;
+  let emptyWith = TransientHashMultisetInternal.emptyWith;
+  let get = TransientHashMultisetInternal.get;
+  let isEmpty = TransientHashMultisetInternal.isEmpty;
+  let isNotEmpty = TransientHashMultisetInternal.isNotEmpty;
+  let persist = TransientHashMultisetInternal.persist;
+  let remove = TransientHashMultisetInternal.remove;
+  let removeAll = TransientHashMultisetInternal.removeAll;
+  let set = TransientHashMultisetInternal.set;
 };
 
 let module HashSet = {
@@ -533,7 +533,7 @@ let module TransientHashSet = {
 };
 
 let module HashSetMultimap = {
-  type t 'k 'v = HashSetMultimap.hashSetMultimap 'k 'v;
+  type t 'k 'v = HashSetMultimap.t 'k 'v;
 
   let contains = HashSetMultimap.contains;
   let containsKey = HashSetMultimap.containsKey;
@@ -737,7 +737,7 @@ let module Option = {
 };
 
 let module SortedMap = {
-  type t 'k 'v = SortedMap.sortedMap 'k 'v;
+  type t 'k 'v = SortedMap.t 'k 'v;
 
   let alter = SortedMap.alter;
   let compare = SortedMap.compare;
@@ -789,7 +789,7 @@ let module SortedMap = {
 };
 
 let module SortedSet = {
-  type t 'a = SortedSet.sortedSet 'a;
+  type t 'a = SortedSet.t 'a;
 
   let add = SortedSet.add;
   let addAll = SortedSet.addAll;
@@ -830,7 +830,7 @@ let module SortedSet = {
 };
 
 let module Stack ={
-  type t 'a = Stack.stack 'a;
+  type t 'a = Stack.t 'a;
 
   let addFirst = Stack.addFirst;
   let addFirstAll = Stack.addFirstAll;
@@ -867,7 +867,7 @@ let module Stack ={
 };
 
 let module StackMultimap = {
-  type t 'k 'v = StackMultimap.stackMultimap 'k 'v;
+  type t 'k 'v = StackMultimap.t 'k 'v;
 
   let add = StackMultimap.add;
   let addAllValues = StackMultimap.addAllValues;
@@ -899,7 +899,7 @@ let module StackMultimap = {
 };
 
 let module Table = {
-  type t 'row 'column 'value = Table.table 'row 'column 'value;
+  type t 'row 'column 'value = Table.t 'row 'column 'value;
 
   let contains = Table.contains;
   let containsRow = Table.containsRow;

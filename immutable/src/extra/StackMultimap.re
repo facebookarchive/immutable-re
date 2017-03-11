@@ -1,13 +1,12 @@
 open HashMap;
 open Option.Operators;
-open Stack;
 
-type stackMultimap 'k 'v = {
+type t 'k 'v = {
   count: int,
-  map: hashMap 'k (stack 'v),
+  map: hashMap 'k (Stack.t 'v),
 };
 
-let add (key: 'k) (value: 'v) ({ count, map }: stackMultimap 'k 'v): (stackMultimap 'k 'v) => {
+let add (key: 'k) (value: 'v) ({ count, map }: t 'k 'v): (t 'k 'v) => {
   count: count + 1,
   map: map |> HashMap.alter key (fun stack => switch stack {
     | Some stack => stack
@@ -15,7 +14,7 @@ let add (key: 'k) (value: 'v) ({ count, map }: stackMultimap 'k 'v): (stackMulti
   } |> Stack.addFirst value |> Option.return),
 };
 
-let addAllValues (key: 'k) (values: (Seq.t 'v)) ({ count, map } as multimap: stackMultimap 'k 'v): (stackMultimap 'k 'v) => {
+let addAllValues (key: 'k) (values: (Seq.t 'v)) ({ count, map } as multimap: t 'k 'v): (t 'k 'v) => {
   let increment = ref 0;
 
   let newMap = map |> HashMap.alter key (fun stack => {
@@ -43,102 +42,102 @@ let containsWith
     (equals: Equality.t 'v)
     (key: 'k)
     (value: 'v)
-    ({ map }: stackMultimap 'k 'v): bool =>
+    ({ map }: t 'k 'v): bool =>
   map |> HashMap.tryGet key >>| Stack.containsWith equals value |? false;
 
-let contains (key: 'k) (value: 'v) (multimap: stackMultimap 'k 'v): bool =>
+let contains (key: 'k) (value: 'v) (multimap: t 'k 'v): bool =>
   multimap |> containsWith Equality.structural key value;
 
-let containsKey (key: 'k) ({ map }: stackMultimap 'k 'v): bool =>
+let containsKey (key: 'k) ({ map }: t 'k 'v): bool =>
   map |> HashMap.containsKey key;
 
-let count ({ count }: stackMultimap 'k 'v) => count;
+let count ({ count }: t 'k 'v) => count;
 
-let empty: (stackMultimap 'k 'v) = {
+let empty: (t 'k 'v) = {
   count: 0,
   map: HashMap.empty,
 };
 
-let emptyWith (hashStrategy: HashStrategy.t 'k): (stackMultimap 'k 'v) => {
+let emptyWith (hashStrategy: HashStrategy.t 'k): (t 'k 'v) => {
   count: 0,
   map: HashMap.emptyWith hashStrategy,
 };
 
 let equalsWith
     (equals: Equality.t 'v)
-    (this: stackMultimap 'k 'v)
-    (that: stackMultimap 'k 'v): bool =>
+    (this: t 'k 'v)
+    (that: t 'k 'v): bool =>
   HashMap.equalsWith (Stack.equalsWith equals) this.map that.map;
 
-let equals (this: stackMultimap 'k 'v) (that: stackMultimap 'k 'v): bool =>
+let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
   HashMap.equalsWith Stack.equals this.map that.map;
 
-let every (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): bool => {
+let every (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   let f' k stack =>
     stack |> Stack.every (fun v => f k v);
   map |> HashMap.every f';
 };
 
-let forEach (f: 'k => 'v => unit) ({ map }: stackMultimap 'k 'v): unit => {
+let forEach (f: 'k => 'v => unit) ({ map }: t 'k 'v): unit => {
   let f' k stack =>
     stack |> Stack.forEach (fun v => f k v);
   map |> HashMap.forEach f';
 };
 
-let get (key: 'k) ({ map }: stackMultimap 'k 'v): (stack 'v) =>
+let get (key: 'k) ({ map }: t 'k 'v): (Stack.t 'v) =>
   map |> HashMap.tryGet key |? Stack.empty;
 
-let hash ({ map }: stackMultimap 'k 'v): int =>
+let hash ({ map }: t 'k 'v): int =>
   map |> HashMap.hashWith Stack.hash;
 
-let hashWith (valueHash: Hash.t 'v) ({ map }: stackMultimap 'k 'v): int =>
+let hashWith (valueHash: Hash.t 'v) ({ map }: t 'k 'v): int =>
   map |> HashMap.hashWith (Stack.hashWith valueHash);
 
-let isEmpty ({ map }: stackMultimap 'k 'v): bool =>
+let isEmpty ({ map }: t 'k 'v): bool =>
   map |> HashMap.isEmpty;
 
-let isNotEmpty ({ map }: stackMultimap 'k 'v): bool =>
+let isNotEmpty ({ map }: t 'k 'v): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: stackMultimap 'k 'v): (ImmSet.t 'k) =>
+let keys ({ map }: t 'k 'v): (ImmSet.t 'k) =>
   map |> HashMap.keys;
 
-let none (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): bool => {
+let none (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   let f' k stack =>
     stack |> Stack.none (fun v => f k v);
   map |> HashMap.every f';
 };
 
-let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: stackMultimap 'k 'v): 'acc => {
+let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ map }: t 'k 'v): 'acc => {
   let rec reducer acc key values =>
     values |> Stack.reduce (fun acc v => f acc key v) acc;
 
   map |> HashMap.reduce reducer acc;
 };
 
-let remove (key: 'k) ({ count, map } as stackMultimap: stackMultimap 'k 'v): (stackMultimap 'k 'v) =>
+let remove (key: 'k) ({ count, map } as stackMultimap: t 'k 'v): (t 'k 'v) =>
   map |> HashMap.tryGet key >>| (fun stack => ({
     count: count - (Stack.count stack),
     map: map |> HashMap.remove key,
   })) |? stackMultimap;
 
-let removeAll ({ map }: stackMultimap 'k 'v): (stackMultimap 'k 'v) =>
+let removeAll ({ map }: t 'k 'v): (t 'k 'v) =>
   { count: 0, map: map |> HashMap.removeAll };
 
-let some (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): bool => {
+let some (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   let f' k stack =>
     stack |> Stack.some (fun v => f k v);
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: stackMultimap 'k 'v): (Seq.t ('k, 'v)) => map
+let toSeq ({ map }: t 'k 'v): (Seq.t ('k, 'v)) => map
   |> HashMap.toSeq
   |> Seq.flatMap (
     fun (k, stack) =>
       stack |> Stack.toSeq |> Seq.map (Pair.create k)
   );
 
-let tryFind (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): (option ('k, 'v)) => {
+let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) => {
   let result = ref None;
   let f' k set => set |> Stack.tryFind (
     fun v => if (f k v) { result := Some (k, v); true } else false
@@ -147,8 +146,8 @@ let tryFind (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): (option ('k, '
   !result
 };
 
-let find (f: 'k => 'v => bool) (multimap: stackMultimap 'k 'v): ('k, 'v) =>
+let find (f: 'k => 'v => bool) (multimap: t 'k 'v): ('k, 'v) =>
   multimap |> tryFind f |> Option.first;
 
-let values ({ map }: stackMultimap 'k 'v): (Seq.t 'v) =>
+let values ({ map }: t 'k 'v): (Seq.t 'v) =>
   map |> HashMap.values |> Seq.flatMap Stack.toSeq;

@@ -1,11 +1,7 @@
-open AVLTreeSet;
-open EqualitySet;
-open SortedSet;
-
 type bitmapTrieSet 'a =
   | Level int32 (array (bitmapTrieSet 'a)) (option Transient.Owner.t)
-  | ComparatorCollision int (avlTreeSet 'a)
-  | EqualitySetCollision int (equalitySet 'a)
+  | ComparatorCollision int (AVLTreeSet.t 'a)
+  | EqualitySetCollision int (EqualitySet.t 'a)
   | Entry int 'a
   | Empty;
 

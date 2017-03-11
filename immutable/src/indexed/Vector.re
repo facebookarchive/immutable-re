@@ -1,5 +1,3 @@
-open CopyOnWriteArray;
-open ImmMap;
 open Option.Operators;
 
 type trie 'a =

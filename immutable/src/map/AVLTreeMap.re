@@ -1,17 +1,15 @@
-open Map;
-
-type avlTreeMap 'k 'v =
+type t 'k 'v =
   | Empty
   | Leaf 'k 'v
-  | Node int (avlTreeMap 'k 'v) 'k 'v (avlTreeMap 'k 'v);
+  | Node int (t 'k 'v) 'k 'v (t 'k 'v);
 
-let height (tree: avlTreeMap 'k 'v): int => switch tree {
+let height (tree: t 'k 'v): int => switch tree {
   | Empty => 0
   | Leaf _ => 1
   | Node h _ _ _ _=> h
 };
 
-let rec validate (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+let rec validate (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => tree
   | Leaf _ _ => tree
   | Node h left _ _ right =>
@@ -24,7 +22,7 @@ let rec validate (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
       };
 };
 
-let makeTree (left: avlTreeMap 'k 'v) (k: 'k) (v: 'v) (right: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => {
+let makeTree (left: t 'k 'v) (k: 'k) (v: 'v) (right: t 'k 'v): (t 'k 'v) => {
   let lh = height left;
   let rh = height right;
 
@@ -39,7 +37,7 @@ let makeTree (left: avlTreeMap 'k 'v) (k: 'k) (v: 'v) (right: avlTreeMap 'k 'v):
 let rec containsKey
     (comparator: Comparator.t 'k)
     (xK: 'k)
-    (tree: avlTreeMap 'k 'v): bool => switch tree {
+    (tree: t 'k 'v): bool => switch tree {
   | Empty => false
   | Leaf k v => if (xK === k) true else {
       let cmp = comparator xK k;
@@ -58,7 +56,7 @@ let rec contains
     (equality: Equality.t 'v)
     (xK: 'k)
     (xV: 'v)
-    (tree: avlTreeMap 'k 'v): bool => switch tree {
+    (tree: t 'k 'v): bool => switch tree {
   | Empty => false
   | Leaf k v => if (xK === k) true else {
       let cmp = comparator xK k;
@@ -72,14 +70,14 @@ let rec contains
     }
 };
 
-let rec every (f: 'k => 'v => bool) (tree: avlTreeMap 'k 'v) => switch tree {
+let rec every (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
   | Empty => true
   | Leaf k v => f k v
   | Node _ left k v right =>
       (every f left) && (f k v) && (every f right)
 };
 
-let rec forEach (f: 'k => 'v => unit) (tree: avlTreeMap 'k 'v) => switch tree {
+let rec forEach (f: 'k => 'v => unit) (tree: t 'k 'v) => switch tree {
   | Empty  => ()
   | Leaf k v => f k v
   | Node _ left k v right =>
@@ -88,7 +86,7 @@ let rec forEach (f: 'k => 'v => unit) (tree: avlTreeMap 'k 'v) => switch tree {
      forEach f right;
 };
 
-let rec first (tree: avlTreeMap 'k 'v): ('k, 'v) => switch tree {
+let rec first (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Leaf k v => (k, v)
   | Node _ Empty k v _ => (k, v)
   | Node _ left _ _ _ => first left
@@ -97,7 +95,7 @@ let rec first (tree: avlTreeMap 'k 'v): ('k, 'v) => switch tree {
 let rec get
     (comparator: Comparator.t 'k)
     (xK: 'k)
-    (tree: avlTreeMap 'k 'v): 'v => switch tree {
+    (tree: t 'k 'v): 'v => switch tree {
   | Empty => failwith "Not found"
   | Leaf k v => if (xK === k) v else {
       let cmp = comparator xK k;
@@ -112,20 +110,20 @@ let rec get
     }
 };
 
-let rec last (tree: avlTreeMap 'k 'v): ('k, 'v) => switch tree {
+let rec last (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Leaf k v => (k, v)
   | Node _ _ k v Empty => (k, v)
   | Node _ _ _ _ right => last right
 };
 
-let rec none (f: 'k => 'v => bool) (tree: avlTreeMap 'k 'v) => switch tree {
+let rec none (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
   | Empty => true
   | Leaf k v => f k v |> not
   | Node _ left k v right =>
       (none f left) && (f k v |> not) && (none f right)
 };
 
-let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: avlTreeMap 'k 'v): 'acc => switch tree {
+let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
   | Empty  => acc
   | Leaf k v => f acc k v
   | Node _ left k v right =>
@@ -135,7 +133,7 @@ let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: avlTreeMap 'k 'v
      acc
 };
 
-let rec reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: avlTreeMap 'k 'v): 'acc => switch tree {
+let rec reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
   | Empty => acc
   | Leaf k v => f acc k v
   | Node _ left k v right =>
@@ -145,7 +143,7 @@ let rec reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: avlTreeMap 
      acc
 };
 
-let rec search (predicate: 'k => Ordering.t) (tree: avlTreeMap 'k 'v): ('k, 'v) => switch tree {
+let rec search (predicate: 'k => Ordering.t) (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Empty => failwith "not found"
   | Leaf k v =>
       let result = predicate k;
@@ -158,14 +156,14 @@ let rec search (predicate: 'k => Ordering.t) (tree: avlTreeMap 'k 'v): ('k, 'v) 
       else (k, v)
 };
 
-let rec some (f: 'k => 'v => bool) (tree: avlTreeMap 'k 'v) => switch tree {
+let rec some (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
   | Empty => false
   | Leaf k v => f k v
   | Node _ left k v right =>
       (some f left) || (f k v) || (none f right)
 };
 
-let rec toSeq (tree: avlTreeMap 'k 'v): (Seq.t ('k, 'v)) => switch tree {
+let rec toSeq (tree: t 'k 'v): (Seq.t ('k, 'v)) => switch tree {
   | Empty => Seq.empty
   | Leaf k v => Seq.return (k, v)
   | Node _ left k v right => Seq.concat [
@@ -175,7 +173,7 @@ let rec toSeq (tree: avlTreeMap 'k 'v): (Seq.t ('k, 'v)) => switch tree {
     ]
 };
 
-let rec tryFind (f: 'k => 'v => bool) (tree: avlTreeMap 'k 'v): (option ('k, 'v)) =>  switch tree {
+let rec tryFind (f: 'k => 'v => bool) (tree: t 'k 'v): (option ('k, 'v)) =>  switch tree {
   | Empty => None
   | Leaf k v => if (f k v) (Some (k, v)) else None;
   | Node _ left k v right => switch (tryFind f left) {
@@ -184,7 +182,7 @@ let rec tryFind (f: 'k => 'v => bool) (tree: avlTreeMap 'k 'v): (option ('k, 'v)
     }
 };
 
-let rec tryFirst (tree: avlTreeMap 'k 'v): (option ('k, 'v)) => switch tree {
+let rec tryFirst (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
   | Empty => None
   | Leaf k v => Some (k, v)
   | Node _ Empty k v _ => Some (k, v)
@@ -194,7 +192,7 @@ let rec tryFirst (tree: avlTreeMap 'k 'v): (option ('k, 'v)) => switch tree {
 let rec tryGet
     (comparator: Comparator.t 'k)
     (xK: 'k)
-    (tree: avlTreeMap 'k 'v): (option 'v) => switch tree {
+    (tree: t 'k 'v): (option 'v) => switch tree {
   | Empty => None
   | Leaf k v => if (xK === k) (Some v) else {
       let cmp = comparator xK k;
@@ -209,14 +207,14 @@ let rec tryGet
     }
 };
 
-let rec tryLast (tree: avlTreeMap 'k 'v): (option ('k, 'v)) => switch tree {
+let rec tryLast (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
   | Empty => None
   | Leaf k v  => Some (k, v)
   | Node _ _ k v Empty => Some (k, v)
   | Node _ _ _ _ right => tryLast right
 };
 
-let rec trySearch (predicate: 'k => Ordering.t) (tree: avlTreeMap 'k 'v): (option ('k, 'v)) => switch tree {
+let rec trySearch (predicate: 'k => Ordering.t) (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
   | Empty => None
   | Leaf k v =>
       let result = predicate v;
@@ -228,7 +226,7 @@ let rec trySearch (predicate: 'k => Ordering.t) (tree: avlTreeMap 'k 'v): (optio
       else Some (k, v)
 };
 
-let rec values (tree: avlTreeMap 'k 'v): (Seq.t 'v) => switch tree {
+let rec values (tree: t 'k 'v): (Seq.t 'v) => switch tree {
   | Empty => Seq.empty
   | Leaf _ v => Seq.return v
   | Node _ left _ v right => Seq.concat [
@@ -240,7 +238,7 @@ let rec values (tree: avlTreeMap 'k 'v): (Seq.t 'v) => switch tree {
 
 let maxHeightDiff = 2;
 
-let rebalance (left: avlTreeMap 'k 'v) (k: 'k) (v: 'v) (right: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => {
+let rebalance (left: t 'k 'v) (k: 'k) (v: 'v) (right: t 'k 'v): (t 'k 'v) => {
   let lh = height left;
   let rh = height right;
 
@@ -264,14 +262,14 @@ let rebalance (left: avlTreeMap 'k 'v) (k: 'k) (v: 'v) (right: avlTreeMap 'k 'v)
   };
 };
 
-let rec removeFirst (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+let rec removeFirst (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => Empty
   | Leaf _ _ => Empty
   | Node _ Empty k v right => right
   | Node _ left k v right => rebalance (removeFirst left) k v right;
 };
 
-let rec removeLast (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+let rec removeLast (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => Empty
   | Leaf _ _ => Empty
   | Node _ left k v Empty => left
@@ -289,7 +287,7 @@ let rec alter
     (result: ref alterResult)
     (xK: 'k)
     (f: (option 'v) => (option 'v))
-    (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+    (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => switch (f None) {
       | None =>
           result := NoChange;
@@ -366,7 +364,7 @@ let rec put
     (comparator: Comparator.t 'k)
     (xK: 'k)
     (xV: 'v)
-    (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+    (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => Leaf xK xV
   | Leaf k v =>
       let cmp = comparator xK k;
@@ -393,7 +391,7 @@ let rec putWithResult
     (result: ref alterResult)
     (xK: 'k)
     (xV: 'v)
-    (tree: avlTreeMap 'k 'v): (avlTreeMap 'k 'v) => switch tree {
+    (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty =>
       result := Added;
       Leaf xK xV

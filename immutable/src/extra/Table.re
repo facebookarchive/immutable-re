@@ -2,16 +2,16 @@ open Functions.Operators;
 open HashMap;
 open Option.Operators;
 
-type table 'row 'column 'value = {
+type t 'row 'column 'value = {
   count: int,
   map: (hashMap 'row (hashMap 'column 'value)),
   columnStrategy: HashStrategy.t 'column,
 };
 
-let columns ({ map }: table 'row 'column 'value): (Seq.t 'column) =>
+let columns ({ map }: t 'row 'column 'value): (Seq.t 'column) =>
   map |> HashMap.values |> Seq.flatMap (HashMap.keys >> ImmSet.toSeq);
 
-let contains (row: 'row) (column: 'column) (value: 'value) ({ map }: table 'row 'column 'value): bool =>
+let contains (row: 'row) (column: 'column) (value: 'value) ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.contains column value) |? false;
 
 let containsWith
@@ -19,18 +19,18 @@ let containsWith
     (row: 'row)
     (column: 'column)
     (value: 'value)
-    ({ map }: table 'row 'column 'value): bool =>
+    ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.containsWith valueEquals column value) |? false;
 
-let containsRow (row: 'row) ({ map }: table 'row 'column 'value): bool =>
+let containsRow (row: 'row) ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.containsKey row;
 
-let containsRowAndColumn (row: 'row) (column: 'column) ({ map }: table 'row 'column 'value): bool =>
+let containsRowAndColumn (row: 'row) (column: 'column) ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.containsKey column) |? false;
 
-let count ({ count }: table 'row 'column 'value): int => count;
+let count ({ count }: t 'row 'column 'value): int => count;
 
-let empty: (table 'row 'column 'value) = {
+let empty: (t 'row 'column 'value) = {
   count: 0,
   map: HashMap.empty,
   columnStrategy: HashStrategy.structuralCompare,
@@ -38,52 +38,52 @@ let empty: (table 'row 'column 'value) = {
 
 let emptyWith
     (rowStrategy: HashStrategy.t 'row)
-    (columnStrategy: HashStrategy.t 'column): (table 'row 'column 'value) => {
+    (columnStrategy: HashStrategy.t 'column): (t 'row 'column 'value) => {
   count: 0,
   map: HashMap.emptyWith rowStrategy,
   columnStrategy,
 };
 
-let equals (this: table 'row 'column 'value) (that: table 'row 'column 'value): bool =>
+let equals (this: t 'row 'column 'value) (that: t 'row 'column 'value): bool =>
   HashMap.equalsWith HashMap.equals this.map that.map;
 
 let equalsWith
     (valueEquals: Equality.t 'value)
-    (this: table 'row 'column 'value)
-    (that: table 'row 'column 'value): bool =>
+    (this: t 'row 'column 'value)
+    (that: t 'row 'column 'value): bool =>
   HashMap.equalsWith (HashMap.equalsWith valueEquals) this.map that.map;
 
-let every (f: 'row => 'column => 'value => bool) ({ map }: table 'row 'column 'value): bool => {
+let every (f: 'row => 'column => 'value => bool) ({ map }: t 'row 'column 'value): bool => {
   let f' row => HashMap.every (fun value column => f row value column);
   map |> HashMap.every f';
 };
 
-let forEach (f: 'row => 'column => 'value => unit) ({ map }: table 'row 'column 'value) => {
+let forEach (f: 'row => 'column => 'value => unit) ({ map }: t 'row 'column 'value) => {
   let f' row => HashMap.forEach (fun value column => f row value column);
   map |> HashMap.forEach f';
 };
 
-let get (row: 'row) (column: 'column) ({ map }: table 'row 'column 'value): 'value =>
+let get (row: 'row) (column: 'column) ({ map }: t 'row 'column 'value): 'value =>
   map |> HashMap.get row |> HashMap.get column;
 
-let hash ({ map }: table 'row 'column 'value): int =>
+let hash ({ map }: t 'row 'column 'value): int =>
   map |> HashMap.hashWith HashMap.hash;
 
-let hashWith (valueHash: Hash.t 'value) ({ map }: table 'row 'column 'value): int =>
+let hashWith (valueHash: Hash.t 'value) ({ map }: t 'row 'column 'value): int =>
   map |> HashMap.hashWith (HashMap.hashWith valueHash);
 
-let isEmpty ({ map }: table 'row 'column 'value): bool =>
+let isEmpty ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.isEmpty;
 
-let isNotEmpty ({ map }: table 'row 'column 'value): bool =>
+let isNotEmpty ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.isNotEmpty;
 
-let keys ({ map }: table 'row 'column 'value): (ImmSet.t 'k) =>
+let keys ({ map }: t 'row 'column 'value): (ImmSet.t 'k) =>
   map |> HashMap.keys;
 
 let map
     (f: 'row => 'column => 'a => 'b)
-    ({ columnStrategy, count, map }: table 'row 'column 'a): (table 'row 'column 'b) => {
+    ({ columnStrategy, count, map }: t 'row 'column 'a): (t 'row 'column 'b) => {
   let f' row map => map |> HashMap.map (fun col value => f row col value);
   {
     columnStrategy,
@@ -92,7 +92,7 @@ let map
   };
 };
 
-let none (f: 'row => 'column => 'value => bool) ({ map }: table 'row 'column 'value): bool => {
+let none (f: 'row => 'column => 'value => bool) ({ map }: t 'row 'column 'value): bool => {
   let f' row => HashMap.none (fun value column => f row value column);
   map |> HashMap.every f';
 };
@@ -101,7 +101,7 @@ let put
     (row: 'row)
     (column: 'column)
     (value: 'value)
-    ({ count, map, columnStrategy }: table 'row 'column 'value): (table 'row 'column 'value) => {
+    ({ count, map, columnStrategy }: t 'row 'column 'value): (t 'row 'column 'value) => {
   let oldColumns = map |> HashMap.tryGet row |? HashMap.emptyWith columnStrategy;
   let newColumns = oldColumns |> HashMap.put column value;
   {
@@ -114,7 +114,7 @@ let put
 let reduce
     (f: 'acc => 'row => 'column => 'value => 'acc)
     (acc: 'acc)
-    ({ map }: table 'row 'column 'value): 'acc => {
+    ({ map }: t 'row 'column 'value): 'acc => {
   let reducer acc row columns => {
     let columnReducer acc column value => f acc row column value;
     columns |> HashMap.reduce columnReducer acc;
@@ -126,7 +126,7 @@ let reduce
 let remove
     (row: 'row)
     (column: 'column)
-    ({ count, map, columnStrategy } as table: table 'row 'column 'value): (table 'row 'column 'value) =>
+    ({ count, map, columnStrategy } as table: t 'row 'column 'value): (t 'row 'column 'value) =>
   (map |> HashMap.tryGet row >>= fun columns =>
   columns |> HashMap.tryGet column >>| fun value =>
   ({
@@ -138,7 +138,7 @@ let remove
 let remove
     (row: 'row)
     (column: 'column)
-    ({ count, map, columnStrategy } as table: table 'row 'column 'value): (table 'row 'column 'value) =>
+    ({ count, map, columnStrategy } as table: t 'row 'column 'value): (t 'row 'column 'value) =>
   (map |> HashMap.tryGet row >>| fun oldColumns => {
     let newColumns = oldColumns |> HashMap.remove column;
     {
@@ -148,27 +148,27 @@ let remove
     }
   }) |? table;
 
-let removeAll ({ map, columnStrategy }: table 'row 'column 'value): (table 'row 'column 'value) =>
+let removeAll ({ map, columnStrategy }: t 'row 'column 'value): (t 'row 'column 'value) =>
   { count: 0, map: map |> HashMap.removeAll, columnStrategy };
 
 let removeRow
     (row: 'row)
-    ({ count, map, columnStrategy } as table: table 'row 'column 'value): (table 'row 'column 'value) =>
+    ({ count, map, columnStrategy } as table: t 'row 'column 'value): (t 'row 'column 'value) =>
   (map |> HashMap.tryGet row >>| fun columns => ({
     count: count - (columns |> HashMap.count),
     map: map |> HashMap.remove row,
     columnStrategy,
   })) |? table;
 
-let rows ({ map }: table 'row 'column 'value): (ImmSet.t 'row) =>
+let rows ({ map }: t 'row 'column 'value): (ImmSet.t 'row) =>
   map |> HashMap.keys;
 
-let some (f: 'row => 'column => 'value => bool) ({ map }: table 'row 'column 'value): bool => {
+let some (f: 'row => 'column => 'value => bool) ({ map }: t 'row 'column 'value): bool => {
   let f' row => HashMap.some (fun value column => f row value column);
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: table 'row 'column 'value): (Seq.t ('row, 'column, 'value)) =>
+let toSeq ({ map }: t 'row 'column 'value): (Seq.t ('row, 'column, 'value)) =>
   map |> HashMap.toSeq |> Seq.flatMap (
     fun (row, columnToValue) => columnToValue |> HashMap.toSeq |> Seq.map (
       fun (column, value) => (row, column, value)
@@ -177,7 +177,7 @@ let toSeq ({ map }: table 'row 'column 'value): (Seq.t ('row, 'column, 'value)) 
 
 let tryFind
     (f: 'row => 'column => 'value => bool)
-    ({ map }: table 'row 'column 'value): (option ('row, 'column, 'value)) => {
+    ({ map }: t 'row 'column 'value): (option ('row, 'column, 'value)) => {
   let result = ref None;
 
   let f' row map => map |> HashMap.tryFind (
@@ -193,11 +193,11 @@ let tryFind
 
 let find
     (f: 'row => 'column => 'value => bool)
-    (table: table 'row 'column 'value): ('row, 'column, 'value) =>
+    (table: t 'row 'column 'value): ('row, 'column, 'value) =>
   table |> tryFind f |> Option.first;
 
-let tryGet (row: 'row) (column: 'column) ({ map }: table 'row 'column 'value): (option 'value) =>
+let tryGet (row: 'row) (column: 'column) ({ map }: t 'row 'column 'value): (option 'value) =>
   map |> (HashMap.tryGet row) >>= (HashMap.tryGet column);
 
-let values ({ map }: table 'row 'column 'value): (Seq.t 'value) =>
+let values ({ map }: t 'row 'column 'value): (Seq.t 'value) =>
   map |> HashMap.values |> Seq.flatMap HashMap.values;

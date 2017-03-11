@@ -1,18 +1,16 @@
-open AVLTreeMap;
-
-type sortedMap 'k 'v = {
+type t 'k 'v = {
   comparator: Comparator.t 'k,
   count: int,
-  tree: avlTreeMap 'k 'v,
+  tree: AVLTreeMap.t 'k 'v,
 };
 
-let empty: (sortedMap 'k 'v) = {
+let empty: (t 'k 'v) = {
   comparator: Comparator.structural,
   count: 0,
   tree: Empty,
 };
 
-let emptyWith (comparator: Comparator.t 'k): (sortedMap 'k 'v) => {
+let emptyWith (comparator: Comparator.t 'k): (t 'k 'v) => {
   comparator,
   count: 0,
   tree: Empty,
@@ -21,14 +19,14 @@ let emptyWith (comparator: Comparator.t 'k): (sortedMap 'k 'v) => {
 let alter
     (key: 'k)
     (f: option 'v => option 'v)
-    ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
-  let alterResult = ref NoChange;
+    ({ comparator, count, tree } as map: t 'k 'v): (t 'k 'v) => {
+  let alterResult = ref AVLTreeMap.NoChange;
   let newTree = tree |> AVLTreeMap.alter comparator alterResult key f;
   switch !alterResult {
-    | Added => { comparator, count: count + 1, tree: newTree }
-    | NoChange => map
-    | Replace => { comparator, count, tree: newTree }
-    | Removed => { comparator, count: count - 1, tree: newTree }
+    | AVLTreeMap.Added => { comparator, count: count + 1, tree: newTree }
+    | AVLTreeMap.NoChange => map
+    | AVLTreeMap.Replace => { comparator, count, tree: newTree }
+    | AVLTreeMap.Removed => { comparator, count: count - 1, tree: newTree }
   };
 };
 
@@ -36,39 +34,39 @@ let containsWith
     (valueEquals: Equality.t 'v )
     (key: 'k)
     (value: 'v)
-    ({ comparator, tree }: sortedMap 'k 'v): bool =>
+    ({ comparator, tree }: t 'k 'v): bool =>
   tree |> AVLTreeMap.contains comparator valueEquals key value;
 
-let contains (key: 'k) (value: 'v) (map: sortedMap 'k 'v): bool =>
+let contains (key: 'k) (value: 'v) (map: t 'k 'v): bool =>
   map |> containsWith Equality.structural key value;
 
-let containsKey (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): bool =>
+let containsKey (key: 'k) ({ comparator, tree }: t 'k 'v): bool =>
   tree |> AVLTreeMap.containsKey comparator key;
 
-let count ({ count }: sortedMap 'k 'v): int => count;
+let count ({ count }: t 'k 'v): int => count;
 
-let every (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
+let every (f: 'k => 'v => bool) ({ tree }: t 'k 'v): bool =>
   tree |> AVLTreeMap.every f;
 
-let first ({ tree }: sortedMap 'k 'v): ('k, 'v) =>
+let first ({ tree }: t 'k 'v): ('k, 'v) =>
   tree |> AVLTreeMap.first;
 
-let forEach (f: 'k => 'v => unit) ({ tree }: sortedMap 'k 'v): unit =>
+let forEach (f: 'k => 'v => unit) ({ tree }: t 'k 'v): unit =>
   tree |> AVLTreeMap.forEach f;
 
-let isEmpty ({ count }: sortedMap 'k 'v): bool =>
+let isEmpty ({ count }: t 'k 'v): bool =>
   count == 0;
 
-let isNotEmpty ({ count }: sortedMap 'k 'v): bool =>
+let isNotEmpty ({ count }: t 'k 'v): bool =>
   count != 0;
 
-let last ({ tree }: sortedMap 'k 'v): ('k, 'v) =>
+let last ({ tree }: t 'k 'v): ('k, 'v) =>
   tree |> AVLTreeMap.last;
 
-let none (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
+let none (f: 'k => 'v => bool) ({ tree }: t 'k 'v): bool =>
   tree |> AVLTreeMap.none f;
 
-let put (key: 'k) (value: 'v) ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
+let put (key: 'k) (value: 'v) ({ comparator, count, tree } as map: t 'k 'v): (t 'k 'v) => {
   let alterResult = ref AVLTreeMap.NoChange;
   let newTree = tree |> AVLTreeMap.putWithResult comparator alterResult key value;
   switch !alterResult {
@@ -78,78 +76,78 @@ let put (key: 'k) (value: 'v) ({ comparator, count, tree } as map: sortedMap 'k 
   };
 };
 
-let putAll (seq: Seq.t ('k, 'v)) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
+let putAll (seq: Seq.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
   seq |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
 
-let fromSeqWith (comparator: Comparator.t 'k) (seq: Seq.t ('k, 'v)): (sortedMap 'k 'v) =>
+let fromSeqWith (comparator: Comparator.t 'k) (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
   emptyWith comparator |> putAll seq;
 
-let fromSeq (seq: Seq.t ('k, 'v)): (sortedMap 'k 'v) =>
+let fromSeq (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
   fromSeqWith (Comparator.structural) seq;
 
-let fromMapWith (comparator: Comparator.t 'k) (map: ImmMap.t 'k 'v): (sortedMap 'k 'v) =>
+let fromMapWith (comparator: Comparator.t 'k) (map: ImmMap.t 'k 'v): (t 'k 'v) =>
   map |> ImmMap.reduce (fun acc k v => acc |> put k v) (emptyWith comparator);
 
-let fromMap (map: ImmMap.t 'k 'v): (sortedMap 'k 'v) =>
+let fromMap (map: ImmMap.t 'k 'v): (t 'k 'v) =>
   fromMapWith Comparator.structural map;
 
-let get (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): 'v =>
+let get (key: 'k) ({ comparator, tree }: t 'k 'v): 'v =>
   tree |> AVLTreeMap.get comparator key;
 
-let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ tree }: sortedMap 'k 'v): 'acc =>
+let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ tree }: t 'k 'v): 'acc =>
   tree |> AVLTreeMap.reduce f acc;
 
-let reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ tree }: sortedMap 'k 'v): 'acc =>
+let reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ tree }: t 'k 'v): 'acc =>
   tree |> AVLTreeMap.reduceRight f acc;
 
-let map (f: 'k => 'a => 'b) ({ comparator } as map: sortedMap 'k 'a): (sortedMap 'k 'b) =>
+let map (f: 'k => 'a => 'b) ({ comparator } as map: t 'k 'a): (t 'k 'b) =>
   map |> reduce (fun acc k v => acc |> put k (f k v)) (emptyWith comparator);
 
-let remove (key: 'k) (map: sortedMap 'k 'v): (sortedMap 'k 'v) =>
+let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;
 
-let removeAll ({ comparator }: sortedMap 'k 'v): (sortedMap 'k 'v) =>
+let removeAll ({ comparator }: t 'k 'v): (t 'k 'v) =>
   emptyWith comparator;
 
-let removeFirst ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
+let removeFirst ({ comparator, count, tree } as map: t 'k 'v): (t 'k 'v) => {
   let newTree = tree |> AVLTreeMap.removeFirst;
 
   if (tree === newTree) map
   else { comparator, count: count - 1, tree: newTree }
 };
 
-let removeLast ({ comparator, count, tree } as map: sortedMap 'k 'v): (sortedMap 'k 'v) => {
+let removeLast ({ comparator, count, tree } as map: t 'k 'v): (t 'k 'v) => {
   let newTree = tree |> AVLTreeMap.removeLast;
 
   if (tree === newTree) map
   else { comparator, count: count - 1, tree: newTree }
 };
 
-let some (f: 'k => 'v => bool) ({ tree }: sortedMap 'k 'v): bool =>
+let some (f: 'k => 'v => bool) ({ tree }: t 'k 'v): bool =>
   tree |> AVLTreeMap.none f;
 
-let toSeq ({ tree }: sortedMap 'k 'v): (Seq.t ('k, 'v)) =>
+let toSeq ({ tree }: t 'k 'v): (Seq.t ('k, 'v)) =>
   tree |> AVLTreeMap.toSeq;
 
-let tryFind (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
+let tryFind (f: 'k => 'v => bool) ({ comparator, tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryFind f;
 
-let find (f: 'k => 'v => bool) ({ comparator, tree }: sortedMap 'k 'v): ('k, 'v) =>
+let find (f: 'k => 'v => bool) ({ comparator, tree }: t 'k 'v): ('k, 'v) =>
   tree |> AVLTreeMap.tryFind f |> Option.first;
 
-let tryFirst ({ tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
+let tryFirst ({ tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryFirst;
 
-let tryGet (key: 'k) ({ comparator, tree }: sortedMap 'k 'v): (option 'v) =>
+let tryGet (key: 'k) ({ comparator, tree }: t 'k 'v): (option 'v) =>
   tree |> AVLTreeMap.tryGet comparator key;
 
-let tryLast ({ tree }: sortedMap 'k 'v): (option ('k, 'v)) =>
+let tryLast ({ tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryLast;
 
-let values ({ tree }: sortedMap 'k 'v): (Seq.t 'v) =>
+let values ({ tree }: t 'k 'v): (Seq.t 'v) =>
   tree |> AVLTreeMap.values;
 
-let toMap (map: sortedMap 'k 'v): (ImmMap.t 'k 'v) => {
+let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
@@ -168,8 +166,8 @@ let toMap (map: sortedMap 'k 'v): (ImmMap.t 'k 'v) => {
 
 let compareWith
     (compareValue: Comparator.t 'v)
-    ({ comparator: thisComparator } as this: sortedMap 'k 'v)
-    ({ comparator: thatComparator } as that: sortedMap 'k 'v): Ordering.t =>
+    ({ comparator: thisComparator } as this: t 'k 'v)
+    ({ comparator: thatComparator } as that: t 'k 'v): Ordering.t =>
   if (thisComparator !== thatComparator) { failwith "Maps must use the same comparator" }
   /* FIXME: Should be possible to make this more efficient
    * by recursively walking the tree.
@@ -180,35 +178,35 @@ let compareWith
     else cmp
   }) (toSeq this) (toSeq that);
 
-let compare (this: sortedMap 'k 'v) (that: sortedMap 'k 'v): Ordering.t =>
+let compare (this: t 'k 'v) (that: t 'k 'v): Ordering.t =>
   compareWith Comparator.structural this that;
 
 let equalsWith
     (valueEquals: Equality.t 'v)
-    ({ comparator } as this: sortedMap 'k 'v)
-    (that: sortedMap 'k 'v): bool =>
+    ({ comparator } as this: t 'k 'v)
+    (that: t 'k 'v): bool =>
   Seq.equalsWith (fun (k1, v1) (k2, v2) =>
     if (k1 === k2) true
     else if (comparator k1 k2 === Equal) (valueEquals v1 v2)
     else false
   ) (toSeq this) (toSeq that);
 
-let equals (this: sortedMap 'k 'v) (that: sortedMap 'k 'v): bool =>
+let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
   equalsWith Equality.structural this that;
 
-let hash (map: sortedMap 'k 'v): int =>
+let hash (map: t 'k 'v): int =>
   map |> toMap |> ImmMap.hash;
 
-let hashWith (keyHash: Hash.t 'k) (valueHash: Hash.t 'v) (map: sortedMap 'k 'v): int =>
+let hashWith (keyHash: Hash.t 'k) (valueHash: Hash.t 'v) (map: t 'k 'v): int =>
   map |> toMap |> ImmMap.hashWith keyHash valueHash;
 
-let keys (map: sortedMap 'k 'v): (ImmSet.t 'k) =>
+let keys (map: t 'k 'v): (ImmSet.t 'k) =>
   map |> toMap |> ImmMap.keys;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (next: sortedMap 'k 'v)
-    (map: sortedMap 'k 'vAcc): (sortedMap 'k 'vAcc) =>
+    (next: t 'k 'v)
+    (map: t 'k 'vAcc): (t 'k 'vAcc) =>
   ImmSet.union (keys map) (keys next) |> Seq.reduce (
     fun acc key => {
       let result = f key (map |> tryGet key) (next |> tryGet key);
@@ -220,8 +218,8 @@ let merge
   )
   map;
 
-let toSetWith (equality: Equality.t 'v) (map: sortedMap 'k 'v): (ImmSet.t ('k, 'v)) =>
+let toSetWith (equality: Equality.t 'v) (map: t 'k 'v): (ImmSet.t ('k, 'v)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
-let toSet (map: sortedMap 'k 'v): (ImmSet.t ('k, 'v)) =>
+let toSet (map: t 'k 'v): (ImmSet.t ('k, 'v)) =>
   map |> toMap |> ImmMap.toSet;

@@ -1,11 +1,7 @@
-open AVLTreeMap;
-open EqualityMap;
-open SortedMap;
-
 type bitmapTrieMap 'k 'v =
   | Level int32 (array (bitmapTrieMap 'k 'v)) (option Transient.Owner.t)
-  | ComparatorCollision int (avlTreeMap 'k 'v)
-  | EqualityCollision int (equalityMap 'k 'v)
+  | ComparatorCollision int (AVLTreeMap.t 'k 'v)
+  | EqualityCollision int (EqualityMap.t 'k 'v)
   | Entry int 'k 'v
   | Empty;
 

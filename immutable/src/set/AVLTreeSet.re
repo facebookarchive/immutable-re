@@ -1,15 +1,15 @@
-type avlTreeSet 'a =
+type t 'a =
   | Empty
   | Leaf 'a
-  | Node int (avlTreeSet 'a) 'a (avlTreeSet 'a);
+  | Node int (t 'a) 'a (t 'a);
 
-let height (tree: avlTreeSet 'a): int => switch tree {
+let height (tree: t 'a): int => switch tree {
   | Empty => 0
   | Leaf _ => 1
   | Node h _ _ _=> h
 };
 
-let rec validate (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec validate (tree: t 'a): (t 'a) => switch tree {
   | Empty => tree
   | Leaf _ => tree
   | Node h left v right =>
@@ -22,7 +22,7 @@ let rec validate (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
       };
 };
 
-let makeTree (left: avlTreeSet 'a) (v: 'a) (right: avlTreeSet 'a): (avlTreeSet 'a) => {
+let makeTree (left: t 'a) (v: 'a) (right: t 'a): (t 'a) => {
   let lh = height left;
   let rh = height right;
 
@@ -36,7 +36,7 @@ let makeTree (left: avlTreeSet 'a) (v: 'a) (right: avlTreeSet 'a): (avlTreeSet '
 
 let maxHeightDiff = 2;
 
-let rebalance (left: avlTreeSet 'a) (v: 'a) (right: avlTreeSet 'a): (avlTreeSet 'a) => {
+let rebalance (left: t 'a) (v: 'a) (right: t 'a): (t 'a) => {
   let lh = height left;
   let rh = height right;
 
@@ -60,7 +60,7 @@ let rebalance (left: avlTreeSet 'a) (v: 'a) (right: avlTreeSet 'a): (avlTreeSet 
   };
 };
 
-let rec add (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec add (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => switch tree {
   | Empty => Leaf x
   | Leaf v =>
       let cmp = comparator x v;
@@ -80,7 +80,7 @@ let rec add (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTre
       } else tree
 };
 
-let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): bool => switch tree {
+let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): bool => switch tree {
   | Empty => false
   | Leaf v => if (x === v) true else {
       let cmp = comparator x v;
@@ -94,13 +94,13 @@ let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): bo
     }
 };
 
-let rec first (tree: avlTreeSet 'a): 'a => switch tree {
+let rec first (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ Empty v _ => v
   | Node _ left _ _ => first left
 };
 
-let rec forEach (f: 'a => unit) (tree: avlTreeSet 'a) => switch tree {
+let rec forEach (f: 'a => unit) (tree: t 'a) => switch tree {
   | Empty  => ()
   | Leaf v => f v
   | Node _ left v right =>
@@ -109,13 +109,13 @@ let rec forEach (f: 'a => unit) (tree: avlTreeSet 'a) => switch tree {
      forEach f right;
 };
 
-let rec last (tree: avlTreeSet 'a): 'a => switch tree {
+let rec last (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ _ v Empty => v
   | Node _ _ _ right => last right
 };
 
-let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: avlTreeSet 'a): 'acc => switch tree {
+let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch tree {
   | Empty  => acc
   | Leaf v => f acc v
   | Node _ left v right =>
@@ -125,7 +125,7 @@ let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: avlTreeSet 'a): 'acc =
      acc
 };
 
-let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: avlTreeSet 'a): 'acc => switch tree {
+let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch tree {
   | Empty => acc
   | Leaf v => f acc v
   | Node _ left v right =>
@@ -135,14 +135,14 @@ let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: avlTreeSet 'a): '
      acc
 };
 
-let rec removeFirst (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec removeFirst (tree: t 'a): (t 'a) => switch tree {
   | Empty => Empty
   | Leaf v => Empty
   | Node _ Empty v right => right
   | Node _ left v right => rebalance (removeFirst left) v right;
 };
 
-let rec removeFirstWithValue (first: ref 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec removeFirstWithValue (first: ref 'a) (tree: t 'a): (t 'a) => switch tree {
   | Empty => Empty
   | Leaf v =>
       first := v;
@@ -153,14 +153,14 @@ let rec removeFirstWithValue (first: ref 'a) (tree: avlTreeSet 'a): (avlTreeSet 
   | Node _ left v right => rebalance (removeFirstWithValue first left) v right;
 };
 
-let rec removeLast (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec removeLast (tree: t 'a): (t 'a) => switch tree {
   | Empty => Empty
   | Leaf v => Empty
   | Node _ left v Empty => left
   | Node _ left v right => rebalance left v (removeLast right);
 };
 
-let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => switch tree {
   | Empty => Empty
   | Leaf v => if (x === v) Empty else {
       let cmp = comparator x v;
@@ -191,7 +191,7 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): (avl
     }
 };
 
-let rec toSeq (tree: avlTreeSet 'a): (Seq.t 'a) => switch tree {
+let rec toSeq (tree: t 'a): (Seq.t 'a) => switch tree {
   | Empty => Seq.empty
   | Leaf v => Seq.return v
   | Node _ left v right => Seq.concat [
@@ -201,14 +201,14 @@ let rec toSeq (tree: avlTreeSet 'a): (Seq.t 'a) => switch tree {
     ]
 };
 
-let rec tryFirst (tree: avlTreeSet 'a): (option 'a) => switch tree {
+let rec tryFirst (tree: t 'a): (option 'a) => switch tree {
   | Empty => None
   | Leaf v => Some v
   | Node _ Empty v _ => Some v
   | Node _ left _ _ => tryFirst left
 };
 
-let rec tryLast (tree: avlTreeSet 'a): (option 'a) => switch tree {
+let rec tryLast (tree: t 'a): (option 'a) => switch tree {
   | Empty => None
   | Leaf v => Some v
   | Node _ _ v Empty => Some v
