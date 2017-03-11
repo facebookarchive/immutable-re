@@ -1,5 +1,5 @@
-type ordering = Equal| GreaterThan | LessThan;
+type t = Equal | GreaterThan | LessThan;
 
-let equal: ordering = Equal;
-let greaterThan: ordering = GreaterThan;
-let lessThan: ordering = LessThan;
+let equal: t = Equal;
+let greaterThan: t = GreaterThan;
+let lessThan: t = LessThan;

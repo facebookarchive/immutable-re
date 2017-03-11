@@ -1,8 +1,4 @@
-open Equality;
-open Functions;
 open Functions.Operators;
-open Hash;
-open Seq;
 
 type set 'a = {
   contains: 'a => bool,
@@ -13,7 +9,7 @@ type set 'a = {
   none: ('a => bool) =>  bool,
   reduce: 'acc . ('acc => 'a => 'acc) => 'acc => 'acc,
   some: ('a => bool) => bool,
-  toSeq: (seq 'a),
+  toSeq: (Seq.t 'a),
   tryFind: ('a => bool) => (option 'a),
 };
 
@@ -49,7 +45,7 @@ let find (f: 'a => bool) ({ find }: set 'a): 'a =>
 let forEach (f: 'a => unit) ({ forEach }: set 'a): unit =>
   forEach f;
 
-let hashWith (hash: hash 'a) ({ reduce }: set 'a): int =>
+let hashWith (hash: Hash.t 'a) ({ reduce }: set 'a): int =>
   reduce (fun acc next => acc + hash next) 0;
 
 let hash (set: set 'a): int =>
@@ -84,7 +80,7 @@ let inRange (start: int) (count: int) (step: int): (set int) => {
   }
 };
 
-let intersect (this: set 'a) (that: set 'a): (seq 'a) =>
+let intersect (this: set 'a) (that: set 'a): (Seq.t 'a) =>
   this.toSeq |> Seq.filter (that.contains);
 
 let isEmpty ({ count }: set 'a): bool =>
@@ -96,7 +92,7 @@ let isNotEmpty ({ count }: set 'a): bool =>
 let none (f: 'a => bool) ({ none }: set 'a): bool =>
   none f;
 
-let ofOptionWith (equals: equality 'a) (opt: option 'a): (set 'a) => {
+let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (set 'a) => {
   contains: fun v => Option.containsWith equals v opt,
   count: Option.count opt,
   every: fun f => Option.every f opt,
@@ -118,15 +114,15 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ reduce }: set 'a): 'acc =>
 let some (f: 'a => bool) ({ some }: set 'a): bool =>
   some f;
 
-let subtract (this: set 'a) (that: set 'a): (seq 'a) =>
+let subtract (this: set 'a) (that: set 'a): (Seq.t 'a) =>
   this.toSeq |> Seq.filter (that.contains >> not);
 
-let toSeq ({ toSeq }: set 'a): (seq 'a) => toSeq;
+let toSeq ({ toSeq }: set 'a): (Seq.t 'a) => toSeq;
 
 let tryFind (f: 'a => bool) ({ tryFind }: set 'a): (option 'a) =>
   tryFind f;
 
-let union (this: set 'a) (that: set 'a): (seq 'a) => Seq.concat [
+let union (this: set 'a) (that: set 'a): (Seq.t 'a) => Seq.concat [
   this.toSeq,
   subtract that this,
 ];

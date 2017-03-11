@@ -1,6 +1,5 @@
 open ImmMap;
 open ImmSet;
-open Seq;
 open Transient;
 
 type bitmapTrieIntSet =
@@ -82,7 +81,7 @@ let module BitmapTrieIntSet = {
     | _ => set
   };
 
-  let rec toSeq (set: bitmapTrieIntSet): (seq int) => switch set {
+  let rec toSeq (set: bitmapTrieIntSet): (Seq.t int) => switch set {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
     | Entry entryValue => Seq.return entryValue;
     | Empty => Seq.empty;
@@ -126,7 +125,7 @@ let remove (value: int) ({ count, root } as set: intSet): intSet => {
 let removeAll (_: intSet): intSet =>
   empty;
 
-let toSeq ({ root }: intSet): (seq int) =>
+let toSeq ({ root }: intSet): (Seq.t int) =>
   root |> BitmapTrieIntSet.toSeq;
 
 let every (f: int => bool) (set: intSet): bool =>
@@ -198,7 +197,7 @@ let module TransientIntSet = {
       }
     });
 
-  let addAll (seq: seq int) (transient: transientIntSet): (transientIntSet) =>
+  let addAll (seq: Seq.t int) (transient: transientIntSet): (transientIntSet) =>
     transient |> Transient.update (fun owner ({ count, root } as set) => {
       let newCount = ref count;
 
@@ -247,10 +246,10 @@ let module TransientIntSet = {
     transient |> Transient.update (fun owner _ => persistentEmpty);
 };
 
-let addAll (seq: seq int) (set: intSet): intSet =>
+let addAll (seq: Seq.t int) (set: intSet): intSet =>
   set |> mutate |> TransientIntSet.addAll seq |> TransientIntSet.persist;
 
-let fromSeq (seq: seq int): intSet =>
+let fromSeq (seq: Seq.t int): intSet =>
   empty |> addAll seq;
 
 let intersect (this: intSet) (that: intSet): intSet =>

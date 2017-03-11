@@ -1,12 +1,8 @@
 open Set;
-open Equality;
-open Functions;
 open HashMap;
-open HashStrategy;
 open ImmMap;
 open ImmSet;
 open Option.Operators;
-open Seq;
 
 type hashMultiset 'a = {
   count: int,
@@ -31,7 +27,7 @@ let empty: (hashMultiset 'a) = {
   map: HashMap.empty,
 };
 
-let emptyWith (keyStrategy: hashStrategy 'a): (hashMultiset 'a) => {
+let emptyWith (keyStrategy: HashStrategy.t 'a): (hashMultiset 'a) => {
   count: 0,
   map: HashMap.emptyWith keyStrategy,
 };
@@ -109,7 +105,7 @@ let some (f: 'a => int => bool) ({ map }: hashMultiset 'a): bool =>
 
 let toMap ({ map }: hashMultiset 'a): (map 'a int) => map |> HashMap.toMap;
 
-let toSeq ({ map }: hashMultiset 'a): (seq 'a) =>
+let toSeq ({ map }: hashMultiset 'a): (Seq.t 'a) =>
   map |> HashMap.toSeq |> Seq.flatMap (fun (v, i) => Seq.repeat v (Some i));
 
 let tryFind (f: 'a => int => bool) ({ map }: hashMultiset 'a): (option ('a, int)) =>
@@ -141,19 +137,19 @@ let module TransientHashMultiset = {
   };
 
   let addAll
-      (seq: seq 'a)
+      (seq: Seq.t 'a)
       (transient: transientHashMultiset 'a): (transientHashMultiset 'a) => seq
     |> Seq.reduce (fun acc next => transient |> add next) transient;
 
   let contains (value: 'a) ({ count, map }: transientHashMultiset 'a): bool =>
-    map |> TransientHashMap.tryGet value >>| alwaysTrue |? false;
+    map |> TransientHashMap.tryGet value >>| Functions.alwaysTrue |? false;
 
   let count ({ count }: transientHashMultiset 'a): int => count;
 
   let empty (): (transientHashMultiset 'a)  =>
     empty |> mutate;
 
-  let emptyWith (strategy: hashStrategy 'a) =>
+  let emptyWith (strategy: HashStrategy.t 'a) =>
     emptyWith strategy |> mutate;
 
   let get (value: 'a) ({ map }: transientHashMultiset 'a): int =>
@@ -198,14 +194,14 @@ let module TransientHashMultiset = {
 };
 
 let addAll
-    (seq: seq 'a)
+    (seq: Seq.t 'a)
     (hashMultiset: hashMultiset 'a): (hashMultiset 'a) => hashMultiset
   |> mutate
   |> TransientHashMultiset.addAll seq
   |> TransientHashMultiset.persist;
 
-let fromSeq (seq: seq 'a): (hashMultiset 'a) =>
+let fromSeq (seq: Seq.t 'a): (hashMultiset 'a) =>
   empty |> addAll seq;
 
-let fromSeqWith (strategy: hashStrategy 'a) (seq: seq 'a): (hashMultiset 'a) =>
+let fromSeqWith (strategy: HashStrategy.t 'a) (seq: Seq.t 'a): (hashMultiset 'a) =>
   (emptyWith strategy) |> addAll seq;

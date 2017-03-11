@@ -1,4 +1,3 @@
-open Functions;
 open Immutable;
 open ReUnit;
 open ReUnit.Expect;

@@ -1,17 +1,13 @@
-open Set;
-open Equality;
 open HashMap;
-open HashStrategy;
 open ImmSet;
 open Option.Operators;
 open Pair;
-open Seq;
 open HashSet;
 
 type hashSetMultimap 'k 'v = {
   count: int,
   map: (hashMap 'k (hashSet 'v)),
-  valueStrategy: hashStrategy 'v,
+  valueStrategy: HashStrategy.t 'v,
 };
 
 let contains (key: 'k) (value: 'v) ({ map }: hashSetMultimap 'k 'v): bool =>
@@ -29,8 +25,8 @@ let empty: (hashSetMultimap 'k 'v) = {
 };
 
 let emptyWith
-    (keyStrategy: hashStrategy 'k)
-    (valueStrategy: hashStrategy 'v): (hashSetMultimap 'k 'v) => ({
+    (keyStrategy: HashStrategy.t 'k)
+    (valueStrategy: HashStrategy.t 'v): (hashSetMultimap 'k 'v) => ({
   count: 0,
   map: (HashMap.emptyWith keyStrategy),
   valueStrategy,
@@ -97,7 +93,7 @@ let put
 
 let putAllValues
     (key: 'k)
-    (values: seq 'v)
+    (values: Seq.t 'v)
     ({ count, map, valueStrategy } as multimap: hashSetMultimap 'k 'v): (hashSetMultimap 'k 'v) => {
   let increment = ref 0;
   let newMap = map |> HashMap.alter key (fun oldSet => switch oldSet {
@@ -143,7 +139,7 @@ let some (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): bool => {
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: hashSetMultimap 'k 'v): (seq ('k, 'v)) =>
+let toSeq ({ map }: hashSetMultimap 'k 'v): (Seq.t ('k, 'v)) =>
   map |> HashMap.toSeq |> Seq.flatMap (
     fun (k, set) => set |> HashSet.toSeq |> Seq.map (Pair.create k)
   );
@@ -160,7 +156,7 @@ let tryFind (f: 'k => 'v => bool) ({ map }: hashSetMultimap 'k 'v): (option ('k,
 let find (f: 'k => 'v => bool) (multimap: hashSetMultimap 'k 'v): ('k, 'v) =>
   multimap |> tryFind f |> Option.first;
 
-let values ({ map }: hashSetMultimap 'k 'v): (seq 'v) =>
+let values ({ map }: hashSetMultimap 'k 'v): (Seq.t 'v) =>
   map |> HashMap.values |> Seq.flatMap HashSet.toSeq;
 
 let toSet

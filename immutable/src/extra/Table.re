@@ -1,27 +1,23 @@
-open Equality;
 open Functions.Operators;
-open Hash;
 open HashMap;
-open HashStrategy;
 open ImmSet;
 open Option.Operators;
 open Pair;
-open Seq;
 
 type table 'row 'column 'value = {
   count: int,
   map: (hashMap 'row (hashMap 'column 'value)),
-  columnStrategy: hashStrategy 'column,
+  columnStrategy: HashStrategy.t 'column,
 };
 
-let columns ({ map }: table 'row 'column 'value): (seq 'column) =>
+let columns ({ map }: table 'row 'column 'value): (Seq.t 'column) =>
   map |> HashMap.values |> Seq.flatMap (HashMap.keys >> ImmSet.toSeq);
 
 let contains (row: 'row) (column: 'column) (value: 'value) ({ map }: table 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.contains column value) |? false;
 
 let containsWith
-    (valueEquals: equality 'v)
+    (valueEquals: Equality.t 'v)
     (row: 'row)
     (column: 'column)
     (value: 'value)
@@ -43,8 +39,8 @@ let empty: (table 'row 'column 'value) = {
 };
 
 let emptyWith
-    (rowStrategy: hashStrategy 'row)
-    (columnStrategy: hashStrategy 'column): (table 'row 'column 'value) => {
+    (rowStrategy: HashStrategy.t 'row)
+    (columnStrategy: HashStrategy.t 'column): (table 'row 'column 'value) => {
   count: 0,
   map: HashMap.emptyWith rowStrategy,
   columnStrategy,
@@ -54,7 +50,7 @@ let equals (this: table 'row 'column 'value) (that: table 'row 'column 'value): 
   HashMap.equalsWith HashMap.equals this.map that.map;
 
 let equalsWith
-    (valueEquals: equality 'value)
+    (valueEquals: Equality.t 'value)
     (this: table 'row 'column 'value)
     (that: table 'row 'column 'value): bool =>
   HashMap.equalsWith (HashMap.equalsWith valueEquals) this.map that.map;
@@ -75,7 +71,7 @@ let get (row: 'row) (column: 'column) ({ map }: table 'row 'column 'value): 'val
 let hash ({ map }: table 'row 'column 'value): int =>
   map |> HashMap.hashWith HashMap.hash;
 
-let hashWith (valueHash: hash 'value) ({ map }: table 'row 'column 'value): int =>
+let hashWith (valueHash: Hash.t 'value) ({ map }: table 'row 'column 'value): int =>
   map |> HashMap.hashWith (HashMap.hashWith valueHash);
 
 let isEmpty ({ map }: table 'row 'column 'value): bool =>
@@ -174,7 +170,7 @@ let some (f: 'row => 'column => 'value => bool) ({ map }: table 'row 'column 'va
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: table 'row 'column 'value): (seq ('row, 'column, 'value)) =>
+let toSeq ({ map }: table 'row 'column 'value): (Seq.t ('row, 'column, 'value)) =>
   map |> HashMap.toSeq |> Seq.flatMap (
     fun (row, columnToValue) => columnToValue |> HashMap.toSeq |> Seq.map (
       fun (column, value) => (row, column, value)
@@ -205,5 +201,5 @@ let find
 let tryGet (row: 'row) (column: 'column) ({ map }: table 'row 'column 'value): (option 'value) =>
   map |> (HashMap.tryGet row) >>= (HashMap.tryGet column);
 
-let values ({ map }: table 'row 'column 'value): (seq 'value) =>
+let values ({ map }: table 'row 'column 'value): (Seq.t 'value) =>
   map |> HashMap.values |> Seq.flatMap HashMap.values;

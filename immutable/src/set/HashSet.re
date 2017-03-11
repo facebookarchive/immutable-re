@@ -1,10 +1,7 @@
 open AVLTreeSet;
 open EqualitySet;
-open HashStrategy;
 open ImmMap;
 open ImmSet;
-open Ordering;
-open Seq;
 open SortedSet;
 open Transient;
 
@@ -17,7 +14,7 @@ type bitmapTrieSet 'a =
 
 let module BitmapTrieSet = {
   let rec add
-      (hashStrategy: hashStrategy 'a)
+      (hashStrategy: HashStrategy.t 'a)
       (updateLevelNode: int => (bitmapTrieSet 'a) => (bitmapTrieSet 'a) => (bitmapTrieSet 'a))
       (owner: option owner)
       (depth: int)
@@ -72,7 +69,7 @@ let module BitmapTrieSet = {
   };
 
   let rec contains
-      (hashStrategy: hashStrategy 'a)
+      (hashStrategy: HashStrategy.t 'a)
       (depth: int)
       (hash: int)
       (value: 'a)
@@ -93,7 +90,7 @@ let module BitmapTrieSet = {
   };
 
   let rec remove
-      (hashStrategy: hashStrategy 'a)
+      (hashStrategy: HashStrategy.t 'a)
       (updateLevelNode: int => (bitmapTrieSet 'a) => (bitmapTrieSet 'a) => (bitmapTrieSet 'a))
       (owner: option owner)
       (depth: int)
@@ -136,7 +133,7 @@ let module BitmapTrieSet = {
     | _ => set
   };
 
-  let rec toSeq (set: bitmapTrieSet 'a): (seq 'a) => switch set {
+  let rec toSeq (set: bitmapTrieSet 'a): (Seq.t 'a) => switch set {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
     | ComparatorCollision _ entrySet => AVLTreeSet.toSeq entrySet;
     | EqualitySetCollision _ entrySet => EqualitySet.toSeq entrySet;
@@ -148,7 +145,7 @@ let module BitmapTrieSet = {
 type hashSet 'a = {
   count: int,
   root: bitmapTrieSet 'a,
-  strategy: hashStrategy 'a,
+  strategy: HashStrategy.t 'a,
 };
 
 let updateLevelNodePersistent
@@ -177,7 +174,7 @@ let empty: (hashSet 'a) = {
   strategy: HashStrategy.structuralCompare,
 };
 
-let emptyWith (strategy: hashStrategy 'a): (hashSet 'a) => {
+let emptyWith (strategy: HashStrategy.t 'a): (hashSet 'a) => {
   count: 0,
   root: Empty,
   strategy,
@@ -197,7 +194,7 @@ let remove (value: 'a) ({ count, root, strategy } as set: hashSet 'a): (hashSet 
 let removeAll ({ strategy }: hashSet 'a): (hashSet 'a) =>
   emptyWith strategy;
 
-let toSeq ({ root }: hashSet 'a): (seq 'a) => root |> BitmapTrieSet.toSeq;
+let toSeq ({ root }: hashSet 'a): (Seq.t 'a) => root |> BitmapTrieSet.toSeq;
 
 let every (f: 'a => bool) (set: hashSet 'a): bool =>
   set |> toSeq |> Seq.every f;
@@ -269,7 +266,7 @@ let module TransientHashSet = {
       }
     });
 
-  let addAll (seq: seq 'a) (transient: transientHashSet 'a): (transientHashSet 'a) =>
+  let addAll (seq: Seq.t 'a) (transient: transientHashSet 'a): (transientHashSet 'a) =>
     transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
       let newCount = ref count;
 
@@ -300,7 +297,7 @@ let module TransientHashSet = {
 
   let persistentEmptyWith = emptyWith;
 
-  let emptyWith (strategy: hashStrategy 'a): (transientHashSet 'a) =>
+  let emptyWith (strategy: HashStrategy.t 'a): (transientHashSet 'a) =>
     emptyWith strategy |> mutate;
 
   let isEmpty (transient: transientHashSet 'a): bool =>
@@ -324,13 +321,13 @@ let module TransientHashSet = {
     transient |> Transient.update (fun owner ({ strategy }) => persistentEmptyWith strategy);
 };
 
-let addAll (seq: seq 'a) (set: hashSet 'a): (hashSet 'a) =>
+let addAll (seq: Seq.t 'a) (set: hashSet 'a): (hashSet 'a) =>
   set |> mutate |> TransientHashSet.addAll seq |> TransientHashSet.persist;
 
-let fromSeq (seq: seq 'a): (hashSet 'a) =>
+let fromSeq (seq: Seq.t 'a): (hashSet 'a) =>
   empty |> addAll seq;
 
-let fromSeqWith (strategy: hashStrategy 'a) (seq: seq 'a): (hashSet 'a) =>
+let fromSeqWith (strategy: HashStrategy.t 'a) (seq: Seq.t 'a): (hashSet 'a) =>
   emptyWith strategy |> addAll seq;
 
 let intersect ({ strategy } as this: hashSet 'a) (that: hashSet 'a): (hashSet 'a) =>

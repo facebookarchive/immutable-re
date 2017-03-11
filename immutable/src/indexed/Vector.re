@@ -1,15 +1,6 @@
-open Comparator;
 open CopyOnWriteArray;
-open Equality;
-open Functions;
-open Hash;
-open Hash;
 open ImmMap;
-open Option;
 open Option.Operators;
-open Ordering;
-open Preconditions;
-open Seq;
 open Transient;
 
 type trie 'a =
@@ -67,13 +58,13 @@ let module Trie = {
         nodes |> CopyOnWriteArray.reduceRight reducer acc
   };
 
-  let rec toSeq (trie: trie 'a): (seq 'a) => switch trie {
+  let rec toSeq (trie: trie 'a): (Seq.t 'a) => switch trie {
     | Empty => Seq.empty
     | Leaf _ values => values |> CopyOnWriteArray.toSeq
     | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
   };
 
-  let rec toSeqReversed (trie: trie 'a): (seq 'a) => switch trie {
+  let rec toSeqReversed (trie: trie 'a): (Seq.t 'a) => switch trie {
     | Empty => Seq.empty
     | Leaf _ values => values |> CopyOnWriteArray.toSeqReversed
     | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeqReversed |> Seq.flatMap toSeqReversed
@@ -685,9 +676,9 @@ let module VectorImpl = {
     type t 'a;
 
     let addFirst: (option owner) => 'a => (t 'a) => (t 'a);
-    let addFirstAll: (option owner) => (seq 'a) => (t 'a) => (t 'a);
+    let addFirstAll: (option owner) => (Seq.t 'a) => (t 'a) => (t 'a);
     let addLast: (option owner) => 'a => (t 'a) => (t 'a);
-    let addLastAll: (option owner) => (seq 'a) => (t 'a) => (t 'a);
+    let addLastAll: (option owner) => (Seq.t 'a) => (t 'a) => (t 'a);
     let count: (t 'a) => int;
     let empty: (t 'a);
     let first: (t 'a) => 'a;
@@ -708,10 +699,10 @@ let module VectorImpl = {
   let module Make = fun (X: VectorBase) => {
     type t 'a = X.t 'a;
 
-    let addFirstAll (owner: option owner) (seq: seq 'a) (vector: t 'a): (t 'a) => seq
+    let addFirstAll (owner: option owner) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
       |> Seq.reduce (fun acc next => acc |> X.addFirst owner next) vector;
 
-    let addLastAll (owner: option owner) (seq: seq 'a) (vector: t 'a): (t 'a) => seq
+    let addLastAll (owner: option owner) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
       |> Seq.reduce (fun acc next => acc |> X.addLast owner next) vector;
 
     let addFirst = X.addFirst;
@@ -743,7 +734,7 @@ let module VectorImpl = {
 
     let tryGet (index: int) (vector: t 'a): (option 'a) => {
       let trieCount = count vector;
-      Preconditions.noneIfIndexOutOfRange trieCount index (flip X.getUnsafe vector);
+      Preconditions.noneIfIndexOutOfRange trieCount index (Functions.flip X.getUnsafe vector);
     };
 
     let tryFirst (vector: t 'a): (option 'a) => tryGet 0 vector;
@@ -1383,13 +1374,13 @@ module TransientVector = {
   let addFirst (value: 'a) (transient: transientVector 'a): (transientVector 'a) =>
     transient |> Transient.update (fun owner => TransientVectorImpl.addFirst (Some owner) value);
 
-  let addFirstAll (seq: seq 'a) (transient: transientVector 'a): (transientVector 'a) =>
+  let addFirstAll (seq: Seq.t 'a) (transient: transientVector 'a): (transientVector 'a) =>
     transient |> Transient.update (fun owner => TransientVectorImpl.addFirstAll (Some owner) seq);
 
   let addLast (value: 'a) (transient: transientVector 'a): (transientVector 'a) =>
     transient |> Transient.update (fun owner => TransientVectorImpl.addLast (Some owner) value);
 
-  let addLastAll (seq: seq 'a) (transient: transientVector 'a): (transientVector 'a) =>
+  let addLastAll (seq: Seq.t 'a) (transient: transientVector 'a): (transientVector 'a) =>
     transient |> Transient.update (fun owner => TransientVectorImpl.addLastAll (Some owner) seq);
 
   let count (transient: transientVector 'a): int =>
@@ -1509,12 +1500,12 @@ module TransientVector = {
     failwith "Not Implemented";
 };
 
-let addFirstAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
+let addFirstAll (seq: Seq.t 'a) (vec: vector 'a): (vector 'a) => vec
   |> mutate
   |> TransientVector.addFirstAll seq
   |> TransientVector.persist;
 
-let addLastAll (seq: seq 'a) (vec: vector 'a): (vector 'a) => vec
+let addLastAll (seq: Seq.t 'a) (vec: vector 'a): (vector 'a) => vec
   |> mutate
   |> TransientVector.addLastAll seq
   |> TransientVector.persist;
@@ -1535,7 +1526,7 @@ let everyWithIndex (f: int => 'a => bool) (vec: vector 'a): bool => {
 };
 
 let equalsWith
-    (valueEquals: equality 'a)
+    (valueEquals: Equality.t 'a)
     ({ left: thisLeft, middle: thisMiddle, right: thisRight } as this: vector 'a)
     ({ left: thatLeft, middle: thatMiddle, right: thatRight } as that: vector 'a): bool =>
   this === that ? true :
@@ -1570,10 +1561,10 @@ let findWithIndex (f: int => 'a => bool) (vec: vector 'a): 'a => {
   find f vec;
 };
 
-let fromSeq (seq: seq 'a): (vector 'a) =>
+let fromSeq (seq: Seq.t 'a): (vector 'a) =>
   empty |> addLastAll seq;
 
-let fromSeqReversed (seq: seq 'a): (vector 'a) =>
+let fromSeqReversed (seq: Seq.t 'a): (vector 'a) =>
   empty|> addFirstAll seq;
 
 let indexOf (f: 'a => bool) (vec: vector 'a): int => {
@@ -1622,7 +1613,7 @@ let noneWithIndex (f: int => 'a => bool) (vec: vector 'a): bool => {
 let some (f: 'a => bool) ({ left, middle, right }: vector 'a): bool =>
   (CopyOnWriteArray.some f left) || (Trie.some f middle) || (CopyOnWriteArray.some f right);
 
-let containsWith (valueEquals: equality 'a) (value: 'a) (vec: vector 'a): bool =>
+let containsWith (valueEquals: Equality.t 'a) (value: 'a) (vec: vector 'a): bool =>
   some (valueEquals value) vec;
 
 let contains (value: 'a) (vec: vector 'a): bool =>
@@ -1690,7 +1681,7 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: vector
 let forEachReverseWithIndex (f: int => 'a => unit) (vec: vector 'a): unit =>
   vec |> reduceRightWithIndex (fun _ index next => f index next) ();
 
-let hashWith (hash: hash 'a) (vec: vector 'a): int =>
+let hashWith (hash: Hash.t 'a) (vec: vector 'a): int =>
   vec |> reduce (Hash.reducer hash) Hash.initialValue;
 
 let hash (vec: vector 'a): int =>
@@ -1796,22 +1787,22 @@ let take (takeCount: int) ({ left, middle, right } as vec: vector 'a): (vector '
 let range (startIndex: int) (takeCount: option int) (vec: vector 'a): (vector 'a) =>
    vec |> skip startIndex |> take (takeCount |? (count vec));
 
-let toSeq ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
+let toSeq ({ left, middle, right }: vector 'a): (Seq.t 'a) => Seq.concat [
   CopyOnWriteArray.toSeq left,
   Trie.toSeq middle,
   CopyOnWriteArray.toSeq right,
 ];
 
 let compareWith
-    (compareValue: comparator 'a)
+    (compareValue: Comparator.t 'a)
     (this: vector 'a)
-    (that: vector 'a): ordering =>
+    (that: vector 'a): Ordering.t =>
   this === that ? Ordering.equal : Seq.compareWith compareValue (toSeq this) (toSeq that);
 
-let compare (this: vector 'a) (that: vector 'a): ordering =>
+let compare (this: vector 'a) (that: vector 'a): Ordering.t =>
   compareWith Comparator.structural this that;
 
-let toSeqReversed ({ left, middle, right }: vector 'a): (seq 'a) => Seq.concat [
+let toSeqReversed ({ left, middle, right }: vector 'a): (Seq.t 'a) => Seq.concat [
   CopyOnWriteArray.toSeqReversed right,
   Trie.toSeqReversed middle,
   CopyOnWriteArray.toSeqReversed left,

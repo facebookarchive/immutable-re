@@ -1,13 +1,8 @@
 open Set;
 open CopyOnWriteArray;
-open Equality;
-open Functions;
-open Hash;
 open ImmMap;
 open ImmSet;
-open Option;
 open Option.Operators;
-open Seq;
 open Transient;
 
 type bitmapTrieIntMap 'a =
@@ -106,7 +101,7 @@ let module BitmapTrieIntMap = {
   };
 
   let rec containsWith
-      (equality: equality 'a)
+      (equality: Equality.t 'a)
       (depth: int)
       (key: int)
       (value: 'a)
@@ -156,7 +151,7 @@ let module BitmapTrieIntMap = {
     | Empty => false
   };
 
-  let rec toSeq (map: bitmapTrieIntMap 'a): (seq (int, 'a)) => switch map {
+  let rec toSeq (map: bitmapTrieIntMap 'a): (Seq.t (int, 'a)) => switch map {
     | Entry key value => Seq.return (key, value)
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
     | Empty => Seq.empty;
@@ -188,7 +183,7 @@ let module BitmapTrieIntMap = {
     | _ => None
   };
 
-  let rec values (map: bitmapTrieIntMap 'a): (seq 'a) => switch map {
+  let rec values (map: bitmapTrieIntMap 'a): (Seq.t 'a) => switch map {
     | Entry key value => Seq.return value
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap values
     | Empty => Seq.empty;
@@ -223,7 +218,7 @@ let alter (key: int) (f: option 'a => option 'a) ({ count, root } as map: intMap
 let containsKey (key: int) ({ root }: intMap 'a): bool =>
   root |> BitmapTrieIntMap.containsKey 0 key;
 
-let containsWith (equality: equality 'a) (key: int) (value: 'a) ({ root }: intMap 'a): bool =>
+let containsWith (equality: Equality.t 'a) (key: int) (value: 'a) ({ root }: intMap 'a): bool =>
   root |> BitmapTrieIntMap.containsWith equality 0 key value;
 
 let contains (key: int) (value: 'a) (map: intMap 'a): bool =>
@@ -257,14 +252,14 @@ let reduce (f: 'acc => int => 'a => 'acc) (acc: 'acc) ({ root }: intMap 'a): 'ac
   root |> BitmapTrieIntMap.reduce f acc;
 
 let remove (key: int) (map: intMap 'a): (intMap 'a) =>
-  map |> alter key alwaysNone;
+  map |> alter key Functions.alwaysNone;
 
 let removeAll (map: intMap 'a): (intMap 'a) => empty;
 
 let some (f: int => 'a => bool) ({ root }: intMap 'a): bool =>
   root |> BitmapTrieIntMap.some f;
 
-let toSeq ({ root }: intMap 'a): (seq ((int, 'a))) =>
+let toSeq ({ root }: intMap 'a): (Seq.t ((int, 'a))) =>
   root |> BitmapTrieIntMap.toSeq;
 
 let tryFind (f: int => 'a => bool) ({ root }: intMap 'a): (option (int, 'a)) =>
@@ -273,7 +268,7 @@ let tryFind (f: int => 'a => bool) ({ root }: intMap 'a): (option (int, 'a)) =>
 let tryGet (key: int) ({ root }: intMap 'a): (option 'a) =>
   root |> BitmapTrieIntMap.tryGet 0 key;
 
-let values ({ root }: intMap 'a): (seq 'a) =>
+let values ({ root }: intMap 'a): (Seq.t 'a) =>
   root |> BitmapTrieIntMap.values;
 
 let toMap (map: intMap 'a): (map int 'a) => {
@@ -296,13 +291,13 @@ let toMap (map: intMap 'a): (map int 'a) => {
 let equals (this: intMap 'a) (that: intMap 'a): bool =>
   ImmMap.equals (toMap this) (toMap that);
 
-let equalsWith (equality: equality 'a) (this: intMap 'a) (that: intMap 'a): bool =>
+let equalsWith (equality: Equality.t 'a) (this: intMap 'a) (that: intMap 'a): bool =>
   ImmMap.equalsWith equality (toMap this) (toMap that);
 
 let hash (map: intMap 'a): int =>
   map |> toMap |> ImmMap.hash;
 
-let hashWith (hash: hash 'a) (map: intMap 'a): int =>
+let hashWith (hash: Hash.t 'a) (map: intMap 'a): int =>
   map |> toMap |> ImmMap.hashWith Hash.structural hash;
 
 let keys (map: intMap 'a): (set int) =>
@@ -311,7 +306,7 @@ let keys (map: intMap 'a): (set int) =>
 let toSet (map: intMap 'a): (set (int, 'a)) =>
   map |> toMap |> ImmMap.toSet;
 
-let toSetWith (equality: equality 'a) (map: intMap 'a): (set (int, 'a)) =>
+let toSetWith (equality: Equality.t 'a) (map: intMap 'a): (set (int, 'a)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
 type transientIntMap 'a = transient (intMap 'a);
@@ -367,12 +362,12 @@ let module TransientIntMap = {
     transient |> alter key (Functions.return @@ Option.return @@ value);
 
   let putAll
-      (seq: seq (int, 'a))
+      (seq: Seq.t (int, 'a))
       (transient: transientIntMap 'a): (transientIntMap 'a) => seq
     |> Seq.reduce (fun acc (k, v) => acc |> put k v) transient;
 
   let remove (key: int) (transient: transientIntMap 'a): (transientIntMap 'a) =>
-    transient |> alter key alwaysNone;
+    transient |> alter key Functions.alwaysNone;
 
   let removeAll (transient: transientIntMap 'a): (transientIntMap 'a) =>
       transient |> Transient.update (fun owner map => persistentEmpty);
@@ -381,7 +376,7 @@ let module TransientIntMap = {
     transient |> Transient.get |> (tryGet key);
 };
 
-let putAll (seq: seq (int, 'a)) (map: intMap 'a): (intMap 'a) => map
+let putAll (seq: Seq.t (int, 'a)) (map: intMap 'a): (intMap 'a) => map
   |> mutate
   |> TransientIntMap.putAll seq
   |> TransientIntMap.persist;
@@ -392,7 +387,7 @@ let map (f: int => 'a => 'b) (map: intMap 'a): (intMap 'b) => map
     (mutate empty)
   |> TransientIntMap.persist;
 
-let fromSeq (seq: seq (int, 'a)): (intMap 'a) => putAll seq empty;
+let fromSeq (seq: Seq.t (int, 'a)): (intMap 'a) => putAll seq empty;
 
 let fromMap (map: map int 'a): (intMap 'a) => map
   |> ImmMap.reduce (fun acc k v => acc |> TransientIntMap.put k v) (mutate empty)

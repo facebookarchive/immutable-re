@@ -1,17 +1,12 @@
-open Comparator;
-open Equality;
-open Hash;
-open Ordering;
-
 let addFirst (value: 'a) (list: list 'a): (list 'a) =>
   [value, ...list];
 
 let add = addFirst;
 
 let rec compareWith
-    (valueCompare: comparator 'a)
+    (valueCompare: Comparator.t 'a)
     (this: list 'a)
-    (that: list 'a): ordering =>
+    (that: list 'a): Ordering.t =>
   this === that ? Ordering.equal : switch (this, that) {
     | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => switch (valueCompare thisHead thatHead) {
         | Equal => compareWith valueCompare thisTail thatTail
@@ -22,10 +17,10 @@ let rec compareWith
     | ([], _) => Ordering.lessThan
   };
 
-let compare (this: list 'a) (that: list 'a): ordering =>
+let compare (this: list 'a) (that: list 'a): Ordering.t =>
   compareWith Comparator.structural this that;
 
-let containsWith (valueEquals: equality 'a) (value: 'a) (list: list 'a): bool => {
+let containsWith (valueEquals: Equality.t 'a) (value: 'a) (list: list 'a): bool => {
   let rec loop list => switch list {
     | [head, ..._] when valueEquals head value => true
     | [_, ...tail] => loop tail
@@ -47,7 +42,7 @@ let count (list: list 'a): int => countImpl list 0;
 
 let empty: (list 'a) = [];
 
-let rec equalsWith (valueEquals: equality 'a) (this: list 'a) (that: list 'a) => switch (this, that) {
+let rec equalsWith (valueEquals: Equality.t 'a) (this: list 'a) (that: list 'a) => switch (this, that) {
   | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => valueEquals thisHead thatHead
     ? equalsWith valueEquals thisTail thatTail
     : false;
@@ -106,7 +101,7 @@ let rec reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) (list: list 'a): 'acc => swi
   | [] => acc
 };
 
-let hashWith (hash: hash 'a) (list: list 'a): int =>
+let hashWith (hash: Hash.t 'a) (list: list 'a): int =>
   list |> reduce (Hash.reducer hash) Hash.initialValue;
 
 let hash (list: list 'a): int => hashWith Hash.structural list;

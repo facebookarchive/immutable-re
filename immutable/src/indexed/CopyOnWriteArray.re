@@ -1,12 +1,5 @@
-open Comparator;
-open Equality;
-open Functions;
-open Hash;
 open ImmMap;
 open Option.Operators;
-open Ordering;
-open Preconditions;
-open Seq;
 
 type copyOnWriteArray 'a = array 'a;
 
@@ -20,7 +13,7 @@ let addFirst (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   retval
 };
 
-let addFirstAll (seq: seq 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
+let addFirstAll (seq: Seq.t 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
   /* FIXME: This implemenation is particularly bad. We can improve it
    * by using dynamic array allocations.
    */
@@ -34,16 +27,16 @@ let addLast (item: 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) => {
   retval
 };
 
-let addLastAll (seq: seq 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
+let addLastAll (seq: Seq.t 'a) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
   /* FIXME: This implemenation is particularly bad. We can improve it
    * by using dynamic array allocations.
    */
   seq |> Seq.reduce (fun acc next => acc |> addLast next) arr;
 
 let rec compareWith
-    (valueCompare: comparator 'a)
+    (valueCompare: Comparator.t 'a)
     (this: copyOnWriteArray 'a)
-    (that: copyOnWriteArray 'a): ordering => {
+    (that: copyOnWriteArray 'a): Ordering.t => {
   let thisCount = count this;
   let thatCount = count that;
 
@@ -60,13 +53,13 @@ let rec compareWith
   loop 0;
 };
 
-let compare (this: copyOnWriteArray 'a) (that: copyOnWriteArray 'a): ordering =>
+let compare (this: copyOnWriteArray 'a) (that: copyOnWriteArray 'a): Ordering.t =>
   compareWith Comparator.structural this that;
 
 let empty: (copyOnWriteArray 'a) = [||];
 
 let rec equalsWith
-    (valueEquals: equality 'a)
+    (valueEquals: Equality.t 'a)
     (this: copyOnWriteArray 'a)
     (that: copyOnWriteArray 'a): bool => {
   let thisCount = count this;
@@ -136,10 +129,10 @@ let forEach (f: 'a => unit) (arr: copyOnWriteArray 'a): 'acc =>
 let forEachWithIndex (f: int => 'a => unit) (arr: copyOnWriteArray 'a): 'acc =>
   arr |> Array.iteri f;
 
-let fromSeq (seq: seq 'a): (copyOnWriteArray 'a) =>
+let fromSeq (seq: Seq.t 'a): (copyOnWriteArray 'a) =>
   [||] |> addLastAll seq;
 
-let fromSeqReversed (seq: seq 'a): (copyOnWriteArray 'a) =>
+let fromSeqReversed (seq: Seq.t 'a): (copyOnWriteArray 'a) =>
   [||] |> addFirstAll seq;
 
 let get (index: int) (arr: copyOnWriteArray 'a): 'a => arr.(index);
@@ -250,7 +243,7 @@ let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOnWrite
 };
 
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: copyOnWriteArray 'a): 'acc =>
-  Array.fold_right (flip f) arr acc;
+  Array.fold_right (Functions.flip f) arr acc;
 
 let forEachReverse (f: 'a => unit) (arr: copyOnWriteArray 'a): unit =>
   arr |> reduceRight (fun _ next => f next) ();
@@ -268,7 +261,7 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: copyOn
 let forEachReverseWithIndex (f: int => 'a => unit) (arr: copyOnWriteArray 'a): unit =>
   arr |> reduceRightWithIndex (fun _ index next => f index next) ();
 
-let hashWith (hash: hash 'a) (arr: copyOnWriteArray 'a): int =>
+let hashWith (hash: Hash.t 'a) (arr: copyOnWriteArray 'a): int =>
   arr |> reduce (Hash.reducer hash) Hash.initialValue;
 
 let hash (arr: copyOnWriteArray 'a): int =>
@@ -358,7 +351,7 @@ let some (f: 'a => bool) (arr: copyOnWriteArray 'a): bool => {
   loop 0;
 };
 
-let containsWith (valueEquals: equality 'a) (value: 'a) (arr: copyOnWriteArray 'a): bool =>
+let containsWith (valueEquals: Equality.t 'a) (value: 'a) (arr: copyOnWriteArray 'a): bool =>
   some (valueEquals value) arr;
 
 let contains (value: 'a) (list: copyOnWriteArray 'a): bool =>
@@ -378,31 +371,31 @@ let someWithIndex (f: int => 'a => bool) (arr: copyOnWriteArray 'a): bool => {
 let take (newCount: int) (arr: copyOnWriteArray 'a): (copyOnWriteArray 'a) =>
   Array.sub arr 0 newCount;
 
-let toSeqReversed (arr: copyOnWriteArray 'a): (seq 'a) => {
+let toSeqReversed (arr: copyOnWriteArray 'a): (Seq.t 'a) => {
   let rec loop index => fun () => index < 0
-    ? Completed
-    : Next arr.(index) (loop (index - 1));
+    ? Seq.Completed
+    : Seq.Next arr.(index) (loop (index - 1));
   loop (count arr - 1);
 };
 
-let toSeq (arr: copyOnWriteArray 'a): (seq 'a) => {
+let toSeq (arr: copyOnWriteArray 'a): (Seq.t 'a) => {
   let arrCount = count arr;
   let rec loop index => fun () => index < arrCount
-    ? Next arr.(index) (loop (index + 1))
-    : Completed;
+    ? Seq.Next arr.(index) (loop (index + 1))
+    : Seq.Completed;
   loop 0;
 };
 
-let toSeqWithIndex (arr: copyOnWriteArray 'a): (seq (int, 'a)) => {
+let toSeqWithIndex (arr: copyOnWriteArray 'a): (Seq.t (int, 'a)) => {
   let arrCount = count arr;
   let rec loop index => fun () => index < arrCount
-    ? Next (index, arr.(index)) (loop (index + 1))
-    : Completed;
+    ? Seq.Next (index, arr.(index)) (loop (index + 1))
+    : Seq.Completed;
   loop 0;
 };
 
 let tryGet (index: int) (arr: copyOnWriteArray 'a): (option 'a) =>
-  Preconditions.noneIfIndexOutOfRange (count arr) index (flip get arr);
+  Preconditions.noneIfIndexOutOfRange (count arr) index (Functions.flip get arr);
 
 let tryFind (f: 'a => bool) (arr: copyOnWriteArray 'a): (option 'a) => {
   let arrCount = count arr;

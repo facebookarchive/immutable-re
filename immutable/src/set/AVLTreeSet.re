@@ -1,7 +1,3 @@
-open Comparator;
-open Ordering;
-open Seq;
-
 type avlTreeSet 'a =
   | Empty
   | Leaf 'a
@@ -64,7 +60,7 @@ let rebalance (left: avlTreeSet 'a) (v: 'a) (right: avlTreeSet 'a): (avlTreeSet 
   };
 };
 
-let rec add (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec add (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
   | Empty => Leaf x
   | Leaf v =>
       let cmp = comparator x v;
@@ -84,7 +80,7 @@ let rec add (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeS
       } else tree
 };
 
-let rec contains (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): bool => switch tree {
+let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): bool => switch tree {
   | Empty => false
   | Leaf v => if (x === v) true else {
       let cmp = comparator x v;
@@ -164,7 +160,7 @@ let rec removeLast (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
   | Node _ left v right => rebalance left v (removeLast right);
 };
 
-let rec remove (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
+let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTreeSet 'a) => switch tree {
   | Empty => Empty
   | Leaf v => if (x === v) Empty else {
       let cmp = comparator x v;
@@ -195,7 +191,7 @@ let rec remove (comparator: comparator 'a) (x: 'a) (tree: avlTreeSet 'a): (avlTr
     }
 };
 
-let rec toSeq (tree: avlTreeSet 'a): (seq 'a) => switch tree {
+let rec toSeq (tree: avlTreeSet 'a): (Seq.t 'a) => switch tree {
   | Empty => Seq.empty
   | Leaf v => Seq.return v
   | Node _ left v right => Seq.concat [

@@ -1,5 +1,3 @@
-open Option;
-
 let failEmpty () =>
   failwith "empty";
 

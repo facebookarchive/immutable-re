@@ -1,5 +1,4 @@
 open Deque;
-open Equality;
 open HashBiMap;
 open HashMap;
 open HashMultiset;
@@ -9,14 +8,14 @@ open IntSet;
 open Vector;
 
 let module Hash = {
-  type t 'a = Hash.hash 'a;
+  type t 'a = Hash.t 'a;
 
   let random = Hash.random;
   let structural = Hash.structural;
 };
 
 let module Equality = {
-  type t 'a = Equality.equality 'a;
+  type t 'a = Equality.t 'a;
 
   /* Will be available in Ocaml 4.03
   let bytes = Equality.bytes;
@@ -32,7 +31,7 @@ let module Equality = {
 };
 
 let module Ordering = {
-  type t = Ordering.ordering;
+  type t = Ordering.t;
 
   let equal = Ordering.equal;
   let greaterThan = Ordering.greaterThan;
@@ -40,7 +39,7 @@ let module Ordering = {
 };
 
 let module Comparator = {
-  type t 'a = Comparator.comparator 'a;
+  type t 'a = Comparator.t 'a;
 
   let bytes = Comparator.bytes;
   let char = Comparator.char;
@@ -53,7 +52,7 @@ let module Comparator = {
 
 let module SeqInternal = Seq;
 let module Seq = {
-  type t 'a = Seq.seq 'a;
+  type t 'a = Seq.t 'a;
 
   let buffer = Seq.buffer;
   let compare = Seq.compare;
@@ -167,7 +166,7 @@ let module Map = {
 };
 
 let module HashStrategy = {
-  type t 'a = HashStrategy.hashStrategy 'a;
+  type t 'a = HashStrategy.t 'a;
 
   let createWithComparator = HashStrategy.createWithComparator;
   let createWithEquality = HashStrategy.createWithEquality;

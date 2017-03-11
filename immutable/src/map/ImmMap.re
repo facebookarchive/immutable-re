@@ -1,15 +1,9 @@
-open Comparator;
-open Equality;
-open Functions;
-open Hash;
 open ImmSet;
 open Option.Operators;
-open Ordering;
 open Pair;
-open Seq;
 
 type map 'k 'v = {
-  containsWith: (equality 'v) => 'k => 'v => bool,
+  containsWith: (Equality.t 'v) => 'k => 'v => bool,
   containsKey: 'k => bool,
   count: int,
   every: ('k => 'v => bool) => bool,
@@ -19,14 +13,14 @@ type map 'k 'v = {
   none: ('k => 'v => bool) => bool,
   reduce: 'acc . ('acc => 'k => 'v => 'acc) => 'acc => 'acc,
   some: ('k => 'v => bool) => bool,
-  toSeq: (seq ('k, 'v)),
+  toSeq: (Seq.t ('k, 'v)),
   tryFind: ('k => 'v => bool) => (option ('k, 'v)),
   tryGet: 'k => (option 'v),
-  values: (seq 'v),
+  values: (Seq.t 'v),
 };
 
 let containsWith
-    (valueEquality: equality 'v)
+    (valueEquality: Equality.t 'v)
     (key: 'k)
     (value: 'v)
     ({ containsWith }: map 'k 'v): bool =>
@@ -60,7 +54,7 @@ let empty: (map 'k 'v) = {
   values: Seq.empty,
 };
 
-let equalsWith (valueEquality: equality 'v) (that: map 'k 'v) (this: map 'k 'v): bool =>
+let equalsWith (valueEquality: Equality.t 'v) (that: map 'k 'v) (this: map 'k 'v): bool =>
   (this === that) ? true :
   (this.count != that.count) ? false :
   this.every (
@@ -84,7 +78,7 @@ let forEach (f: 'k => 'v => unit) ({ forEach }: map 'k 'v): unit =>
 let get (key: 'k) ({ get }: map 'k 'v): 'v =>
   get key;
 
-let hashWith (keyHash: hash 'k) (valueHash: hash 'v) ({ reduce }: map 'k 'v): int =>
+let hashWith (keyHash: Hash.t 'k) (valueHash: Hash.t 'v) ({ reduce }: map 'k 'v): int =>
   reduce (MapEntry.hashReducer keyHash valueHash) Hash.initialValue;
 
 let hash (map: map 'k 'v): int =>
@@ -165,7 +159,7 @@ let some (f: 'k => 'v => bool) ({ some }: map 'k 'v): bool =>
   some f;
 
 let toSetWith
-    (equals: equality 'v)
+    (equals: Equality.t 'v)
     (map: map 'k 'v): (set ('k, 'v)) => {
   contains: fun (k, v) => map.tryGet k >>| equals v |? false,
   count: map.count,
@@ -182,7 +176,7 @@ let toSetWith
 let toSet (map: map 'k 'v): (set ('k, 'v)) =>
   toSetWith Equality.structural map;
 
-let toSeq ({ toSeq }: map 'k 'v): (seq ('k, 'v)) => toSeq;
+let toSeq ({ toSeq }: map 'k 'v): (Seq.t ('k, 'v)) => toSeq;
 
 let tryFind (f: 'k => 'v => bool) ({ tryFind }: map 'k 'v): (option ('k, 'v)) =>
   tryFind f;
@@ -190,4 +184,4 @@ let tryFind (f: 'k => 'v => bool) ({ tryFind }: map 'k 'v): (option ('k, 'v)) =>
 let tryGet (key: 'k) ({ tryGet }: map 'k 'v): (option 'v) =>
   tryGet key;
 
-let values ({ values }: map 'k 'v): (seq 'v) => values;
+let values ({ values }: map 'k 'v): (Seq.t 'v) => values;

@@ -1,10 +1,7 @@
-open Equality;
 open HashMap;
-open HashStrategy;
 open ImmMap;
 open ImmSet;
 open Option.Operators;
-open Seq;
 
 type hashBiMap 'k 'v = {
   map: hashMap 'k 'v,
@@ -25,8 +22,8 @@ let empty: (hashBiMap 'k 'v) = {
 };
 
 let emptyWith
-    (keyStrategy: hashStrategy 'k)
-    (valueStrategy: hashStrategy 'v): (hashBiMap 'k 'v) => {
+    (keyStrategy: HashStrategy.t 'k)
+    (valueStrategy: HashStrategy.t 'v): (hashBiMap 'k 'v) => {
   map: HashMap.emptyWith keyStrategy,
   inverse: HashMap.emptyWith valueStrategy,
 };
@@ -120,7 +117,7 @@ let toInverseMap ({ inverse }: hashBiMap 'k 'v): (hashMap 'k 'k) => inverse;
 
 let toMap ({ map }: hashBiMap 'k 'v): (map 'k 'v) => map |> HashMap.toMap;
 
-let toSeq ({ map }: hashBiMap 'k 'v): (seq ('k, 'v)) => map |> HashMap.toSeq;
+let toSeq ({ map }: hashBiMap 'k 'v): (Seq.t ('k, 'v)) => map |> HashMap.toSeq;
 
 let tryFind (f: 'k => 'v => bool) ({ map }: hashBiMap 'k 'v): (option ('k, 'v)) =>
   map |> HashMap.tryFind f;
@@ -161,8 +158,8 @@ let module TransientHashBiMap = {
     empty |> mutate;
 
   let emptyWith
-      (keyStrategy: hashStrategy 'k)
-      (valueStrategy: hashStrategy 'v): (transientHashBiMap 'k 'v) =>
+      (keyStrategy: HashStrategy.t 'k)
+      (valueStrategy: HashStrategy.t 'v): (transientHashBiMap 'k 'v) =>
     emptyWith keyStrategy valueStrategy |> mutate;
 
   let isEmpty (transient: transientHashBiMap 'k 'v): bool =>
@@ -194,7 +191,7 @@ let module TransientHashBiMap = {
   };
 
   let putAll
-      (seq: seq ('k, 'v))
+      (seq: Seq.t ('k, 'v))
       (map: transientHashBiMap 'k 'v): (transientHashBiMap 'k 'v) => seq
     |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
 
@@ -244,16 +241,16 @@ let module TransientHashBiMap = {
   };
 };
 
-let putAll (seq: seq ('k, 'v)) (map: hashBiMap 'k 'v): (hashBiMap 'k 'v) => map
+let putAll (seq: Seq.t ('k, 'v)) (map: hashBiMap 'k 'v): (hashBiMap 'k 'v) => map
   |> mutate
   |> TransientHashBiMap.putAll seq
   |> TransientHashBiMap.persist;
 
-let fromSeq (seq: seq ('k, 'v)): (hashBiMap 'k 'v) =>
+let fromSeq (seq: Seq.t ('k, 'v)): (hashBiMap 'k 'v) =>
   empty |> putAll seq;
 
 let fromSeqWith
-    (keyStrategy: hashStrategy 'k)
-    (valueStrategy: hashStrategy 'v)
-    (seq: seq ('k, 'v)): (hashBiMap 'k 'v) =>
+    (keyStrategy: HashStrategy.t 'k)
+    (valueStrategy: HashStrategy.t 'v)
+    (seq: Seq.t ('k, 'v)): (hashBiMap 'k 'v) =>
   emptyWith keyStrategy valueStrategy |> putAll seq;

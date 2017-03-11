@@ -1,11 +1,7 @@
-open Equality;
-open Hash;
 open HashMap;
-open HashStrategy;
 open ImmSet;
 open Option.Operators;
 open Pair;
-open Seq;
 open Stack;
 
 type stackMultimap 'k 'v = {
@@ -21,7 +17,7 @@ let add (key: 'k) (value: 'v) ({ count, map }: stackMultimap 'k 'v): (stackMulti
   } |> Stack.addFirst value |> Option.return),
 };
 
-let addAllValues (key: 'k) (values: (seq 'v)) ({ count, map } as multimap: stackMultimap 'k 'v): (stackMultimap 'k 'v) => {
+let addAllValues (key: 'k) (values: (Seq.t 'v)) ({ count, map } as multimap: stackMultimap 'k 'v): (stackMultimap 'k 'v) => {
   let increment = ref 0;
 
   let newMap = map |> HashMap.alter key (fun stack => {
@@ -46,7 +42,7 @@ let addAllValues (key: 'k) (values: (seq 'v)) ({ count, map } as multimap: stack
 };
 
 let containsWith
-    (equals: equality 'v)
+    (equals: Equality.t 'v)
     (key: 'k)
     (value: 'v)
     ({ map }: stackMultimap 'k 'v): bool =>
@@ -65,13 +61,13 @@ let empty: (stackMultimap 'k 'v) = {
   map: HashMap.empty,
 };
 
-let emptyWith (hashStrategy: hashStrategy 'k): (stackMultimap 'k 'v) => {
+let emptyWith (hashStrategy: HashStrategy.t 'k): (stackMultimap 'k 'v) => {
   count: 0,
   map: HashMap.emptyWith hashStrategy,
 };
 
 let equalsWith
-    (equals: equality 'v)
+    (equals: Equality.t 'v)
     (this: stackMultimap 'k 'v)
     (that: stackMultimap 'k 'v): bool =>
   HashMap.equalsWith (Stack.equalsWith equals) this.map that.map;
@@ -97,7 +93,7 @@ let get (key: 'k) ({ map }: stackMultimap 'k 'v): (stack 'v) =>
 let hash ({ map }: stackMultimap 'k 'v): int =>
   map |> HashMap.hashWith Stack.hash;
 
-let hashWith (valueHash: hash 'v) ({ map }: stackMultimap 'k 'v): int =>
+let hashWith (valueHash: Hash.t 'v) ({ map }: stackMultimap 'k 'v): int =>
   map |> HashMap.hashWith (Stack.hashWith valueHash);
 
 let isEmpty ({ map }: stackMultimap 'k 'v): bool =>
@@ -137,7 +133,7 @@ let some (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): bool => {
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: stackMultimap 'k 'v): (seq ('k, 'v)) => map
+let toSeq ({ map }: stackMultimap 'k 'v): (Seq.t ('k, 'v)) => map
   |> HashMap.toSeq
   |> Seq.flatMap (
     fun (k, stack) =>
@@ -156,5 +152,5 @@ let tryFind (f: 'k => 'v => bool) ({ map }: stackMultimap 'k 'v): (option ('k, '
 let find (f: 'k => 'v => bool) (multimap: stackMultimap 'k 'v): ('k, 'v) =>
   multimap |> tryFind f |> Option.first;
 
-let values ({ map }: stackMultimap 'k 'v): (seq 'v) =>
+let values ({ map }: stackMultimap 'k 'v): (Seq.t 'v) =>
   map |> HashMap.values |> Seq.flatMap Stack.toSeq;

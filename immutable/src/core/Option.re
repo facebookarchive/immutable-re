@@ -1,22 +1,17 @@
-open Comparator;
-open Equality;
-open Hash;
-open Ordering;
-
 let compareWith
-    (compare: comparator 'a)
+    (compare: Comparator.t 'a)
     (this: option 'a)
-    (that: option 'a): ordering => switch (this, that) {
+    (that: option 'a): Ordering.t => switch (this, that) {
   | (Some x, Some y) => compare x y
   | (Some _, _) => Ordering.greaterThan
   | (_, Some _) => Ordering.lessThan
   | (None, None) => Ordering.equal
 };
 
-let compare (this: option 'a) (that: option 'a): ordering =>
+let compare (this: option 'a) (that: option 'a): Ordering.t =>
   compareWith Comparator.structural this that;
 
-let containsWith (equals: equality 'a) (value: 'a) (opt: option 'a): bool => switch opt {
+let containsWith (equals: Equality.t 'a) (value: 'a) (opt: option 'a): bool => switch opt {
   | Some x => equals x value
   | None => false
 };
@@ -31,7 +26,7 @@ let count (opt: option 'a): int => switch opt {
 
 let empty: (option 'a) = None;
 
-let equalsWith (equals: equality 'a) (this: option 'a) (that: option 'a): bool => switch (this, that) {
+let equalsWith (equals: Equality.t 'a) (this: option 'a) (that: option 'a): bool => switch (this, that) {
   | (Some x, Some y) => equals x y
   | (None, None) => true
   | _ => false
@@ -78,7 +73,7 @@ let forEach (f: 'a => unit) (opt: option 'a): unit => switch opt {
 
 let last = first;
 
-let hashWith (hash: hash 'a) (opt: option 'a): int => switch opt {
+let hashWith (hash: Hash.t 'a) (opt: option 'a): int => switch opt {
   | None => 0
   | Some x => hash x
 };

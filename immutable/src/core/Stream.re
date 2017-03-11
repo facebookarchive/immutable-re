@@ -1,9 +1,5 @@
 open Choice;
-open Equality;
-open Functions;
 open Functions.Operators;
-open List;
-open Option;
 open Option.Operators;
 
 module type StreamBase = {
@@ -33,7 +29,7 @@ module type Stream = {
   let concatMap: ('a => (stream 'b)) => (stream 'a) => (stream 'b);
   let defer: (unit => (stream 'a)) => (stream 'a);
   let distinctUntilChanged: (stream 'a) => (stream 'a);
-  let distinctUntilChangedWith: (equality 'a) => (stream 'a) => (stream 'a);
+  let distinctUntilChangedWith: (Equality.t 'a) => (stream 'a) => (stream 'a);
   let doOnNext: ('a => unit) => (stream 'a) => (stream 'a);
   let empty: stream 'a;
   let filter: ('a => bool) => (stream 'a) => (stream 'a);
@@ -98,7 +94,7 @@ let module Make = fun (X: StreamBase) => {
   let defer = X.defer;
 
   let distinctUntilChangedWith
-      (equality: equality 'a)
+      (equality: Equality.t 'a)
       (stream: stream 'a): (stream 'a) => stream
     |> X.scan
       (fun (accPrev, accNext) next => (accNext, Some next))

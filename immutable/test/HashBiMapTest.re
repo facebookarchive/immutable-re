@@ -1,5 +1,4 @@
 /*open Immutable;
-open Functions;
 open ReUnit;
 open ReUnit.Expect;
 open ReUnit.Test;

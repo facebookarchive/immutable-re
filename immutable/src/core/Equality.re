@@ -1,4 +1,4 @@
-type equality 'a = 'a => 'a => bool;
+type t 'a = 'a => 'a => bool;
 
 /* Will be available in Ocaml 4.03
 let bytes = Bytes.equal;

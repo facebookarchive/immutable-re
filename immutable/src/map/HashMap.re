@@ -1,12 +1,7 @@
 open AVLTreeMap;
-open Equality;
 open EqualityMap;
-open Hash;
-open HashStrategy;
 open ImmMap;
 open ImmSet;
-open Ordering;
-open Seq;
 open SortedMap;
 open Transient;
 
@@ -25,7 +20,7 @@ let module BitmapTrieMap = {
     | Replace;
 
   let rec alter
-      (hashStrategy: hashStrategy 'k)
+      (hashStrategy: HashStrategy.t 'k)
       (updateLevelNode: int => (bitmapTrieMap 'k 'v) => (bitmapTrieMap 'k 'v) => (bitmapTrieMap 'k 'v))
       (owner: option owner)
       (alterResult: ref alterResult)
@@ -161,7 +156,7 @@ let module BitmapTrieMap = {
   };
 
   let rec containsKey
-      (hashStrategy: hashStrategy 'k)
+      (hashStrategy: HashStrategy.t 'k)
       (depth: int)
       (hash: int)
       (key: 'k)
@@ -182,8 +177,8 @@ let module BitmapTrieMap = {
   };
 
   let rec containsWith
-      (hashStrategy: hashStrategy 'k)
-      (valueEquals: equality 'v)
+      (hashStrategy: HashStrategy.t 'k)
+      (valueEquals: Equality.t 'v)
       (depth: int)
       (hash: int)
       (key: 'k)
@@ -230,7 +225,7 @@ let module BitmapTrieMap = {
   };
 
   let rec get
-      (hashStrategy: hashStrategy 'k)
+      (hashStrategy: HashStrategy.t 'k)
       (depth: int)
       (hash: int)
       (key: 'k)
@@ -283,7 +278,7 @@ let module BitmapTrieMap = {
     | Empty => false
   };
 
-  let rec toSeq (map: bitmapTrieMap 'k 'v): (seq ('k, 'v)) => switch map {
+  let rec toSeq (map: bitmapTrieMap 'k 'v): (Seq.t ('k, 'v)) => switch map {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
     | ComparatorCollision _ entryMap => AVLTreeMap.toSeq entryMap
     | EqualityCollision _ entryMap => EqualityMap.toSeq entryMap;
@@ -310,7 +305,7 @@ let module BitmapTrieMap = {
   };
 
   let rec tryGet
-      (hashStrategy: hashStrategy 'k)
+      (hashStrategy: HashStrategy.t 'k)
       (depth: int)
       (hash: int)
       (key: 'k)
@@ -334,7 +329,7 @@ let module BitmapTrieMap = {
     | Empty => None;
   };
 
-  let rec values (map: bitmapTrieMap 'k 'v): (seq 'v) => switch map {
+  let rec values (map: bitmapTrieMap 'k 'v): (Seq.t 'v) => switch map {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap values
     | ComparatorCollision _ entryMap => AVLTreeMap.values entryMap
     | EqualityCollision _ entryMap => EqualityMap.values entryMap;
@@ -346,7 +341,7 @@ let module BitmapTrieMap = {
 type hashMap 'k 'v = {
   count: int,
   root: bitmapTrieMap 'k 'v,
-  strategy: hashStrategy 'k,
+  strategy: HashStrategy.t 'k,
 };
 
 let empty: (hashMap 'k 'v) = {
@@ -355,7 +350,7 @@ let empty: (hashMap 'k 'v) = {
   strategy: HashStrategy.structuralCompare,
 };
 
-let emptyWith (strategy: hashStrategy 'k): (hashMap 'k 'v) => {
+let emptyWith (strategy: HashStrategy.t 'k): (hashMap 'k 'v) => {
   count: 0,
   root: Empty,
   strategy,
@@ -395,7 +390,7 @@ let containsKey (key: 'k) ({ root, strategy }: hashMap 'k 'v): bool => {
   root |> BitmapTrieMap.containsKey strategy 0 hash key;
 };
 
-let containsWith (valueEquals: equality 'v) (key: 'k) (value: 'v) ({ root, strategy }: hashMap 'k 'v): bool => {
+let containsWith (valueEquals: Equality.t 'v) (key: 'k) (value: 'v) ({ root, strategy }: hashMap 'k 'v): bool => {
   let hash = HashStrategy.hash strategy key;
   root |> BitmapTrieMap.containsWith strategy valueEquals 0 hash key value;
 };
@@ -440,7 +435,7 @@ let removeAll ({ strategy }: hashMap 'k 'v): (hashMap 'k 'v) =>
 let some (f: 'k => 'v => bool) ({ root }: hashMap 'k 'v): bool =>
   root |> BitmapTrieMap.some f;
 
-let toSeq ({ root }: hashMap 'k 'v): (seq ('k, 'v)) =>
+let toSeq ({ root }: hashMap 'k 'v): (Seq.t ('k, 'v)) =>
   root |> BitmapTrieMap.toSeq;
 
 let tryFind (f: 'k => 'v => bool) ({ root }: hashMap 'k 'v): (option ('k, 'v)) =>
@@ -454,7 +449,7 @@ let tryGet (key: 'k) ({ strategy, root }: hashMap 'k 'v): (option 'v) => {
   root |> BitmapTrieMap.tryGet strategy 0 hash key;
 };
 
-let values ({ root }: hashMap 'k 'v): (seq 'v) =>
+let values ({ root }: hashMap 'k 'v): (Seq.t 'v) =>
   root |> BitmapTrieMap.values;
 
 let toMap (map: hashMap 'k 'v): (map 'k 'v) => {
@@ -475,7 +470,7 @@ let toMap (map: hashMap 'k 'v): (map 'k 'v) => {
 };
 
 let equalsWith
-    (valueEquals: equality 'v)
+    (valueEquals: Equality.t 'v)
     ({ strategy } as this: hashMap 'k 'v)
     (that: hashMap 'k 'v): bool =>
   Seq.equalsWith (fun (k1, v1) (k2, v2) =>
@@ -490,7 +485,7 @@ let equals (this: hashMap 'k 'v) (that: hashMap 'k 'v): bool =>
 let hash (map: hashMap 'k 'v): int =>
   map |> toMap |> ImmMap.hash;
 
-let hashWith (valueHash: hash 'v) ({ strategy } as map: hashMap 'k 'v): int =>
+let hashWith (valueHash: Hash.t 'v) ({ strategy } as map: hashMap 'k 'v): int =>
   map |> toMap |> ImmMap.hashWith (HashStrategy.hash strategy) valueHash;
 
 let keys (map: hashMap 'k 'v): (set 'k) =>
@@ -499,7 +494,7 @@ let keys (map: hashMap 'k 'v): (set 'k) =>
 let toSet (map: hashMap 'k 'v): (set ('k, 'v)) =>
   map |> toMap |> ImmMap.toSet;
 
-let toSetWith (equality: equality 'v) (map: hashMap 'k 'v): (set ('k, 'v)) =>
+let toSetWith (equality: Equality.t 'v) (map: hashMap 'k 'v): (set ('k, 'v)) =>
   map |> toMap |> ImmMap.toSetWith equality;
 
 type transientHashMap 'k 'v = transient (hashMap 'k 'v);
@@ -554,7 +549,7 @@ let module TransientHashMap = {
 
   let persistentEmptyWith = emptyWith;
 
-  let emptyWith (strategy: hashStrategy 'k): (transientHashMap 'k 'v) =>
+  let emptyWith (strategy: HashStrategy.t 'k): (transientHashMap 'k 'v) =>
     persistentEmptyWith strategy |> mutate;
 
   let isEmpty (transient: transientHashMap 'k 'v): bool =>
@@ -569,7 +564,7 @@ let module TransientHashMap = {
   let put (key: 'k) (value: 'v) (transient: transientHashMap 'k 'v): (transientHashMap 'k 'v) =>
     transient |> alter key (Functions.return @@ Option.return @@ value);
 
-  let putAll (seq: seq ('k, 'v)) (map: transientHashMap 'k 'v): (transientHashMap 'k 'v) =>
+  let putAll (seq: Seq.t ('k, 'v)) (map: transientHashMap 'k 'v): (transientHashMap 'k 'v) =>
     seq |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
 
   let remove (key: 'k) (transient: transientHashMap 'k 'v): (transientHashMap 'k 'v) =>
@@ -586,16 +581,16 @@ let map (f: 'k => 'a => 'b) ({ strategy } as map: hashMap 'k 'a): (hashMap 'k 'b
   |> reduce (fun acc k v => acc |> TransientHashMap.put k (f k v)) (emptyWith strategy |> mutate)
   |> TransientHashMap.persist;
 
-let putAll (seq: seq ('k, 'v)) (map: hashMap 'k 'v): (hashMap 'k 'v) =>
+let putAll (seq: Seq.t ('k, 'v)) (map: hashMap 'k 'v): (hashMap 'k 'v) =>
   map |> mutate |> TransientHashMap.putAll seq |> TransientHashMap.persist;
 
-let fromSeqWith (strategy: hashStrategy 'k) (seq: seq ('k, 'v)): (hashMap 'k 'v) =>
+let fromSeqWith (strategy: HashStrategy.t 'k) (seq: Seq.t ('k, 'v)): (hashMap 'k 'v) =>
   emptyWith strategy |> putAll seq;
 
-let fromSeq (seq: seq ('k, 'v)): (hashMap 'k 'v) =>
+let fromSeq (seq: Seq.t ('k, 'v)): (hashMap 'k 'v) =>
   fromSeqWith (HashStrategy.structuralCompare) seq;
 
-let fromMapWith (strategy: hashStrategy 'k) (map: map 'k 'v): (hashMap 'k 'v) =>
+let fromMapWith (strategy: HashStrategy.t 'k) (map: map 'k 'v): (hashMap 'k 'v) =>
   ImmMap.reduce (fun acc k v => acc |> TransientHashMap.put k v) (emptyWith strategy |> mutate) map
   |> TransientHashMap.persist;
 

@@ -1,17 +1,11 @@
 open AVLTreeSet;
-open Comparator;
-open Equality;
-open Functions;
 open Functions.Operators;
-open Hash;
 open ImmMap;
 open ImmSet;
 open Option.Operators;
-open Ordering;
-open Seq;
 
 type sortedSet 'a = {
-  comparator: comparator 'a,
+  comparator: Comparator.t 'a,
   count: int,
   tree: avlTreeSet 'a,
 };
@@ -21,7 +15,7 @@ let add (x: 'a) ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sorte
   if (newTree === tree) sortedSet else { comparator, count: count + 1, tree: newTree }
 };
 
-let addAll (seq: seq 'a) (sortedSet: sortedSet 'a): (sortedSet 'a) => seq
+let addAll (seq: Seq.t 'a) (sortedSet: sortedSet 'a): (sortedSet 'a) => seq
   |> Seq.reduce (fun acc next => acc |> add next) sortedSet;
 
 let contains (x: 'a) ({ comparator, tree }: sortedSet 'a): bool =>
@@ -31,16 +25,16 @@ let count ({ count }: sortedSet 'a): int => count;
 
 let empty: sortedSet 'a = { comparator: Comparator.structural, count: 0, tree: Empty };
 
-let emptyWith (comparator: comparator 'a): (sortedSet 'a) => ({ comparator, count: 0, tree: Empty });
+let emptyWith (comparator: Comparator.t 'a): (sortedSet 'a) => ({ comparator, count: 0, tree: Empty });
 
 let isEmpty ({ count }: sortedSet 'a): bool => count == 0;
 
 let isNotEmpty ({ count }: sortedSet 'a): bool => count != 0;
 
-let fromSeq (seq: seq 'a): (sortedSet 'a) =>
+let fromSeq (seq: Seq.t 'a): (sortedSet 'a) =>
   empty |> addAll seq;
 
-let fromSeqWith (comparator: comparator 'a) (seq: seq 'a): (sortedSet 'a) =>
+let fromSeqWith (comparator: Comparator.t 'a) (seq: Seq.t 'a): (sortedSet 'a) =>
   emptyWith comparator |> addAll seq;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ tree }: sortedSet 'a): 'acc =>
@@ -67,12 +61,12 @@ let removeLast ({ comparator, count, tree } as sortedSet: sortedSet 'a): (sorted
   if (newTree === tree) sortedSet else { comparator, count: count - 1, tree: newTree }
 };
 
-let toSeq ({ tree }: sortedSet 'a): (seq 'a) =>
+let toSeq ({ tree }: sortedSet 'a): (Seq.t 'a) =>
   tree |> AVLTreeSet.toSeq;
 
 let compare
     ({ comparator: thisCompare } as this: sortedSet 'a)
-    ({ comparator: thatCompare } as that: sortedSet 'a): ordering =>
+    ({ comparator: thatCompare } as that: sortedSet 'a): Ordering.t =>
   if (thisCompare !== thatCompare) { failwith "Sets must use the same comparator" }
   /* FIXME: Should be possible to make this more efficient
    * by recursively walking the tree.
@@ -103,7 +97,7 @@ let first ({ tree }: sortedSet 'a): 'a =>
 let forEach (f: 'a => unit) ({ tree }: sortedSet 'a) =>
   tree |> AVLTreeSet.forEach f;
 
-let hashWith (hash: (hash 'a)) (set: sortedSet 'a): int => set
+let hashWith (hash: (Hash.t 'a)) (set: sortedSet 'a): int => set
   |> reduce (Hash.reducer hash) Hash.initialValue;
 
 let hash (set: sortedSet 'a): int =>

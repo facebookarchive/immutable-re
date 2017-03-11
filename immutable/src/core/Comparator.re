@@ -1,8 +1,6 @@
-open Ordering;
+type t 'a = 'a => 'a => Ordering.t;
 
-type comparator 'a = 'a => 'a => ordering;
-
-let make (compare: 'a => 'a => int) (that: 'a) (this: 'a): ordering => {
+let make (compare: 'a => 'a => int) (that: 'a) (this: 'a): Ordering.t => {
   let cmp = compare that this;
 
   cmp > 0 ? GreaterThan :
@@ -16,4 +14,4 @@ let int32 = make Int32.compare;
 let int64 = make Int64.compare;
 let nativeInt = make Nativeint.compare;
 let string = make String.compare;
-let structural (that: 'a) (this: 'a): ordering => make compare that this;
+let structural (that: 'a) (this: 'a): Ordering.t => make compare that this;
