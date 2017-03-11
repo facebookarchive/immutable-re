@@ -7,13 +7,13 @@ type t 'k 'v = {
 let empty: (t 'k 'v) = {
   comparator: Comparator.structural,
   count: 0,
-  tree: Empty,
+  tree: AVLTreeMap.Empty,
 };
 
 let emptyWith (comparator: Comparator.t 'k): (t 'k 'v) => {
   comparator,
   count: 0,
-  tree: Empty,
+  tree: AVLTreeMap.Empty,
 };
 
 let alter
@@ -175,7 +175,7 @@ let compareWith
    */
   else Seq.compareWith (fun (k1, v1) (k2, v2) => {
     let cmp = thisComparator k1 k2;
-    if (cmp === Equal) (compareValue v1 v2)
+    if (cmp === Ordering.equal) (compareValue v1 v2)
     else cmp
   }) (toSeq this) (toSeq that);
 
@@ -188,7 +188,7 @@ let equalsWith
     (that: t 'k 'v): bool =>
   Seq.equalsWith (fun (k1, v1) (k2, v2) =>
     if (k1 === k2) true
-    else if (comparator k1 k2 === Equal) (valueEquals v1 v2)
+    else if (comparator k1 k2 === Ordering.equal) (valueEquals v1 v2)
     else false
   ) (toSeq this) (toSeq that);
 

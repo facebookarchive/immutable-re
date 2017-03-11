@@ -42,9 +42,11 @@ let compareWith
   let loopCount = min thisCount thatCount;
 
   let rec loop index =>
-    index < loopCount ? switch (valueCompare this.(index) that.(index)) {
-      | Equal => loop (index + 1)
-      | x => x
+    index < loopCount ? {
+      let cmp = valueCompare this.(index) that.(index);
+
+      if (cmp === Ordering.equal) (loop (index + 1))
+      else cmp
     } :
     index < thisCount ? Ordering.greaterThan :
     index < thatCount ? Ordering.lessThan :

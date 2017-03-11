@@ -19,9 +19,9 @@ let contains (x: 'a) ({ comparator, tree }: t 'a): bool =>
 
 let count ({ count }: t 'a): int => count;
 
-let empty: t 'a = { comparator: Comparator.structural, count: 0, tree: Empty };
+let empty: t 'a = { comparator: Comparator.structural, count: 0, tree: AVLTreeSet.Empty };
 
-let emptyWith (comparator: Comparator.t 'a): (t 'a) => ({ comparator, count: 0, tree: Empty });
+let emptyWith (comparator: Comparator.t 'a): (t 'a) => ({ comparator, count: 0, tree: AVLTreeSet.Empty });
 
 let isEmpty ({ count }: t 'a): bool => count == 0;
 
@@ -78,7 +78,7 @@ let equals
     /* FIXME: Should be possible to make this more efficient
      * by recursively walking the tree.
      */
-    Seq.equalsWith (fun a b => (thisCompare a b) === Equal) (toSeq this) (toSeq that)
+    Seq.equalsWith (fun a b => (thisCompare a b) === Ordering.equal) (toSeq this) (toSeq that)
   );
 
 let every (f: 'a => bool) (set: t 'a): bool =>

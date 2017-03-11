@@ -9,7 +9,7 @@ let rec compareWith
     (that: list 'a): Ordering.t =>
   this === that ? Ordering.equal : switch (this, that) {
     | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => switch (valueCompare thisHead thatHead) {
-        | Equal => compareWith valueCompare thisTail thatTail
+        | Ordering.Equal => compareWith valueCompare thisTail thatTail
         | x => x
       }
     | ([], []) => Ordering.equal

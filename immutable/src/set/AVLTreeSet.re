@@ -64,17 +64,17 @@ let rec add (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => switch
   | Empty => Leaf x
   | Leaf v =>
       let cmp = comparator x v;
-      if (cmp === LessThan) {
+      if (cmp === Ordering.lessThan) {
         Node 2 Empty x tree
-      } else if (cmp === GreaterThan) {
+      } else if (cmp === Ordering.greaterThan) {
         Node 2 tree x Empty
       } else tree
   | Node _ left v right =>
       let cmp = comparator x v;
-      if (cmp === LessThan) {
+      if (cmp === Ordering.lessThan) {
         let newLeft = add comparator x left;
         if (newLeft === left) tree else rebalance newLeft v right
-      } else if (cmp === GreaterThan) {
+      } else if (cmp === Ordering.greaterThan) {
         let newRight = add comparator x right;
         if (newRight === right) tree else rebalance left v newRight
       } else tree
@@ -84,12 +84,12 @@ let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): bool => swi
   | Empty => false
   | Leaf v => if (x === v) true else {
       let cmp = comparator x v;
-      cmp === Equal
+      cmp === Ordering.equal
     }
   | Node _ left v right => if (x === v) true else {
       let cmp = comparator x v;
-      if (cmp === LessThan) (contains comparator x left)
-      else if (cmp === GreaterThan) (contains comparator x right)
+      if (cmp === Ordering.lessThan) (contains comparator x left)
+      else if (cmp === Ordering.greaterThan) (contains comparator x right)
       else true
     }
 };
@@ -166,7 +166,7 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
   | Empty => Empty
   | Leaf v => if (x === v) Empty else {
       let cmp = comparator x v;
-      if (cmp === Equal) Empty else tree
+      if (cmp === Ordering.equal) Empty else tree
     }
   | Node height left v right => if (x === v) (switch (left, right) {
       | (Empty, _) => right
@@ -174,10 +174,10 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
       | _ => rebalance left (first right) (removeFirst right)
     }) else {
       let cmp = comparator x v;
-      if (cmp === LessThan) {
+      if (cmp === Ordering.lessThan) {
         let newLeft = remove comparator x left;
         if (newLeft === left) tree else rebalance newLeft v right
-      } else if (cmp === GreaterThan) {
+      } else if (cmp === Ordering.greaterThan) {
         let newRight = remove comparator x right;
         if (newRight === right) tree else rebalance left v newRight
       } else switch (left, right) {

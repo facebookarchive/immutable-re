@@ -6,7 +6,12 @@ type t 'k 'v = {
 };
 
 let contains (key: 'k) (value: 'v) ({ map, inverse }: t 'k 'v): bool =>
-  map |> HashMap.containsWith (HashStrategy.equals inverse.strategy) key value;
+  map |> HashMap.containsWith (HashStrategy.equals {
+    /* To get the access to internals of HashMap.t */
+    open HashMap;
+
+    inverse.strategy
+  }) key value;
 
 let containsKey (key: 'k) ({ map }: t 'k 'v): bool =>
   map |> HashMap.containsKey key;
@@ -26,7 +31,7 @@ let emptyWith
 };
 
 let equals ({ map: thisMap, inverse: thisInverse }: t 'k 'v) ({ map: thatMap }: t 'k 'v): bool => {
-  /* Open HashMap to get the access to internals of HashMap.t */
+  /* To get the access to internals of HashMap.t */
   open HashMap;
 
   let { strategy: valueStrategy } = thisInverse;
@@ -46,7 +51,12 @@ let get (key: 'k) ({ map }: t 'k 'v): 'v =>
   map |> HashMap.get key;
 
 let hash ({ map, inverse }: t 'k 'v): int =>
-  map |> HashMap.hashWith (HashStrategy.hash inverse.strategy);
+  map |> HashMap.hashWith (HashStrategy.hash {
+    /* To get the access to internals of HashMap.t */
+    open HashMap;
+    
+    inverse.strategy
+  });
 
 let keys ({ map }: t 'k 'v): (ImmSet.t 'k) =>
   map |> HashMap.keys;
@@ -111,7 +121,11 @@ let some (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool =>
 
 let toSet ({ map, inverse }: t 'k 'v): (ImmSet.t ('k, 'v)) =>
   /* Kind of cheating */
-  map |> HashMap.toSetWith (HashStrategy.equals inverse.strategy);
+  map |> HashMap.toSetWith (HashStrategy.equals {
+    /* To get the access to internals of HashMap.t */
+    open HashMap;
+    inverse.strategy
+  });
 
 let toMap ({ map }: t 'k 'v): (ImmMap.t 'k 'v) => map |> HashMap.toMap;
 

@@ -3,8 +3,8 @@ type t 'a = 'a => 'a => Ordering.t;
 let make (compare: 'a => 'a => int) (that: 'a) (this: 'a): Ordering.t => {
   let cmp = compare that this;
 
-  cmp > 0 ? GreaterThan :
-  cmp < 0 ? LessThan :
+  cmp > 0 ? Ordering.greaterThan :
+  cmp < 0 ? Ordering.lessThan :
   Equal;
 };
 

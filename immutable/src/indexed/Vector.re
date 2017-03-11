@@ -760,8 +760,8 @@ let updateLevelPersistent
     (count: int)
     (index: int)
     (child: Trie.t 'a)
-    (Level depth _ _ tries: Trie.t 'a): (Trie.t 'a) =>
-  Level depth (ref count) None (CopyOnWriteArray.update index child tries);
+    (Trie.Level depth _ _ tries: Trie.t 'a): (Trie.t 'a) =>
+  Trie.Level depth (ref count) None (CopyOnWriteArray.update index child tries);
 
 let module PersistentVector = VectorImpl.Make {
   type nonrec t 'a = t 'a;
@@ -786,8 +786,8 @@ let module PersistentVector = VectorImpl.Make {
   let updateLeaf
       (index: int)
       (value: 'a)
-      (Leaf _ values: Trie.t 'a): (Trie.t 'a) =>
-    Leaf None (values |> CopyOnWriteArray.update index value);
+      (Trie.Leaf _ values: Trie.t 'a): (Trie.t 'a) =>
+    Trie.Leaf None (values |> CopyOnWriteArray.update index value);
 
   let addFirst (_: option Transient.Owner.t) (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
     (tailIsFull left) && (CopyOnWriteArray.isNotEmpty right) ? {
@@ -980,12 +980,12 @@ let updateLevelTransient
     (index: int)
     (child: Trie.t 'a)
     (trie: Trie.t 'a): (Trie.t 'a) => switch trie {
-  | Level _ trieCount (Some trieOwner) tries when trieOwner === owner =>
+  | Trie.Level _ trieCount (Some trieOwner) tries when trieOwner === owner =>
       tries.(index) = child;
       trieCount := count;
       trie
-  | Level depth _ _ tries =>
-      Level depth (ref count) (Some owner) (CopyOnWriteArray.update index child tries)
+  | Trie.Level depth _ _ tries =>
+      Trie.Level depth (ref count) (Some owner) (CopyOnWriteArray.update index child tries)
   | _ => failwith "Invalid state"
 };
 
@@ -994,11 +994,11 @@ let updateLeafTransient
     (index: int)
     (value: 'a)
     (trie: Trie.t 'a): (Trie.t 'a) => switch trie {
-  | Leaf (Some trieOwner) values when trieOwner === owner =>
+  | Trie.Leaf (Some trieOwner) values when trieOwner === owner =>
       values.(index) = value;
       trie
-  | Leaf _ values =>
-      Leaf (Some owner) (values |> CopyOnWriteArray.update index value)
+  | Trie.Leaf _ values =>
+      Trie.Leaf (Some owner) (values |> CopyOnWriteArray.update index value)
   | _ => failwith "Invalid state"
 };
 

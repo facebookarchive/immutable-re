@@ -19,11 +19,13 @@ let structuralEquality: (t 'a) =
 
 let comparator (strategy: t 'a): (Comparator.t 'a) => switch strategy {
   | Comparator _ comparator => comparator;
-  | Equality _ equality => fun x y => equality x y ? Equal : GreaterThan;
+  | Equality _ equality =>
+      /* FIXME: Should this just throw? */
+      fun x y => equality x y ? Ordering.equal : Ordering.greaterThan;
 };
 
 let equals (strategy: t 'a): (Equality.t 'a) => switch strategy {
-  | Comparator _ comparator => fun x y => (comparator x y) === Equal
+  | Comparator _ comparator => fun x y => (comparator x y) === Ordering.equal
   | Equality _ equals => equals
 };
 

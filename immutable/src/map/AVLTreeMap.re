@@ -41,12 +41,12 @@ let rec containsKey
   | Empty => false
   | Leaf k _ => if (xK === k) true else {
       let cmp = comparator xK k;
-      cmp === Equal
+      cmp === Ordering.equal
     }
   | Node _ left k _ right => if (xK === k) true else {
       let cmp = comparator xK k;
-      if (cmp === LessThan) (containsKey comparator xK left)
-      else if (cmp === GreaterThan) (containsKey comparator xK right)
+      if (cmp === Ordering.lessThan) (containsKey comparator xK left)
+      else if (cmp === Ordering.greaterThan) (containsKey comparator xK right)
       else true
     }
 };
@@ -60,12 +60,12 @@ let contains
   | Empty => false
   | Leaf k v => if (xK === k) true else {
       let cmp = comparator xK k;
-      (cmp === Equal) && (equality v xV)
+      (cmp === Ordering.equal) && (equality v xV)
     }
   | Node _ left k v right => if (xK === k) true else {
       let cmp = comparator xK k;
-      if (cmp === LessThan) (containsKey comparator xK left)
-      else if (cmp === GreaterThan) (containsKey comparator xK right)
+      if (cmp === Ordering.lessThan) (containsKey comparator xK left)
+      else if (cmp === Ordering.greaterThan) (containsKey comparator xK right)
       else (equality v xV)
     }
 };
@@ -100,13 +100,13 @@ let rec get
   | Empty => failwith "Not found"
   | Leaf k v => if (xK === k) v else {
       let cmp = comparator xK k;
-      if (cmp === Equal) v
+      if (cmp === Ordering.equal) v
       else (failwith "Not found")
     }
   | Node _ left k v right => if (xK === k) v else {
       let cmp = comparator xK k;
-      if (cmp === LessThan) (get comparator xK left)
-      else if (cmp === GreaterThan) (get comparator xK right)
+      if (cmp === Ordering.lessThan) (get comparator xK left)
+      else if (cmp === Ordering.greaterThan) (get comparator xK right)
       else v
     }
 };
@@ -149,12 +149,12 @@ let rec search (predicate: 'k => Ordering.t) (tree: t 'k 'v): ('k, 'v) => switch
   | Empty => failwith "not found"
   | Leaf k v =>
       let result = predicate k;
-      if (result === Equal) (k, v)
+      if (result === Ordering.equal) (k, v)
       else (failwith "not found")
   | Node _ left k v right =>
       let result = predicate v;
-      if (result === LessThan) (search predicate left)
-      else if (result === GreaterThan) (search predicate right)
+      if (result === Ordering.lessThan) (search predicate left)
+      else if (result === Ordering.greaterThan) (search predicate right)
       else (k, v)
 };
 
@@ -198,13 +198,13 @@ let rec tryGet
   | Empty => None
   | Leaf k v => if (xK === k) (Some v) else {
       let cmp = comparator xK k;
-      if (cmp === Equal) (Some v)
+      if (cmp === Ordering.equal) (Some v)
       else None
     }
   | Node _ left k v right => if (xK === k) (Some v) else {
       let cmp = comparator xK k;
-      if (cmp === LessThan) (tryGet comparator xK left)
-      else if (cmp === GreaterThan) (tryGet comparator xK right)
+      if (cmp === Ordering.lessThan) (tryGet comparator xK left)
+      else if (cmp === Ordering.greaterThan) (tryGet comparator xK right)
       else (Some v)
     }
 };
@@ -220,11 +220,11 @@ let rec trySearch (predicate: 'k => Ordering.t) (tree: t 'k 'v): (option ('k, 'v
   | Empty => None
   | Leaf k v =>
       let result = predicate v;
-      if (result === Equal) (Some (k, v)) else None
+      if (result === Ordering.equal) (Some (k, v)) else None
   | Node _ left k v right =>
       let result = predicate k;
-      if (result === LessThan) (trySearch predicate left)
-      else if (result === GreaterThan) (trySearch predicate right)
+      if (result === Ordering.lessThan) (trySearch predicate left)
+      else if (result === Ordering.greaterThan) (trySearch predicate right)
       else Some (k, v)
 };
 
@@ -300,7 +300,7 @@ let rec alter
     }
   | Leaf k v =>
       let cmp = comparator xK k;
-      if (cmp === LessThan) (switch (f None) {
+      if (cmp === Ordering.lessThan) (switch (f None) {
         | None =>
             result := NoChange;
             tree;
@@ -308,7 +308,7 @@ let rec alter
             result := Added;
             Node 2 Empty xK xV tree
       })
-      else if (cmp === GreaterThan) (switch (f None) {
+      else if (cmp === Ordering.greaterThan) (switch (f None) {
         | None =>
             result := NoChange;
             tree;
@@ -326,7 +326,7 @@ let rec alter
       })
   | Node height left k v right =>
       let cmp = comparator xK k;
-      if (cmp === LessThan) {
+      if (cmp === Ordering.lessThan) {
         let newLeft = alter comparator result xK f left;
         switch !result {
           | Added => rebalance newLeft k v right
@@ -335,7 +335,7 @@ let rec alter
           | Replace => Node height newLeft k v right
         }
       }
-      else if (cmp === GreaterThan) {
+      else if (cmp === Ordering.greaterThan) {
         let newRight = alter comparator result xK f right;
         switch !result {
         | Added => rebalance left k v newRight
@@ -371,17 +371,17 @@ let rec put
   | Leaf k v =>
       let cmp = comparator xK k;
 
-      if (cmp === LessThan) (Node 2 Empty xK xV tree)
-      else if (cmp === GreaterThan) (Node 2 tree xK xV Empty)
+      if (cmp === Ordering.lessThan) (Node 2 Empty xK xV tree)
+      else if (cmp === Ordering.greaterThan) (Node 2 tree xK xV Empty)
       else if (xV === v) tree
       else (Leaf xK xV)
   | Node height left k v right =>
       let cmp = comparator xK k;
 
-      if (cmp === LessThan) {
+      if (cmp === Ordering.lessThan) {
         let newLeft = put comparator xK xV left;
         if (newLeft === left) tree else rebalance newLeft k v right
-      } else if (cmp === GreaterThan) {
+      } else if (cmp === Ordering.greaterThan) {
         let newRight = put comparator xK xV right;
         if (newRight === right) tree else rebalance left k v newRight
       } else if (xV === v) tree
@@ -400,11 +400,11 @@ let rec putWithResult
   | Leaf k v =>
       let cmp = comparator xK k;
 
-      if (cmp === LessThan) {
+      if (cmp === Ordering.lessThan) {
         result := Added;
         Node 2 Empty xK xV tree
       }
-      else if (cmp === GreaterThan) {
+      else if (cmp === Ordering.greaterThan) {
         result := Added;
         Node 2 tree xK xV Empty
       }
@@ -416,10 +416,10 @@ let rec putWithResult
   | Node height left k v right =>
       let cmp = comparator xK k;
 
-      if (cmp === LessThan) {
+      if (cmp === Ordering.lessThan) {
         let newLeft = putWithResult comparator result xK xV left;
         if (newLeft === left) tree else rebalance newLeft k v right
-      } else if (cmp === GreaterThan) {
+      } else if (cmp === Ordering.greaterThan) {
         let newRight = putWithResult comparator result xK xV right;
         if (newRight === right) tree else rebalance left k v newRight
       } else if (xV === v) tree

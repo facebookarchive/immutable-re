@@ -37,13 +37,13 @@ let module BitmapTrieMap = {
           })
         else (switch (f None) {
           | Some value => switch hashStrategy {
-              | Comparator _ comparator =>
+              | HashStrategy.Comparator _ comparator =>
                   let map = AVLTreeMap.Empty
                     |> AVLTreeMap.put comparator entryKey entryValue
                     |> AVLTreeMap.put comparator key value;
                   alterResult := Added;
                   ComparatorCollision entryHash map;
-              | Equality _ equals =>
+              | HashStrategy.Equality _ equals =>
                   /* FIXME: Could improve this to avoid collisions. */
                   let map = EqualityMap.empty
                     |> EqualityMap.put equals entryKey entryValue
@@ -91,17 +91,17 @@ let module BitmapTrieMap = {
         let newEntryMap = entryMap |> AVLTreeMap.alter (HashStrategy.comparator hashStrategy) collisionResult key f;
 
         switch !collisionResult {
-          | Added =>
+          | AVLTreeMap.Added =>
               alterResult := Added;
               ComparatorCollision entryHash newEntryMap;
-          | NoChange =>
+          | AVLTreeMap.NoChange =>
               alterResult := NoChange;
               map
-          | Replace =>
+          | AVLTreeMap.Replace =>
               alterResult := Replace;
               ComparatorCollision entryHash newEntryMap;
-          | Removed => switch newEntryMap {
-              | Leaf k v =>
+          | AVLTreeMap.Removed => switch newEntryMap {
+              | AVLTreeMap.Leaf k v =>
                   alterResult := Removed;
                   Entry entryHash k v;
               | _ =>
@@ -339,21 +339,21 @@ type t 'k 'v = {
 
 let empty: (t 'k 'v) = {
   count: 0,
-  root: Empty,
+  root: BitmapTrieMap.Empty,
   strategy: HashStrategy.structuralCompare,
 };
 
 let emptyWith (strategy: HashStrategy.t 'k): (t 'k 'v) => {
   count: 0,
-  root: Empty,
+  root: BitmapTrieMap.Empty,
   strategy,
 };
 
 let updateLevelNodePersistent
     (index: int)
     (childNode: BitmapTrieMap.t 'k 'v)
-    ((Level bitmap nodes _): (BitmapTrieMap.t 'k 'v)): (BitmapTrieMap.t 'k 'v) =>
-  Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
+    (BitmapTrieMap.Level bitmap nodes _: (BitmapTrieMap.t 'k 'v)): (BitmapTrieMap.t 'k 'v) =>
+  BitmapTrieMap.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
 
 let alter
     (key: 'k)
@@ -502,11 +502,11 @@ let module TransientHashMap = {
       (owner: Transient.Owner.t)
       (index: int)
       (childNode: BitmapTrieMap.t 'k 'v)
-      ((Level bitmap nodes nodeOwner) as node: (BitmapTrieMap.t 'k 'v)): (BitmapTrieMap.t 'k 'v) => switch nodeOwner {
+      (BitmapTrieMap.Level bitmap nodes nodeOwner as node: (BitmapTrieMap.t 'k 'v)): (BitmapTrieMap.t 'k 'v) => switch nodeOwner {
     | Some nodeOwner when nodeOwner === owner =>
         nodes.(index) = childNode;
         node
-    | _ => Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
+    | _ => BitmapTrieMap.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
   };
 
   let alter

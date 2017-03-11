@@ -142,7 +142,7 @@ let buffer = Stream.buffer;
 let rec compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): Ordering.t =>
   this === that ? Ordering.equal : switch (this (), that ()) {
     | (Next thisValue thisNext, Next thatValue thatNext) => switch (valueCompare thisValue thatValue) {
-        | Equal => compareWith valueCompare thisNext thatNext
+        | Ordering.Equal => compareWith valueCompare thisNext thatNext
         | x => x
       }
     | (Completed, Completed) => Ordering.equal

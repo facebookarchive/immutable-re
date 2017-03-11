@@ -42,14 +42,14 @@ let module BitmapTrieSet = {
         let bitmap = BitmapTrie.bitPos entryHash depth;
         Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
     | Entry entryHash entryValue when hash == entryHash =>
-        if ((HashStrategy.comparator hashStrategy value entryValue) === Equal) set
+        if ((HashStrategy.comparator hashStrategy value entryValue) === Ordering.equal) set
         else (switch hashStrategy {
-          | Comparator _ _ =>
+          | HashStrategy.Comparator _ _ =>
               let set = AVLTreeSet.Empty
                 |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) entryValue
                 |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) value;
               ComparatorCollision entryHash set;
-          | Equality _ _ =>
+          | HashStrategy.Equality _ _ =>
             let set = EqualitySet.empty
               |> EqualitySet.add (HashStrategy.equals hashStrategy) entryValue
               |> EqualitySet.add (HashStrategy.equals hashStrategy) value;
@@ -78,7 +78,7 @@ let module BitmapTrieSet = {
     | ComparatorCollision entryHash entrySet =>
         (hash == entryHash) && (AVLTreeSet.contains (HashStrategy.comparator hashStrategy) value entrySet);
     | Entry entryHash entryValue =>
-        (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Equal);
+        (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Ordering.equal);
     | Empty => false;
   };
 
@@ -118,10 +118,10 @@ let module BitmapTrieSet = {
         let newEntrySet = entrySet |> AVLTreeSet.remove (HashStrategy.comparator hashStrategy) value;
 
         if (newEntrySet === entrySet) set else (switch newEntrySet {
-          | Leaf entryValue => (Entry entryHash entryValue)
+          | AVLTreeSet.Leaf entryValue => (Entry entryHash entryValue)
           | _ => (ComparatorCollision entryHash newEntrySet)
         });
-    | Entry entryHash entryValue when (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Equal) =>
+    | Entry entryHash entryValue when (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Ordering.equal) =>
         Empty;
     | _ => set
   };
@@ -144,8 +144,8 @@ type t 'a = {
 let updateLevelNodePersistent
     (index: int)
     (childNode: BitmapTrieSet.t 'a)
-    ((Level bitmap nodes _): (BitmapTrieSet.t 'a)): (BitmapTrieSet.t 'a) =>
-  Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
+    (BitmapTrieSet.Level bitmap nodes _: (BitmapTrieSet.t 'a)): (BitmapTrieSet.t 'a) =>
+  BitmapTrieSet.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
 
 let add (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
   let hash = HashStrategy.hash strategy value;
@@ -163,13 +163,13 @@ let count ({ count }: t 'a): int => count;
 
 let empty: (t 'a) = {
   count: 0,
-  root: Empty,
+  root: BitmapTrieSet.Empty,
   strategy: HashStrategy.structuralCompare,
 };
 
 let emptyWith (strategy: HashStrategy.t 'a): (t 'a) => {
   count: 0,
-  root: Empty,
+  root: BitmapTrieSet.Empty,
   strategy,
 };
 
@@ -244,11 +244,11 @@ let module TransientHashSet = {
       (owner: Transient.Owner.t)
       (index: int)
       (childNode: BitmapTrieSet.t 'a)
-      ((Level bitmap nodes nodeOwner) as node: (BitmapTrieSet.t 'a)): (BitmapTrieSet.t 'a) => switch nodeOwner {
+      (BitmapTrieSet.Level bitmap nodes nodeOwner as node: (BitmapTrieSet.t 'a)): (BitmapTrieSet.t 'a) => switch nodeOwner {
     | Some nodeOwner when nodeOwner === owner =>
         nodes.(index) = childNode;
         node
-    | _ => Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
+    | _ => BitmapTrieSet.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
   };
 
   let add (value: 'a) (transient: t 'a): (t 'a) =>
