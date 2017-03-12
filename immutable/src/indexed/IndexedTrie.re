@@ -70,12 +70,12 @@ let rec tryFind (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
       values |> CopyOnWriteArray.tryFind f
   | Level _ _ _ nodes =>
       let nodesCount = CopyOnWriteArray.count nodes;
-      let rec loop index => index < nodesCount
-        ? switch (tryFind f nodes.(index)) {
-            | Some _ as result => result
-            | _ => loop (index + 1)
-          }
-        : None;
+      let rec loop index =>
+        if (index < nodesCount) (switch (tryFind f nodes.(index)) {
+          | Some _ as result => result
+          | _ => loop (index + 1)
+        })
+        else None;
       loop 0
 };
 
@@ -244,12 +244,11 @@ let rec removeFirstLeafUsingMutator
       let triesWidth = CopyOnWriteArray.count tries;
       let firstChild = tries |> CopyOnWriteArray.first;
 
-      triesWidth > 2 ? {
+      if (triesWidth > 2) {
         let newLevelCount = !levelCount - (count firstChild);
         (firstChild, Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeFirst tries))
-      } : {
-        (firstChild, CopyOnWriteArray.last tries)
-      };
+      }
+      else (firstChild, CopyOnWriteArray.last tries);
   | _ => failwith "invalid state"
 };
 
@@ -279,12 +278,11 @@ let rec removeLastLeafUsingMutator
       let triesWidth = CopyOnWriteArray.count tries;
       let lastChild = tries |> CopyOnWriteArray.last;
 
-      triesWidth > 2 ? {
+      if (triesWidth > 2) {
         let newLevelCount = !levelCount - (count lastChild);
         (Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries), lastChild)
-      } : {
-        (CopyOnWriteArray.first tries, lastChild)
-      };
+      }
+      else (CopyOnWriteArray.first tries, lastChild);
   | _ => failwith "invalid state"
 };
 
@@ -324,9 +322,8 @@ let computeLevelIndexUsingCountSearch
     let childNode = tries.(childIndex);
     let childCount = count childNode;
 
-    index < childCount
-      ? f trie index childIndex
-      : loop (index - childCount) (childIndex + 1);
+    if (index < childCount) (f trie index childIndex)
+    else loop (index - childCount) (childIndex + 1);
   };
 
   loop index 0;
@@ -516,9 +513,9 @@ let updateUsingMutatorImpl
       trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
         let childNode = tries |> CopyOnWriteArray.get childIndex;
         let newChildNode = childNode |> updateUsingMutator updateLevel updateLeaf owner index value;
-        childNode === newChildNode
-          ? trie
-          : trie |> updateLevel owner !count childIndex newChildNode;
+
+        if (childNode === newChildNode) trie
+        else (updateLevel owner !count childIndex newChildNode trie);
       });
 };
 
@@ -572,24 +569,28 @@ let rec updateAllUsingMutator
   | Empty => Empty
   | Leaf _ values =>
       let valuesCount = CopyOnWriteArray.count values;
-      let rec loop index trie => index < valuesCount ? {
-        let newValue = f values.(index);
-        let newTrie = trie |> updateLeaf owner index newValue;
-        loop (index + 1) newTrie;
-      } : trie;
+      let rec loop index trie =>
+        if (index < valuesCount) {
+          let newValue = f values.(index);
+          let newTrie = trie |> updateLeaf owner index newValue;
+          loop (index + 1) newTrie;
+        }
+        else trie;
 
       loop 0 trie;
   | Level _ count _ tries =>
       let triesCount = CopyOnWriteArray.count tries;
 
-      let rec loop index trie => index < triesCount ? {
-        let childNode = tries.(index);
-        let newChildNode = childNode |> updateAllUsingMutator updateLevel updateLeaf owner f;
-        let newTrie = childNode === newChildNode
-          ? trie
-          : trie |> updateLevel owner !count index newChildNode;
-        loop (index + 1) newTrie;
-      }: trie;
+      let rec loop index trie =>
+        if (index < triesCount) {
+          let childNode = tries.(index);
+          let newChildNode = childNode |> updateAllUsingMutator updateLevel updateLeaf owner f;
+          let newTrie =
+            if (childNode === newChildNode) trie
+            else (updateLevel owner !count index newChildNode trie);
+          loop (index + 1) newTrie;
+        }
+        else trie;
 
       loop 0 trie;
 };
@@ -621,9 +622,9 @@ let updateWithUsingMutatorImpl
       trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
         let childNode = tries |> CopyOnWriteArray.get childIndex;
         let newChildNode = childNode |> updateWithUsingMutator updateLevel updateLeaf owner index f;
-        childNode === newChildNode
-          ? trie
-          : trie |> updateLevel owner !count childIndex newChildNode;
+
+        if (childNode === newChildNode) trie
+        else (updateLevel owner !count childIndex newChildNode trie);
       });
 };
 
