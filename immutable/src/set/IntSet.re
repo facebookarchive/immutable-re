@@ -1,13 +1,15 @@
 /* FIXME: I'm fairly certain the BitmapTrie functions can be changed to properly sort IntSet */
 let module BitmapTrieIntSet = {
   type t =
-    | Level int32 (array t) (option Transient.Owner.t)
+    | Level int32 (array t) Transient.Owner.t
     | Entry int
     | Empty;
 
+  type updateLevelNode = Transient.Owner.t => int => t => t => t;
+
   let rec add
-      (updateLevelNode: int => t => t => t)
-      (owner: option Transient.Owner.t)
+      (updateLevelNode: updateLevelNode)
+      (owner: Transient.Owner.t)
       (depth: int)
       (value: int)
       (set: t): t => switch set {
@@ -20,7 +22,7 @@ let module BitmapTrieIntSet = {
           let newChildNode = childNode |> add updateLevelNode owner (depth + 1) value;
 
           if (childNode === newChildNode) set
-          else (updateLevelNode index newChildNode set)
+          else (updateLevelNode owner index newChildNode set)
         } else {
           let entry = Entry value;
           let nodes = nodes |> CopyOnWriteArray.insertAt index entry;
@@ -50,8 +52,8 @@ let module BitmapTrieIntSet = {
   };
 
   let rec remove
-      (updateLevelNode: int => t => t => t)
-      (owner: option Transient.Owner.t)
+      (updateLevelNode: updateLevelNode)
+      (owner: Transient.Owner.t)
       (depth: int)
       (value: int)
       (set: t): t => switch set {
@@ -69,7 +71,7 @@ let module BitmapTrieIntSet = {
 
             if (CopyOnWriteArray.count nodes > 0) (Level (Int32.logxor bitmap bit) nodes owner)
             else Empty;
-          } else (updateLevelNode index newChildNode set);
+          } else (updateLevelNode owner index newChildNode set);
         } else set;
     | Entry entryValue when value == entryValue =>
         Empty;
@@ -81,6 +83,24 @@ let module BitmapTrieIntSet = {
     | Entry entryValue => Seq.return entryValue;
     | Empty => Seq.empty;
   };
+
+  let updateLevelNodePersistent
+      (_: Transient.Owner.t)
+      (index: int)
+      (childNode: t)
+      (Level bitmap nodes _: t): t =>
+    Level bitmap (CopyOnWriteArray.update index childNode nodes) Transient.Owner.none;
+
+  let updateLevelNodeTransient
+      (owner: Transient.Owner.t)
+      (index: int)
+      (childNode: t)
+      (Level bitmap nodes nodeOwner as node: t): t =>
+    if (nodeOwner === owner) {
+      nodes.(index) = childNode;
+      node
+    }
+    else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner;
 };
 
 type t = {
@@ -88,14 +108,13 @@ type t = {
   root: BitmapTrieIntSet.t,
 };
 
-let updateLevelNodePersistent
-    (index: int)
-    (childNode: BitmapTrieIntSet.t)
-    (BitmapTrieIntSet.Level bitmap nodes _: BitmapTrieIntSet.t): BitmapTrieIntSet.t =>
-  BitmapTrieIntSet.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
-
 let add (value: int) ({ count, root } as set: t): t => {
-  let newRoot = root |> BitmapTrieIntSet.add updateLevelNodePersistent None 0 value;
+  let newRoot = root |> BitmapTrieIntSet.add
+    BitmapTrieIntSet.updateLevelNodePersistent
+    Transient.Owner.none
+    0
+    value;
+
   if (newRoot === root) set
   else { count: count + 1, root: newRoot };
 };
@@ -112,7 +131,12 @@ let isEmpty ({ count }: t): bool => count == 0;
 let isNotEmpty ({ count }: t): bool => count != 0;
 
 let remove (value: int) ({ count, root } as set: t): t => {
-  let newRoot = root |> BitmapTrieIntSet.remove updateLevelNodePersistent None 0 value;
+  let newRoot = root |> BitmapTrieIntSet.remove
+    BitmapTrieIntSet.updateLevelNodePersistent
+    Transient.Owner.none
+    0
+    value;
+
   if (newRoot === root) set
   else { count: count - 1, root: newRoot };
 };
@@ -174,22 +198,16 @@ let module TransientIntSet = {
   let mutate (set: intSet): t =>
     Transient.create set;
 
-  let updateLevelNodeTransient
-      (owner: Transient.Owner.t)
-      (index: int)
-      (childNode: BitmapTrieIntSet.t)
-      (BitmapTrieIntSet.Level bitmap nodes nodeOwner as node: BitmapTrieIntSet.t): BitmapTrieIntSet.t => switch nodeOwner {
-    | Some nodeOwner when nodeOwner === owner =>
-        nodes.(index) = childNode;
-        node
-    | _ => BitmapTrieIntSet.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
-  };
-
   let add (value: int) (transient: t): t =>
     transient |> Transient.update (fun owner ({ count, root } as set) => {
       if (set |> contains value) set
       else {
-        let newRoot = root |> BitmapTrieIntSet.add (updateLevelNodeTransient owner) (Some owner) 0 value;
+        let newRoot = root |> BitmapTrieIntSet.add
+          BitmapTrieIntSet.updateLevelNodeTransient
+          owner
+          0
+          value;
+
         { count: count + 1, root: newRoot };
       }
     });
@@ -201,8 +219,12 @@ let module TransientIntSet = {
       let newRoot = seq |> Seq.reduce (fun acc value => {
         if (acc |> BitmapTrieIntSet.contains 0 value) acc
         else  {
-          let newRoot = acc
-            |> BitmapTrieIntSet.add (updateLevelNodeTransient owner) (Some owner) 0 value;
+          let newRoot = acc |> BitmapTrieIntSet.add
+            BitmapTrieIntSet.updateLevelNodeTransient
+            owner
+            0
+            value;
+
           newCount := !newCount + 1;
           newRoot
         }
@@ -234,7 +256,12 @@ let module TransientIntSet = {
 
   let remove (value: int) (transient: t): t =>
     transient |> Transient.update (fun owner ({ count, root } as set) => {
-      let newRoot = root |> BitmapTrieIntSet.remove  (updateLevelNodeTransient owner) None 0 value;
+      let newRoot = root |> BitmapTrieIntSet.remove
+        BitmapTrieIntSet.updateLevelNodeTransient
+        owner
+        0
+        value;
+
       if (newRoot === root) set
       else { count: count - 1, root: newRoot };
     });

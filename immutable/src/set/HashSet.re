@@ -1,15 +1,17 @@
 let module BitmapTrieSet = {
   type t 'a =
-    | Level int32 (array (t 'a)) (option Transient.Owner.t)
+    | Level int32 (array (t 'a)) Transient.Owner.t
     | ComparatorCollision int (AVLTreeSet.t 'a)
     | EqualitySetCollision int (EqualitySet.t 'a)
     | Entry int 'a
     | Empty;
 
+  type updateLevelNode 'a = Transient.Owner.t => int => (t 'a) => (t 'a) => (t 'a);
+
   let rec add
       (hashStrategy: HashStrategy.t 'a)
-      (updateLevelNode: int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
+      (updateLevelNode: updateLevelNode 'a)
+      (owner: Transient.Owner.t)
       (depth: int)
       (hash: int)
       (value: 'a)
@@ -23,7 +25,7 @@ let module BitmapTrieSet = {
           let newChildNode = childNode |> add hashStrategy updateLevelNode owner (depth + 1) hash value;
 
           if (childNode === newChildNode) set
-          else (updateLevelNode index newChildNode set)
+          else (updateLevelNode owner index newChildNode set)
         } else {
           let entry = Entry hash value;
           let nodes = nodes |> CopyOnWriteArray.insertAt index entry;
@@ -84,8 +86,8 @@ let module BitmapTrieSet = {
 
   let rec remove
       (hashStrategy: HashStrategy.t 'a)
-      (updateLevelNode: int => (t 'a) => (t 'a) => (t 'a))
-      (owner: option Transient.Owner.t)
+      (updateLevelNode: updateLevelNode 'a)
+      (owner: Transient.Owner.t)
       (depth: int)
       (hash: int)
       (value: 'a)
@@ -104,7 +106,7 @@ let module BitmapTrieSet = {
 
             if (CopyOnWriteArray.count nodes > 0) (Level (Int32.logxor bitmap bit) nodes owner)
             else Empty;
-          } else (updateLevelNode index newChildNode set);
+          } else (updateLevelNode owner index newChildNode set);
         } else set;
     | EqualitySetCollision entryHash entrySet when hash == entryHash =>
         let newEntrySet = entrySet |> EqualitySet.remove (HashStrategy.equals hashStrategy) value;
@@ -133,6 +135,24 @@ let module BitmapTrieSet = {
     | Entry _ entryValue => Seq.return entryValue;
     | Empty => Seq.empty;
   };
+
+  let updateLevelNodePersistent
+      (_: Transient.Owner.t)
+      (index: int)
+      (childNode: t 'a)
+      (Level bitmap nodes _: (t 'a)): (t 'a) =>
+    Level bitmap (CopyOnWriteArray.update index childNode nodes) Transient.Owner.none;
+
+  let updateLevelNodeTransient
+      (owner: Transient.Owner.t)
+      (index: int)
+      (childNode: t 'a)
+      (Level bitmap nodes nodeOwner as node: (t 'a)): (t 'a) =>
+    if (nodeOwner === owner) {
+      nodes.(index) = childNode;
+      node
+    }
+    else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner
 };
 
 type t 'a = {
@@ -141,15 +161,16 @@ type t 'a = {
   strategy: HashStrategy.t 'a,
 };
 
-let updateLevelNodePersistent
-    (index: int)
-    (childNode: BitmapTrieSet.t 'a)
-    (BitmapTrieSet.Level bitmap nodes _: (BitmapTrieSet.t 'a)): (BitmapTrieSet.t 'a) =>
-  BitmapTrieSet.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) None;
-
 let add (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
   let hash = HashStrategy.hash strategy value;
-  let newRoot = root |> BitmapTrieSet.add strategy updateLevelNodePersistent None 0 hash value;
+  let newRoot = root |> BitmapTrieSet.add
+    strategy
+    BitmapTrieSet.updateLevelNodePersistent
+    Transient.Owner.none
+    0
+    hash
+    value;
+
   if (newRoot === root) set
   else { count: count + 1, root: newRoot, strategy };
 };
@@ -179,7 +200,14 @@ let isNotEmpty ({ count }: t 'a): bool => count != 0;
 
 let remove (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
   let hash = HashStrategy.hash strategy value;
-  let newRoot = root |> BitmapTrieSet.remove strategy updateLevelNodePersistent None 0 hash value;
+  let newRoot = root |> BitmapTrieSet.remove
+    strategy
+    BitmapTrieSet.updateLevelNodePersistent
+    Transient.Owner.none
+    0
+    hash
+    value;
+
   if (newRoot === root) set
   else { count: count - 1, root: newRoot, strategy };
 };
@@ -240,23 +268,21 @@ let module TransientHashSet = {
   let mutate (set: hashSet 'a): (t 'a) =>
     Transient.create set;
 
-  let updateLevelNodeTransient
-      (owner: Transient.Owner.t)
-      (index: int)
-      (childNode: BitmapTrieSet.t 'a)
-      (BitmapTrieSet.Level bitmap nodes nodeOwner as node: (BitmapTrieSet.t 'a)): (BitmapTrieSet.t 'a) => switch nodeOwner {
-    | Some nodeOwner when nodeOwner === owner =>
-        nodes.(index) = childNode;
-        node
-    | _ => BitmapTrieSet.Level bitmap (nodes |> CopyOnWriteArray.update index childNode) (Some owner)
-  };
+
 
   let add (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
       let hash = HashStrategy.hash strategy value;
       if (set |> contains value) set
       else {
-        let newRoot = root |> BitmapTrieSet.add strategy (updateLevelNodeTransient owner) (Some owner) 0 hash value;
+        let newRoot = root |> BitmapTrieSet.add
+          strategy
+          BitmapTrieSet.updateLevelNodeTransient
+          owner
+          0
+          hash
+          value;
+
         { count: count + 1, root: newRoot, strategy };
       }
     });
@@ -270,8 +296,14 @@ let module TransientHashSet = {
 
         if (acc |> BitmapTrieSet.contains strategy 0 hash value) acc
         else  {
-          let newRoot = acc
-            |> BitmapTrieSet.add strategy (updateLevelNodeTransient owner) (Some owner) 0 hash value;
+          let newRoot = acc |> BitmapTrieSet.add
+            strategy
+            BitmapTrieSet.updateLevelNodeTransient
+            owner
+            0
+            hash
+            value;
+
           newCount := !newCount + 1;
           newRoot
         }
@@ -307,7 +339,14 @@ let module TransientHashSet = {
   let remove (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
       let hash = HashStrategy.hash strategy value;
-      let newRoot = root |> BitmapTrieSet.remove strategy (updateLevelNodeTransient owner) None 0 hash value;
+      let newRoot = root |> BitmapTrieSet.remove
+        strategy
+        BitmapTrieSet.updateLevelNodeTransient
+        owner
+        0
+        hash
+        value;
+        
       if (newRoot === root) set
       else { count: count - 1, root: newRoot, strategy };
     });
