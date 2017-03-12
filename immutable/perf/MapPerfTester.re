@@ -81,7 +81,10 @@ let test (n: int) (count: int): Test.t => {
         (fun () => CamlIntMap.empty)
         CamlIntMap.add
         CamlIntMap.remove
-        (fun k map => (CamlIntMap.mem k map) ? Some (CamlIntMap.find k map) : None)
+        (fun k map =>
+          if (CamlIntMap.mem k map) (Some (CamlIntMap.find k map))
+          else None
+        )
         count
     ),
 

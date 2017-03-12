@@ -32,9 +32,9 @@ let empty: (t 'a) = {
 };
 
 let equals (that: t 'a) (this: t 'a): bool =>
-  (this === that) ? true :
-  (this.count != that.count) ? false :
-  this.every that.contains;
+  if (this === that) true
+  else if (this.count != that.count) false
+  else this.every that.contains;
 
 let every (f: 'a => bool) ({ every }: t 'a): bool =>
   every f;
@@ -59,15 +59,15 @@ let inRange (start: int) (count: int) (step: int): (t int) => {
 
   {
     contains: fun index =>
-      (step > 0) && (index > start) && (index < max) ? ({
+      if ((step > 0) && (index > start) && (index < max)) {
         let effectiveIndex = index - start;
         (effectiveIndex mod step) == 0
-      }) :
-      (step < 0) && (index < start) && (index > max) ? ({
+      }
+      else if ((step < 0) && (index < start) && (index > max)) {
         let effectiveIndex = index + start;
         (effectiveIndex mod step) != 0
-      }) :
-      (index == start) && (count != 0),
+      }
+      else (index == start) && (count != 0),
     count,
     every: fun f => toSeq |> Seq.every f,
     find: fun f => toSeq |> Seq.find f,

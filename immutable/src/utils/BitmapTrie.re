@@ -22,7 +22,7 @@ let bitCountTable = {
 let countBits (x: int32): int => {
   let intValue = Int32.to_int x;
   let intBits = bitCountTable.(intValue land 65535) + bitCountTable.((intValue asr 16) land 65535);
-  intBits + (x < 0l ? 1 : 0);
+  intBits + (if (x < 0l) 1 else 0);
 };
 /*
 let countBits (x: int32): int => {
@@ -35,7 +35,7 @@ let countBits (x: int32): int => {
     let x = x + (x asr 16);
     x land 0x7f;
   };
-  intBits + (x < 0l ? 1 : 0);
+  intBits + (if (x < 0l) 1 else 0);
 };*/
 
 let shift = 5;

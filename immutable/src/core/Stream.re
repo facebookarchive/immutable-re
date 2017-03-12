@@ -59,7 +59,8 @@ module type Stream = {
 };
 
 let rec listTake (count: int) (list: list 'a): (list 'a) =>
-  count == 0 ? [] : switch list {
+  if (count == 0) []
+  else switch list {
     | [head, ...tail] => [head, ...(tail |> listTake (count - 1))]
     | _ => failwith "list too short"
   };
@@ -70,15 +71,15 @@ let module Make = fun (X: StreamBase) => {
   let buffer
       (count: int)
       (skip: int)
-      (stream: stream 'a): (stream (list 'a)) => count <= 0 || skip <= 0
-    ? failwith "out of range"
-    : stream |> X.scan (
+      (stream: stream 'a): (stream (list 'a)) =>
+    if (count <= 0 || skip <= 0) (failwith "out of range")
+    else stream |> X.scan (
         fun (lst, counted, skipped) next =>
-          counted < count && skipped < skip ? ([next, ...lst], counted + 1, skipped + 1) :
-          skipped < skip ? (lst, counted, skipped + 1) :
-          counted < count ? ([next, ...lst], counted + 1, skipped) :
-          skip < count ? ([next, ...(listTake (count - skip) lst)], counted, skipped) :
-          ([next], 1, 1)
+          if (counted < count && skipped < skip) ([next, ...lst], counted + 1, skipped + 1)
+          else if (skipped < skip) (lst, counted, skipped + 1)
+          else if (counted < count) ([next, ...lst], counted + 1, skipped)
+          else if (skip < count) ([next, ...(listTake (count - skip) lst)], counted, skipped)
+          else ([next], 1, 1)
         ) ([], 0, 0)
       |> X.filter (fun (_, counted, skipped) => counted == count && skipped == skip)
       |> X.map (fun (lst, _, _) => lst);
@@ -119,7 +120,10 @@ let module Make = fun (X: StreamBase) => {
 
   let first (stream: stream 'a): (stream 'a) => stream
     |> X.scan
-        (fun acc next => Option.isEmpty acc ? Some next : None)
+        (fun acc next =>
+          if (Option.isEmpty acc) (Some next)
+          else None
+        )
         None
     |> X.takeWhile Option.isNotEmpty
     |> X.map Option.first;
@@ -148,21 +152,24 @@ let module Make = fun (X: StreamBase) => {
   let scan = X.scan;
 
   let skip (count: int) (stream: stream 'a): (stream 'a) =>
-    count > 0 ? stream
-      |> X.scan (fun (count, _) next => count > 0
-          ? (count - 1, None)
-          : (count, Some next)
+    if (count > 0) (stream
+      |> X.scan (fun (count, _) next =>
+          if (count > 0)  (count - 1, None)
+          else (count, Some next)
         ) (count, None)
       |> X.filter (snd >> Option.isNotEmpty)
-      |> X.map (snd >> Option.first) :
-    count == 0 ? stream :
-    failwith "count must be greater or equal to 0";
+      |> X.map (snd >> Option.first)
+    )
+    else if (count == 0) stream
+    else failwith "count must be greater or equal to 0";
 
   let skipWhile (f: 'a => bool) (stream: stream 'a): (stream 'a) => stream
     |> X.scan
       (fun acc next => switch acc {
         | Some _ => Some next
-        | _ => f next ? None : Some next
+        | _ =>
+          if (f next) None
+          else Some next
       }) None
     |> X.filter Option.isNotEmpty
     |> X.map Option.first;
@@ -174,15 +181,16 @@ let module Make = fun (X: StreamBase) => {
     concat [return value, stream];
 
   let take (count: int) (stream: stream 'a): (stream 'a) =>
-    count > 0 ? stream
-      |> X.scan (fun (count, _) next => count > 0
-          ? (count - 1, Some next)
-          : (count, None)
-          ) (count, None)
+    if (count > 0) (stream
+      |> X.scan (fun (count, _) next =>
+          if (count > 0) (count - 1, Some next)
+          else (count, None)
+        ) (count, None)
       |> X.takeWhile (snd >> Option.isNotEmpty)
-      |> X.map (snd >> Option.first) :
-    count == 0 ? X.empty :
-    failwith "count must be greater or equal to 0";
+      |> X.map (snd >> Option.first)
+    )
+    else if (count == 0) X.empty
+    else failwith "count must be greater or equal to 0";
 
   let takeWhile = X.takeWhile;
 

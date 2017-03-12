@@ -19,9 +19,9 @@ let create (value: 'a): (t 'a) => ({
   value: value,
 });
 
-let ensureEditable ({ editable } as transient: t 'a): (t 'a) => (not editable)
-  ? { failwith "Transient has already been persisted" }
-  : transient;
+let ensureEditable ({ editable } as transient: t 'a): (t 'a) =>
+  if (not editable) { failwith "Transient has already been persisted" }
+  else transient;
 
 let get (transient: t 'a): 'a => {
   let { value } = ensureEditable transient;

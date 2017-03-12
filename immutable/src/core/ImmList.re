@@ -7,7 +7,8 @@ let rec compareWith
     (valueCompare: Comparator.t 'a)
     (this: list 'a)
     (that: list 'a): Ordering.t =>
-  this === that ? Ordering.equal : switch (this, that) {
+  if (this === that) Ordering.equal
+  else switch (this, that) {
     | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => switch (valueCompare thisHead thatHead) {
         | Ordering.Equal => compareWith valueCompare thisTail thatTail
         | x => x
@@ -43,9 +44,9 @@ let count (list: list 'a): int => countImpl list 0;
 let empty: (list 'a) = [];
 
 let rec equalsWith (valueEquals: Equality.t 'a) (this: list 'a) (that: list 'a) => switch (this, that) {
-  | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => valueEquals thisHead thatHead
-    ? equalsWith valueEquals thisTail thatTail
-    : false;
+  | ([thisHead, ...thisTail], [thatHead, ...thatTail]) =>
+      if (valueEquals thisHead thatHead) (equalsWith valueEquals thisTail thatTail)
+      else false
   | ([], []) => true
   | _ => false
 };
@@ -54,7 +55,9 @@ let equals (this: list 'a) (that: list 'a) =>
   equalsWith Equality.structural this that;
 
 let rec every (f: 'a => bool) (list: list 'a): bool => switch list {
-  | [head, ...tail] => f head ? every f tail : false
+  | [head, ...tail] =>
+      if (f head) (every f tail)
+      else false
   | [] => true
 };
 
@@ -72,7 +75,9 @@ let isNotEmpty (list: list 'a): bool => switch list {
 };
 
 let rec find (f: 'a => bool) (list: list 'a): 'a => switch list {
-  | [head, ...tail] => f head ? head : find f tail
+  | [head, ...tail] =>
+      if (f head) head
+      else find f tail
   | [] => failwith "not found"
 };
 
@@ -90,7 +95,9 @@ let mapReverse (f: 'a => 'b) (list: list 'a): (list 'b) =>
   mapReverseImpl f list [];
 
 let rec none (f: 'a => bool) (list: list 'a): bool => switch list {
-  | [head, ...tail] => f head ? false : none f tail
+  | [head, ...tail] =>
+      if (f head) false
+      else none f tail
   | [] => true
 };
 
@@ -129,7 +136,9 @@ let rec some (f: 'a => bool) (list: list 'a): bool => switch list {
 };
 
 let rec tryFind (f: 'a => bool) (list: list 'a): (option 'a) => switch list {
-  | [head, ...tail] => f head ? Some head : tryFind f tail
+  | [head, ...tail] =>
+      if (f head) (Some head)
+      else tryFind f tail
   | [] => None
 };
 

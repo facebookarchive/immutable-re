@@ -42,9 +42,9 @@ let module Stream = Stream.Make {
 
   let filter (f: 'a => bool) (seq: t 'a): (t 'a) => {
     let rec filterIter (iter: iterator 'a): iterator 'b => switch iter {
-      | Next value next => f value
-         ? Next value (next >> filterIter)
-         : next () |> filterIter
+      | Next value next =>
+          if (f value) (Next value (next >> filterIter))
+          else next () |> filterIter
       | Completed => Completed
     };
 
@@ -111,7 +111,8 @@ let module Stream = Stream.Make {
 
   let rec takeWhile (f: 'a => bool) (seq: t 'a): (t 'a) => fun () => switch (seq ()) {
     | Next value next =>
-        (f value) ? Next value (takeWhile f next) : Completed;
+        if (f value) (Next value (takeWhile f next))
+        else Completed;
     | Completed => Completed
   };
 
@@ -140,7 +141,8 @@ let module Stream = Stream.Make {
 let buffer = Stream.buffer;
 
 let rec compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): Ordering.t =>
-  this === that ? Ordering.equal : switch (this (), that ()) {
+  if (this === that) Ordering.equal
+  else switch (this (), that ()) {
     | (Next thisValue thisNext, Next thatValue thatNext) => switch (valueCompare thisValue thatValue) {
         | Ordering.Equal => compareWith valueCompare thisNext thatNext
         | x => x
@@ -181,7 +183,9 @@ let mapWithIndex (f: int => 'a => 'b) (seq: t 'a): (t 'b) => seq
   |> Stream.map (fun (i, v) => f i (Option.first v));
 
 let rec every (f: 'a => bool) (seq: t 'a): bool => switch ( seq () ) {
-  | Next value next => f value ? every f next : false
+  | Next value next =>
+      if (f value) (every f next)
+      else false
   | Completed => true
 };
 
@@ -230,7 +234,8 @@ let map = Stream.map;
 
 let rec none (f: 'a => bool) (seq: t 'a): bool => switch ( seq () ) {
   | Next value next => try (
-      f value ? false : none f next
+      if (f value) false
+      else none f next
     ){ | exn => raise exn; }
   | Completed => true
 };
@@ -273,10 +278,12 @@ let tryFindIndex (predicate: 'a => bool) (seq: t 'a): (option int) => seq
   >>| fst;
 
 let get (index: int) (seq: t 'a): 'a =>
-  index < 0 ? failwith "index < 0" : seq |> Stream.skip index |> first;
+  if (index < 0) (failwith "index < 0")
+  else seq |> Stream.skip index |> first;
 
 let tryGet (index: int) (seq: t 'a): (option 'a) =>
-  index < 0 ? None : seq |> Stream.skip index |> tryFirst;
+  if (index < 0) None
+  else seq |> Stream.skip index |> tryFirst;
 
 let tryLast (seq: t 'a) => seq |> Stream.last |> tryFirst;
 

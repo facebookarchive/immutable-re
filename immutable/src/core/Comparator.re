@@ -3,9 +3,9 @@ type t 'a = 'a => 'a => Ordering.t;
 let make (compare: 'a => 'a => int) (that: 'a) (this: 'a): Ordering.t => {
   let cmp = compare that this;
 
-  cmp > 0 ? Ordering.greaterThan :
-  cmp < 0 ? Ordering.lessThan :
-  Equal;
+  if (cmp > 0) Ordering.greaterThan
+  else if (cmp < 0) Ordering.lessThan
+  else Ordering.equal;
 };
 
 let bytes = make Bytes.compare;

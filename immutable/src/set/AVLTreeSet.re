@@ -15,7 +15,8 @@ let rec validate (tree: t 'a): (t 'a) => switch tree {
   | Node _ left _ right =>
       let lh = height left;
       let rh = height right;
-      (lh - rh) > 2 || (lh - rh) < -2 ? failwith "invalid" : {
+      if ((lh - rh) > 2 || (lh - rh) < -2) (failwith "invalid")
+      else {
         validate left |> ignore;
         validate right |> ignore;
         tree

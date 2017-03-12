@@ -53,9 +53,9 @@ let empty: (t 'k 'v) = {
 };
 
 let equalsWith (valueEquality: Equality.t 'v) (that: t 'k 'v) (this: t 'k 'v): bool =>
-  (this === that) ? true :
-  (this.count != that.count) ? false :
-  this.every (
+  if (this === that) true
+  else if (this.count != that.count) false
+  else this.every (
     fun key thisValue => that.tryGet key
     >>| (fun thatValue => thisValue |> valueEquality thatValue)
     |? false
@@ -131,7 +131,9 @@ let none (f: 'k => 'v => bool) ({ none }: t 'k 'v): bool =>
   none f;
 
 let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
-  containsWith: fun equals k v => set |> ImmSet.contains k ? equals k v : false,
+  containsWith: fun equals k v =>
+    if (set |> ImmSet.contains k) (equals k v)
+    else false,
   containsKey: fun k => set |> ImmSet.contains k,
   count: ImmSet.count set,
   every: fun f => set |> ImmSet.every (fun k => f k k),
@@ -140,13 +142,17 @@ let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
     (k, k)
   },
   forEach: fun f => set |> ImmSet.forEach (fun k => f k k),
-  get: fun k => set |> ImmSet.contains k ? k : failwith "not found",
+  get: fun k =>
+    if (set |> ImmSet.contains k) k
+    else failwith "not found",
   none: fun f => set |> ImmSet.none (fun k => f k k),
   reduce: fun f acc => set |> ImmSet.reduce (fun acc k => f acc k k) acc,
   some: fun f => set |> ImmSet.some (fun k => f k k),
   toSeq: ImmSet.toSeq set |> Seq.map (fun k => (k, k)),
   tryFind: fun f => set |> ImmSet.tryFind (fun k => f k k) >>| (fun k => (k, k)),
-  tryGet: fun k => set |> ImmSet.contains k ? Some k : None,
+  tryGet: fun k =>
+    if (set |> ImmSet.contains k) (Some k)
+    else None,
   values: ImmSet.toSeq set,
 };
 

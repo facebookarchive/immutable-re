@@ -131,7 +131,9 @@ let toSet (set: t 'a): (ImmSet.t 'a) => {
 };
 
 let toMap (set: t 'a): (ImmMap.t 'a 'a) => {
-  containsWith: fun equals k v => set |> contains k ? equals k v : false,
+  containsWith: fun equals k v =>
+    if (set |> contains k) (equals k v)
+    else false,
   containsKey: fun k => set |> contains k,
   count: count set,
   every: fun f => set |> every (fun k => f k k),
@@ -140,13 +142,17 @@ let toMap (set: t 'a): (ImmMap.t 'a 'a) => {
     (k, k)
   },
   forEach: fun f => set |> forEach (fun k => f k k),
-  get: fun k => set |> contains k ? k : failwith "not found",
+  get: fun k =>
+    if (set |> contains k) k
+    else failwith "not found",
   none: fun f => set |> none (fun k => f k k),
   reduce: fun f acc => set |> reduce (fun acc k => f acc k k) acc,
   some: fun f => set |> some (fun k => f k k),
   toSeq: toSeq set |> Seq.map (fun k => (k, k)),
   tryFind: fun f => set |> tryFind (fun k => f k k) >>| (fun k => (k, k)),
-  tryGet: fun k => set |> contains k ? Some k : None,
+  tryGet: fun k =>
+    if (set |> contains k) (Some k)
+    else None,
   values: toSeq set,
 };
 

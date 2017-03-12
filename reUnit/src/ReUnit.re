@@ -73,9 +73,11 @@ let module Expect = {
       (equals: Equality.t 'a)
       (toString: 'a => string)
       (expected: 'a)
-      (expect: t 'a) => expect |> flatMap (fun value => (not (equals expected value))
-    ? failwith ("expected: " ^ (toString expected) ^ " but got: " ^ (toString value))
-    : return value
+      (expect: t 'a) => expect |> flatMap (fun value =>
+    if (not (equals expected value)) (
+      failwith ("expected: " ^ (toString expected) ^ " but got: " ^ (toString value))
+    )
+    else return value
   ) |> get |> ignore;
 
   let toBeEqualTo (toString: 'a => string) =>

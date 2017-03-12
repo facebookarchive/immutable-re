@@ -24,9 +24,9 @@ let count (deque: t 'a): int => switch deque {
 };
 
 let equalsWith (valueEquals: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
-  this === that ? true :
-  (count this) != (count that) ? false :
-  switch (this, that) {
+  if (this === that) true
+  else if ((count this) != (count that)) false
+  else switch (this, that) {
     | (Ascending this, Ascending that)
     | (Descending this, Descending that) =>
         Vector.equalsWith valueEquals this that
@@ -135,7 +135,8 @@ let toSeqReversed (deque: t 'a): (Seq.t 'a) => switch deque {
 };
 
 let compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): Ordering.t =>
-  this === that ? Ordering.equal : Seq.compareWith valueCompare (toSeq this) (toSeq that);
+  if (this === that) Ordering.equal
+  else Seq.compareWith valueCompare (toSeq this) (toSeq that);
 
 let compare (this: t 'a) (that: t 'a): Ordering.t =>
   compareWith Comparator.structural this that;

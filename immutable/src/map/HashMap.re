@@ -282,12 +282,12 @@ let module BitmapTrieMap = {
   let rec tryFind (f: 'k => 'v => bool) (map: t 'k 'v): (option ('k, 'v)) => switch map {
     | Level _ nodes _ =>
         let nodesCount = CopyOnWriteArray.count nodes;
-        let rec loop index => index < nodesCount
-          ? switch (tryFind f nodes.(index)) {
-              | Some _ as result => result
-              | _ => loop (index + 1)
-            }
-          : None;
+        let rec loop index =>
+          if (index < nodesCount) (switch (tryFind f nodes.(index)) {
+            | Some _ as result => result
+            | _ => loop (index + 1)
+          })
+          else None;
         loop 0
     | ComparatorCollision _ entryMap => AVLTreeMap.tryFind f entryMap
     | EqualityCollision _ entryMap => EqualityMap.tryFind f entryMap;

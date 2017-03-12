@@ -41,7 +41,9 @@ let every (f: 'a => bool) (opt: option 'a): bool => switch opt {
 };
 
 let filter (f: 'a => bool) (opt: option 'a): (option 'a) => switch opt {
-  | Some x => f x ? opt : None
+  | Some x =>
+      if (f x) opt
+      else None
   | _ => None
 };
 

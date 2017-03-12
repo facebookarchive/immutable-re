@@ -23,16 +23,16 @@ let addFirstAll (values: Seq.t 'a) ({ count, list }: t 'a): (t 'a) => {
 
 let compare
     ({ list: thisList } as this: t 'a)
-    ({ list: thatList } as that: t 'a): Ordering.t => this === that
-  ? Ordering.equal
-  : ImmList.compare thisList thatList;
+    ({ list: thatList } as that: t 'a): Ordering.t =>
+  if (this === that) Ordering.equal
+  else ImmList.compare thisList thatList;
 
 let compareWith
     (valueCompare: Comparator.t 'a)
     ({ list: thisList } as this: t 'a)
-    ({ list: thatList } as that: t 'a): Ordering.t => this === that
-  ? Ordering.equal
-  : ImmList.compareWith valueCompare thisList thatList;
+    ({ list: thatList } as that: t 'a): Ordering.t =>
+  if (this === that) Ordering.equal
+  else ImmList.compareWith valueCompare thisList thatList;
 
 let contains (value: 'a) ({ list }: t 'a): bool =>
   list |> ImmList.contains value;
@@ -50,17 +50,17 @@ let empty: t 'a = {
 let equals
     ({ count: thisCount, list: thisList } as this: t 'a)
     ({ count: thatCount, list: thatList } as that: t 'a): bool =>
-  this === that ? true :
-  thisCount != thatCount ? false :
-  ImmList.equals thisList thatList;
+  if (this === that) true
+  else if (thisCount != thatCount) false
+  else ImmList.equals thisList thatList;
 
 let equalsWith
     (valueEquals: Equality.t 'a)
     ({ count: thisCount, list: thisList } as this: t 'a)
     ({ count: thatCount, list: thatList } as that: t 'a): bool =>
-  this === that ? true :
-  thisCount != thatCount ? false :
-  ImmList.equalsWith valueEquals thisList thatList;
+  if (this === that) true
+  else if (thisCount != thatCount) false
+  else ImmList.equalsWith valueEquals thisList thatList;
 
 let every (f: 'a => bool) ({ list }: t 'a): bool =>
   list |> ImmList.every f;

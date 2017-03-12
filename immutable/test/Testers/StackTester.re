@@ -229,9 +229,9 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
 
   it (sprintf "compare %i elements" count) (fun () => {
     let orderingToString (ord: Ordering.t): string =>
-      ord === Ordering.equal ? "Equals" :
-      ord === Ordering.greaterThan ? "GreaterThan" :
-      "LesserThan";
+      if (ord === Ordering.equal) "Equals"
+      else if (ord === Ordering.greaterThan) "GreaterThan"
+      else "LesserThan";
 
     let stackCount = Seq.inRange 0 (Some count) 1
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
