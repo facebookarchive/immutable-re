@@ -80,6 +80,32 @@ let module Comparator: {
   /** The default structural comparison function. */
 };
 
+let module HashStrategy: {
+  /** Strategies for hashing values and resolving conflicts either using equality or comparison. */
+
+  type t 'a;
+  /** The HashStrategy type. */
+
+  let createWithComparator: (Hash.t 'a) => (Comparator.t 'a) => (t 'a);
+  /** [createWithComparator hash comparator] returns a HashStrategy using the
+   *  provided hash and comparator functions.
+   */
+
+  let createWithEquality: (Hash.t 'a) => (Equality.t 'a) => (t 'a);
+  /** [createWithEquality hash equality] returns a HashStrategy using the
+   *  provided hash and equality functions.
+   */
+
+  let identity: (t 'a);
+  /** A HashStrategy using structural hashing and reference equality. */
+
+  let structuralCompare: (t 'a);
+  /** A HashStrategy using structural hashing and structural comparison. */
+
+  let structuralEquality: (t 'a);
+  /** A HashStrategy using structural hashing and structural equality. */
+};
+
 let module Seq: {
   /** Functional sequence iterators. */
 
@@ -556,32 +582,6 @@ and Map: {
 
   let values: (t 'k 'v) => (Seq.t 'v);
   /** [values map] returns a Seq of non-unique values in [map]. */
-};
-
-let module HashStrategy: {
-  /** Strategies for hashing values and resolving conflicts either using equality or comparison. */
-
-  type t 'a;
-  /** The HashStrategy type. */
-
-  let createWithComparator: (Hash.t 'a) => (Comparator.t 'a) => (t 'a);
-  /** [createWithComparator hash comparator] returns a HashStrategy using the
-   *  provided hash and comparator functions.
-   */
-
-  let createWithEquality: (Hash.t 'a) => (Equality.t 'a) => (t 'a);
-  /** [createWithEquality hash equality] returns a HashStrategy using the
-   *  provided hash and equality functions.
-   */
-
-  let identity: (t 'a);
-  /** A HashStrategy using structural hashing and reference equality. */
-
-  let structuralCompare: (t 'a);
-  /** A HashStrategy using structural hashing and structural comparison. */
-
-  let structuralEquality: (t 'a);
-  /** A HashStrategy using structural hashing and structural equality. */
 };
 
 let module CopyOnWriteArray: {

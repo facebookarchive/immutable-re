@@ -11,8 +11,8 @@ ReUnit.run (describe "Immutable.re" [
   HashSetMultimapTest.test,
   IntMapTest.test,*/
   MapTest.test,
-  OptionTest.test,/*
-  SeqTest.test,*/
+  OptionTest.test,
+  SeqTest.test,
   SetTest.test,/*
   SortedMapTest.test,*/
   SortedSetTest.test,

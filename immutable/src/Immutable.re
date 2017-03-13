@@ -51,6 +51,16 @@ let module Comparator = {
   let structural = Comparator.structural;
 };
 
+let module HashStrategy = {
+  type t 'a = HashStrategy.t 'a;
+
+  let createWithComparator = HashStrategy.createWithComparator;
+  let createWithEquality = HashStrategy.createWithEquality;
+  let identity = HashStrategy.identity;
+  let structuralCompare = HashStrategy.structuralCompare;
+  let structuralEquality = HashStrategy.structuralEquality;
+};
+
 let module Seq = {
   type t 'a = Seq.t 'a;
 
@@ -163,16 +173,6 @@ let module Map = {
   let tryFind = ImmMap.tryFind;
   let tryGet = ImmMap.tryGet;
   let values = ImmMap.values;
-};
-
-let module HashStrategy = {
-  type t 'a = HashStrategy.t 'a;
-
-  let createWithComparator = HashStrategy.createWithComparator;
-  let createWithEquality = HashStrategy.createWithEquality;
-  let identity = HashStrategy.identity;
-  let structuralCompare = HashStrategy.structuralCompare;
-  let structuralEquality = HashStrategy.structuralEquality;
 };
 
 let module CopyOnWriteArray = {

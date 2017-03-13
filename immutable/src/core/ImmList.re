@@ -135,6 +135,13 @@ let rec some (f: 'a => bool) (list: list 'a): bool => switch list {
   | [] => false
 };
 
+let rec take (count: int) (list: list 'a): (list 'a) =>
+  if (count == 0) []
+  else switch list {
+    | [head, ...tail] => [head, ...(tail |> take (count - 1))]
+    | _ => failwith "list too short"
+  };
+
 let rec tryFind (f: 'a => bool) (list: list 'a): (option 'a) => switch list {
   | [head, ...tail] =>
       if (f head) (Some head)
