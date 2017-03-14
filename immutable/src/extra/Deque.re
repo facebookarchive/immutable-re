@@ -241,10 +241,13 @@ let module TransientDeque = {
     | Descending vector => Descending (TransientVector.persist vector)
   };
 
+  let removeAllImpl
+      (_: Transient.Owner.t)
+      (_: transientDequeImpl 'a): (transientDequeImpl 'a) =>
+    Ascending (Vector.empty |> Vector.mutate);
+
   let removeAll (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun _ _ => {
-      Ascending (Vector.empty |> Vector.mutate)
-    });
+    transient |> Transient.update removeAllImpl;
 
   let removeFirst (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
@@ -264,11 +267,15 @@ let module TransientDeque = {
         transient;
   };
 
+  let reverseImpl
+      (_: Transient.Owner.t)
+      (vector: transientDequeImpl 'a) => switch vector {
+    | Ascending vector => Descending vector;
+    | Descending vector => Ascending vector;
+  };
+
   let reverse (transient: t 'a): (t 'a) =>
-    transient |> Transient.update(fun _ vector => switch vector {
-      | Ascending vector => Descending vector;
-      | Descending vector => Ascending vector;
-    });
+    transient |> Transient.update reverseImpl;
 
   let tryFirst (transient: t 'a): (option 'a) => switch (Transient.get transient) {
     | Ascending vector => vector |> TransientVector.tryFirst

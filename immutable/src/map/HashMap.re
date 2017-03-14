@@ -513,32 +513,38 @@ let module TransientHashMap = {
   let mutate (map: hashMap 'k 'v): (t 'k 'v) =>
     Transient.create map;
 
+  let alterImpl
+      (owner: Transient.Owner.t)
+      (key: 'k)
+      (f: option 'v => option 'v)
+      ({ count, root, strategy } as map: hashMap 'k 'v): (hashMap 'k 'v) => {
+    let hash = HashStrategy.hash strategy key;
+    let alterResult = ref BitmapTrieMap.NoChange;
+    let newRoot = root |> BitmapTrieMap.alter
+      strategy
+      BitmapTrieMap.updateLevelNodeTransient
+      owner
+      alterResult
+      0
+      hash
+      key
+      f;
+
+    switch !alterResult {
+      | BitmapTrieMap.Added => { count: count + 1, root: newRoot, strategy }
+      | BitmapTrieMap.NoChange => map
+      | BitmapTrieMap.Replace =>
+          if (newRoot === root) map
+          else { count, root: newRoot, strategy }
+      | BitmapTrieMap.Removed => { count: count - 1, root: newRoot, strategy }
+    };
+  };
+
   let alter
       (key: 'k)
       (f: option 'v => option 'v)
       (transient: t 'k 'v): (t 'k 'v) =>
-    transient |> Transient.update (fun owner ({ count, root, strategy } as map) => {
-      let hash = HashStrategy.hash strategy key;
-      let alterResult = ref BitmapTrieMap.NoChange;
-      let newRoot = root |> BitmapTrieMap.alter
-        strategy
-        BitmapTrieMap.updateLevelNodeTransient
-        owner
-        alterResult
-        0
-        hash
-        key
-        f;
-
-      switch !alterResult {
-        | BitmapTrieMap.Added => { count: count + 1, root: newRoot, strategy }
-        | BitmapTrieMap.NoChange => map
-        | BitmapTrieMap.Replace =>
-            if (newRoot === root) map
-            else { count, root: newRoot, strategy }
-        | BitmapTrieMap.Removed => { count: count - 1, root: newRoot, strategy }
-      };
-    });
+    transient |> Transient.update2 alterImpl key f;
 
   let count (transient: t 'k 'v): int =>
     transient |> Transient.get |> count;
@@ -569,8 +575,13 @@ let module TransientHashMap = {
   let remove (key: 'k) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> alter key Functions.alwaysNone;
 
+  let removeAllImpl
+      (_: Transient.Owner.t)
+      ({ strategy }: hashMap 'k 'v): (hashMap 'k 'v) =>
+    persistentEmptyWith strategy;
+
   let removeAll (transient: t 'k 'v): (t 'k 'v) =>
-    transient |> Transient.update (fun _ { strategy } => persistentEmptyWith strategy);
+    transient |> Transient.update removeAllImpl;
 
   let tryGet (key: 'k) (transient: t 'k 'v): (option 'v) =>
     transient |> Transient.get |> tryGet key;

@@ -327,27 +327,33 @@ let module TransientIntMap = {
 
   let mutate (map: intMap 'a): (t 'a) => Transient.create map;
 
+  let alterImpl
+      (owner: Transient.Owner.t)
+      (key: int)
+      (f: option 'a => option 'a)
+      ({ count, root } as map: intMap 'a): (intMap 'a) => {
+    let alterResult = ref BitmapTrieIntMap.NoChange;
+    let newRoot = root |> BitmapTrieIntMap.alter
+      BitmapTrieIntMap.updateLevelNodeTransient
+        owner
+        alterResult
+        0
+        key
+        f;
+
+    switch !alterResult {
+      | BitmapTrieIntMap.Added => { count: count + 1, root: newRoot }
+      | BitmapTrieIntMap.NoChange => map
+      | BitmapTrieIntMap.Replace => if (root === newRoot) map else { count, root: newRoot }
+      | BitmapTrieIntMap.Removed => { count: count - 1, root: newRoot }
+    }
+  };
+
   let alter
       (key: int)
       (f: option 'a => option 'a)
       (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner ({ count, root } as map) => {
-      let alterResult = ref BitmapTrieIntMap.NoChange;
-      let newRoot = root |> BitmapTrieIntMap.alter
-        BitmapTrieIntMap.updateLevelNodeTransient
-          owner
-          alterResult
-          0
-          key
-          f;
-
-      switch !alterResult {
-        | BitmapTrieIntMap.Added => { count: count + 1, root: newRoot }
-        | BitmapTrieIntMap.NoChange => map
-        | BitmapTrieIntMap.Replace => if (root === newRoot) map else { count, root: newRoot }
-        | BitmapTrieIntMap.Removed => { count: count - 1, root: newRoot }
-      }
-    });
+    transient |> Transient.update2 alterImpl key f;
 
   let count (transient: t 'a): int =>
     transient |> Transient.get |> count;
@@ -376,8 +382,12 @@ let module TransientIntMap = {
   let remove (key: int) (transient: t 'a): (t 'a) =>
     transient |> alter key Functions.alwaysNone;
 
+  let removeAllImpl
+      (_: Transient.Owner.t)
+      (_: intMap 'a): (intMap 'a) => persistentEmpty;
+
   let removeAll (transient: t 'a): (t 'a) =>
-      transient |> Transient.update (fun _ _ => persistentEmpty);
+      transient |> Transient.update removeAllImpl;
 
   let tryGet (key: int) (transient: t 'a): (option 'a) =>
     transient |> Transient.get |> (tryGet key);

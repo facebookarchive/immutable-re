@@ -317,7 +317,7 @@ let module TransientVectorImpl = VectorImpl.Make {
 
   let tailAddFirst (value: 'a) (arr: array 'a): (array 'a) => {
     let arr =
-      if ((CopyOnWriteArray.count arr) == 0) (Array.make IndexedTrie.width value)
+      if (CopyOnWriteArray.isEmpty arr) (Array.make IndexedTrie.width value)
       else arr;
 
     let rec loop index =>
@@ -346,7 +346,7 @@ let module TransientVectorImpl = VectorImpl.Make {
 
   let tailUpdate (index: int) (value: 'a) (arr: array 'a): (array 'a) => {
     let arr =
-      if ((CopyOnWriteArray.count arr) == 0) (Array.make IndexedTrie.width value)
+      if (CopyOnWriteArray.isEmpty arr) (Array.make IndexedTrie.width value)
       else arr;
 
     arr.(index) = value;
@@ -373,7 +373,6 @@ let module TransientVectorImpl = VectorImpl.Make {
         left,
         leftCount,
         middle,
-        right,
         rightCount,
       } as transientVec: t 'a): (t 'a) => {
     if ((tailIsFull leftCount) && (tailIsNotEmpty rightCount)) {
@@ -628,16 +627,16 @@ module TransientVector = {
   };
 
   let addFirst (value: 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.addFirst owner value);
+    transient |> Transient.update1 TransientVectorImpl.addFirst value;
 
   let addFirstAll (seq: Seq.t 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.addFirstAll owner seq);
+    transient |> Transient.update1 TransientVectorImpl.addFirstAll seq;
 
   let addLast (value: 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.addLast owner value);
+    transient |> Transient.update1 TransientVectorImpl.addLast value;
 
   let addLastAll (seq: Seq.t 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.addLastAll owner seq);
+    transient |> Transient.update1 TransientVectorImpl.addLastAll seq;
 
   let count (transient: t 'a): int =>
     transient |> Transient.get |> TransientVectorImpl.count;
@@ -678,14 +677,19 @@ module TransientVector = {
     }
   };
 
+  let removeImpl
+      (_: Transient.Owner.t)
+      (vec: transientVectorImpl 'a) =>
+    TransientVectorImpl.removeAll vec;
+
   let removeAll (transient: t 'a): (t 'a) =>
-      transient |> Transient.update (fun _ => TransientVectorImpl.removeAll);
+      transient |> Transient.update removeImpl;
 
   let removeFirst (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.removeFirst owner);
+    transient |> Transient.update TransientVectorImpl.removeFirst;
 
   let removeLast (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.removeLast owner);
+    transient |> Transient.update TransientVectorImpl.removeLast;
 
   let get (index: int) (transient: t 'a): 'a =>
     transient |> Transient.get |> TransientVectorImpl.get index;
@@ -696,27 +700,31 @@ module TransientVector = {
   let last (transient: t 'a): 'a =>
     transient |> Transient.get |> TransientVectorImpl.last;
 
+  let reverseImpl
+      (owner: Transient.Owner.t)
+      (vector: transientVectorImpl 'a): (transientVectorImpl 'a) => {
+    let count = TransientVectorImpl.count vector;
+    let lastIndex = count - 1;
+
+    let rec loop indexFirst indexLast =>
+      if (indexFirst < indexLast) {
+        let first = vector |> TransientVectorImpl.get indexFirst;
+        let last = vector |> TransientVectorImpl.get indexLast;
+
+        vector
+          |> TransientVectorImpl.update owner indexFirst first
+          |> TransientVectorImpl.update owner indexLast last
+          |> ignore;
+
+        loop (indexFirst + 1) (indexLast - 1)
+      }
+      else vector;
+
+    loop 0 lastIndex;
+  };
+
   let reverse (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner vector => {
-      let count = TransientVectorImpl.count vector;
-      let lastIndex = count - 1;
-
-      let rec loop indexFirst indexLast =>
-        if (indexFirst < indexLast) {
-          let first = vector |> TransientVectorImpl.get indexFirst;
-          let last = vector |> TransientVectorImpl.get indexLast;
-
-          vector
-            |> TransientVectorImpl.update owner indexFirst first
-            |> TransientVectorImpl.update owner indexLast last
-            |> ignore;
-
-          loop (indexFirst + 1) (indexLast - 1)
-        }
-        else vector;
-
-      loop 0 lastIndex;
-    });
+    transient |> Transient.update reverseImpl;
 
   let tryGet (index: int) (transient: t 'a): (option 'a) =>
     transient |> Transient.get |> TransientVectorImpl.tryGet index;
@@ -728,33 +736,44 @@ module TransientVector = {
     transient |> Transient.get |> TransientVectorImpl.tryLast;
 
   let update (index: int) (value: 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.update owner index value);
+    transient |> Transient.update2 TransientVectorImpl.update index value;
+
+  let updateAllImpl
+      (owner: Transient.Owner.t)
+      (f: int => 'a => 'a)
+      ({
+        left,
+        leftCount,
+        middle,
+        right,
+        rightCount
+      } as transientVec: transientVectorImpl 'a): (transientVectorImpl 'a) => {
+    let index = ref 0;
+    let updater value => {
+      let result = f !index value;
+      index := !index + 1;
+      result;
+    };
+
+    for i in 0 to (leftCount - 1) { left.(i) = updater left.(i) };
+
+    let middle = middle |> IndexedTrie.updateAllUsingMutator
+      IndexedTrie.updateLevelTransient
+      IndexedTrie.updateLeafTransient
+      owner
+      updater;
+
+    for i in 0 to (rightCount - 1) { right.(i) = updater right.(i) };
+
+    transientVec.middle = middle;
+    transientVec
+  };
 
   let updateAll (f: int => 'a => 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner ({ left, leftCount, middle, right, rightCount } as transientVec) => {
-      let index = ref 0;
-      let updater value => {
-        let result = f !index value;
-        index := !index + 1;
-        result;
-      };
-
-      for i in 0 to (leftCount - 1) { left.(i) = updater left.(i) };
-
-      let middle = middle |> IndexedTrie.updateAllUsingMutator
-        IndexedTrie.updateLevelTransient
-        IndexedTrie.updateLeafTransient
-        owner
-        updater;
-
-      for i in 0 to (rightCount - 1) { right.(i) = updater right.(i) };
-
-      transientVec.middle = middle;
-      transientVec
-    });
+    transient |> Transient.update1 updateAllImpl f;
 
   let updateWith (index: int) (f: 'a => 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner => TransientVectorImpl.updateWith owner index f);
+    transient |> Transient.update2 TransientVectorImpl.updateWith index f;
 
   /* Unimplemented functions */
   let insertAt (index: int) (value: 'a) (transient: t 'a): (t 'a) =>

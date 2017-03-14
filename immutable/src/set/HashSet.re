@@ -268,14 +268,40 @@ let module TransientHashSet = {
   let mutate (set: hashSet 'a): (t 'a) =>
     Transient.create set;
 
+  let addImpl
+      (owner: Transient.Owner.t)
+      (value: 'a)
+      ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
+    let hash = HashStrategy.hash strategy value;
+    if (set |> contains value) set
+    else {
+      let newRoot = root |> BitmapTrieSet.add
+        strategy
+        BitmapTrieSet.updateLevelNodeTransient
+        owner
+        0
+        hash
+        value;
 
+      { count: count + 1, root: newRoot, strategy };
+    }
+  };
 
   let add (value: 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
+    transient |> Transient.update1 addImpl value;
+
+  let addAllImpl
+      (owner: Transient.Owner.t)
+      (seq: Seq.t 'a)
+      ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
+    let newCount = ref count;
+
+    let newRoot = seq |> Seq.reduce (fun acc value => {
       let hash = HashStrategy.hash strategy value;
-      if (set |> contains value) set
-      else {
-        let newRoot = root |> BitmapTrieSet.add
+
+      if (acc |> BitmapTrieSet.contains strategy 0 hash value) acc
+      else  {
+        let newRoot = acc |> BitmapTrieSet.add
           strategy
           BitmapTrieSet.updateLevelNodeTransient
           owner
@@ -283,35 +309,17 @@ let module TransientHashSet = {
           hash
           value;
 
-        { count: count + 1, root: newRoot, strategy };
+        newCount := !newCount + 1;
+        newRoot
       }
-    });
+    }) root;
+
+    if (!newCount == count) set
+    else { count: !newCount, root: newRoot, strategy };
+  };
 
   let addAll (seq: Seq.t 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
-      let newCount = ref count;
-
-      let newRoot = seq |> Seq.reduce (fun acc value => {
-        let hash = HashStrategy.hash strategy value;
-
-        if (acc |> BitmapTrieSet.contains strategy 0 hash value) acc
-        else  {
-          let newRoot = acc |> BitmapTrieSet.add
-            strategy
-            BitmapTrieSet.updateLevelNodeTransient
-            owner
-            0
-            hash
-            value;
-
-          newCount := !newCount + 1;
-          newRoot
-        }
-      }) root;
-
-      if (!newCount == count) set
-      else { count: !newCount, root: newRoot, strategy };
-    });
+    transient |> Transient.update1 addAllImpl seq;
 
   let contains (value: 'a) (transient: t 'a): bool =>
     transient |> Transient.get |> contains value;
@@ -336,23 +344,33 @@ let module TransientHashSet = {
   let persist (transient: t 'a): (hashSet 'a) =>
     transient |> Transient.persist;
 
-  let remove (value: 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun owner ({ count, root, strategy } as set) => {
-      let hash = HashStrategy.hash strategy value;
-      let newRoot = root |> BitmapTrieSet.remove
-        strategy
-        BitmapTrieSet.updateLevelNodeTransient
-        owner
-        0
-        hash
-        value;
-        
-      if (newRoot === root) set
-      else { count: count - 1, root: newRoot, strategy };
-    });
+  let removeImpl
+      (owner: Transient.Owner.t)
+      (value: 'a)
+      ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
+    let hash = HashStrategy.hash strategy value;
+    let newRoot = root |> BitmapTrieSet.remove
+      strategy
+      BitmapTrieSet.updateLevelNodeTransient
+      owner
+      0
+      hash
+      value;
 
-  let removeAll  (transient: t 'a): (t 'a) =>
-    transient |> Transient.update (fun _ ({ strategy }) => persistentEmptyWith strategy);
+    if (newRoot === root) set
+    else { count: count - 1, root: newRoot, strategy };
+  };
+
+  let remove (value: 'a) (transient: t 'a): (t 'a) =>
+    transient |> Transient.update1 removeImpl value;
+
+  let removeAllImpl
+      (_: Transient.Owner.t)
+      ({ strategy }: hashSet 'a): (hashSet 'a) =>
+    persistentEmptyWith strategy;
+
+  let removeAll (transient: t 'a): (t 'a) =>
+    transient |> Transient.update removeAllImpl;
 };
 
 let mutate = TransientHashSet.mutate;

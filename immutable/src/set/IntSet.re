@@ -198,41 +198,51 @@ let module TransientIntSet = {
   let mutate (set: intSet): t =>
     Transient.create set;
 
+  let addImpl
+      (owner: Transient.Owner.t)
+      (value: int)
+      ({ count, root } as set: intSet): intSet => {
+    if (set |> contains value) set
+    else {
+      let newRoot = root |> BitmapTrieIntSet.add
+        BitmapTrieIntSet.updateLevelNodeTransient
+        owner
+        0
+        value;
+
+      { count: count + 1, root: newRoot };
+    }
+  };
+
   let add (value: int) (transient: t): t =>
-    transient |> Transient.update (fun owner ({ count, root } as set) => {
-      if (set |> contains value) set
-      else {
-        let newRoot = root |> BitmapTrieIntSet.add
+    transient |> Transient.update1 addImpl value;
+
+  let addAllImpl
+      (owner: Transient.Owner.t)
+      (seq: Seq.t int)
+      ({ count, root } as set: intSet): intSet => {
+    let newCount = ref count;
+
+    let newRoot = seq |> Seq.reduce (fun acc value => {
+      if (acc |> BitmapTrieIntSet.contains 0 value) acc
+      else  {
+        let newRoot = acc |> BitmapTrieIntSet.add
           BitmapTrieIntSet.updateLevelNodeTransient
           owner
           0
           value;
 
-        { count: count + 1, root: newRoot };
+        newCount := !newCount + 1;
+        newRoot
       }
-    });
+    }) root;
+
+    if (!newCount == count) set
+    else { count: !newCount, root: newRoot };
+  };
 
   let addAll (seq: Seq.t int) (transient: t): t =>
-    transient |> Transient.update (fun owner ({ count, root } as set) => {
-      let newCount = ref count;
-
-      let newRoot = seq |> Seq.reduce (fun acc value => {
-        if (acc |> BitmapTrieIntSet.contains 0 value) acc
-        else  {
-          let newRoot = acc |> BitmapTrieIntSet.add
-            BitmapTrieIntSet.updateLevelNodeTransient
-            owner
-            0
-            value;
-
-          newCount := !newCount + 1;
-          newRoot
-        }
-      }) root;
-
-      if (!newCount == count) set
-      else { count: !newCount, root: newRoot };
-    });
+    transient |> Transient.update1 addAllImpl seq;
 
   let contains (value: int) (transient: t): bool =>
     transient |> Transient.get |> contains value;
@@ -254,20 +264,29 @@ let module TransientIntSet = {
   let persist (transient: t): intSet =>
     transient |> Transient.persist;
 
-  let remove (value: int) (transient: t): t =>
-    transient |> Transient.update (fun owner ({ count, root } as set) => {
-      let newRoot = root |> BitmapTrieIntSet.remove
-        BitmapTrieIntSet.updateLevelNodeTransient
-        owner
-        0
-        value;
+  let removeImpl
+      (owner: Transient.Owner.t)
+      (value: int)
+      ({ count, root } as set: intSet): intSet => {
+    let newRoot = root |> BitmapTrieIntSet.remove
+      BitmapTrieIntSet.updateLevelNodeTransient
+      owner
+      0
+      value;
 
-      if (newRoot === root) set
-      else { count: count - 1, root: newRoot };
-    });
+    if (newRoot === root) set
+    else { count: count - 1, root: newRoot };
+  };
+
+  let remove (value: int) (transient: t): t =>
+    transient |> Transient.update1 removeImpl value;
+
+  let removeAllImpl
+      (_: Transient.Owner.t)
+      (_: intSet): intSet => persistentEmpty;
 
   let removeAll (transient: t): t =>
-    transient |> Transient.update (fun _ _ => persistentEmpty);
+    transient |> Transient.update removeAllImpl;
 };
 
 let mutate = TransientIntSet.mutate;
