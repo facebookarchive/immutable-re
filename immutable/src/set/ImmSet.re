@@ -51,35 +51,6 @@ let hashWith (hash: Hash.t 'a) ({ reduce }: t 'a): int =>
 let hash (set: t 'a): int =>
   hashWith Hash.structural set;
 
-let inRange (start: int) (count: int) (step: int): (t int) => {
-  Preconditions.failIf "step must be greater or less than 0" (step == 0);
-
-  let toSeq = Seq.inRange start (Some count) step;
-  let max = start + (count * step);
-
-  {
-    contains: fun index =>
-      if ((step > 0) && (index > start) && (index < max)) {
-        let effectiveIndex = index - start;
-        (effectiveIndex mod step) == 0
-      }
-      else if ((step < 0) && (index < start) && (index > max)) {
-        let effectiveIndex = index + start;
-        (effectiveIndex mod step) != 0
-      }
-      else (index == start) && (count != 0),
-    count,
-    every: fun f => toSeq |> Seq.every f,
-    find: fun f => toSeq |> Seq.find f,
-    forEach: fun f => toSeq |> Seq.forEach f,
-    none: fun f => toSeq |> Seq.none f,
-    reduce: fun f acc => toSeq |> Seq.reduce f acc,
-    some: fun f => toSeq |> Seq.some f,
-    toSeq,
-    tryFind: fun f => toSeq |> Seq.tryFind f,
-  }
-};
-
 let intersect (this: t 'a) (that: t 'a): (Seq.t 'a) =>
   this.toSeq |> Seq.filter (that.contains);
 

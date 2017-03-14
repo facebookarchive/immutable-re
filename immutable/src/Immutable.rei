@@ -420,11 +420,6 @@ let module rec Set: {
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
 
-  let inRange: int => int => int => (t int);
-  /** [inRange start count step] returns an integer Set starting with [start]
-   *  with [count] elements, with an interval of [step] between elements in the Set.
-   */
-
   let intersect: (t 'a) => (t 'a) => (Seq.t 'a);
   /** [intersect this that] returns a Seq of unique elements
    *  which occur in both [this] and [that].
@@ -582,6 +577,57 @@ and Map: {
 
   let values: (t 'k 'v) => (Seq.t 'v);
   /** [values map] returns a Seq of non-unique values in [map]. */
+};
+
+let module ContiguousIntSet: {
+  /** Represents a contiguous Set of discrete integers */
+
+  type t;
+  /** The ContiguousIntSet type.*/
+
+  let create: int => int => t;
+
+  let contains: int => t => bool;
+
+  let count: t => int;
+
+  let empty: t;
+
+  let every: (int => bool) => t => bool;
+
+  let find: (int => bool) => t => int;
+
+  let first: t => int;
+
+  let forEach: (int => unit) => t => unit;
+
+  let hash: t => int;
+
+  let isEmpty: t => bool;
+
+  let isNotEmpty: t => bool;
+
+  let last: t => int;
+
+  let reduce: ('acc => int => 'acc) => 'acc => t => 'acc;
+
+  let reduceRight: ('acc => int => 'acc) => 'acc => t => 'acc;
+
+  let some: (int => bool) => t => bool;
+
+  let toMap: t => (Map.t int int);
+
+  let toSeq: t => (Seq.t int);
+
+  let toSeqReversed: t => (Seq.t int);
+
+  let toSet: t => (Set.t int);
+
+  let tryFind: (int => bool) => t => (option int);
+
+  let tryFirst: t => (option int);
+
+  let tryLast: t => (option int);
 };
 
 let module CopyOnWriteArray: {

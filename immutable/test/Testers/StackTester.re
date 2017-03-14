@@ -49,7 +49,7 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     defer (fun () => empty |> Stack.first) |> throws;
     expect (empty |> Stack.tryFirst) |> toBeEqualToNoneOfInt;
 
-    let stack = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i => {
+    let stack = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
       let acc = acc |> Stack.addFirst i;
 
       expect (Stack.isNotEmpty acc) |> toBeEqualToTrue;
@@ -61,7 +61,7 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
       acc;
     }) empty;
 
-    let shouldBeEmpty = Seq.inRange (count - 1) (Some count) (-1) |> Seq.reduce (fun acc i => {
+    let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduceRight (fun acc i => {
       expect (Stack.isNotEmpty acc) |> toBeEqualToTrue;
       expect (Stack.isEmpty acc) |> toBeEqualToFalse;
       expect (Stack.count acc) |> toBeEqualToInt (i + 1);
@@ -76,7 +76,9 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     defer (fun () => shouldBeEmpty |> Stack.first) |> throws;
     expect (shouldBeEmpty |> Stack.tryFirst) |>  toBeEqualToNoneOfInt;
 
-    expect @@ Stack.toSeq @@ stack |> toBeEqualToSeqOfInt (Seq.inRange (count - 1) (Some count) (-1));
+    expect @@ Stack.toSeq @@ stack |> toBeEqualToSeqOfInt (
+      ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed
+    );
   }),
 
   it (sprintf "every with %i elements" count) (fun () => {
@@ -158,24 +160,24 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "mapReverse %i elements" count) (fun () => {
-    Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.mapReverse (fun i => i + 1)
       |> Stack.toSeq
       |> expect
-      |> toBeEqualToSeqOfInt (Seq.inRange 1 (Some count) 1);
+      |> toBeEqualToSeqOfInt (ContiguousIntSet.create 1 count |> ContiguousIntSet.toSeq);
   }),
 
   it (sprintf "reverse %i elements" count) (fun () => {
-    let stack = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stack = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
     let reversed = stack |> Stack.reverse;
 
     reversed
       |> Stack.toSeq
       |> expect
-      |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some count) 1);
+      |> toBeEqualToSeqOfInt (ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq);
 
     reversed
       |> Stack.reverse
@@ -185,8 +187,8 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "addFirst and removeAll %i elements" count) (fun () => {
-    let stack = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stack = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
     expect (Stack.isNotEmpty stack) |> toBeEqualToTrue;
     expect (Stack.isEmpty stack) |> toBeEqualToFalse;
@@ -208,8 +210,8 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "find and tryFind in %i elements" count) (fun () => {
-    let stack = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stack = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
     let find0 i => i == 0;
     let findCountMinusOne i => i == (count - 1);
@@ -233,17 +235,17 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
       else if (ord === Ordering.greaterThan) "GreaterThan"
       else "LesserThan";
 
-    let stackCount = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCount = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCountPlusOne = Seq.inRange 0 (Some (count + 1)) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountPlusOne = ContiguousIntSet.create 0 (count + 1)
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCountDup = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountDup = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackGreaterCount = Seq.inRange 1 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackGreaterCount = ContiguousIntSet.create 1 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
     expect (Stack.compare stackCount stackCount) |> toBeEqualTo orderingToString Ordering.equal;
     expect (Stack.compare stackCount stackCountDup) |> toBeEqualTo orderingToString Ordering.equal;
@@ -254,17 +256,17 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "equals %i elements" count) (fun () => {
-    let stackCountMinusOne = Seq.inRange 0 (Some (count - 1)) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountMinusOne = ContiguousIntSet.create 0 (count - 1)
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCount = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCount =  ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCountDup = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountDup =  ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCountPlusOne = Seq.inRange 0 (Some (count + 1)) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountPlusOne = ContiguousIntSet.create 0 (count + 1)
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
     expect (Stack.equals stackCount stackCount) |> toBeEqualToTrue;
     expect (Stack.equals stackCount stackCountDup) |> toBeEqualToTrue;
@@ -273,17 +275,17 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "hash %i elements" count) (fun () => {
-    let stackCountMinusOne = Seq.inRange 0 (Some (count - 1)) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountMinusOne = ContiguousIntSet.create 0 (count - 1)
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCount = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCount = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCountDup = Seq.inRange 0 (Some count) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountDup = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
-    let stackCountPlusOne = Seq.inRange 0 (Some (count + 1)) 1
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
+    let stackCountPlusOne = ContiguousIntSet.create 0 (count + 1)
+      |> ContiguousIntSet.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty;
 
     expect (Stack.hash stackCount) |> toBeEqualToInt (Stack.hash stackCount);
     expect (Stack.hash stackCount) |> toBeEqualToInt (Stack.hash stackCountDup);
@@ -292,28 +294,28 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "addFirstAll with %i elements" count) (fun () => {
-    let seq = Seq.inRange 0 (Some count) 1;
+    let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
     let result = Stack.empty |> Stack.addFirstAll seq;
 
     (Stack.toSeq result)
-      |> Seq.equals (Seq.inRange (count - 1) (Some count) (-1))
+      |> Seq.equals (ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed)
       |> expect
       |> toBeEqualToTrue;
   }),
 
   it (sprintf "fromSeqReversed with %i elements" count) (fun () => {
-    let seq = Seq.inRange 0 (Some count) 1;
+    let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
     let result = Stack.fromSeqReversed seq;
 
     (Stack.toSeq result)
-      |> Seq.equals (Seq.inRange (count - 1) (Some count) (-1))
+      |> Seq.equals (ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed)
       |> expect
       |> toBeEqualToTrue;
   }),
 
   it (sprintf "forEach with %i elements" count) (fun () => {
     let counted = ref 0;
-    let seq = Seq.inRange (count - 1) (Some count) (-1);
+    let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed;
     let result = Stack.fromSeqReversed seq;
     result |> Stack.forEach (fun i => {
       expect i |> toBeEqualToInt !counted;
@@ -328,7 +330,7 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "contains with %i elements" count) (fun () => {
-    let seq = Seq.inRange 0 (Some count) 1;
+    let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
     let result = Stack.fromSeqReversed seq;
 
     result

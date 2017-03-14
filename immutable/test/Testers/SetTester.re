@@ -39,7 +39,9 @@ let intTupleToString (i, v) =>
 
 let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   it (sprintf "add %i elements" count) (fun () => {
-    let src = Seq.inRange 0 (Some count) 1 |> Seq.map (Hash.random ());
+    let src = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
+      |> Seq.map (Hash.random ());
 
     let (_, mapOfSizeN) = src
       |> Seq.scan
@@ -55,7 +57,9 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     );
   }),
   it (sprintf "removeAll %i elements" count) (fun () => {
-    let set = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
+    let set = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
+      |> SetImpl.fromSeq;
 
     expect (SetImpl.isNotEmpty set) |> toBeEqualToTrue;
     expect (SetImpl.isEmpty set) |> toBeEqualToFalse;
@@ -73,9 +77,10 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.isEmpty empty) |> toBeEqualToTrue;
     expect (SetImpl.count empty) |> toBeEqualToInt 0;
 
-    let set = empty |> SetImpl.addAll (Seq.inRange 0 (Some count) 1);
+    let set = empty
+      |> SetImpl.addAll (ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq);
 
-    let shouldBeEmpty = Seq.inRange (count - 1) (Some count) (-1) |> Seq.reduce (fun acc i => {
+    let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduceRight (fun acc i => {
       expect (SetImpl.isNotEmpty acc) |> toBeEqualToTrue;
       expect (SetImpl.isEmpty acc) |> toBeEqualToFalse;
       expect (SetImpl.count acc) |> toBeEqualToInt (i + 1);
@@ -98,10 +103,10 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.count set) |> toBeEqualToInt count;
   }),
   it (sprintf "equals %i elements" count) (fun () => {
-    let setCountMinusOne = Seq.inRange 0 (Some (count - 1)) 1 |> SetImpl.fromSeq;
-    let setCount = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
-    let setCountDup = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
-    let setCountPlusOne = Seq.inRange 0 (Some (count + 1)) 1 |> SetImpl.fromSeq;
+    let setCountMinusOne = ContiguousIntSet.create 0 (count - 1) |> ContiguousIntSet.toSeq |> SetImpl.fromSeq;
+    let setCount = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> SetImpl.fromSeq;
+    let setCountDup = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq|> SetImpl.fromSeq;
+    let setCountPlusOne = ContiguousIntSet.create 0 (count + 1) |> ContiguousIntSet.toSeq |> SetImpl.fromSeq;
 
     expect (SetImpl.equals setCount setCount) |> toBeEqualToTrue;
     expect (SetImpl.equals setCount setCountDup) |> toBeEqualToTrue;
@@ -109,28 +114,34 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.equals setCount setCountPlusOne) |> toBeEqualToFalse;
   }),
   it (sprintf "every with %i elements" count) (fun () => {
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.every (fun v => v > (count / 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.every (fun v => v > 0)
       |> expect |> toBeEqualToFalse;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.every (fun v => v > (count - 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.every (fun v => v < count)
       |> expect |> toBeEqualToTrue;
   }),
   it (sprintf "find and tryFind in %i elements" count) (fun () => {
-    let set = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
+    let set = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
+      |> SetImpl.fromSeq;
 
     let find0 i => i == 0;
     let findCountMinusOne i => i == (count - 1);
@@ -148,21 +159,21 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.tryFind Functions.alwaysFalse set) |> toBeEqualToNoneOfInt;
   }),
   it (sprintf "forEach with %i elements" count) (fun () => {
-    let seq = Seq.inRange (count - 1) (Some count) (-1);
+    let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed;
     let set = SetImpl.fromSeq seq;
     set |> SetImpl.forEach (fun i => {
       expect (set |> SetImpl.contains i) |> toBeEqualToTrue;
     });
   }),
   it (sprintf "hash with %i elements" count) (fun () => {
-    let col = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
-    let dup = Seq.inRange (count - 1) (Some count) (-1) |> SetImpl.fromSeq;
+    let col = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> SetImpl.fromSeq;
+    let dup = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed |> SetImpl.fromSeq;
 
     expect (SetImpl.hash col) |> toBeEqualToInt (SetImpl.hash col);
     expect (SetImpl.hash col) |> toBeEqualToInt (SetImpl.hash dup);
   }),
   it (sprintf "intersect with %i elements" count) (fun () => {
-    let setA = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
+    let setA = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> SetImpl.fromSeq;
     let setB = Seq.inRange 0 (Some (count / 2)) 2 |> SetImpl.fromSeq;
 
     let intersection = SetImpl.intersect setA setB;
@@ -170,36 +181,41 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.equals intersection expected) |> toBeEqualToTrue;
   }),
   it (sprintf "none with %i elements" count) (fun () => {
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.none (fun v => v > 0)
       |> expect |> toBeEqualToFalse;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.none (fun v => v > (count / 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.none (fun v => v > (count - 2))
       |> expect |> toBeEqualToFalse;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.none (fun v => v < 0)
       |> expect |> toBeEqualToTrue;
   }),
   it (sprintf "reduce with %i elements" count) (fun () => {
     /* FIXME: This test could be better by not using a single repeated value. */
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.reduce (fun acc _ => acc + 1) 0
       |> expect
       |> toBeEqualToInt count;
   }),
   it (sprintf "remove %i elements" count) (fun () => {
-    let src = Seq.inRange 0 (Some count) 1;
+    let src = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
     let mapOfSizeN = src |> SetImpl.fromSeq;
 
     /* FIMXE: Maybe add Seq.sample, Seq.filteri */
@@ -224,29 +240,35 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     );
   }),
   it (sprintf "some with %i elements" count) (fun () => {
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.some (fun v => v > 0)
       |> expect |> toBeEqualToTrue;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.some (fun v => v > (count - 2))
       |> expect |> toBeEqualToTrue;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.some (fun v => v > (count / 2))
       |> expect |> toBeEqualToTrue;
 
-    Seq.inRange 0 (Some count) 1
+    ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq
       |> SetImpl.some (fun v => v < 0)
       |> expect |> toBeEqualToFalse;
 
   }),
   it (sprintf "subtract with %i elements" count) (fun () => {
-    let setA = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
+    let setA = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
+      |> SetImpl.fromSeq;
     let setB = Seq.inRange 0 (Some (count / 2)) 2 |> SetImpl.fromSeq;
 
     let subtracted = SetImpl.subtract setA setB;
@@ -258,7 +280,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     it (sprintf "contains with %i elements" count) (fun () => {
       let set = Seq.inRange 0 (Some count) 3 |> SetImpl.fromSeq |> SetImpl.toSet;
 
-      Set.inRange 0 count 3 |> Set.forEach (fun i => {
+      Seq.inRange 0 (Some count) 3 |> Seq.forEach (fun i => {
         expect (set |> Set.contains i) |> toBeEqualToTrue;
       });
     }),
@@ -267,32 +289,39 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       expect (Set.count set) |> toBeEqualToInt count;
     }),
     it (sprintf "every with %i elements" count) (fun () => {
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.every (fun v => v > (count / 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.every (fun v => v > 0)
         |> expect |> toBeEqualToFalse;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.every (fun v => v > (count - 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.every (fun v => v < count)
         |> expect |> toBeEqualToTrue;
     }),
     it (sprintf "find and tryFind with %i elements" count) (fun () => {
-      let set = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toSet;
+      let set = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toSet;
 
       let find0 i => i == 0;
       let findCountMinusOne i => i == (count - 1);
@@ -310,38 +339,46 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       expect (Set.tryFind Functions.alwaysFalse set) |> toBeEqualToNoneOfInt;
     }),
     it (sprintf "forEach and tryFind with %i elements" count) (fun () => {
-      let set = Seq.inRange (count - 1) (Some count) (-1) |> SetImpl.fromSeq |> SetImpl.toSet;
+      let set = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeqReversed
+        |> SetImpl.fromSeq
+        |> SetImpl.toSet;
       set |> Set.forEach (fun i => {
         expect (set |> Set.contains i) |> toBeEqualToTrue;
       });
     }),
     it (sprintf "none with %i elements" count) (fun () => {
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.none (fun v => v > 0)
         |> expect |> toBeEqualToFalse;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.none (fun v => v > (count / 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.none (fun v => v > (count - 2))
         |> expect |> toBeEqualToFalse;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.none (fun v => v < 0)
         |> expect |> toBeEqualToTrue;
     }),
     it (sprintf "reduce with %i elements" count) (fun () => {
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.reduce (fun acc _ => acc + 1) 0
@@ -349,25 +386,29 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
         |> toBeEqualToInt count;
     }),
     it (sprintf "some with %i elements" count) (fun () => {
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.some (fun v => v > 0)
         |> expect |> toBeEqualToTrue;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.some (fun v => v > (count - 2))
         |> expect |> toBeEqualToTrue;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.some (fun v => v > (count / 2))
         |> expect |> toBeEqualToTrue;
 
-      Seq.inRange 0 (Some count) 1
+      ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
         |> SetImpl.fromSeq
         |> SetImpl.toSet
         |> Set.some (fun v => v < 0)
@@ -379,8 +420,12 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   ],
   describe "toMap" [
     it (sprintf "containsWith with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
-      Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
+
+      ContiguousIntSet.create 0 count |> ContiguousIntSet.forEach (fun i => {
         expect (map |> Map.contains i i) |> toBeEqualToTrue;
       });
 
@@ -389,8 +434,11 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       expect (map |> Map.contains 0 1) |> toBeEqualToFalse;
     }),
     it (sprintf "containsKey with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
-      Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
+      ContiguousIntSet.create 0 count |> ContiguousIntSet.forEach (fun i => {
         expect (map |> Map.containsKey i) |> toBeEqualToTrue;
       });
 
@@ -398,23 +446,35 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       expect (map |> Map.containsKey count) |> toBeEqualToFalse;
     }),
     it (sprintf "count with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       expect (map |> Map.count) |> toBeEqualToInt count;
     }),
     it (sprintf "every with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       expect (map |> Map.every (fun i v => i == v)) |> toBeEqualToTrue;
       expect (map |> Map.every (fun i v => i != v)) |> toBeEqualToFalse;
     }),
     it (sprintf "find with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       expect (map |> Map.find (fun i v =>
         (i == (count - 1)) && (v == (count - 1))
       )) |> toBeEqualTo intTupleToString (count - 1, count - 1);
       defer (fun () => map |> Map.find (fun i v => i != v)) |> throws;
     }),
     it (sprintf "forEach with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       let loopCount = ref 0;
       map |> Map.forEach (fun i v => {
         expect i |> toBeEqualToInt v;
@@ -424,8 +484,11 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       expect !loopCount |> toBeEqualToInt count;
     }),
     it (sprintf "get with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
-      Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
+      ContiguousIntSet.create 0 count |> ContiguousIntSet.forEach (fun i => {
         expect (map |> Map.get i) |> toBeEqualToInt i;
       });
 
@@ -433,25 +496,37 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       defer (fun () => map |> Map.get count) |> throws;
     }),
     it (sprintf "keys with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       map
         |> Map.keys
-        |> Set.equals (Set.inRange 0 count 1)
+        |> Set.equals (ContiguousIntSet.create 0 count |> ContiguousIntSet.toSet)
         |> expect
         |> toBeEqualToTrue;
     }),
     it (sprintf "none with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       expect (map |> Map.none (fun i v => i != v)) |> toBeEqualToTrue;
       expect (map |> Map.none (fun i v => i == v)) |> toBeEqualToFalse;
     }),
     it (sprintf "reduce with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       let reduced = map |> Map.reduce (fun acc _ _ => acc + 1) 0;
       expect reduced |> toBeEqualToInt count;
     }),
     it (sprintf "some with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       expect (map |> Map.some (fun i v => i == v)) |> toBeEqualToTrue;
       expect (map |> Map.some (fun i v => i != v)) |> toBeEqualToFalse;
     }),
@@ -459,15 +534,21 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
 
     ],
     it (sprintf "tryFind with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       expect (map |> Map.tryFind (fun i v =>
         (i == (count - 1)) && (v == (count - 1))
       )) |> toBeEqualToSome intTupleToString (count - 1, count - 1);
       expect (map |> Map.tryFind (fun i v => i != v)) |> toBeEqualToNone intTupleToString;
     }),
     it (sprintf "tryGet with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
-      Seq.inRange 0 (Some count) 1 |> Seq.forEach (fun i => {
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
+      ContiguousIntSet.create 0 count |> ContiguousIntSet.forEach (fun i => {
         expect (map |> Map.tryGet i) |> toBeEqualToSomeOfInt i;
       });
 
@@ -475,12 +556,15 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
       expect (map |> Map.tryGet count) |> toBeEqualToNoneOfInt;
     }),
     it (sprintf "values with %i elements" count) (fun () => {
-      let map = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq |> SetImpl.toMap;
+      let map = ContiguousIntSet.create 0 count
+        |> ContiguousIntSet.toSeq
+        |> SetImpl.fromSeq
+        |> SetImpl.toMap;
       map
         |> Map.values
         |> SetImpl.fromSeq
         |> SetImpl.toSet
-        |> Set.equals (Set.inRange 0 count 1)
+        |> Set.equals (ContiguousIntSet.create 0 count |> ContiguousIntSet.toSet)
         |> expect
         |> toBeEqualToTrue;
     }),
@@ -493,7 +577,9 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     let setB = Seq.inRange 0 (Some (count / 2)) 2 |> SetImpl.fromSeq;
 
     let union = SetImpl.union setA setB;
-    let expected = Seq.inRange 0 (Some count) 1 |> SetImpl.fromSeq;
+    let expected = ContiguousIntSet.create 0 count
+      |> ContiguousIntSet.toSeq
+      |> SetImpl.fromSeq;
 
     expect (SetImpl.equals union expected) |> toBeEqualToTrue;
   }),

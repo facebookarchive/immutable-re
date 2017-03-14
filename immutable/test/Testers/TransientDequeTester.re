@@ -51,7 +51,7 @@ let test (count: int) (module TransientDeque: TransientDeque): (list Test.t) => 
       expect (empty |> TransientDeque.tryFirst) |> toBeEqualToNoneOfInt;
       expect (empty |> TransientDeque.tryLast) |> toBeEqualToNoneOfInt;
 
-      let deque = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i => {
+      let deque = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
         let acc = acc |> TransientDeque.addLast i;
 
         expect (TransientDeque.isNotEmpty acc) |> toBeEqualToTrue;
@@ -65,7 +65,7 @@ let test (count: int) (module TransientDeque: TransientDeque): (list Test.t) => 
         acc;
       }) empty;
 
-      let shouldBeEmpty = Seq.inRange (count - 1) (Some count) (-1) |> Seq.reduce (fun acc i => {
+      let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduceRight (fun acc i => {
         expect (TransientDeque.isNotEmpty acc) |> toBeEqualToTrue;
         expect (TransientDeque.isEmpty acc) |> toBeEqualToFalse;
         expect (TransientDeque.count acc) |> toBeEqualToInt (i + 1);
@@ -95,7 +95,7 @@ let test (count: int) (module TransientDeque: TransientDeque): (list Test.t) => 
       expect (empty |> TransientDeque.tryFirst) |> toBeEqualToNoneOfInt;
       expect (empty |> TransientDeque.tryLast) |> toBeEqualToNoneOfInt;
 
-      let deque = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i => {
+      let deque = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
         let acc = acc |> TransientDeque.addLast i;
 
         expect (TransientDeque.isNotEmpty acc) |> toBeEqualToTrue;
@@ -109,7 +109,7 @@ let test (count: int) (module TransientDeque: TransientDeque): (list Test.t) => 
         acc;
       }) empty;
 
-      let shouldBeEmpty = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i => {
+      let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
         expect (TransientDeque.isNotEmpty acc) |> toBeEqualToTrue;
         expect (TransientDeque.isEmpty acc) |> toBeEqualToFalse;
         expect (TransientDeque.count acc) |> toBeEqualToInt (count - i);
@@ -139,7 +139,7 @@ let test (count: int) (module TransientDeque: TransientDeque): (list Test.t) => 
       expect (empty |> TransientDeque.tryFirst) |> toBeEqualToNoneOfInt;
       expect (empty |> TransientDeque.tryLast) |> toBeEqualToNoneOfInt;
 
-      let deque = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i => {
+      let deque = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
         let acc = acc |> TransientDeque.addFirst i;
 
         expect (TransientDeque.isNotEmpty acc) |> toBeEqualToTrue;
@@ -153,7 +153,7 @@ let test (count: int) (module TransientDeque: TransientDeque): (list Test.t) => 
         acc;
       }) empty;
 
-      let shouldBeEmpty = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i => {
+      let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
         expect (TransientDeque.isNotEmpty acc) |> toBeEqualToTrue;
         expect (TransientDeque.isEmpty acc) |> toBeEqualToFalse;
         expect (TransientDeque.count acc) |> toBeEqualToInt (count - i);

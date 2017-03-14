@@ -36,7 +36,7 @@ let module Set = {
 
 let transientIntSetTest (count: int): (list Test.t) => [
   it (sprintf "add with %i elements" count) (fun () => {
-    let src = Seq.inRange 0 (Some count) 1;
+    let src = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
 
     let (_, mapOfSizeN) = src
       |> Seq.scan
@@ -57,7 +57,9 @@ let transientIntSetTest (count: int): (list Test.t) => [
     let hash = Hash.random ();
     let transient = IntSet.empty
       |> IntSet.mutate
-      |> TransientIntSet.addAll  (Seq.inRange 0 (Some count) 1 |> Seq.map hash);
+      |> TransientIntSet.addAll (
+        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Seq.map hash
+      );
 
     Seq.inRange 0 (Some (count / 2)) 2 |> Seq.map hash |> Seq.forEach (fun i => {
       transient |> TransientIntSet.remove i |> ignore;
@@ -75,7 +77,9 @@ let transientIntSetTest (count: int): (list Test.t) => [
     let hash = Hash.random ();
     let transient = IntSet.empty
       |> IntSet.mutate
-      |> TransientIntSet.addAll  (Seq.inRange 0 (Some count) 1 |> Seq.map hash);
+      |> TransientIntSet.addAll (
+        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Seq.map hash
+      );
     transient |> TransientIntSet.removeAll |> ignore;
     expect (transient |> TransientIntSet.isEmpty) |> toBeEqualToTrue;
   }),

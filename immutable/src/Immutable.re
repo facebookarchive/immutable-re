@@ -130,7 +130,6 @@ let module Set = {
   let forEach = ImmSet.forEach;
   let hash = ImmSet.hash;
   let hashWith = ImmSet.hashWith;
-  let inRange = ImmSet.inRange;
   let intersect = ImmSet.intersect;
   let isEmpty = ImmSet.isEmpty;
   let isNotEmpty = ImmSet.isNotEmpty;
@@ -173,6 +172,33 @@ let module Map = {
   let tryFind = ImmMap.tryFind;
   let tryGet = ImmMap.tryGet;
   let values = ImmMap.values;
+};
+
+let module ContiguousIntSet = {
+  type t = ContiguousIntSet.t;
+
+  let create = ContiguousIntSet.create;
+  let contains = ContiguousIntSet.contains;
+  let count = ContiguousIntSet.count;
+  let empty = ContiguousIntSet.empty;
+  let every = ContiguousIntSet.every;
+  let find = ContiguousIntSet.find;
+  let first = ContiguousIntSet.first;
+  let forEach = ContiguousIntSet.forEach;
+  let hash = ContiguousIntSet.hash;
+  let isEmpty = ContiguousIntSet.isEmpty;
+  let isNotEmpty = ContiguousIntSet.isNotEmpty;
+  let last = ContiguousIntSet.last;
+  let reduce = ContiguousIntSet.reduce;
+  let reduceRight = ContiguousIntSet.reduceRight;
+  let some = ContiguousIntSet.some;
+  let toMap = ContiguousIntSet.toMap;
+  let toSeq = ContiguousIntSet.toSeq;
+  let toSeqReversed = ContiguousIntSet.toSeqReversed;
+  let toSet = ContiguousIntSet.toSet;
+  let tryFind = ContiguousIntSet.tryFind;
+  let tryFirst = ContiguousIntSet.tryFirst;
+  let tryLast = ContiguousIntSet.tryLast;
 };
 
 let module CopyOnWriteArray = {

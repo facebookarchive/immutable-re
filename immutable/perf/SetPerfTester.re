@@ -9,28 +9,30 @@ let hash = Hash.random ();
 
 let generateTests
     (getTestData: unit => 'set)
-    (keys: unit => Seq.t int)
+    (keys: unit => ContiguousIntSet.t)
     (empty: unit => 'set)
     (add: int => 'set => 'set)
     (remove: int => 'set => 'set)
     (contains: int => 'set => bool)
     (n: int): (list Test.t) => [
   it (sprintf "add %i elements" n) (fun () => {
-    let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash;
-
-    keys |> Seq.reduce (fun acc i => acc |> add i) (empty ()) |> ignore;
+    ContiguousIntSet.create 0 n
+      |> ContiguousIntSet.reduce
+        (fun acc i => acc |> add (hash i))
+        (empty ())
+      |> ignore
   }),
 
   it (sprintf "set with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToRemove = keys () |> ContiguousIntSet.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
 
     keysToRemove |> Seq.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "set with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToUpdate = keys () |> ContiguousIntSet.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
 
     keysToUpdate |> Seq.reduce (fun acc i => acc |> add i) map |> ignore;
   }),
@@ -38,7 +40,7 @@ let generateTests
   it (sprintf "contains %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> Seq.forEach (fun i => map |> contains i |> ignore);
+    keys () |> ContiguousIntSet.forEach (fun i => map |> contains i |> ignore);
   }),
 ];
 
@@ -48,29 +50,37 @@ let module CamlIntSet = CamlSet.Make {
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash;
+  let keys = ContiguousIntSet.create 0 count;
 
-  let camlIntSet = keys |> Seq.reduce
-    (fun acc i => acc |> CamlIntSet.add i)
-    CamlIntSet.empty;
+  let camlIntSet = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> CamlIntSet.add (hash i))
+      CamlIntSet.empty;
 
-  let hashSetComparison = keys |> Seq.reduce
-    (fun acc i => acc |> HashSet.add i)
-    HashSet.empty;
+  let hashSetComparison = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> TransientHashSet.add i)
+      (TransientHashSet.empty ())
+    |> TransientHashSet.persist;
 
-  let hashSetEquality = keys |> Seq.reduce
-    (fun acc i => acc |> HashSet.add i)
-    (HashSet.emptyWith HashStrategy.structuralEquality);
+  let hashSetEquality = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> TransientHashSet.add i)
+      (TransientHashSet.emptyWith HashStrategy.structuralEquality)
+    |> TransientHashSet.persist;
 
-  let intSet = keys |> Seq.reduce
-    (fun acc i => acc |> IntSet.add i)
-    IntSet.empty;
+  let intSet = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> TransientIntSet.add i)
+      (TransientIntSet.empty ())
+    |> TransientIntSet.persist;
 
   let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
 
-  let sortedSet = keys |> Seq.reduce
-    (fun acc i => acc |> SortedSet.add i)
-    SortedSet.empty;
+  let sortedSet = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> SortedSet.add i)
+      SortedSet.empty;
 
   let testGroup = [
     describe "CamlIntSet" (

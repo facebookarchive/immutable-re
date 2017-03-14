@@ -132,7 +132,7 @@ let module BadHashEqualitySet = {
 
 let transientHashSetTest (count: int): (list Test.t) => [
   it (sprintf "add with %i elements" count) (fun () => {
-    let src = Seq.inRange 0 (Some count) 1;
+    let src = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
 
     let (_, mapOfSizeN) = src
       |> Seq.scan

@@ -29,7 +29,7 @@ let test  (count: int) (module TransientStack: TransientStack): (list Test.t) =>
     defer (fun () => empty |> TransientStack.first) |> throws;
     expect (empty |> TransientStack.tryFirst) |> toBeEqualToNoneOfInt;
 
-    let stack = Seq.inRange 0 (Some count) 1 |> Seq.reduce (fun acc i => {
+    let stack = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
       let acc = acc |> TransientStack.addFirst i;
 
       expect (TransientStack.isNotEmpty acc) |> toBeEqualToTrue;
@@ -41,7 +41,7 @@ let test  (count: int) (module TransientStack: TransientStack): (list Test.t) =>
       acc;
     }) empty;
 
-    let shouldBeEmpty = Seq.inRange (count - 1) (Some count) (-1) |> Seq.reduce (fun acc i => {
+    let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduceRight (fun acc i => {
       expect (TransientStack.isNotEmpty acc) |> toBeEqualToTrue;
       expect (TransientStack.isEmpty acc) |> toBeEqualToFalse;
       expect (TransientStack.count acc) |> toBeEqualToInt (i + 1);

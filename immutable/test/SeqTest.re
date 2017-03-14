@@ -48,14 +48,14 @@ let test = describe "Seq" [
     expect (test |> Seq.equals expected) |> toBeEqualToTrue;
   }),
   it "contains" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
 
     expect (seq |> Seq.contains (-1)) |> toBeEqualToFalse;
     expect (seq |> Seq.contains 1) |> toBeEqualToTrue;
     expect (seq |> Seq.contains 11) |> toBeEqualToFalse;
   }),
   it "count" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
     expect (seq |> Seq.count) |> toBeEqualToInt 10;
   }),
   it "defer" (fun () => {
@@ -71,23 +71,27 @@ let test = describe "Seq" [
     ()
   }),
   it "equals" (fun () => {
-    Seq.inRange 0 (Some 10) 1
-      |> Seq.equals (Seq.inRange 0 (Some 10) 1)
+    ContiguousIntSet.create 0 10
+      |> ContiguousIntSet.toSeq
+      |> Seq.equals (ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq)
       |> expect
       |> toBeEqualToTrue;
 
-    Seq.inRange 0 (Some 9) 1
-      |> Seq.equals (Seq.inRange 0 (Some 10) 1)
+    ContiguousIntSet.create 0 9
+      |> ContiguousIntSet.toSeq
+      |> Seq.equals (ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq)
       |> expect
       |> toBeEqualToFalse;
 
-    Seq.inRange 0 (Some 11) 1
-      |> Seq.equals (Seq.inRange 0 (Some 10) 1)
+    ContiguousIntSet.create 0 11
+      |> ContiguousIntSet.toSeq
+      |> Seq.equals (ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq)
       |> expect
       |> toBeEqualToFalse;
 
-    Seq.inRange 1 (Some 10) 1
-      |> Seq.equals (Seq.inRange 0 (Some 10) 1)
+    ContiguousIntSet.create 1 10
+      |> ContiguousIntSet.toSeq
+      |> Seq.equals (ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq)
       |> expect
       |> toBeEqualToFalse;
   }),
@@ -104,12 +108,12 @@ let test = describe "Seq" [
     expect (test |> Seq.equals expected) |> toBeEqualToTrue;
   }),
   it "find" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
     expect (Seq.find (fun a => a == 3) seq) |> toBeEqualToInt 3;
     defer (fun () => Seq.find (fun a => a == 11) seq) |> throws;
   }),
   it "first" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
     expect (Seq.first seq) |> toBeEqualToInt 0;
     defer (fun () => Seq.first Seq.empty) |> throws;
   }),
@@ -134,15 +138,20 @@ let test = describe "Seq" [
     ()
   }),
   it "get" (fun () => {
-    expect (Seq.inRange 0 (Some 10) 1 |> Seq.get 2) |> toBeEqualToInt 2;
-    defer (fun () => Seq.inRange 0 (Some 10) 1 |> Seq.get (-10)) |> throws;
-    defer (fun () => Seq.inRange 0 (Some 10) 1 |> Seq.get 20) |> throws;
+    expect (
+      ContiguousIntSet.create 0 10
+      |> ContiguousIntSet.toSeq
+      |> Seq.get 2
+    ) |> toBeEqualToInt 2;
+    defer (fun () => ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq |> Seq.get (-10)) |> throws;
+    defer (fun () => ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq |> Seq.get 20) |> throws;
   }),
   it "hash" (fun () => {
     ()
   }),
   it "inRange" (fun () => {
-    Seq.inRange 1 (Some 5) 1
+    ContiguousIntSet.create 1 5
+      |> ContiguousIntSet.toSeq
       |> expect
       |> toBeEqualToSeqOfInt (List.toSeq [1, 2, 3, 4, 5])
   }),
@@ -155,13 +164,16 @@ let test = describe "Seq" [
     expect (Seq.isNotEmpty (List.toSeq [1])) |> toBeEqualToTrue;
   }),
   it "last" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
     expect (Seq.last seq) |> toBeEqualToInt 9;
     defer (fun () => Seq.last Seq.empty) |> throws;
   }),
   it "map" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1 |> Seq.map (fun i => i + 5);
-    expect seq |> toBeEqualToSeqOfInt (Seq.inRange 5 (Some 10) 1);
+    ContiguousIntSet.create 0 10
+      |> ContiguousIntSet.toSeq
+      |> Seq.map (fun i => i + 5)
+      |> expect
+      |> toBeEqualToSeqOfInt (ContiguousIntSet.create 5 10 |> ContiguousIntSet.toSeq);
   }),
   it "none" (fun () => {
     expect ([1, 1, 1] |> List.toSeq |> Seq.none (fun _ => false )) |> toBeEqualToTrue;
@@ -176,18 +188,20 @@ let test = describe "Seq" [
     expect seq |> toBeEqualToSeqOfInt ([1,1,1,1] |> List.toSeq);
   }),
   it "return" (fun () => {
-    Seq.return 1 |> Seq.first |> expect |> toBeEqualToInt 1; 
+    Seq.return 1 |> Seq.first |> expect |> toBeEqualToInt 1;
   }),
   it "scan" (fun () => {
     ()
   }),
   it "skip" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
-    (Seq.skip 5 seq) |> expect |> toBeEqualToSeqOfInt (Seq.inRange 5 (Some 5) 1);
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
+    (Seq.skip 5 seq) |> expect |> toBeEqualToSeqOfInt (ContiguousIntSet.create 5 5 |> ContiguousIntSet.toSeq);
   }),
   it "skipWhile" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
-    (Seq.skipWhile (fun x => x < 5) seq) |> expect |> toBeEqualToSeqOfInt (Seq.inRange 5 (Some 5) 1);
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
+    (Seq.skipWhile (fun x => x < 5) seq) |> expect |> toBeEqualToSeqOfInt (
+      ContiguousIntSet.create 5 5 |> ContiguousIntSet.toSeq
+    );
   }),
   it "some" (fun () => {
     expect ([1, 1, 1] |> List.toSeq |> Seq.some (fun x => x == 2 )) |> toBeEqualToFalse;
@@ -195,19 +209,23 @@ let test = describe "Seq" [
     expect (Seq.empty |> Seq.some (fun _ => true )) |> toBeEqualToFalse;
   }),
   it "startWith" (fun () => {
-    let seq = Seq.startWith 0 (Seq.inRange 1 (Some 10) 1);
+    let seq = Seq.startWith 0 (ContiguousIntSet.create 1 10 |> ContiguousIntSet.toSeqReversed);
     expect (Seq.first seq) |> toBeEqualToInt 0;
   }),
   it "take" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
-    (Seq.take 5 seq) |> expect |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some 5) 1);
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
+    (Seq.take 5 seq) |> expect |> toBeEqualToSeqOfInt (
+      ContiguousIntSet.create 0 5 |> ContiguousIntSet.toSeq
+    );
   }),
   it "takeWhile" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
-    (Seq.takeWhile (fun x => x < 5) seq) |> expect |> toBeEqualToSeqOfInt (Seq.inRange 0 (Some 5) 1);
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
+    (Seq.takeWhile (fun x => x < 5) seq) |> expect |> toBeEqualToSeqOfInt (
+      ContiguousIntSet.create 0 5 |> ContiguousIntSet.toSeq
+    );
   }),
   it "tryFind" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
     expect (Seq.tryFind (fun a => a == 3) seq) |> toBeEqualToSomeOfInt 3;
     expect (Seq.tryFind (fun a => a == 11) seq) |> toBeEqualToNoneOfInt;
   }),
@@ -216,12 +234,12 @@ let test = describe "Seq" [
     expect ([1, 2, 3] |> List.toSeq |> Seq.tryFirst) |> toBeEqualToSomeOfInt 1;
   }),
   it "tryGet" (fun () => {
-    expect (Seq.inRange 0 (Some 10) 1 |> Seq.tryGet 2) |> toBeEqualToSomeOfInt 2;
-    expect (Seq.inRange 0 (Some 10) 1 |> Seq.tryGet (-10)) |> toBeEqualToNoneOfInt;
-    expect (Seq.inRange 0 (Some 10) 1 |> Seq.tryGet 20) |> toBeEqualToNoneOfInt;
+    expect (ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq |> Seq.tryGet 2) |> toBeEqualToSomeOfInt 2;
+    expect (ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq |> Seq.tryGet (-10)) |> toBeEqualToNoneOfInt;
+    expect (ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq |> Seq.tryGet 20) |> toBeEqualToNoneOfInt;
   }),
   it "tryLast" (fun () => {
-    let seq = Seq.inRange 0 (Some 10) 1;
+    let seq = ContiguousIntSet.create 0 10 |> ContiguousIntSet.toSeq;
     expect (Seq.tryLast seq) |> toBeEqualToSomeOfInt 9;
     expect (Seq.tryLast Seq.empty) |> toBeEqualToNoneOfInt;
   }),

@@ -9,32 +9,28 @@ let hash = Hash.random ();
 
 let generateTests
     (getTestData: unit => 'map)
-    (keys: unit => Seq.t int)
+    (keys: unit => ContiguousIntSet.t)
     (empty: unit => 'map)
     (put: int => int => 'map => 'map)
     (remove: int => 'map => 'map)
     (tryGet: int => 'map => option int)
     (n: int): (list Test.t) => [
   it (sprintf "put %i elements" n) (fun () => {
-    let keys = Seq.inRange 0 (Some n) 1 |> Seq.map hash;
-
-    Seq.reduce
-      (fun acc i => acc |> put i i)
-      (empty ())
-      keys
-    |> ignore;
+    ContiguousIntSet.create 0 n
+      |> ContiguousIntSet.reduce (fun acc i => acc |> put (hash i) i) (empty ())
+      |> ignore;
   }),
 
   it (sprintf "map with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToRemove = keys () |> ContiguousIntSet.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
 
     keysToRemove |> Seq.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "map with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToUpdate = keys () |> ContiguousIntSet.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
 
     /* Multiply the updated value to avoid optimizations */
     keysToUpdate |> Seq.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
@@ -43,7 +39,7 @@ let generateTests
   it (sprintf "tryGet %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> Seq.forEach (fun i => map |> tryGet i |> ignore);
+    keys () |> ContiguousIntSet.forEach (fun i => map |> tryGet i |> ignore);
   }),
 ];
 
@@ -53,25 +49,34 @@ let module CamlIntMap = CamlMap.Make {
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = Seq.inRange 0 (Some count) 1 |> Seq.map hash;
+  let keys = ContiguousIntSet.create 0 count;
 
-  let camlIntMap = keys |> Seq.reduce
-    (fun acc i => acc |> CamlIntMap.add i i)
+  let camlIntMap = keys |> ContiguousIntSet.reduce
+    (fun acc i => acc |> CamlIntMap.add (hash i) i)
     CamlIntMap.empty;
 
-  let hashMapComparison = keys |> Seq.reduce
-    (fun acc i => acc |> HashMap.put i i)
-    HashMap.empty;
+  let hashMapComparison = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> TransientHashMap.put (hash i) i)
+      (TransientHashMap.empty ())
+    |> TransientHashMap.persist;
 
-  let hashMapEquality = keys |> Seq.reduce
-    (fun acc i => acc |> HashMap.put i i)
-    (HashMap.emptyWith HashStrategy.structuralEquality);
+  let hashMapEquality = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> TransientHashMap.put (hash i) i)
+      (TransientHashMap.emptyWith HashStrategy.structuralEquality)
+    |> TransientHashMap.persist;
 
-  let intMap = keys |> Seq.map (fun i => (i, i)) |> IntMap.fromSeq;
+  let intMap = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> TransientIntMap.put i i)
+      (TransientIntMap.empty ())
+    |> TransientIntMap.persist;
 
-  let sortedMap = keys |> Seq.reduce
-    (fun acc i => acc |> SortedMap.put i i)
-    SortedMap.empty;
+  let sortedMap = keys
+    |> ContiguousIntSet.reduce
+      (fun acc i => acc |> SortedMap.put i i)
+      SortedMap.empty;
 
   let testGroup = [
     describe "CamlIntMap" (
