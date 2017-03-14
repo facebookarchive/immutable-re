@@ -225,33 +225,46 @@ let rec scan
 let buffer
     (count: int)
     (skip: int)
-    (seq: t 'a): (t (list 'a)) =>
-  if (count <= 0 || skip <= 0) (failwith "out of range")
-  else seq
-    |> scan (
-      fun (lst, counted, skipped) next =>
-        if (counted < count && skipped < skip) ([next, ...lst], counted + 1, skipped + 1)
-        else if (skipped < skip) (lst, counted, skipped + 1)
-        else if (counted < count) ([next, ...lst], counted + 1, skipped)
-        else if (skip < count) ([next, ...(ImmList.take (count - skip) lst)], counted, skipped)
-        else ([next], 1, 1)
-      ) ([], 0, 0)
-    |> filter (fun (_, counted, skipped) => counted == count && skipped == skip)
-    |> map (fun (lst, _, _) => lst);
+    (seq: t 'a): (t (list 'a)) => {
+  if (count <= 0 || skip <= 0) (failwith "out of range");
+
+  let rec recurse (lst: list 'a) (counted: int) (skipped: int) (seq: t 'a) => fun () => switch (seq ()) {
+    | Next value next =>
+        let nextSeq =
+          if (counted < count && skipped < skip) (recurse [value, ...lst] (counted + 1) (skipped + 1) next)
+          else if (skipped < skip) (recurse lst counted (skipped + 1) next)
+          else if (counted < count) (recurse [value, ...lst] (counted + 1) skipped next)
+          else if (skip < count) (recurse [value, ...(ImmList.take (count - skip) lst)] counted skipped next)
+          else (recurse [value] 1 1 next);
+
+        if (counted == count && skipped == skip) (Next lst nextSeq)
+        else (nextSeq ())
+    | Completed =>
+        if (counted == count && skipped == skip) (Next lst empty)
+        else Completed
+  };
+
+  recurse [] 0 0 seq;
+};
 
 let distinctUntilChangedWith
     (equality: Equality.t 'a)
-    (seq: t 'a): (t 'a) => seq
-  |> scan
-    (fun (_, accNext) next => (accNext, Some next))
-    (None, None)
-  |> map (fun v => switch v {
-      | (Some prev, Some next) when (not @@ equality prev @@ next) => Some next
-      | (None, Some next) => Some next
-      | _ => None
-    })
-  |> filter Option.isNotEmpty
-  |> map Option.first;
+    (seq: t 'a): (t 'a) => fun () => {
+  let rec iter
+      (equality: Equality.t 'a)
+      (prevValue: 'a)
+      (next: t 'a): (t 'a) => fun () => switch (next ()) {
+    | Next value next =>
+        if (equality prevValue value) (iter equality prevValue next ())
+        else Next value (iter equality value next)
+    | Completed => Completed
+  };
+
+  switch (seq ()) {
+    | Next value next => Next value (iter equality value next)
+    | Completed => Completed
+  }
+};
 
 let distinctUntilChanged (seq: t 'a): (t 'a) =>
   seq |> distinctUntilChangedWith Equality.structural;
@@ -271,16 +284,16 @@ let get (index: int) (seq: t 'a): 'a =>
   if (index < 0) (failwith "index < 0")
   else seq |> skip index |> first;
 
-let skipWhile (f: 'a => bool) (seq: t 'a): (t 'a) => seq
-  |> scan
-    (fun acc next => switch acc {
-      | Some _ => Some next
-      | _ =>
-        if (f next) None
-        else Some next
-    }) None
-  |> filter Option.isNotEmpty
-  |> map Option.first;
+let skipWhile (f: 'a => bool) (seq: t 'a): (t 'a) => fun () => {
+  let rec skipIter f (iter: iterator 'a): (iterator 'a) => switch iter {
+    | Next value next =>
+        if (f value) { skipIter f (next ()) }
+        else iter
+    | Completed => Completed
+  };
+
+  skipIter f (seq ())
+};
 
 let rec some (f: 'a => bool) (seq: t 'a): bool => switch (seq ()) {
   | Next value next => (f value) || (some f next)
@@ -297,16 +310,13 @@ let rec takeWhile (f: 'a => bool) (seq: t 'a): (t 'a) => fun () => switch (seq (
   | Completed => Completed
 };
 
-let take (count: int) (seq: t 'a): (t 'a) =>
-  if (count > 0) (seq
-    |> scan (fun (count, _) next =>
-        if (count > 0) (count - 1, Some next)
-        else (count, None)
-      ) (count, None)
-    |> takeWhile (snd >> Option.isNotEmpty)
-    |> map (snd >> Option.first)
-  )
-  else if (count == 0) empty
+let rec take (count: int) (seq: t 'a): (t 'a) => fun () =>
+  if (count > 0) (switch (seq ()) {
+    | Next value next =>
+        Next value (take (count - 1) next)
+    | Completed => Completed
+  })
+  else if (count == 0) Completed
   else failwith "count must be greater or equal to 0";
 
 let rec tryFind (predicate: 'a => bool) (seq: t 'a): (option 'a) => switch (seq ()) {
