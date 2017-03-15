@@ -137,6 +137,9 @@ let test = describe "Seq" [
   it "forEach" (fun () => {
     ()
   }),
+  it "generate" (fun () => {
+    ()
+  }),
   it "get" (fun () => {
     expect (
       ContiguousIntSet.create 0 10
@@ -148,12 +151,6 @@ let test = describe "Seq" [
   }),
   it "hash" (fun () => {
     ()
-  }),
-  it "inRange" (fun () => {
-    ContiguousIntSet.create 1 5
-      |> ContiguousIntSet.toSeq
-      |> expect
-      |> toBeEqualToSeqOfInt (List.toSeq [1, 2, 3, 4, 5])
   }),
   it "isEmpty" (fun () => {
     expect (Seq.isEmpty Seq.empty) |> toBeEqualToTrue;

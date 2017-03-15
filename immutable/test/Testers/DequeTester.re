@@ -248,7 +248,9 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         |> Deque.map (fun i => i + 1)
         |> Deque.toSeq
         |> expect
-        |> toBeEqualToSeqOfInt (Seq.inRange 1 (Some count) 1);
+        |> toBeEqualToSeqOfInt (
+          ContiguousIntSet.create 1 count |> ContiguousIntSet.toSeq
+        );
     }),
 
     it (sprintf "reduceRight %i elements" count) (fun () => {

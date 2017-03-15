@@ -486,9 +486,11 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToFalse;
     }),
     it (sprintf "insertAt with %i elements" count) (fun () => {
-      let result = Seq.inRange 1 (Some count) 2 |> Seq.reduce
-        (fun acc i => acc |> Vector.insertAt i 1)
-        (Vector.fromSeq @@ Seq.repeat 0 @@ (Some count));
+      let result = Seq.generate (fun i => i + 2) 1
+        |> Seq.take count
+        |> Seq.reduce
+          (fun acc i => acc |> Vector.insertAt i 1)
+          (Vector.fromSeq @@ Seq.repeat 0 @@ (Some count));
 
       expect @@ Vector.toSeq @@ result
         |> toBeEqualToSeqOfInt (Seq.repeat [0, 1] (Some count) |> Seq.flatMap List.toSeq);

@@ -61,17 +61,23 @@ let transientIntSetTest (count: int): (list Test.t) => [
         ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Seq.map hash
       );
 
-    Seq.inRange 0 (Some (count / 2)) 2 |> Seq.map hash |> Seq.forEach (fun i => {
-      transient |> TransientIntSet.remove i |> ignore;
-    });
+    Seq.generate (fun i => i + 2) 0
+      |> Seq.take (count / 2)
+      |> Seq.map hash |> Seq.forEach (fun i => {
+        transient |> TransientIntSet.remove i |> ignore;
+      });
 
-    Seq.inRange 1 (Some (count / 2)) 2 |> Seq.map hash |> Seq.forEach (fun i => {
-      expect (transient |> TransientIntSet.contains i) |> toBeEqualToTrue;
-    });
+    Seq.generate (fun i => i + 2) 0
+      |> Seq.take (count / 2)
+      |> Seq.map hash |> Seq.forEach (fun i => {
+        expect (transient |> TransientIntSet.contains i) |> toBeEqualToTrue;
+      });
 
-    Seq.inRange 0 (Some (count / 2)) 2 |> Seq.map hash |> Seq.forEach (fun i => {
-      expect (transient |> TransientIntSet.contains i) |> toBeEqualToFalse;
-    });
+    Seq.generate (fun i => i + 2) 0
+      |> Seq.take (count / 2)
+      |> Seq.map hash |> Seq.forEach (fun i => {
+        expect (transient |> TransientIntSet.contains i) |> toBeEqualToFalse;
+      });
   }),
   it (sprintf "removeAll with %i elements" count) (fun () => {
     let hash = Hash.random ();

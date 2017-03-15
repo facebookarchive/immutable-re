@@ -20,7 +20,8 @@ let generateTests
       |> ContiguousIntSet.reduce (fun acc _ => acc |> removeLast) (getTestData ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, update %i elements alternating" n (n / 2)) (fun () => {
-    Seq.inRange 0 (Some (n / 2)) 2
+    Seq.generate (fun i => i + 2) 0
+      |> Seq.take (n / 2)
       |> Seq.reduce (fun acc i => acc |> update i (n - i)) (getTestData ()) |> ignore;
   }),
   it (sprintf "tryGet %i values" n) (fun () => {

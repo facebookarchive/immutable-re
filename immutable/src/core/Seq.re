@@ -116,17 +116,8 @@ let rec forEach (f: 'a => unit) (seq: t 'a) => switch (seq ()) {
   | Completed => ()
 };
 
-let inRange (start: int) (count: option int) (step: int): (t int) => switch count {
-  | Some count when count < 0 => failwith "Count must be great than 0"
-  | _ =>
-      let rec recurse (start: int) (count: option int) (step: int): (t int) => fun () => switch count {
-        | Some count when count == 0 => Completed
-        | Some count => Next start (recurse (start + step) (Some (count - 1)) step)
-        | None => Next start (recurse (start + step) None step)
-      };
-
-      recurse start count step
-};
+let rec generate (f: 'acc => 'acc) (acc: 'acc): (t 'acc) => fun () =>
+  Next acc (generate f (f acc));
 
 let isEmpty (seq: t 'a): bool => switch (seq ()) {
   | Next _ => false

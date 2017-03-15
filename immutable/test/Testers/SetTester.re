@@ -92,14 +92,14 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.count shouldBeEmpty) |> toBeEqualToInt 0;
   }),
   it (sprintf "contains with %i elements" count) (fun () => {
-    let values = Seq.inRange (-count) (Some count) 5;
+    let values = Seq.generate (fun i => i + 5) (-count) |> Seq.take count;
     let set = SetImpl.fromSeq values;
     values |> Seq.forEach (fun i => {
       expect (SetImpl.contains i set) |> toBeEqualToTrue;
     });
   }),
   it (sprintf "count with %i elements" count) (fun () => {
-    let set = Seq.inRange (-count) (Some count) 5 |> SetImpl.fromSeq;
+    let set = Seq.generate (fun i => i + 5) (-count) |> Seq.take count |> SetImpl.fromSeq;
     expect (SetImpl.count set) |> toBeEqualToInt count;
   }),
   it (sprintf "equals %i elements" count) (fun () => {
@@ -174,10 +174,10 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   }),
   it (sprintf "intersect with %i elements" count) (fun () => {
     let setA = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> SetImpl.fromSeq;
-    let setB = Seq.inRange 0 (Some (count / 2)) 2 |> SetImpl.fromSeq;
+    let setB = Seq.generate (fun i => i + 2) 0 |> Seq.take (count / 2) |> SetImpl.fromSeq;
 
     let intersection = SetImpl.intersect setA setB;
-    let expected = Seq.inRange 0 (Some (count / 2)) 2 |> SetImpl.fromSeq;
+    let expected = Seq.generate (fun i => i + 2) 0 |> Seq.take (count / 2) |> SetImpl.fromSeq;
     expect (SetImpl.equals intersection expected) |> toBeEqualToTrue;
   }),
   it (sprintf "none with %i elements" count) (fun () => {
@@ -269,23 +269,23 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     let setA = ContiguousIntSet.create 0 count
       |> ContiguousIntSet.toSeq
       |> SetImpl.fromSeq;
-    let setB = Seq.inRange 0 (Some (count / 2)) 2 |> SetImpl.fromSeq;
+    let setB =  Seq.generate (fun i => i + 2) 0 |> Seq.take (count / 2) |> SetImpl.fromSeq;
 
     let subtracted = SetImpl.subtract setA setB;
-    let expected = Seq.inRange 1 (Some (count / 2)) 2 |> SetImpl.fromSeq;
+    let expected =  Seq.generate (fun i => i + 2) 1 |> Seq.take (count / 2) |> SetImpl.fromSeq;
 
     expect (SetImpl.equals subtracted expected) |> toBeEqualToTrue;
   }),
   describe "toSet" [
     it (sprintf "contains with %i elements" count) (fun () => {
-      let set = Seq.inRange 0 (Some count) 3 |> SetImpl.fromSeq |> SetImpl.toSet;
+      let set = Seq.generate (fun i => i + 3) 0 |> Seq.take count |> SetImpl.fromSeq |> SetImpl.toSet;
 
-      Seq.inRange 0 (Some count) 3 |> Seq.forEach (fun i => {
+      Seq.generate (fun i => i + 3) 0 |> Seq.take count |> Seq.forEach (fun i => {
         expect (set |> Set.contains i) |> toBeEqualToTrue;
       });
     }),
     it (sprintf "count with %i elements" count) (fun () => {
-      let set = Seq.inRange 0 (Some count) 3 |> SetImpl.fromSeq |> SetImpl.toSet;
+      let set = Seq.generate (fun i => i + 3) 0 |> Seq.take count |> SetImpl.fromSeq |> SetImpl.toSet;
       expect (Set.count set) |> toBeEqualToInt count;
     }),
     it (sprintf "every with %i elements" count) (fun () => {
@@ -573,8 +573,8 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
 
   ],
   it (sprintf "union with %i elements" count) (fun () => {
-    let setA = Seq.inRange 1 (Some (count / 2)) 2 |> SetImpl.fromSeq;
-    let setB = Seq.inRange 0 (Some (count / 2)) 2 |> SetImpl.fromSeq;
+    let setA = Seq.generate (fun i => i + 2) 1 |> Seq.take (count / 2) |> SetImpl.fromSeq;
+    let setB = Seq.generate (fun i => i + 2) 0 |> Seq.take (count / 2) |> SetImpl.fromSeq;
 
     let union = SetImpl.union setA setB;
     let expected = ContiguousIntSet.create 0 count

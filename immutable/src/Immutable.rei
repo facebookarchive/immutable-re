@@ -225,6 +225,9 @@ let module Seq: {
    *  Complexity: O(N)
    */
 
+   let generate: ('acc => 'acc) => 'acc => (t 'acc);
+   /** [generate f acc] generates the infinite sequence x, f(x), f(f(x)), ...*/
+
    let get: int => (t 'a) => 'a;
    /** [get n seq] returns the [n]th element in [seq] or throws.
     *
@@ -241,12 +244,6 @@ let module Seq: {
   /** [hashWith hash seq] hashes [seq], hashing elements using [hash].
    *
    *  Complexity: O(N)
-   */
-
-  let inRange: int => (option int) => int => (t int);
-  /** [inRange start count step] returns an integer Seq starting with [start]
-   *  with [count] elements, with an interval of [step] between elements in the Seq.
-   *  If count is None, the Seq is infinite.
    */
 
   let isEmpty: (t 'a) => bool;
