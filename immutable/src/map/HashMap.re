@@ -443,6 +443,20 @@ let removeAll ({ strategy }: t 'k 'v): (t 'k 'v) =>
 let some (f: 'k => 'v => bool) ({ root }: t 'k 'v): bool =>
   root |> BitmapTrieMap.some f;
 
+let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
+  if (isEmpty map) Iterable.empty
+  else {
+    reduce: fun f acc => map |> reduce
+      (fun acc k v => f acc (k, v))
+      acc
+  };
+
+let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
+  if (isEmpty map) KeyedIterable.empty
+  else {
+    reduce: fun f acc => map |> reduce f acc
+  };
+
 let toSeq ({ root }: t 'k 'v): (Seq.t ('k, 'v)) =>
   root |> BitmapTrieMap.toSeq;
 

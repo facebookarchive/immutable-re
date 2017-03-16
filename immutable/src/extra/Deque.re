@@ -124,6 +124,10 @@ let forEachReverse (f: 'a => unit) (deque: t 'a): unit =>
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
+let toIterable (deque: t 'a): (Iterable.t 'a) =>
+ if (isEmpty deque) Iterable.empty
+ else { reduce: fun f acc => reduce f acc deque };
+
 let toSeq (deque: t 'a): (Seq.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSeq
   | Descending vector => vector |> Vector.toSeqReversed;

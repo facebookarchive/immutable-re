@@ -88,6 +88,20 @@ let some (f: 'a => bool) ({ some }: t 'a): bool =>
 let subtract (this: t 'a) (that: t 'a): (Seq.t 'a) =>
   this.toSeq |> Seq.filter (that.contains >> not);
 
+let toIterable ({ reduce } as set: t 'a): (Iterable.t 'a) =>
+  if (set === empty) Iterable.empty
+  else {
+    reduce: reduce
+  };
+
+let toKeyedIterable ({ reduce } as set: t 'a): (KeyedIterable.t 'a 'a) =>
+  if (set == empty) KeyedIterable.empty
+  else {
+    reduce: fun f acc => reduce
+      (fun acc next => f acc next next)
+      acc
+    };
+
 let toSeq ({ toSeq }: t 'a): (Seq.t 'a) => toSeq;
 
 let tryFind (f: 'a => bool) ({ tryFind }: t 'a): (option 'a) =>

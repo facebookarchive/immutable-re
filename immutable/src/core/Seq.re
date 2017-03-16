@@ -213,6 +213,12 @@ let rec scan
   | Completed => Completed
 };
 
+let toIterable (seq: t 'a): (Iterable.t 'a) =>
+  if (isEmpty seq) Iterable.empty
+  else {
+    reduce: fun f acc => reduce f acc seq
+  };
+
 let buffer
     (count: int)
     (skip: int)

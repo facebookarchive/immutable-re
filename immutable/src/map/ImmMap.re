@@ -162,6 +162,16 @@ let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ reduce }: t 'k 'v): 'acc
 let some (f: 'k => 'v => bool) ({ some }: t 'k 'v): bool =>
   some f;
 
+let toIterable ({ reduce }: t 'k 'v): (Iterable.t ('k, 'v)) => {
+  reduce: fun f acc => reduce
+    (fun acc k v => f acc (k, v))
+    acc
+};
+
+let toKeyedIterable ({ reduce }: t 'k 'v): (KeyedIterable.t 'k 'v) => {
+  reduce: reduce
+};
+
 let toSetWith
     (equals: Equality.t 'v)
     (map: t 'k 'v): (ImmSet.t ('k, 'v)) => {

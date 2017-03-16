@@ -148,6 +148,20 @@ let tryLast ({ tree }: t 'k 'v): (option ('k, 'v)) =>
 let values ({ tree }: t 'k 'v): (Seq.t 'v) =>
   tree |> AVLTreeMap.values;
 
+let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
+  if (isEmpty map) Iterable.empty
+  else {
+    reduce: fun f acc => map |> reduce
+      (fun acc k v => f acc (k, v))
+      acc
+  };
+
+let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
+  if (isEmpty map) KeyedIterable.empty
+  else {
+    reduce: fun f acc => map |> reduce f acc
+  };
+
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,

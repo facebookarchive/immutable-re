@@ -126,6 +126,17 @@ let tryFind (f: int => bool) ({ count, start }: t): (option int) => {
   recurse f start count;
 };
 
+let toIterable (set: t): (Iterable.t int) =>
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduce f acc set };
+
+let toKeyedIterable (set: t): (KeyedIterable.t int int) =>
+  if (isEmpty set) KeyedIterable.empty
+  else { reduce: fun f acc => set |> reduce
+    (fun acc next => f acc next next)
+    acc
+  };
+
 let toSet (set: t): (ImmSet.t int) => {
   contains: fun v => contains v set,
   count: count set,

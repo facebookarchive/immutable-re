@@ -271,6 +271,20 @@ let removeAll (_: t 'a): (t 'a) => empty;
 let some (f: int => 'a => bool) ({ root }: t 'a): bool =>
   root |> BitmapTrieIntMap.some f;
 
+let toIterable (map: t 'a): (Iterable.t (int, 'a)) =>
+  if (isEmpty map) Iterable.empty
+  else {
+    reduce: fun f acc => map |> reduce
+      (fun acc k v => f acc (k, v))
+      acc
+  };
+
+let toKeyedIterable (map: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty map) KeyedIterable.empty
+  else {
+    reduce: fun f acc => map |> reduce f acc
+  };
+
 let toSeq ({ root }: t 'a): (Seq.t ((int, 'a))) =>
   root |> BitmapTrieIntMap.toSeq;
 

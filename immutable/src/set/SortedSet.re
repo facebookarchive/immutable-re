@@ -108,6 +108,18 @@ let none (f: 'a => bool) (set: t 'a): bool =>
 let some (f: 'a => bool) (set: t 'a): bool =>
   set |> toSeq |> Seq.some f;
 
+let toIterable (set: t 'a): (Iterable.t 'a) =>
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduce f acc set };
+
+let toKeyedIterable (set: t 'a): (KeyedIterable.t 'a 'a) =>
+  if (isEmpty set) KeyedIterable.empty
+  else {
+    reduce: fun f acc => set |> reduce
+      (fun acc next => f acc next next)
+      acc
+  };
+
 let tryFind (f: 'a => bool) (set: t 'a): (option 'a) =>
   set |> toSeq |> Seq.tryFind f;
 

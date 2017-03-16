@@ -168,18 +168,31 @@ let some (f: int => bool) (set: t): bool =>
 let tryFind (f: int => bool) (set: t): (option int) =>
   set |> toSeq |> Seq.tryFind f;
 
-let toSet (set: t): (ImmSet.t int) => {
-  contains: fun v => contains v set,
-  count: count set,
-  every: fun f => set |> every f,
-  find: fun f => set |> find f,
-  forEach: fun f => set |> forEach f,
-  none: fun f => set |> none f,
-  reduce: fun f acc => set |> reduce f acc,
-  some: fun f => set |> some f,
-  toSeq: toSeq set,
-  tryFind: fun f => set |> tryFind f,
-};
+let toIterable (set: t): (Iterable.t int) =>
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduce f acc set };
+
+let toKeyedIterable (set: t): (KeyedIterable.t int int) =>
+  if (isEmpty set) KeyedIterable.empty
+  else { reduce: fun f acc => set |> reduce
+    (fun acc next => f acc next next)
+    acc
+  };
+
+let toSet (set: t): (ImmSet.t int) =>
+  if (isEmpty set) ImmSet.empty
+  else {
+    contains: fun v => contains v set,
+    count: count set,
+    every: fun f => set |> every f,
+    find: fun f => set |> find f,
+    forEach: fun f => set |> forEach f,
+    none: fun f => set |> none f,
+    reduce: fun f acc => set |> reduce f acc,
+    some: fun f => set |> some f,
+    toSeq: toSeq set,
+    tryFind: fun f => set |> tryFind f,
+  };
 
 let equals (this: t) (that: t): bool =>
   ImmSet.equals (toSet this) (toSet that);

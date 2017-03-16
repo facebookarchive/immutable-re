@@ -1075,6 +1075,14 @@ let take (takeCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
 let range (startIndex: int) (takeCount: option int) (vec: t 'a): (t 'a) =>
    vec |> skip startIndex |> take (takeCount |? (count vec));
 
+let toIterable (set: t 'a): (Iterable.t 'a) =>
+ if (isEmpty set) Iterable.empty
+ else { reduce: fun f acc => reduce f acc set };
+
+let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty arr) KeyedIterable.empty
+  else { reduce: fun f acc => reduceWithIndex f acc arr };
+
 let toSeq ({ left, middle, right }: t 'a): (Seq.t 'a) => Seq.concat [
   CopyOnWriteArray.toSeq left,
   IndexedTrie.toSeq middle,
@@ -1160,7 +1168,7 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
   reduce: fun f acc => reduceWithIndex f acc vec,
   some: fun f => someWithIndex f vec,
   toSeq: Seq.zip2
-    (ContiguousIntSet.create 0 (count vec) |> ContiguousIntSet.toSeq) 
+    (ContiguousIntSet.create 0 (count vec) |> ContiguousIntSet.toSeq)
     (toSeq vec),
   tryFind: fun f => tryIndexOfWithIndex f vec >>| fun index => (index, vec |> get index),
   tryGet: fun i => tryGet i vec,

@@ -106,6 +106,24 @@ let module HashStrategy: {
   /** A HashStrategy using structural hashing and structural equality. */
 };
 
+let module Iterable: {
+  type t 'a;
+
+  let concat: (list (t 'a)) => (t 'a);
+  let concatAll: (t (t 'a)) => (t 'a);
+  let count: (t 'a) => int;
+  let doOnNext: ('a => unit) => (t 'a) => (t 'a);
+  let empty: (t 'a);
+  let filter: ('a => bool) => (t 'a) => (t 'a);
+  let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
+  let flatten: (t (t 'a)) => (t 'a);
+  let forEach: ('a => unit) => (t 'a) => unit;
+  let hash: (Hash.t (t 'a));
+  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+};
+
 let module Seq: {
   /** Functional sequence iterators. */
 
@@ -320,6 +338,8 @@ let module Seq: {
   /** [takeWhile f seq] returns a Seq that applies the predicate [f] to each element in [seq],
    *  taking elements until [f] first returns false.  */
 
+  let toIterable: (t 'a) => (Iterable.t 'a);
+
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
    *
@@ -373,6 +393,24 @@ let module Seq: {
   /** [zip3 first second third] merges two Seq into a Seq of triples.
    *  Elements are produce until first, second, and third all complete.
    */
+};
+
+let module KeyedIterable: {
+  type t 'k 'v;
+
+  let count: (t 'k 'v) => int;
+  let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
+  let empty: (t 'k 'v);
+  let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+  let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+  let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
+  let hash: (Hash.t (t 'k 'v));
+  let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
+  let keys: (t 'k 'v) => (Iterable.t 'k);
+  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k ' b);
+  let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
+  let values: (t 'k 'v) => Iterable.t 'v;
 };
 
 let module rec Set: {
@@ -447,6 +485,10 @@ let module rec Set: {
   /** [subtract this that] returns a Seq of unique element
    *  which occur in [this] but not in [that].
    */
+
+  let toIterable: (t 'a) => (Iterable.t 'a);
+
+  let toKeyedIterable: (t 'a) => (KeyedIterable.t 'a 'a);
 
   let toMap: (t 'a) => (Map.t 'a 'a);
   /** [toMap set] returns a Map view of [set] as a mapping of values to themselves. */
@@ -553,6 +595,13 @@ and Map: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
+  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
+
+  let toKeyedIterable: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+
+  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
    *  to equate values.
@@ -562,9 +611,6 @@ and Map: {
   /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
    *  using [equals] to equate values.
    */
-
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
 
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
@@ -611,6 +657,10 @@ let module ContiguousIntSet: {
   let reduceRight: ('acc => int => 'acc) => 'acc => t => 'acc;
 
   let some: (int => bool) => t => bool;
+
+  let toIterable: t => (Iterable.t int);
+
+  let toKeyedIterable: t => (KeyedIterable.t int int);
 
   let toMap: t => (Map.t int int);
 
@@ -912,6 +962,10 @@ let module CopyOnWriteArray: {
   let take: int => (t 'a) => (t 'a);
   /** [take count cow] returns a new CopyOnWriteArray that includes the first [count] elements in [cow]. */
 
+  let toIterable: (t 'a) => (Iterable.t 'a);
+
+  let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap cow] returns a Map view of [cow] */
 
@@ -1151,6 +1205,8 @@ let module rec Deque: {
   /** [some f deque] returns true if the predicate [f] returns true for any element in [deque], otherwise false.
    *  If [deque] is empty, returns false.
    */
+
+  let toIterable: (t 'a) => (Iterable.t 'a);
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq deque] returns a Seq of the elements in [deque] in order. */
@@ -1639,6 +1695,16 @@ let module rec HashMap: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
+  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
+
+  let toKeyedIterable: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+
+  let toMap: (t 'k 'v) => (Map.t 'k 'v);
+  /** [toMap map] returns a Map view of [map]. */
+
+  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
    *  to equate values.
@@ -1648,12 +1714,6 @@ let module rec HashMap: {
   /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
    *  using [equals] to equate values.
    */
-
-  let toMap: (t 'k 'v) => (Map.t 'k 'v);
-  /** [toMap map] returns a Map view of [map]. */
-
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
 
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
@@ -2058,14 +2118,18 @@ let module rec HashSet: {
    *  Complexity: O(N) currently, ideally O(log32 N) if [this] and [that] use the same HashStrategy.
    */
 
-  let toSet: (t 'a) => (Set.t 'a);
-  /** [toSet set] returns a Set view of [set] */
+  let toIterable: (t 'a) => (Iterable.t 'a);
+
+  let toKeyedIterable: (t 'a) => (KeyedIterable.t 'a 'a);
 
   let toMap: (t 'a) => (Map.t 'a 'a);
   /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq set] returns a Seq of the values in [set]. */
+
+  let toSet: (t 'a) => (Set.t 'a);
+  /** [toSet set] returns a Set view of [set] */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
@@ -2315,16 +2379,20 @@ let module rec IntMap: {
    *  to equate values.
    */
 
-  let toSetWith: (Equality.t 'a) => (t 'a) => (Set.t (int, 'a));
-  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
-   *  using [equals] to equate values.
-   */
+  let toIterable: (t 'a) => (Iterable.t (int, 'a));
+
+  let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
 
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap map] returns a Map view of [map]. */
 
   let toSeq: (t 'a) => (Seq.t ((int, 'a)));
   /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
+  let toSetWith: (Equality.t 'a) => (t 'a) => (Set.t (int, 'a));
+  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
+   *  using [equals] to equate values.
+   */
 
   let tryFind: (int => 'a => bool) => (t 'a) => (option (int, 'a));
   /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
@@ -2502,14 +2570,18 @@ let module rec IntSet: {
    *  Complexity: O(N) currently, ideally O(log32 N).
    */
 
-  let toSet: t => (Set.t int);
-  /** [toSet set] returns a Set view of [set] */
+  let toIterable: t => (Iterable.t int);
+
+  let toKeyedIterable: t => (KeyedIterable.t int int);
 
   let toMap: t => (Map.t int int);
   /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
   let toSeq: t => (Seq.t int);
   /** [toSeq set] returns a Seq of the values in [set]. */
+
+  let toSet: t => (Set.t int);
+  /** [toSet set] returns a Set view of [set] */
 
   let tryFind: (int => bool) => t => (option int);
   /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
@@ -2721,6 +2793,8 @@ let module List: {
    *  If [list] is empty, returns false.
    */
 
+  let toIterable: (t 'a) => (Iterable.t 'a);
+
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq list] returns a Seq of the elements in [list] in order. */
 
@@ -2839,6 +2913,8 @@ let module Option: {
   /** [some f option] returns true if the predicate [f] returns true for any element in [option], otherwise false.
    *  If [option] is empty, returns false.
    */
+
+  let toIterable: (t 'a) => (Iterable.t 'a);
 
   let toSet: (option 'a) => (Set.t 'a);
   /* [toSet option] returns a Set view of the option using structural equality equate values. */
@@ -3049,6 +3125,16 @@ let module SortedMap: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
+  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
+
+  let toKeyedIterable: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+
+  let toMap: (t 'k 'v) => (Map.t 'k 'v);
+  /** [toMap map] returns a Map view of [map]. */
+
+  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
    *  to equate values.
@@ -3058,12 +3144,6 @@ let module SortedMap: {
   /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
    *  using [equals] to equate values.
    */
-
-  let toMap: (t 'k 'v) => (Map.t 'k 'v);
-  /** [toMap map] returns a Map view of [map]. */
-
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
 
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
@@ -3233,14 +3313,18 @@ let module SortedSet: {
    *  the same comparator (NOT IMPLEMENTED).
    */
 
-  let toSet: (t 'a) => (Set.t 'a);
-  /** [toSet set] returns a Set view of [set] */
+  let toIterable: (t 'a) => (Iterable.t 'a);
+
+  let toKeyedIterable: (t 'a) => (KeyedIterable.t 'a 'a);
 
   let toMap: (t 'a) => (Map.t 'a 'a);
   /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq set] returns a Seq of the values in [set]. */
+
+  let toSet: (t 'a) => (Set.t 'a);
+  /** [toSet set] returns a Set view of [set] */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
@@ -3410,6 +3494,8 @@ let module Stack: {
   /** [some f stack] returns true if the predicate [f] returns true for any element in [stack], otherwise false.
    *  If [stack] is empty, returns false.
    */
+
+  let toIterable: (t 'a) => (Iterable.t 'a);
 
   let toList: (t 'a) => (list 'a);
   /** [toList stack] returns the underlying List backing the stack */
@@ -3782,6 +3868,10 @@ let module rec Vector: {
 
   let take: int => (t 'a) => (t 'a);
   /** [take count vec] returns a new Vector that includes the first [count] elements in [vec]. */
+
+  let toIterable: (t 'a) => (Iterable.t 'a);
+
+  let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
 
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap vec] returns a Map view of [vec] */

@@ -124,6 +124,9 @@ let reverse ({ count, list }: t 'a): (t 'a) => {
 let some (f: 'a => bool) ({ list }: t 'a): bool =>
   list |> ImmList.some f;
 
+let toIterable ({ list }: t 'a): (Iterable.t 'a) =>
+  Iterable.ofList list;
+
 let toList ({ list }: t 'a): (list 'a) => list;
 
 let toSeq ({ list }: t 'a): (Seq.t 'a) => Seq.ofList list;

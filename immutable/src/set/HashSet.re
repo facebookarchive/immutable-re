@@ -215,7 +215,9 @@ let remove (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
 let removeAll ({ strategy }: t 'a): (t 'a) =>
   emptyWith strategy;
 
-let toSeq ({ root }: t 'a): (Seq.t 'a) => root |> BitmapTrieSet.toSeq;
+let toSeq ({ root } as set: t 'a): (Seq.t 'a) =>
+  if (isEmpty set) Seq.empty
+  else root |> BitmapTrieSet.toSeq;
 
 let every (f: 'a => bool) (set: t 'a): bool =>
   set |> toSeq |> Seq.every f;
@@ -238,18 +240,31 @@ let some (f: 'a => bool) (set: t 'a): bool =>
 let tryFind (f: 'a => bool) (set: t 'a): (option 'a) =>
   set |> toSeq |> Seq.tryFind f;
 
-let toSet (set: t 'a): (ImmSet.t 'a) => {
-  contains: fun v => contains v set,
-  count: count set,
-  every: fun f => set |> every f,
-  find: fun f => set |> find f,
-  forEach: fun f => set |> forEach f,
-  none: fun f => set |> none f,
-  reduce: fun f acc => set |> reduce f acc,
-  some: fun f => set |> some f,
-  toSeq: toSeq set,
-  tryFind: fun f => set |> tryFind f,
-};
+let toIterable (set: t 'a): (Iterable.t 'a) =>
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduce f acc set };
+
+let toKeyedIterable (set: t 'a): (KeyedIterable.t 'a 'a) =>
+  if (isEmpty set) KeyedIterable.empty
+  else { reduce: fun f acc => set |> reduce
+    (fun acc next => f acc next next)
+    acc
+  };
+
+let toSet (set: t 'a): (ImmSet.t 'a) =>
+  if (isEmpty set) ImmSet.empty
+  else {
+    contains: fun v => contains v set,
+    count: count set,
+    every: fun f => set |> every f,
+    find: fun f => set |> find f,
+    forEach: fun f => set |> forEach f,
+    none: fun f => set |> none f,
+    reduce: fun f acc => set |> reduce f acc,
+    some: fun f => set |> some f,
+    toSeq: toSeq set,
+    tryFind: fun f => set |> tryFind f,
+  };
 
 let equals (this: t 'a) (that: t 'a): bool =>
   ImmSet.equals (toSet this) (toSet that);

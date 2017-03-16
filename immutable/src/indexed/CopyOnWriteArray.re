@@ -400,20 +400,32 @@ let someWithIndex (f: int => 'a => bool) (arr: t 'a): bool => {
 let take (newCount: int) (arr: t 'a): (t 'a) =>
   Array.sub arr 0 newCount;
 
-let toSeqReversed (arr: t 'a): (Seq.t 'a) => {
-  let rec loop index => fun () =>
-    if (index < 0) Seq.Completed
-    else Seq.Next arr.(index) (loop (index - 1));
-  loop (count arr - 1);
-};
+let toIterable (arr: t 'a): (Iterable.t 'a) =>
+ if (isEmpty arr) Iterable.empty
+ else { reduce: fun f acc => reduce f acc arr };
 
-let toSeq (arr: t 'a): (Seq.t 'a) => {
-  let arrCount = count arr;
-  let rec loop index => fun () =>
-    if (index < arrCount) (Seq.Next arr.(index) (loop (index + 1)))
-    else Seq.Completed;
-  loop 0;
-};
+let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty arr) KeyedIterable.empty
+  else { reduce: fun f acc => reduceWithIndex f acc arr };
+
+let toSeqReversed (arr: t 'a): (Seq.t 'a) =>
+  if (isEmpty arr) Seq.empty
+  else {
+    let rec loop index => fun () =>
+      if (index < 0) Seq.Completed
+      else Seq.Next arr.(index) (loop (index - 1));
+    loop (count arr - 1);
+  };
+
+let toSeq (arr: t 'a): (Seq.t 'a) =>
+  if (isEmpty arr) Seq.empty
+  else {
+    let arrCount = count arr;
+    let rec loop index => fun () =>
+      if (index < arrCount) (Seq.Next arr.(index) (loop (index + 1)))
+      else Seq.Completed;
+    loop 0;
+  };
 
 let toSeqWithIndex (arr: t 'a): (Seq.t (int, 'a)) => {
   let arrCount = count arr;
