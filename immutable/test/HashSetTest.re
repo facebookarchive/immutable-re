@@ -132,7 +132,7 @@ let module BadHashEqualitySet = {
 
 let transientHashSetTest (count: int): (list Test.t) => [
   it (sprintf "add with %i elements" count) (fun () => {
-    let src = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
+    let src = IntRange.create 0 count |> IntRange.toSeq;
 
     let (_, mapOfSizeN) = src
       |> Seq.scan
@@ -154,7 +154,7 @@ let transientHashSetTest (count: int): (list Test.t) => [
     let transient = HashSet.empty
       |> HashSet.mutate
       |> TransientHashSet.addAll (
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Seq.map hash
+        IntRange.create 0 count |> IntRange.toSeq |> Seq.map hash
       );
 
     Seq.generate (fun i => i + 2) 0
@@ -183,7 +183,7 @@ let transientHashSetTest (count: int): (list Test.t) => [
     let transient = HashSet.empty
       |> HashSet.mutate
       |> TransientHashSet.addAll (
-          ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Seq.map hash
+          IntRange.create 0 count |> IntRange.toSeq |> Seq.map hash
       );
     transient |> TransientHashSet.removeAll |> ignore;
     expect (transient |> TransientHashSet.isEmpty) |> toBeEqualToTrue;

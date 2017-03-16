@@ -97,7 +97,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (empty |> Deque.tryFirst) |> toBeEqualToNoneOfInt;
       expect (empty |> Deque.tryLast) |> toBeEqualToNoneOfInt;
 
-      let deque = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
+      let deque = IntRange.create 0 count |> IntRange.reduce (fun acc i => {
         let acc = acc |> Deque.addLast i;
 
         expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
@@ -111,7 +111,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         acc;
       }) empty;
 
-      let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduceRight (fun acc i => {
+      let shouldBeEmpty = IntRange.create 0 count |> IntRange.reduceRight (fun acc i => {
         expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
         expect (Deque.isEmpty acc) |> toBeEqualToFalse;
         expect (Deque.count acc) |> toBeEqualToInt (i + 1);
@@ -131,10 +131,10 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (shouldBeEmpty |> Deque.tryLast) |>  toBeEqualToNoneOfInt;
 
       expect @@ Deque.toSeq @@ deque |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq
+        IntRange.create 0 count |> IntRange.toSeq
       );
       expect @@ Deque.toSeqReversed @@ deque |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed
+        IntRange.create 0 count |> IntRange.toSeqReversed
       );
     }),
 
@@ -149,7 +149,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (empty |> Deque.tryFirst) |> toBeEqualToNoneOfInt;
       expect (empty |> Deque.tryLast) |> toBeEqualToNoneOfInt;
 
-      let deque = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
+      let deque = IntRange.create 0 count |> IntRange.reduce (fun acc i => {
         let acc = acc |> Deque.addLast i;
 
         expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
@@ -163,7 +163,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         acc;
       }) empty;
 
-      let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
+      let shouldBeEmpty = IntRange.create 0 count |> IntRange.reduce (fun acc i => {
         expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
         expect (Deque.isEmpty acc) |> toBeEqualToFalse;
         expect (Deque.count acc) |> toBeEqualToInt (count - i);
@@ -183,10 +183,10 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (shouldBeEmpty |> Deque.tryLast) |> toBeEqualToNoneOfInt;
 
       expect @@ Deque.toSeq @@ deque |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq
+        IntRange.create 0 count |> IntRange.toSeq
       );
       expect @@ Deque.toSeqReversed @@ deque |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed
+        IntRange.create 0 count |> IntRange.toSeqReversed
       );
     }),
 
@@ -201,7 +201,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (empty |> Deque.tryFirst) |> toBeEqualToNoneOfInt;
       expect (empty |> Deque.tryLast) |> toBeEqualToNoneOfInt;
 
-      let deque = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
+      let deque = IntRange.create 0 count |> IntRange.reduce (fun acc i => {
         let acc = acc |> Deque.addFirst i;
 
         expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
@@ -215,7 +215,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
         acc;
       }) empty;
 
-      let shouldBeEmpty = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i => {
+      let shouldBeEmpty = IntRange.create 0 count |> IntRange.reduce (fun acc i => {
         expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
         expect (Deque.isEmpty acc) |> toBeEqualToFalse;
         expect (Deque.count acc) |> toBeEqualToInt (count - i);
@@ -235,21 +235,21 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
       expect (shouldBeEmpty |> Deque.tryLast) |>  toBeEqualToNoneOfInt;
 
       expect @@ Deque.toSeq @@ deque |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed
+        IntRange.create 0 count |> IntRange.toSeqReversed
       );
       expect @@ Deque.toSeqReversed @@ deque |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq
+        IntRange.create 0 count |> IntRange.toSeq
       );
     }),
 
     it (sprintf "map %i elements" count) (fun () => {
-      ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce (fun acc i => acc |> Deque.addLast i) Deque.empty
+      IntRange.create 0 count
+        |> IntRange.reduce (fun acc i => acc |> Deque.addLast i) Deque.empty
         |> Deque.map (fun i => i + 1)
         |> Deque.toSeq
         |> expect
         |> toBeEqualToSeqOfInt (
-          ContiguousIntSet.create 1 count |> ContiguousIntSet.toSeq
+          IntRange.create 1 count |> IntRange.toSeq
         );
     }),
 
@@ -263,7 +263,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     }),
 
     it (sprintf "addLastAll with %i elements" count) (fun () => {
-      let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
+      let seq = IntRange.create 0 count |> IntRange.toSeq;
       let result = Deque.empty |> Deque.addLastAll seq;
 
       (Deque.toSeq result)
@@ -273,7 +273,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     }),
 
     it (sprintf "fromSeq with %i elements" count) (fun () => {
-      let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
+      let seq = IntRange.create 0 count |> IntRange.toSeq;
       let result = Deque.fromSeq seq;
 
       (Deque.toSeq result)
@@ -284,7 +284,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
 
     it (sprintf "forEachReverse with %i elements" count) (fun () => {
       let counted = ref count;
-      let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
+      let seq = IntRange.create 0 count |> IntRange.toSeq;
       let result = Deque.fromSeqReversed seq;
       result |> Deque.forEachReverse (fun i => {
         expect (count - i) |> toBeEqualToInt !counted;

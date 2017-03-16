@@ -12,12 +12,12 @@ let generateTests
     (tryGet: int => 'vector => option int)
     (n: int): list Test.t => [
   it (sprintf "add %i elements" n) (fun () => {
-    let src = ContiguousIntSet.create 0 n;
-    src |> ContiguousIntSet.reduce (fun acc i => acc |> add i) (empty ()) |> ignore;
+    let src = IntRange.create 0 n;
+    src |> IntRange.reduce (fun acc i => acc |> add i) (empty ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, removeLast %i elements" n (n / 2)) (fun () => {
-    ContiguousIntSet.create 0 (n / 2)
-      |> ContiguousIntSet.reduce (fun acc _ => acc |> removeLast) (getTestData ()) |> ignore;
+    IntRange.create 0 (n / 2)
+      |> IntRange.reduce (fun acc _ => acc |> removeLast) (getTestData ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, update %i elements alternating" n (n / 2)) (fun () => {
     Seq.generate (fun i => i + 2) 0
@@ -26,27 +26,27 @@ let generateTests
   }),
   it (sprintf "tryGet %i values" n) (fun () => {
     let vec = getTestData ();
-    ContiguousIntSet.create 0 n
-      |> ContiguousIntSet.forEach
+    IntRange.create 0 n
+      |> IntRange.forEach
         (fun i => vec |> tryGet i |> ignore);
   }),
 ];
 
 let test (n: int) (count: int): Test.t => {
-  let indexes = ContiguousIntSet.create 0 count;
+  let indexes = IntRange.create 0 count;
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> ContiguousIntSet.toSeq |> List.fromSeqReversed;
-  let stack = indexes |> ContiguousIntSet.toSeq |> Stack.fromSeqReversed;
+  let list = indexes |> IntRange.toSeq |> List.fromSeqReversed;
+  let stack = indexes |> IntRange.toSeq |> Stack.fromSeqReversed;
   let vector = indexes
-    |> ContiguousIntSet.reduce (fun acc i => acc |> TransientVector.addLast i) (TransientVector.empty ())
+    |> IntRange.reduce (fun acc i => acc |> TransientVector.addLast i) (TransientVector.empty ())
     |> TransientVector.persist;
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> ContiguousIntSet.toSeq |> List.fromSeqReversed;
-  let stack = indexes |> ContiguousIntSet.toSeq |> Stack.fromSeqReversed;
+  let list = indexes |> IntRange.toSeq |> List.fromSeqReversed;
+  let stack = indexes |> IntRange.toSeq |> Stack.fromSeqReversed;
 
   let testGroup = [
     describe "CamlMutableArray" (

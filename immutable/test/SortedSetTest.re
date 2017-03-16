@@ -41,33 +41,33 @@ let count = 10000;
 
 let test = describe "SortedSet" [
   it "compare" (fun () => {
-    let set = ContiguousIntSet.create 0 count
-      |> ContiguousIntSet.toSeq
+    let set = IntRange.create 0 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
 
-    let setEqual = ContiguousIntSet.create 0 count
-      |> ContiguousIntSet.toSeq
+    let setEqual = IntRange.create 0 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
     expect (SortedSet.compare set setEqual) |> toBeEqualTo (fun _ => "") Ordering.equal;
 
-    let setSameLengthLessThan = ContiguousIntSet.create (-1) count
-      |> ContiguousIntSet.toSeq
+    let setSameLengthLessThan = IntRange.create (-1) count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
     expect (SortedSet.compare set setSameLengthLessThan) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
 
 
-    let setSameLengthGreaterThan = ContiguousIntSet.create 1 count
-      |> ContiguousIntSet.toSeq
+    let setSameLengthGreaterThan = IntRange.create 1 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
     expect (SortedSet.compare set setSameLengthGreaterThan) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
 
-    let setLonger = ContiguousIntSet.create 0 (count + 1)
-      |> ContiguousIntSet.toSeq
+    let setLonger = IntRange.create 0 (count + 1)
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
     expect (SortedSet.compare set setLonger) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
 
-    let setShorter = ContiguousIntSet.create 0 (count - 1)
-      |> ContiguousIntSet.toSeq
+    let setShorter = IntRange.create 0 (count - 1)
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
     expect (SortedSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
 
@@ -76,8 +76,8 @@ let test = describe "SortedSet" [
     defer (fun () => SortedSet.compare setWithRandomComparator1 setWithRandomComparator2) |> throws;
   }),
   it "last and tryLast" (fun () => {
-    let set = ContiguousIntSet.create 0 count
-      |> ContiguousIntSet.toSeq
+    let set = IntRange.create 0 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
 
     expect (set |> SortedSet.last) |> toBeEqualToInt (count - 1);
@@ -88,8 +88,8 @@ let test = describe "SortedSet" [
     expect (SortedSet.empty |> SortedSet.tryLast) |> toBeEqualToNoneOfInt;
   }),
   it "first and tryFirst" (fun () => {
-    let set = ContiguousIntSet.create 0 count
-      |> ContiguousIntSet.toSeq
+    let set = IntRange.create 0 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq;
 
     expect (set |> SortedSet.first) |> toBeEqualToInt 0;
@@ -99,8 +99,8 @@ let test = describe "SortedSet" [
     expect (SortedSet.empty |> SortedSet.tryFirst) |> toBeEqualToNoneOfInt;
   }),
   it "reduceRight" (fun () => {
-    ContiguousIntSet.create 0 count
-      |> ContiguousIntSet.toSeq
+    IntRange.create 0 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq
       |> SortedSet.reduceRight
         (fun acc i => { expect (i < acc) |> toBeEqualToTrue; i })
@@ -108,15 +108,15 @@ let test = describe "SortedSet" [
       |> ignore;
   }),
   it "removeLast" (fun () => {
-    let set = ContiguousIntSet.create 0 count
-      |> ContiguousIntSet.toSeq
+    let set = IntRange.create 0 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq
       |> SortedSet.removeLast;
     expect (set |> Set.contains (count - 1)) |> toBeEqualToFalse;
   }),
   it "removeFirst" (fun () => {
-    let set = ContiguousIntSet.create 0 count
-      |> ContiguousIntSet.toSeq
+    let set = IntRange.create 0 count
+      |> IntRange.toSeq
       |> SortedSet.fromSeq
       |> SortedSet.removeFirst;
     expect (set |> Set.contains 0) |> toBeEqualToFalse;

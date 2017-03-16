@@ -9,15 +9,15 @@ let hash = Hash.random ();
 
 let generateTests
     (getTestData: unit => 'set)
-    (keys: unit => ContiguousIntSet.t)
+    (keys: unit => IntRange.t)
     (empty: unit => 'set)
     (add: int => 'set => 'set)
     (remove: int => 'set => 'set)
     (contains: int => 'set => bool)
     (n: int): (list Test.t) => [
   it (sprintf "add %i elements" n) (fun () => {
-    ContiguousIntSet.create 0 n
-      |> ContiguousIntSet.reduce
+    IntRange.create 0 n
+      |> IntRange.reduce
         (fun acc i => acc |> add (hash i))
         (empty ())
       |> ignore
@@ -25,14 +25,14 @@ let generateTests
 
   it (sprintf "set with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> ContiguousIntSet.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToRemove = keys () |> IntRange.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
 
     keysToRemove |> Seq.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "set with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> ContiguousIntSet.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToUpdate = keys () |> IntRange.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
 
     keysToUpdate |> Seq.reduce (fun acc i => acc |> add i) map |> ignore;
   }),
@@ -40,7 +40,7 @@ let generateTests
   it (sprintf "contains %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> ContiguousIntSet.forEach (fun i => map |> contains i |> ignore);
+    keys () |> IntRange.forEach (fun i => map |> contains i |> ignore);
   }),
 ];
 
@@ -50,27 +50,27 @@ let module CamlIntSet = CamlSet.Make {
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = ContiguousIntSet.create 0 count;
+  let keys = IntRange.create 0 count;
 
   let camlIntSet = keys
-    |> ContiguousIntSet.reduce
+    |> IntRange.reduce
       (fun acc i => acc |> CamlIntSet.add (hash i))
       CamlIntSet.empty;
 
   let hashSetComparison = keys
-    |> ContiguousIntSet.reduce
+    |> IntRange.reduce
       (fun acc i => acc |> TransientHashSet.add i)
       (TransientHashSet.empty ())
     |> TransientHashSet.persist;
 
   let hashSetEquality = keys
-    |> ContiguousIntSet.reduce
+    |> IntRange.reduce
       (fun acc i => acc |> TransientHashSet.add i)
       (TransientHashSet.emptyWith HashStrategy.structuralEquality)
     |> TransientHashSet.persist;
 
   let intSet = keys
-    |> ContiguousIntSet.reduce
+    |> IntRange.reduce
       (fun acc i => acc |> TransientIntSet.add i)
       (TransientIntSet.empty ())
     |> TransientIntSet.persist;
@@ -78,7 +78,7 @@ let test (n: int) (count: int): Test.t => {
   let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
 
   let sortedSet = keys
-    |> ContiguousIntSet.reduce
+    |> IntRange.reduce
       (fun acc i => acc |> SortedSet.add i)
       SortedSet.empty;
 

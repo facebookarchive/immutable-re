@@ -53,40 +53,40 @@ let test (count: int) (module TransientVector: TransientVector): (list Test.t) =
 
   [
     it (sprintf "update %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 10 |> ContiguousIntSet.reduce (fun acc i =>
+      let vector = IntRange.create 0 10 |> IntRange.reduce (fun acc i =>
         acc |> TransientVector.addLast i
       ) (TransientVector.empty ());
 
-      ContiguousIntSet.create 0 10 |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 10 |> IntRange.forEach (fun i => {
         expect (vector |> TransientVector.get i) |> toBeEqualToInt i;
         expect (vector |> TransientVector.tryGet i) |> toBeEqualToSomeOfInt i;
       });
 
-      let updated = ContiguousIntSet.create 0 10 |> ContiguousIntSet.reduce (fun acc i =>
+      let updated = IntRange.create 0 10 |> IntRange.reduce (fun acc i =>
         acc |> TransientVector.update i (i + 1)
       ) vector;
 
-      ContiguousIntSet.create 0 10 |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 10 |> IntRange.forEach (fun i => {
         expect (updated |> TransientVector.get i) |> toBeEqualToInt (i + 1);
         expect (updated |> TransientVector.tryGet i) |> toBeEqualToSomeOfInt (i + 1);
       });
     }),
 
     it (sprintf "updateWith %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 10 |> ContiguousIntSet.reduce (fun acc i =>
+      let vector = IntRange.create 0 10 |> IntRange.reduce (fun acc i =>
         acc |> TransientVector.addLast i
       ) (TransientVector.empty ());
 
-      ContiguousIntSet.create 0 10 |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 10 |> IntRange.forEach (fun i => {
         expect (vector |> TransientVector.get i) |> toBeEqualToInt i;
         expect (vector |> TransientVector.tryGet i) |> toBeEqualToSomeOfInt i;
       });
 
-      let updated = ContiguousIntSet.create 0 10 |> ContiguousIntSet.reduce (fun acc i =>
+      let updated = IntRange.create 0 10 |> IntRange.reduce (fun acc i =>
         acc |> TransientVector.updateWith i (fun v => v + 1)
       ) vector;
 
-      ContiguousIntSet.create 0 10 |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 10 |> IntRange.forEach (fun i => {
         expect (updated |> TransientVector.get i) |> toBeEqualToInt (i + 1);
         expect (updated |> TransientVector.tryGet i) |> toBeEqualToSomeOfInt (i + 1);
       });

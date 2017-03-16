@@ -11,7 +11,7 @@ let test
     (tryGet: int => 'map => option int)
     (n: int): list Test.t => [
   it (sprintf "put %i elements" n) (fun () => {
-    let src = ContiguousIntSet.create 0 n |> ContiguousIntSet.toSeq |> Seq.map (Hash.random ());
+    let src = IntRange.create 0 n |> IntRange.toSeq |> Seq.map (Hash.random ());
 
     let (_, mapOfSizeN) = src
       |> Seq.scan
@@ -28,7 +28,7 @@ let test
   }),
 
   it (sprintf "remove %i elements" n) (fun () => {
-    let src = ContiguousIntSet.create 0 n |> ContiguousIntSet.toSeq
+    let src = IntRange.create 0 n |> IntRange.toSeq
     let mapOfSizeN = src |> Seq.reduce (fun acc i => acc |> put i i) (empty ());
 
     /* FIMXE: Maybe add Seq.sample, Seq.filteri */

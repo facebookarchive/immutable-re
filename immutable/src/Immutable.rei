@@ -622,11 +622,11 @@ and Map: {
   /** [values map] returns a Seq of non-unique values in [map]. */
 };
 
-let module ContiguousIntSet: {
+let module IntRange: {
   /** Represents a contiguous Set of discrete integers */
 
   type t;
-  /** The ContiguousIntSet type.*/
+  /** The IntRange type.*/
 
   let create: int => int => t;
 

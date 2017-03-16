@@ -36,24 +36,24 @@ let test = describe "Set" [
     }),
   ],
   it "equals" (fun () => {
-    let col = ContiguousIntSet.create 0 20 |> ContiguousIntSet.toSet;
-    let dup = ContiguousIntSet.create 0 20 |> ContiguousIntSet.toSet;
-    let rev = ContiguousIntSet.create 0 20 |> ContiguousIntSet.toSet;
+    let col = IntRange.create 0 20 |> IntRange.toSet;
+    let dup = IntRange.create 0 20 |> IntRange.toSet;
+    let rev = IntRange.create 0 20 |> IntRange.toSet;
 
     expect (Set.equals col dup) |> toBeEqualToTrue;
     expect (Set.equals col col) |> toBeEqualToTrue;
     expect (Set.equals col rev) |> toBeEqualToTrue;
     expect (Set.equals col Set.empty) |> toBeEqualToFalse;
     expect (
-      Set.equals col (ContiguousIntSet.create 1 20 |> ContiguousIntSet.toSet)
+      Set.equals col (IntRange.create 1 20 |> IntRange.toSet)
     ) |> toBeEqualToFalse;
     expect (
-      Set.equals (ContiguousIntSet.empty |> ContiguousIntSet.toSet) Set.empty
+      Set.equals (IntRange.empty |> IntRange.toSet) Set.empty
     ) |> toBeEqualToTrue;
   }),
   it "hash" (fun () => {
-    let col = ContiguousIntSet.create 0 20 |> ContiguousIntSet.toSet;
-    let dup = ContiguousIntSet.create 0 20 |> ContiguousIntSet.toSet;
+    let col = IntRange.create 0 20 |> IntRange.toSet;
+    let dup = IntRange.create 0 20 |> IntRange.toSet;
 
     expect (Set.hash col) |> toBeEqualToInt (Set.hash col);
     expect (Set.hash col) |> toBeEqualToInt (Set.hash dup);
@@ -73,13 +73,13 @@ let test = describe "Set" [
   it "isEmpty" (fun () => {
     expect (Set.empty |> Set.isEmpty) |> toBeEqualToTrue;
     expect (
-      ContiguousIntSet.create 0 1 |> ContiguousIntSet.toSet|> Set.isEmpty
+      IntRange.create 0 1 |> IntRange.toSet|> Set.isEmpty
     ) |> toBeEqualToFalse;
   }),
   it "isNotEmpty" (fun () => {
     expect (Set.empty |> Set.isNotEmpty) |> toBeEqualToFalse;
     expect (
-      ContiguousIntSet.create 0 1 |> ContiguousIntSet.toSet |> Set.isNotEmpty
+      IntRange.create 0 1 |> IntRange.toSet |> Set.isNotEmpty
     ) |> toBeEqualToTrue;
   }),
   it "subtract" (fun () => {

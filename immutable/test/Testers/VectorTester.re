@@ -125,32 +125,32 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
   [
     it (sprintf "update with %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce
+      let vector = IntRange.create 0 count
+        |> IntRange.reduce
           (fun acc i => acc |> Vector.addLast i)
           Vector.empty;
 
-      ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 count
+        |> IntRange.forEach (fun i => {
           expect (vector |> Vector.get i) |> toBeEqualToInt i;
           expect (vector |> Vector.tryGet i) |> toBeEqualToSomeOfInt i;
         });
 
-      let updated = ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce
+      let updated = IntRange.create 0 count
+        |> IntRange.reduce
           (fun acc i => acc |> Vector.update i (i + 1))
           vector;
 
-      ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 count
+        |> IntRange.forEach (fun i => {
           expect (updated |> Vector.get i) |> toBeEqualToInt (i + 1);
           expect (updated |> Vector.tryGet i) |> toBeEqualToSomeOfInt (i + 1);
         });
     }),
 
     it (sprintf "updateAll with %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.toSeq
+      let vector = IntRange.create 0 count
+        |> IntRange.toSeq
         |> Vector.fromSeq;
 
       expect (
@@ -161,45 +161,45 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
           }
         ) |> Vector.toSeq
       ) |> toBeEqualToSeqOfInt
-        (ContiguousIntSet.create 1 count |> ContiguousIntSet.toSeq);
+        (IntRange.create 1 count |> IntRange.toSeq);
     }),
 
     it (sprintf "updateWith with %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i =>
+      let vector = IntRange.create 0 count |> IntRange.reduce (fun acc i =>
         acc |> Vector.addLast i
       ) Vector.empty;
 
-      ContiguousIntSet.create 0 count |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 count |> IntRange.forEach (fun i => {
         expect (vector |> Vector.get i) |> toBeEqualToInt i;
         expect (vector |> Vector.tryGet i) |> toBeEqualToSomeOfInt i;
       });
 
-      let updated = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i =>
+      let updated = IntRange.create 0 count |> IntRange.reduce (fun acc i =>
         acc |> Vector.updateWith i (fun v => v + 1)
       ) vector;
 
-      ContiguousIntSet.create 0 count |> ContiguousIntSet.forEach (fun i => {
+      IntRange.create 0 count |> IntRange.forEach (fun i => {
         expect (updated |> Vector.get i) |> toBeEqualToInt (i + 1);
         expect (updated |> Vector.tryGet i) |> toBeEqualToSomeOfInt (i + 1);
       });
     }),
 
     it (sprintf "mapWithIndex %i elements" count) (fun () => {
-      ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
+      IntRange.create 0 count
+        |> IntRange.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
         |> Vector.mapWithIndex (fun i _ => i + 1)
         |> Vector.toSeq
         |> expect
-        |> toBeEqualToSeqOfInt (ContiguousIntSet.create 1 count |> ContiguousIntSet.toSeq);
+        |> toBeEqualToSeqOfInt (IntRange.create 1 count |> IntRange.toSeq);
     }),
 
     it (sprintf "mapReverseWithIndex %i elements" count) (fun () => {
-      ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
+      IntRange.create 0 count
+        |> IntRange.reduce (fun acc i => acc |> Vector.addLast i) Vector.empty
         |> Vector.mapReverseWithIndex (fun i _ => i + 1)
         |> Vector.toSeq
         |> expect
-        |> toBeEqualToSeqOfInt (ContiguousIntSet.create 1 count |> ContiguousIntSet.toSeqReversed);
+        |> toBeEqualToSeqOfInt (IntRange.create 1 count |> IntRange.toSeqReversed);
     }),
 
     it (sprintf "reduceWithIndex with %i elements" count) (fun () => {
@@ -207,8 +207,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.reduceWithIndex (fun acc i _ => acc + i) 0;
 
-      let expected = ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce (fun acc i => acc + i) 0;
+      let expected = IntRange.create 0 count
+        |> IntRange.reduce (fun acc i => acc + i) 0;
 
       expect result |> toBeEqualToInt expected;
     }),
@@ -218,15 +218,15 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.reduceRightWithIndex (fun acc i _ => acc + i) 0;
 
-      let expected = ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduceRight (fun acc i => acc + i) 0;
+      let expected = IntRange.create 0 count
+        |> IntRange.reduceRight (fun acc i => acc + i) 0;
 
       expect result |> toBeEqualToInt expected;
     }),
 
     it (sprintf "take with %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce
+      let vector = IntRange.create 0 count
+        |> IntRange.reduce
           (fun acc i => acc |> Vector.addLast i)
           Vector.empty;
 
@@ -235,41 +235,41 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
       let taken = vector |> Vector.take (count / 2);
       expect @@ Vector.toSeq @@ taken |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 (count / 2) |> ContiguousIntSet.toSeq
+        IntRange.create 0 (count / 2) |> IntRange.toSeq
       );
 
       let taken = vector |> Vector.take (count - 1);
       expect @@ Vector.toSeq @@ taken |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 0 (count - 1) |> ContiguousIntSet.toSeq
+        IntRange.create 0 (count - 1) |> IntRange.toSeq
       );
     }),
     it (sprintf "skip with %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 count
-        |> ContiguousIntSet.reduce
+      let vector = IntRange.create 0 count
+        |> IntRange.reduce
           (fun acc i => acc |> Vector.addLast i)
           Vector.empty;
 
       let skipped = vector |> Vector.skip 1;
       expect @@ Vector.toSeq @@ skipped |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 1 (count - 1) |> ContiguousIntSet.toSeq
+        IntRange.create 1 (count - 1) |> IntRange.toSeq
       );
 
       let skipped = vector |> Vector.skip (count / 2);
       expect @@ Vector.toSeq @@ skipped |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create (count / 2) (count / 2) |> ContiguousIntSet.toSeq
+        IntRange.create (count / 2) (count / 2) |> IntRange.toSeq
       );
 
       let skipped = vector |> Vector.skip (count - 1);
       expect @@ Vector.toSeq @@ skipped |> toBeEqualToSeqOfInt (Seq.return (count - 1));
     }),
     it (sprintf "range with %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce (fun acc i =>
+      let vector = IntRange.create 0 count |> IntRange.reduce (fun acc i =>
         acc |> Vector.addLast i
       ) Vector.empty;
 
       let rangeOneToCountMinusTwo = vector |> Vector.range 1 (count - 2 |> Option.return);
       expect @@ Vector.toSeq @@ rangeOneToCountMinusTwo |> toBeEqualToSeqOfInt (
-        ContiguousIntSet.create 1 (count - 2) |> ContiguousIntSet.toSeq
+        IntRange.create 1 (count - 2) |> IntRange.toSeq
       );
     }),
     it (sprintf "init with %i elements" count) (fun () => {
@@ -280,7 +280,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "forEachWithIndex with %i elements" count) (fun () => {
       let counted = ref 0;
-      let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeqReversed;
+      let seq = IntRange.create 0 count |> IntRange.toSeqReversed;
       let result = Vector.fromSeqReversed seq;
       result |> Vector.forEachWithIndex (fun i v => {
         expect i |> toBeEqualToInt v;
@@ -290,7 +290,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "forEachReverseWithIndex with %i elements" count) (fun () => {
       let counted = ref (count - 1);
-      let seq = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq;
+      let seq = IntRange.create 0 count |> IntRange.toSeq;
       let result = Vector.fromSeq seq;
       result |> Vector.forEachReverseWithIndex (fun i v => {
         expect i |> toBeEqualToInt v;
@@ -344,7 +344,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToTrue;
     }),
     it (sprintf "findWithIndex and tryFindWithIndex in %i elements" count) (fun () => {
-      let vector = ContiguousIntSet.create 0 count |> ContiguousIntSet.reduce
+      let vector = IntRange.create 0 count |> IntRange.reduce
         (fun acc i => acc |> Vector.addFirst i)
         Vector.empty;
 
@@ -500,7 +500,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Seq.flatMap List.toSeq
         |> Vector.fromSeq;
 
-      let result = ContiguousIntSet.create 1 count |> ContiguousIntSet.reduce
+      let result = IntRange.create 1 count |> IntRange.reduce
         (fun acc i => acc |> Vector.removeAt i)
         initialValue;
 
@@ -553,33 +553,33 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
       }),
     ],
     it (sprintf "indexOf with %i elements" count) (fun () => {
-      let vec = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
       let f pos v => v == pos;
       expect (Vector.indexOf (f (count / 2)) vec) |> toBeEqualToInt (count / 2);
       defer (fun () => Vector.indexOf (f (-1)) vec) |> throws;
     }),
     it (sprintf "indexOfWithIndex with %i elements" count) (fun () => {
-      let vec = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
       let f pos i _ => i == pos;
       expect (Vector.indexOfWithIndex (f (count / 2)) vec) |> toBeEqualToInt (count / 2);
       defer (fun () => Vector.indexOfWithIndex (f (-1)) vec) |> throws;
     }),
     it (sprintf "tryIndexOf with %i elements" count) (fun () => {
-      let vec = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
       let f pos v => v == pos;
       expect (Vector.tryIndexOf (f (count / 2)) vec) |> toBeEqualToSomeOfInt (count / 2);
       expect (Vector.tryIndexOf (f (-1)) vec) |> toBeEqualToNoneOfInt;
     }),
     it (sprintf "tryIndexOfWithIndex with %i elements" count) (fun () => {
-      let vec = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
       let f pos i _ => i == pos;
       expect (Vector.tryIndexOfWithIndex (f (count / 2)) vec) |> toBeEqualToSomeOfInt (count / 2);
       expect (Vector.tryIndexOfWithIndex (f (-1)) vec) |> toBeEqualToNoneOfInt;
     }),
     describe (sprintf "toMap with %i elements" count) [
       it "containsWith" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
-        ContiguousIntSet.create 0 count |> ContiguousIntSet.forEach (fun i => {
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        IntRange.create 0 count |> IntRange.forEach (fun i => {
           expect (map |> Map.contains i i) |> toBeEqualToTrue;
         });
 
@@ -588,8 +588,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect (map |> Map.contains 0 1) |> toBeEqualToFalse;
       }),
       it "containsKey" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
-        ContiguousIntSet.create 0 10 |> ContiguousIntSet.forEach (fun i => {
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        IntRange.create 0 10 |> IntRange.forEach (fun i => {
           expect (map |> Map.containsKey i) |> toBeEqualToTrue;
         });
 
@@ -597,21 +597,21 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect (map |> Map.containsKey count) |> toBeEqualToFalse;
       }),
       it "count" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         expect (map |> Map.count) |> toBeEqualToInt count;
       }),
       it "every" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         expect (map |> Map.every (fun i v => i == v)) |> toBeEqualToTrue;
         expect (map |> Map.every (fun i v => i != v)) |> toBeEqualToFalse;
       }),
       it "find" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         expect (map |> Map.find (fun i v => i == v)) |> toBeEqualTo (fun _ => "") (0, 0);
         defer (fun () => map |> Map.find (fun i v => i != v)) |> throws;
       }),
       it "forEach" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         let loopCount = ref 0;
         map |> Map.forEach (fun i v => {
           expect i |> toBeEqualToInt !loopCount;
@@ -622,8 +622,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect !loopCount |> toBeEqualToInt count;
       }),
       it "get" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
-        ContiguousIntSet.create 0 10 |> ContiguousIntSet.forEach (fun i => {
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        IntRange.create 0 10 |> IntRange.forEach (fun i => {
           expect (map |> Map.get i) |> toBeEqualToInt i;
         });
 
@@ -631,40 +631,40 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         defer (fun () => map |> Map.get count) |> throws;
       }),
       it "keys" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         expect (map |> Map.keys |> Set.toSeq) |> toBeEqualToSeqOfInt (
-          ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq
+          IntRange.create 0 count |> IntRange.toSeq
         );
       }),
       it "none" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         expect (map |> Map.none (fun i v => i != v)) |> toBeEqualToTrue;
         expect (map |> Map.none (fun i v => i == v)) |> toBeEqualToFalse;
       }),
       it "reduce" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         let reduced = map |> Map.reduce (fun acc _ _ => acc + 1) 0;
         expect reduced |> toBeEqualToInt count;
       }),
       it "some" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         expect (map |> Map.some (fun i v => i == v)) |> toBeEqualToTrue;
         expect (map |> Map.some (fun i v => i != v)) |> toBeEqualToFalse;
       }),
       it "toSeq" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         map |> Map.toSeq |> Seq.forEach (fun (i, v) => {
           expect i |> toBeEqualToInt v;
         });
       }),
       it "tryFind" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
         expect (map |> Map.tryFind (fun i v => i == v)) |> toBeEqualToSome (fun _ => "") (0, 0);
         expect (map |> Map.tryFind (fun i v => i != v)) |> toBeEqualToNone (fun _ => "");
       }),
       it "tryGet" (fun () => {
-        let map = ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq |> Vector.fromSeq |> Vector.toMap;
-        ContiguousIntSet.create 0 10 |> ContiguousIntSet.forEach (fun i => {
+        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        IntRange.create 0 10 |> IntRange.forEach (fun i => {
           expect (map |> Map.tryGet i) |> toBeEqualToSomeOfInt i;
         });
 
@@ -672,12 +672,12 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect (map |> Map.tryGet count) |> toBeEqualToNoneOfInt;
       }),
       it "values" (fun () => {
-        let map = ContiguousIntSet.create 0 count
-          |> ContiguousIntSet.toSeq
+        let map = IntRange.create 0 count
+          |> IntRange.toSeq
           |> Vector.fromSeq
           |> Vector.toMap;
         expect (map |> Map.values) |> toBeEqualToSeqOfInt (
-          ContiguousIntSet.create 0 count |> ContiguousIntSet.toSeq
+          IntRange.create 0 count |> IntRange.toSeq
         );
       }),
     ],

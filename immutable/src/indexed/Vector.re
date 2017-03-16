@@ -878,8 +878,8 @@ let indexOfWithIndex (f: int => 'a => bool) (vec: t 'a): int => {
   if (!index >= 0) !index else failwith "not found";
 };
 
-let init (count: int) (f: int => 'a): (t 'a) => ContiguousIntSet.create 0 count
-  |> ContiguousIntSet.reduce (fun acc next => acc |> TransientVector.addLast (f next)) (mutate empty)
+let init (count: int) (f: int => 'a): (t 'a) => IntRange.create 0 count
+  |> IntRange.reduce (fun acc next => acc |> TransientVector.addLast (f next)) (mutate empty)
   |> TransientVector.persist;
 
 let none (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
@@ -1168,7 +1168,7 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
   reduce: fun f acc => reduceWithIndex f acc vec,
   some: fun f => someWithIndex f vec,
   toSeq: Seq.zip2
-    (ContiguousIntSet.create 0 (count vec) |> ContiguousIntSet.toSeq)
+    (IntRange.create 0 (count vec) |> IntRange.toSeq)
     (toSeq vec),
   tryFind: fun f => tryIndexOfWithIndex f vec >>| fun index => (index, vec |> get index),
   tryGet: fun i => tryGet i vec,
