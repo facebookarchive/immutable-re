@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2017 - present Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
 open Option.Operators;
 
 type t 'k 'v = {
@@ -54,7 +63,7 @@ let hash ({ map, inverse }: t 'k 'v): int =>
   map |> HashMap.hashWith (HashStrategy.hash {
     /* To get the access to internals of HashMap.t */
     open HashMap;
-    
+
     inverse.strategy
   });
 
