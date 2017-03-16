@@ -69,5 +69,5 @@ let tryFind (f: 'k => 'v => bool) (map: t 'k 'v): (option ('k, 'v)) =>
 let tryGet (equals: Equality.t 'k) (key: 'k) (map: t 'k 'v): (option 'v) =>
   map |> CopyOnWriteArray.tryFind (entryFinder equals key) >>= (fun (_, v) => Some v);
 
-let values (map: t 'k 'v): (Seq.t 'v) =>
-  map |> toSeq |> Seq.map (fun (_, v) => v);
+let values (map: t 'k 'v): (Iterable.t 'v) =>
+  map |> CopyOnWriteArray.toIterable |> Iterable.map (fun (_, v) => v);

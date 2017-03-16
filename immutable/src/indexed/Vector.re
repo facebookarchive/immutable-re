@@ -1184,7 +1184,7 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
     (toSeq vec),
   tryFind: fun f => tryIndexOfWithIndex f vec >>| fun index => (index, vec |> get index),
   tryGet: fun i => tryGet i vec,
-  values: toSeq vec,
+  values: toIterable vec,
 };
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec

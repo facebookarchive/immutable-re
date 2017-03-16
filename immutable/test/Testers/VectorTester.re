@@ -708,7 +708,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
           |> IntRange.toIterable
           |> Vector.from
           |> Vector.toMap;
-        expect (map |> Map.values) |> toBeEqualToSeqOfInt (
+        expect (map |> Map.values |> Vector.from |> Vector.toSeq) |> toBeEqualToSeqOfInt (
           IntRange.create 0 count |> IntRange.toSeq
         );
       }),

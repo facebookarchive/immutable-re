@@ -342,12 +342,12 @@ let module BitmapTrieMap = {
     | Empty => None;
   };
 
-  let rec values (map: t 'k 'v): (Seq.t 'v) => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap values
+  let rec values (map: t 'k 'v): (Iterable.t 'v) => switch map {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterable |> Iterable.flatMap values
     | ComparatorCollision _ entryMap => AVLTreeMap.values entryMap
     | EqualityCollision _ entryMap => EqualityMap.values entryMap;
-    | Entry _ _ entryValue => Seq.return entryValue;
-    | Empty => Seq.empty;
+    | Entry _ _ entryValue => Iterable.return entryValue;
+    | Empty => Iterable.empty;
   };
 };
 
@@ -471,7 +471,7 @@ let tryGet (key: 'k) ({ strategy, root }: t 'k 'v): (option 'v) => {
   root |> BitmapTrieMap.tryGet strategy 0 hash key;
 };
 
-let values ({ root }: t 'k 'v): (Seq.t 'v) =>
+let values ({ root }: t 'k 'v): (Iterable.t 'v) =>
   root |> BitmapTrieMap.values;
 
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
@@ -621,7 +621,7 @@ let merge
     (next: t 'k 'v)
     (map: t 'k 'vAcc): (t 'k 'vAcc) =>
   ImmSet.union (keys map) (keys next)
-    |> Seq.reduce (
+    |> Iterable.reduce (
         fun acc key => {
           let result = f key (map |> tryGet key) (next |> tryGet key);
           switch result {

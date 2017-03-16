@@ -195,10 +195,10 @@ let module BitmapTrieIntMap = {
     | _ => None
   };
 
-  let rec values (map: t 'a): (Seq.t 'a) => switch map {
-    | Entry _ value => Seq.return value
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap values
-    | Empty => Seq.empty;
+  let rec values (map: t 'a): (Iterable.t 'a) => switch map {
+    | Entry _ value => Iterable.return value
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterable |> Iterable.flatMap values
+    | Empty => Iterable.empty;
   };
 };
 
@@ -294,7 +294,7 @@ let tryFind (f: int => 'a => bool) ({ root }: t 'a): (option (int, 'a)) =>
 let tryGet (key: int) ({ root }: t 'a): (option 'a) =>
   root |> BitmapTrieIntMap.tryGet 0 key;
 
-let values ({ root }: t 'a): (Seq.t 'a) =>
+let values ({ root }: t 'a): (Iterable.t 'a) =>
   root |> BitmapTrieIntMap.values;
 
 let toMap (map: t 'a): (ImmMap.t int 'a) => {
@@ -427,7 +427,7 @@ let merge
     (next: t 'v)
     (map: t 'vAcc): (t 'vAcc) =>
   ImmSet.union (keys map) (keys next)
-    |> Seq.reduce (
+    |> Iterable.reduce (
         fun acc key => {
           let result = f key (map |> tryGet key) (next |> tryGet key);
           switch result {

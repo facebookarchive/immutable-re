@@ -312,12 +312,12 @@ let from (iter: Iterable.t int): t =>
 
 let intersect (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */
-  ImmSet.intersect (toSet this) (toSet that) |> Seq.toIterable |> from;
+  ImmSet.intersect (toSet this) (toSet that) |> from;
 
 let subtract (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */
-  ImmSet.subtract (toSet this) (toSet that) |> Seq.toIterable |> from;
+  ImmSet.subtract (toSet this) (toSet that) |> from;
 
 let union (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */
-  ImmSet.union (toSet this) (toSet that) |> Seq.toIterable |> from;
+  ImmSet.union (toSet this) (toSet that) |> from;

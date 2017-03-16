@@ -7,8 +7,8 @@ type t 'row 'column 'value = {
   columnStrategy: HashStrategy.t 'column,
 };
 
-let columns ({ map }: t 'row 'column 'value): (Seq.t 'column) =>
-  map |> HashMap.values |> Seq.flatMap (HashMap.keys >> ImmSet.toSeq);
+let columns ({ map }: t 'row 'column 'value): (Iterable.t 'column) =>
+  map |> HashMap.values |> Iterable.flatMap (HashMap.keys >> ImmSet.toIterable);
 
 let contains (row: 'row) (column: 'column) (value: 'value) ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.contains column value) |? false;
@@ -185,5 +185,5 @@ let find
 let tryGet (row: 'row) (column: 'column) ({ map }: t 'row 'column 'value): (option 'value) =>
   map |> (HashMap.tryGet row) >>= (HashMap.tryGet column);
 
-let values ({ map }: t 'row 'column 'value): (Seq.t 'value) =>
-  map |> HashMap.values |> Seq.flatMap HashMap.values;
+let values ({ map }: t 'row 'column 'value): (Iterable.t 'value) =>
+  map |> HashMap.values |> Iterable.flatMap HashMap.values;

@@ -63,7 +63,6 @@ let test = describe "Set" [
     let setB = ["b", "c", "d"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     let intersection = Set.intersect setA setB
-      |> Seq.toIterable
       |> SortedSet.from
       |> SortedSet.toSet;
 
@@ -88,7 +87,6 @@ let test = describe "Set" [
     let setB = ["b", "c", "d"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     let subtracted = Set.subtract setA setB
-      |> Seq.toIterable
       |> SortedSet.from
       |> SortedSet.toSet;
 
@@ -101,7 +99,6 @@ let test = describe "Set" [
     let setB = ["b", "c", "d"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     let union =  Set.union setA setB
-      |> Seq.toIterable
       |> SortedSet.from
       |> SortedSet.toSet;
 

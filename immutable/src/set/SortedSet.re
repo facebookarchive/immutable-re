@@ -180,17 +180,17 @@ let toMap (set: t 'a): (ImmMap.t 'a 'a) => {
   tryGet: fun k =>
     if (set |> contains k) (Some k)
     else None,
-  values: toSeq set,
+  values: toIterable set,
 };
 
 let intersect ({ comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Improve this implementation to be O(log N) */
-  ImmSet.intersect (toSet this) (toSet that) |> Seq.toIterable |> fromWith comparator;
+  ImmSet.intersect (toSet this) (toSet that) |> fromWith comparator;
 
 let subtract ({ comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Improve this implementation to be O(log N) */
-  ImmSet.subtract (toSet this) (toSet that) |> Seq.toIterable |> fromWith comparator;
+  ImmSet.subtract (toSet this) (toSet that) |> fromWith comparator;
 
 let union ({ comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Improve this implementation to be O(log N) */
-  ImmSet.union (toSet this) (toSet that) |> Seq.toIterable |> fromWith comparator;
+  ImmSet.union (toSet this) (toSet that) |> fromWith comparator;

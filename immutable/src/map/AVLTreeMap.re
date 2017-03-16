@@ -239,13 +239,13 @@ let rec trySearch (predicate: 'k => Ordering.t) (tree: t 'k 'v): (option ('k, 'v
       else Some (k, v)
 };
 
-let rec values (tree: t 'k 'v): (Seq.t 'v) => switch tree {
-  | Empty => Seq.empty
-  | Leaf _ v => Seq.return v
-  | Node _ left _ v right => Seq.concat [
-      Seq.defer(fun () => values left),
-      Seq.return v,
-      Seq.defer(fun () => values right),
+let rec values (tree: t 'k 'v): (Iterable.t 'v) => switch tree {
+  | Empty => Iterable.empty
+  | Leaf _ v => Iterable.return v
+  | Node _ left _ v right => Iterable.concat [
+      values left,
+      Iterable.return v,
+      values right,
     ]
 };
 

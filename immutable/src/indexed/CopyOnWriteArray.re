@@ -562,5 +562,5 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   toSeq: toSeqWithIndex arr,
   tryFind: fun f => tryIndexOfWithIndex f arr >>| fun index => (index, arr.(index)),
   tryGet: fun i => tryGet i arr,
-  values: toSeq arr,
+  values: toIterable arr,
 };

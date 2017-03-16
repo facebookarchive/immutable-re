@@ -44,7 +44,7 @@ let test = describe "Map" [
       expect (Map.empty |> Map.tryGet 1) |> toBeEqualToNoneOfInt;
     }),
     it "values" (fun () => {
-      expect (Map.empty |> Map.values |> Seq.isEmpty) |> toBeEqualToTrue;
+      expect (Map.empty |> Map.values |> Iterable.count) |> toBeEqualToInt 0;
     }),
   ],
   it "equalsWith" (fun () => {
@@ -215,7 +215,8 @@ let test = describe "Map" [
     it "values" (fun () => {
       let map = Vector.from @@ List.toIterable @@ [0, 1, 2] |> Vector.toMap;
       let mapped = map |> Map.map (fun _ v => v + 3);
-      expect (mapped |> Map.values) |> toBeEqualToSeqOfInt (List.toSeq [3, 4, 5]);
+      expect (mapped |> Map.values |> List.fromReversed |> List.toSeq)
+        |> toBeEqualToSeqOfInt (List.toSeq [5, 4, 3]);
     }),
   ],
   describe "toSet" [

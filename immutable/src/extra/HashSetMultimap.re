@@ -152,8 +152,8 @@ let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) => {
 let find (f: 'k => 'v => bool) (multimap: t 'k 'v): ('k, 'v) =>
   multimap |> tryFind f |> Option.first;
 
-let values ({ map }: t 'k 'v): (Seq.t 'v) =>
-  map |> HashMap.values |> Seq.flatMap HashSet.toSeq;
+let values ({ map }: t 'k 'v): (Iterable.t 'v) =>
+  map |> HashMap.values |> Iterable.flatMap HashSet.toIterable;
 
 let toSet
     ({ count } as multimap: t 'k 'v): (ImmSet.t ('k, 'v)) => {

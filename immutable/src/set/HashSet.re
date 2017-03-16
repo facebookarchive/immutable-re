@@ -401,18 +401,12 @@ let fromWith (strategy: HashStrategy.t 'a) (iter: Iterable.t 'a): (t 'a) =>
 
 let intersect ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  ImmSet.intersect (toSet this) (toSet that)
-    |> Seq.toIterable
-    |> fromWith strategy;
+  ImmSet.intersect (toSet this) (toSet that) |> fromWith strategy;
 
 let subtract ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  ImmSet.subtract (toSet this) (toSet that)
-    |> Seq.toIterable
-    |> fromWith strategy;
+  ImmSet.subtract (toSet this) (toSet that) |> fromWith strategy;
 
 let union ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  ImmSet.union (toSet this) (toSet that)
-    |> Seq.toIterable
-    |> fromWith strategy;
+  ImmSet.union (toSet this) (toSet that) |> fromWith strategy;

@@ -51,9 +51,6 @@ let hashWith (hash: Hash.t 'a) ({ reduce }: t 'a): int =>
 let hash (set: t 'a): int =>
   hashWith Hash.structural set;
 
-let intersect (this: t 'a) (that: t 'a): (Seq.t 'a) =>
-  this.toSeq |> Seq.filter (that.contains);
-
 let isEmpty ({ count }: t 'a): bool =>
   count == 0;
 
@@ -85,9 +82,6 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ reduce }: t 'a): 'acc =>
 let some (f: 'a => bool) ({ some }: t 'a): bool =>
   some f;
 
-let subtract (this: t 'a) (that: t 'a): (Seq.t 'a) =>
-  this.toSeq |> Seq.filter (that.contains >> not);
-
 let toIterable ({ reduce } as set: t 'a): (Iterable.t 'a) =>
   if (set === empty) Iterable.empty
   else {
@@ -107,7 +101,13 @@ let toSeq ({ toSeq }: t 'a): (Seq.t 'a) => toSeq;
 let tryFind (f: 'a => bool) ({ tryFind }: t 'a): (option 'a) =>
   tryFind f;
 
-let union (this: t 'a) (that: t 'a): (Seq.t 'a) => Seq.concat [
-  this.toSeq,
+let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+  this |> toIterable |> Iterable.filter (that.contains);
+
+let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+  this |> toIterable |> Iterable.filter (that.contains >> not);
+
+let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
+  this |> toIterable,
   subtract that this,
 ];

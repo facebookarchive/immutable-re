@@ -593,7 +593,6 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
         |> SetImpl.toMap;
       map
         |> Map.values
-        |> Seq.toIterable
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.equals (IntRange.create 0 count |> IntRange.toSet)

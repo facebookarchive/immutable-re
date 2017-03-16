@@ -454,8 +454,8 @@ let module rec Set: {
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
 
-  let intersect: (t 'a) => (t 'a) => (Seq.t 'a);
-  /** [intersect this that] returns a Seq of unique elements
+  let intersect: (t 'a) => (t 'a) => (Iterable.t 'a);
+  /** [intersect this that] returns an Iterable of unique elements
    *  which occur in both [this] and [that].
    */
 
@@ -480,8 +480,8 @@ let module rec Set: {
    *  any element in [set], otherwise false. If [set] is empty, returns false.
    */
 
-  let subtract: (t 'a) => (t 'a) => (Seq.t 'a);
-  /** [subtract this that] returns a Seq of unique element
+  let subtract: (t 'a) => (t 'a) => (Iterable.t 'a);
+  /** [subtract this that] returns an Iterable of unique element
    *  which occur in [this] but not in [that].
    */
 
@@ -498,8 +498,8 @@ let module rec Set: {
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [find f set] returns the first value for which the predicate [f] returns true or None. */
 
-  let union: (t 'a) => (t 'a) => (Seq.t 'a);
-  /** [union this that] returns a Seq of unique elements which occur in either [this] or [that]. */
+  let union: (t 'a) => (t 'a) => (Iterable.t 'a);
+  /** [union this that] returns an Iterable of unique elements which occur in either [this] or [that]. */
 }
 
 and Map: {
@@ -617,8 +617,8 @@ and Map: {
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'k 'v) => (Seq.t 'v);
-  /** [values map] returns a Seq of non-unique values in [map]. */
+  let values: (t 'k 'v) => (Iterable.t 'v);
+  /** [values map] returns a Iterable of non-unique values in [map]. */
 };
 
 let module IntRange: {
@@ -1714,7 +1714,7 @@ let module rec HashMap: {
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'k 'v) => (Seq.t 'v);
+  let values: (t 'k 'v) => (Iterable.t 'v);
   /** [values map] returns a Seq of non-unique values in [map]. */
 }
 
@@ -2225,7 +2225,7 @@ let module HashSetMultimap: {
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  let values: (t 'k 'v) => (Seq.t 'v);
+  let values: (t 'k 'v) => (Iterable.t 'v);
 };
 */
 let module rec IntMap: {
@@ -2390,7 +2390,7 @@ let module rec IntMap: {
   let tryGet: int => (t 'a) => (option 'a);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'a) => (Seq.t 'a);
+  let values: (t 'a) => (Iterable.t 'a);
   /** [values map] returns a Seq of non-unique values in [map]. */
 }
 
@@ -3141,7 +3141,7 @@ let module SortedMap: {
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'k 'v) => (Seq.t 'v);
+  let values: (t 'k 'v) => (Iterable.t 'v);
   /** [values map] returns a Seq of non-unique values in [map]. */
 };
 
@@ -3524,13 +3524,13 @@ let module StackMultimap: {
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  let values: (t 'k 'v) => (Seq.t 'v);
+  let values: (t 'k 'v) => (Iterable.t 'v);
 };
 
 let module Table: {
   type t 'row 'column 'value;
 
-  let columns: (t 'row 'column 'value) => (Seq.t 'column);
+  let columns: (t 'row 'column 'value) => (Iterable.t 'column);
   let contains: 'row => 'column => 'value => (t 'row 'column 'value) => bool;
   let containsWith: (Equality.t 'value) => 'row => 'column => 'value => (t 'row 'column 'value) => bool;
   let containsRow: 'row => (t 'row 'column 'value) => bool;
@@ -3560,7 +3560,7 @@ let module Table: {
   let toSeq: (t 'row 'column 'value) => (Seq.t ('row, 'column, 'value));
   let tryFind: ('row => 'column => 'value => bool) => (t 'row 'column 'value) => (option ('row, 'column, 'value));
   let tryGet: 'row => 'column => (t 'row 'column 'value) => (option 'value);
-  let values: (t 'row 'column 'value) => (Seq.t 'value);
+  let values: (t 'row 'column 'value) => (Iterable.t 'value);
 };
 */
 let module rec Vector: {

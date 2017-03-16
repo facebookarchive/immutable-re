@@ -148,7 +148,7 @@ let tryGet (key: 'k) ({ comparator, tree }: t 'k 'v): (option 'v) =>
 let tryLast ({ tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryLast;
 
-let values ({ tree }: t 'k 'v): (Seq.t 'v) =>
+let values ({ tree }: t 'k 'v): (Iterable.t 'v) =>
   tree |> AVLTreeMap.values;
 
 let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
@@ -239,7 +239,7 @@ let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: t 'k 'v)
     (map: t 'k 'vAcc): (t 'k 'vAcc) =>
-  ImmSet.union (keys map) (keys next) |> Seq.reduce (
+  ImmSet.union (keys map) (keys next) |> Iterable.reduce (
     fun acc key => {
       let result = f key (map |> tryGet key) (next |> tryGet key);
       switch result {
