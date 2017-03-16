@@ -255,7 +255,8 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
 
     it (sprintf "reduceRight %i elements" count) (fun () => {
       /* FIXME: This test could be better by not using a single repeated value. */
-      Seq.repeat 1 (Some count)
+      Seq.repeat 1
+        |> Seq.take count
         |> Seq.reduce (fun acc i => acc |> Deque.addFirst i) Deque.empty
         |> Deque.reduceRight (fun acc i => acc + i) 0
         |> expect

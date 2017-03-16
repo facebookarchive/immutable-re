@@ -102,7 +102,7 @@ let some (f: 'a => int => bool) ({ map }: t 'a): bool =>
 let toMap ({ map }: t 'a): (ImmMap.t 'a int) => map |> HashMap.toMap;
 
 let toSeq ({ map }: t 'a): (Seq.t 'a) =>
-  map |> HashMap.toSeq |> Seq.flatMap (fun (v, i) => Seq.repeat v (Some i));
+  map |> HashMap.toSeq |> Seq.flatMap (fun (v, i) => Seq.repeat v |> Seq.take i);
 
 let tryFind (f: 'a => int => bool) ({ map }: t 'a): (option ('a, int)) =>
   map |> HashMap.tryFind f;

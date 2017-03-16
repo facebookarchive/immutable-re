@@ -187,13 +187,10 @@ let hashWith (hash: (Hash.t 'a)) (seq: t 'a): int => seq
 let hash (seq: t 'a): int =>
   hashWith Hash.structural seq;
 
-let rec repeat (value: 'a) (count: option int): (t 'a) => switch count {
-  | Some count when count > 0 => fun () => Next value (repeat value (Some (count - 1)))
-  | Some count when count < 0 => failwith "count must be greater or equal to 0"
-  | Some _ => empty
-  | None =>
-      let rec repeatForever () => Next value repeatForever;
-      repeatForever
+let rec repeat (value: 'a): (t 'a) => {
+  let rec repeatForever value () =>
+    Next value (repeatForever value);
+  repeatForever value;
 };
 
 let rec scan
@@ -372,7 +369,7 @@ let rec zip3 (a: t 'a) (b: t 'b) (c: t 'c): (t ('a, 'b, 'c)) => fun () => switch
 };
 
 let zipLongest (seqs: list (t 'a)): (t (list (option 'a))) => seqs
-  |> ImmList.mapReverse (fun seq => concat [seq |> map Option.return, repeat None None ])
+  |> ImmList.mapReverse (fun seq => concat [seq |> map Option.return, repeat None ])
   |> ImmList.reverse
   |> zip
   |> takeWhile (ImmList.some Option.isNotEmpty);

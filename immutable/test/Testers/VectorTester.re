@@ -203,7 +203,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
 
     it (sprintf "reduceWithIndex with %i elements" count) (fun () => {
-      let result = Seq.repeat 1 (Some count)
+      let result = Seq.repeat 1
+        |> Seq.take count
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.reduceWithIndex (fun acc i _ => acc + i) 0;
 
@@ -214,7 +215,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
 
     it (sprintf "reduceRightWithIndex %i elements" count) (fun () => {
-      let result = Seq.repeat 1 (Some count)
+      let result = Seq.repeat 1
+        |> Seq.take count
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.reduceRightWithIndex (fun acc i _ => acc + i) 0;
 
@@ -304,7 +306,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "everyWithIndex with %i elements" count) (fun () => {
       let previousIndex = ref (-1);
-      Seq.concat [Seq.return false, Seq.repeat true (Some (count - 1))]
+      Seq.concat [Seq.return false, Seq.repeat true |> Seq.take (count - 1)]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.everyWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -314,7 +316,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToFalse;
 
       let previousIndex = ref (-1);
-      Seq.concat [Seq.repeat true (Some (count - 1)), Seq.return false]
+      Seq.concat [Seq.repeat true |> Seq.take (count - 1), Seq.return false]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.everyWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -325,9 +327,9 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
       let previousIndex = ref (-1);
       Seq.concat [
-        Seq.repeat true (Some (count / 2 - 1)),
+        Seq.repeat true |> Seq.take (count / 2 - 1),
         Seq.return false,
-        Seq.repeat true (Some (count / 2 - 1)),
+        Seq.repeat true |> Seq.take (count / 2 - 1),
       ]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.everyWithIndex (fun i v => {
@@ -338,7 +340,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToFalse;
 
       let previousIndex = ref (-1);
-      Seq.repeat true (Some count)
+      Seq.repeat true
+        |> Seq.take count
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.everyWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -401,7 +404,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "noneWithIndex with %i elements" count) (fun () => {
       let previousIndex = ref (-1);
-      Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+      Seq.concat [Seq.repeat false |> Seq.take (count - 1), Seq.return true]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.noneWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -411,7 +414,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToFalse;
 
       let previousIndex = ref (-1);
-      Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+      Seq.concat [Seq.return true, Seq.repeat false |> Seq.take (count - 1)]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.noneWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -422,9 +425,9 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
       let previousIndex = ref (-1);
       Seq.concat [
-        Seq.repeat false (Some (count / 2 - 1)),
+        Seq.repeat false |> Seq.take (count / 2 - 1),
         Seq.return true,
-        Seq.repeat false (Some (count / 2 - 1)),
+        Seq.repeat false |> Seq.take (count / 2 - 1),
       ]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.noneWithIndex (fun i v => {
@@ -435,7 +438,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToFalse;
 
       let previousIndex = ref (-1);
-      Seq.repeat false (Some count)
+      Seq.repeat false
+        |> Seq.take count
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.noneWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -446,7 +450,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "someWithIndex with %i elements" count) (fun () => {
       let previousIndex = ref (-1);
-      Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+      Seq.concat [Seq.repeat false |> Seq.take (count - 1), Seq.return true]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.someWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -456,7 +460,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToTrue;
 
       let previousIndex = ref (-1);
-      Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+      Seq.concat [Seq.return true, Seq.repeat false |> Seq.take (count - 1)]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.someWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -467,9 +471,9 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
       let previousIndex = ref (-1);
       Seq.concat [
-        Seq.repeat false (Some (count / 2 - 1)),
+        Seq.repeat false |> Seq.take (count / 2 - 1),
         Seq.return true,
-        Seq.repeat false (Some (count / 2 - 1)),
+        Seq.repeat false |> Seq.take (count / 2 - 1),
       ]
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.someWithIndex (fun i v => {
@@ -480,7 +484,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> expect |> toBeEqualToTrue;
 
       let previousIndex = ref (-1);
-      Seq.repeat false (Some count)
+      Seq.repeat false
+        |> Seq.take count
         |> Seq.reduce (fun acc i => acc |> Vector.addFirst i) Vector.empty
         |> Vector.someWithIndex (fun i v => {
             expect i |> toBeEqualToInt (!previousIndex + 1);
@@ -494,13 +499,14 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Seq.take count
         |> Seq.reduce
           (fun acc i => acc |> Vector.insertAt i 1)
-          (Seq.repeat 0 (Some count) |> Seq.toIterable |> Vector.from);
+          (Seq.repeat 0 |> Seq.take count |> Seq.toIterable |> Vector.from);
 
       expect @@ Vector.toSeq @@ result
-        |> toBeEqualToSeqOfInt (Seq.repeat [0, 1] (Some count) |> Seq.flatMap List.toSeq);
+        |> toBeEqualToSeqOfInt (Seq.repeat [0, 1] |> Seq.take count |> Seq.flatMap List.toSeq);
     }),
     it (sprintf "removeAt with %i elements" count) (fun () => {
-      let initialValue = Seq.repeat [0, 1] (Some count)
+      let initialValue = Seq.repeat [0, 1]
+        |> Seq.take count
         |> Seq.flatMap List.toSeq
         |> Seq.toIterable
         |> Vector.from;
@@ -510,16 +516,18 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         initialValue;
 
       expect @@ Vector.toSeq @@ result
-        |> toBeEqualToSeqOfInt (Seq.repeat 0 (Some count));
+        |> toBeEqualToSeqOfInt (Seq.repeat 0 |> Seq.take count);
     }),
     describe (sprintf "concat with %i elements" count) [
       it "balanced segments" (fun () => {
         let segmentCount = count / 2;
-        let vecFirst = Seq.repeat 0 (Some segmentCount)
+        let vecFirst = Seq.repeat 0
+          |> Seq.take segmentCount
           |> Seq.toIterable
           |> Vector.from;
 
-        let vecSecond = Seq.repeat 1 (Some segmentCount)
+        let vecSecond = Seq.repeat 1
+          |> Seq.take segmentCount
           |> Seq.toIterable
           |> Vector.from;
 
@@ -527,19 +535,21 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Vector.toSeq
         |> expect
         |> toBeEqualToSeqOfInt @@ Seq.concat @@ [
-            Seq.repeat 0 (Some segmentCount),
-            Seq.repeat 1 (Some segmentCount),
+            Seq.repeat 0 |> Seq.take segmentCount,
+            Seq.repeat 1 |> Seq.take segmentCount,
           ];
       }),
       it "left larger than right" (fun () => {
         let segmentRightCount = count / 4;
         let segmentLeftCount = count - segmentRightCount;
 
-        let vecLeft = Seq.repeat 0 (Some segmentLeftCount)
+        let vecLeft = Seq.repeat 0
+          |> Seq.take segmentLeftCount
           |> Seq.toIterable
           |> Vector.from;
 
-        let vecRight = Seq.repeat 1 (Some segmentRightCount)
+        let vecRight = Seq.repeat 1
+          |> Seq.take segmentRightCount
           |> Seq.toIterable
           |> Vector.from;
 
@@ -547,19 +557,21 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Vector.toSeq
         |> expect
         |> toBeEqualToSeqOfInt @@ Seq.concat @@ [
-            Seq.repeat 0 (Some segmentLeftCount),
-            Seq.repeat 1 (Some segmentRightCount),
+            Seq.repeat 0 |> Seq.take segmentLeftCount,
+            Seq.repeat 1 |> Seq.take segmentRightCount,
           ];
       }),
       it "right larger than left" (fun () => {
         let segmentLeftCount = count / 4;
         let segmentRightCount = count - segmentLeftCount;
 
-        let vecLeft = Seq.repeat 0 (Some segmentLeftCount)
+        let vecLeft = Seq.repeat 0
+          |> Seq.take segmentLeftCount
           |> Seq.toIterable
           |> Vector.from;
 
-        let vecRight = Seq.repeat 1 (Some segmentRightCount)
+        let vecRight = Seq.repeat 1
+          |> Seq.take segmentRightCount
           |> Seq.toIterable
           |> Vector.from;
 
@@ -567,8 +579,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Vector.toSeq
         |> expect
         |> toBeEqualToSeqOfInt @@ Seq.concat @@ [
-            Seq.repeat 0 (Some segmentLeftCount),
-            Seq.repeat 1 (Some segmentRightCount),
+            Seq.repeat 0 |> Seq.take segmentLeftCount,
+            Seq.repeat 1 |> Seq.take segmentRightCount,
           ];
       }),
     ],

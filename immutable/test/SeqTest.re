@@ -181,7 +181,7 @@ let test = describe "Seq" [
     ()
   }),
   it "repeat" (fun () => {
-    let seq = Seq.repeat 1 (Some 4);
+    let seq = Seq.repeat 1 |> Seq.take  4;
     expect seq |> toBeEqualToSeqOfInt ([1,1,1,1] |> List.toSeq);
   }),
   it "return" (fun () => {

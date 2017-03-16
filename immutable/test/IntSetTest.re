@@ -16,7 +16,7 @@ let module Set = {
   let every = IntSet.every;
   let find = IntSet.find;
   let forEach = IntSet.forEach;
-  let fromSeq = IntSet.fromSeq;
+  let from = IntSet.from;
   let hash = IntSet.hash;
   let intersect = IntSet.intersect;
   let isEmpty = IntSet.isEmpty;
@@ -58,7 +58,7 @@ let transientIntSetTest (count: int): (list Test.t) => [
     let transient = IntSet.empty
       |> IntSet.mutate
       |> TransientIntSet.addAll (
-        IntRange.create 0 count |> IntRange.toSeq |> Seq.map hash
+        IntRange.create 0 count |> IntRange.toIterable |> Iterable.map hash
       );
 
     Seq.generate (fun i => i + 2) 0
@@ -84,26 +84,26 @@ let transientIntSetTest (count: int): (list Test.t) => [
     let transient = IntSet.empty
       |> IntSet.mutate
       |> TransientIntSet.addAll (
-        IntRange.create 0 count |> IntRange.toSeq |> Seq.map hash
+        IntRange.create 0 count |> IntRange.toIterable |> Iterable.map hash
       );
     transient |> TransientIntSet.removeAll |> ignore;
     expect (transient |> TransientIntSet.isEmpty) |> toBeEqualToTrue;
   }),
 ];
 
-let test = describe "IntSet" (List.fromSeqReversed @@ Seq.concat @@ [
-  describe "IntSet" (List.fromSeqReversed @@ Seq.concat @@ [
-    (SetTester.test 10 (module Set)) |> List.toSeq,
-    (SetTester.test 48 (module Set)) |> List.toSeq,
-    (SetTester.test 90 (module Set)) |> List.toSeq,
-    (SetTester.test 500 (module Set)) |> List.toSeq,
-    (SetTester.test 5000 (module Set)) |> List.toSeq,
-  ]) |> Seq.return,
-  describe "TransientIntSet" (List.fromSeqReversed @@ Seq.concat @@ [
-    transientIntSetTest 10 |> List.toSeq,
-    transientIntSetTest 48 |> List.toSeq,
-    transientIntSetTest 90 |> List.toSeq,
-    transientIntSetTest 500 |> List.toSeq,
-    transientIntSetTest 5000 |> List.toSeq,
-  ]) |> Seq.return,
+let test = describe "IntSet" (List.fromReversed @@ Iterable.concat @@ [
+  describe "IntSet" (List.fromReversed @@ Iterable.concat @@ [
+    (SetTester.test 10 (module Set)) |> List.toIterable,
+    (SetTester.test 48 (module Set)) |> List.toIterable,
+    (SetTester.test 90 (module Set)) |> List.toIterable,
+    (SetTester.test 500 (module Set)) |> List.toIterable,
+    (SetTester.test 5000 (module Set)) |> List.toIterable,
+  ]) |> Iterable.return,
+  describe "TransientIntSet" (List.fromReversed @@ Iterable.concat @@ [
+    transientIntSetTest 10 |> List.toIterable,
+    transientIntSetTest 48 |> List.toIterable,
+    transientIntSetTest 90 |> List.toIterable,
+    transientIntSetTest 500 |> List.toIterable,
+    transientIntSetTest 5000 |> List.toIterable,
+  ]) |> Iterable.return,
 ]);

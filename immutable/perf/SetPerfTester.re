@@ -175,7 +175,8 @@ let test (n: int) (count: int): Test.t => {
     ),
   ];
 
-  let tests = Seq.repeat testGroup (Some n)
+  let tests = Seq.repeat testGroup
+    |> Seq.take n
     |> Seq.flatMap List.toSeq
     |> Seq.toIterable
     |> List.fromReversed;

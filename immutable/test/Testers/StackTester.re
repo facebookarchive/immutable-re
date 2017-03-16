@@ -82,78 +82,81 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "every with %i elements" count) (fun () => {
-    Seq.concat [Seq.return false, Seq.repeat true (Some (count - 1))]
+    Seq.concat [Seq.return false, Seq.repeat true |> Seq.take (count - 1)]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [Seq.repeat true (Some (count - 1)), Seq.return false]
+    Seq.concat [Seq.repeat true |> Seq.take (count - 1), Seq.return false]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToFalse;
 
     Seq.concat [
-      Seq.repeat true (Some (count / 2 - 1)),
+      Seq.repeat true |> Seq.take (count / 2 - 1),
       Seq.return false,
-      Seq.repeat true (Some (count / 2 - 1)),
+      Seq.repeat true |> Seq.take (count / 2 - 1),
     ]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.repeat true (Some count)
+    Seq.repeat true
+      |> Seq.take count
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToTrue;
   }),
 
   it (sprintf "none with %i elements" count) (fun () => {
-    Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+    Seq.concat [Seq.repeat false |> Seq.take (count - 1), Seq.return true]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+    Seq.concat [Seq.return true, Seq.repeat false |> Seq.take (count - 1)]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToFalse;
 
     Seq.concat [
-      Seq.repeat false (Some (count / 2 - 1)),
+      Seq.repeat false |> Seq.take (count / 2 - 1),
       Seq.return true,
-      Seq.repeat false (Some (count / 2 - 1)),
+      Seq.repeat false |> Seq.take (count / 2 - 1),
     ]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.repeat false (Some count)
+    Seq.repeat false
+      |> Seq.take count
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToTrue;
   }),
 
   it (sprintf "some with %i elements" count) (fun () => {
-    Seq.concat [Seq.repeat false (Some (count - 1)), Seq.return true]
+    Seq.concat [Seq.repeat false |> Seq.take (count - 1), Seq.return true]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToTrue;
 
-    Seq.concat [Seq.return true, Seq.repeat false (Some (count - 1))]
+    Seq.concat [Seq.return true, Seq.repeat false |> Seq.take (count - 1)]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToTrue;
 
     Seq.concat [
-      Seq.repeat false (Some (count / 2 - 1)),
+      Seq.repeat false |> Seq.take (count / 2 - 1),
       Seq.return true,
-      Seq.repeat false (Some (count / 2 - 1)),
+      Seq.repeat false |> Seq.take (count / 2 - 1),
     ]
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToTrue;
 
-    Seq.repeat false (Some count)
+    Seq.repeat false
+      |> Seq.take count
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToFalse;
@@ -202,7 +205,8 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
 
   it (sprintf "reduce with %i elements" count) (fun () => {
     /* FIXME: This test could be better by not using a single repeated value. */
-    Seq.repeat 1 (Some count)
+    Seq.repeat 1
+      |> Seq.take count
       |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.reduce (fun acc i => acc + i) 0
       |> expect

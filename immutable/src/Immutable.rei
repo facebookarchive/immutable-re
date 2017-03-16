@@ -300,10 +300,8 @@ let module Seq: {
    *  Complexity: O(N)
    */
 
-  let repeat: 'a => (option int) => (t 'a);
-  /** [repeat value count] returns a Seq that repeats [value] [count] times.
-   *  If [count] is None, the Seq is infinite.
-   */
+  let repeat: 'a => (t 'a);
+  /** [repeat value] returns a Seq that repeats [value] forever. */
 
   let return: 'a => (t 'a);
   /** [return value] returns a single element Seq containing [value]. */
