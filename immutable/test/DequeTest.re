@@ -21,8 +21,8 @@ let module Deque = {
   let first = Deque.first;
   let forEach = Deque.forEach;
   let forEachReverse = Deque.forEachReverse;
-  let fromSeq = Deque.fromSeq;
-  let fromSeqReversed = Deque.fromSeqReversed;
+  let from = Deque.from;
+  let fromReversed = Deque.fromReversed;
   let hash = Deque.hash;
   let hashWith = Deque.hashWith;
   let isEmpty = Deque.isEmpty;
@@ -46,7 +46,7 @@ let module Deque = {
   let tryLast = Deque.tryLast;
 };
 
-let test = describe "Deque" (List.fromSeqReversed @@ Seq.concat @@ [
-  (DequeTester.test 1000 (module Deque)) |> List.toSeq,
-  describe "TransientDeque" (TransientDequeTester.test 1000 (module TransientDeque)) |> Seq.return,
+let test = describe "Deque" (List.fromReversed @@ Iterable.concat @@ [
+  (DequeTester.test 1000 (module Deque)) |> List.toIterable,
+  describe "TransientDeque" (TransientDequeTester.test 1000 (module TransientDeque)) |> Iterable.return,
 ]);

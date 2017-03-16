@@ -8,7 +8,7 @@ module type Stack = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let contains: 'a => (t 'a) => bool;
@@ -21,7 +21,7 @@ module type Stack = {
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let forEach: ('a => unit) => (t 'a) => unit;
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  let fromReversed: (Iterable.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
@@ -294,8 +294,9 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "addFirstAll with %i elements" count) (fun () => {
-    let seq = IntRange.create 0 count |> IntRange.toSeq;
-    let result = Stack.empty |> Stack.addFirstAll seq;
+    let result = IntRange.create 0 count
+      |> IntRange.toIterable
+      |> Stack.fromReversed;
 
     (Stack.toSeq result)
       |> Seq.equals (IntRange.create 0 count |> IntRange.toSeqReversed)
@@ -304,8 +305,9 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "fromSeqReversed with %i elements" count) (fun () => {
-    let seq = IntRange.create 0 count |> IntRange.toSeq;
-    let result = Stack.fromSeqReversed seq;
+    let result = IntRange.create 0 count
+      |> IntRange.toIterable
+      |> Stack.fromReversed;
 
     (Stack.toSeq result)
       |> Seq.equals (IntRange.create 0 count |> IntRange.toSeqReversed)
@@ -315,8 +317,10 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
 
   it (sprintf "forEach with %i elements" count) (fun () => {
     let counted = ref 0;
-    let seq = IntRange.create 0 count |> IntRange.toSeqReversed;
-    let result = Stack.fromSeqReversed seq;
+    let result = IntRange.create 0 count
+      |> IntRange.toIterableReversed
+      |> Stack.fromReversed;
+
     result |> Stack.forEach (fun i => {
       expect i |> toBeEqualToInt !counted;
       counted := !counted + 1;
@@ -330,8 +334,9 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   }),
 
   it (sprintf "contains with %i elements" count) (fun () => {
-    let seq = IntRange.create 0 count |> IntRange.toSeq;
-    let result = Stack.fromSeqReversed seq;
+    let result = IntRange.create 0 count
+      |> IntRange.toIterable
+      |> Stack.fromReversed;
 
     result
       |> Stack.contains (count / 2)

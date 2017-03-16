@@ -128,6 +128,10 @@ let toIterable (deque: t 'a): (Iterable.t 'a) =>
  if (isEmpty deque) Iterable.empty
  else { reduce: fun f acc => reduce f acc deque };
 
+let toIterableReversed (deque: t 'a): (Iterable.t 'a) =>
+  if (isEmpty deque) Iterable.empty
+  else { reduce: fun f acc => reduceRight f acc deque };
+
 let toSeq (deque: t 'a): (Seq.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSeq
   | Descending vector => vector |> Vector.toSeqReversed;
@@ -184,13 +188,13 @@ let module TransientDeque = {
   };
 
   let addFirstAll
-      (values: Seq.t 'a)
+      (iter: Iterable.t 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        vector |> TransientVector.addFirstAll values |> ignore;
+        vector |> TransientVector.addFirstAll iter |> ignore;
         transient;
     | Descending vector =>
-        vector |> TransientVector.addLastAll values |> ignore;
+        vector |> TransientVector.addLastAll iter |> ignore;
         transient;
   };
 
@@ -206,13 +210,13 @@ let module TransientDeque = {
   };
 
   let addLastAll
-      (values: Seq.t 'a)
+      (iter: Iterable.t 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        vector |> TransientVector.addLastAll values |> ignore;
+        vector |> TransientVector.addLastAll iter |> ignore;
         transient;
     | Descending vector =>
-        vector |> TransientVector.addFirstAll values |> ignore;
+        vector |> TransientVector.addFirstAll iter |> ignore;
         transient;
   };
 
@@ -294,14 +298,14 @@ let module TransientDeque = {
 
 let mutate = TransientDeque.mutate;
 
-let addFirstAll (values: Seq.t 'a) (deque: t 'a): (t 'a) => deque
+let addFirstAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
   |> mutate
-  |> TransientDeque.addFirstAll values
+  |> TransientDeque.addFirstAll iter
   |> TransientDeque.persist;
 
-let addLastAll (values: Seq.t 'a) (deque: t 'a): (t 'a) => deque
+let addLastAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
   |> mutate
-  |> TransientDeque.addLastAll values
+  |> TransientDeque.addLastAll iter
   |> TransientDeque.persist;
 
 let every (f: 'a => bool) (deque: t 'a): bool => switch deque {
@@ -310,11 +314,11 @@ let every (f: 'a => bool) (deque: t 'a): bool => switch deque {
       Vector.every f vector
 };
 
-let fromSeq (seq: Seq.t 'a): (t 'a) =>
-  empty |> addLastAll seq;
+let from (iter: Iterable.t 'a): (t 'a) =>
+  empty |> addLastAll iter;
 
-let fromSeqReversed (seq: Seq.t 'a): (t 'a) =>
-  empty|> addFirstAll seq;
+let fromReversed (iter: Iterable.t 'a): (t 'a) =>
+  empty|> addFirstAll iter;
 
 let map (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
   | Ascending vector => Ascending (Vector.map f vector)

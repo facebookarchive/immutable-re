@@ -12,11 +12,11 @@ let addFirst (item: 'a) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let addFirstAll (seq: Seq.t 'a) (arr: t 'a): (t 'a) =>
+let addFirstAll (iter: Iterable.t 'a) (arr: t 'a): (t 'a) =>
   /* FIXME: This implemenation is particularly bad. We can improve it
    * by using dynamic array allocations.
    */
-  seq |> Seq.reduce (fun acc next => acc |> addFirst next) arr;
+  iter |> Iterable.reduce (fun acc next => acc |> addFirst next) arr;
 
 let addLast (item: 'a) (arr: t 'a): (t 'a) => {
   let count = count arr;
@@ -26,11 +26,11 @@ let addLast (item: 'a) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let addLastAll (seq: Seq.t 'a) (arr: t 'a): (t 'a) =>
+let addLastAll (iter: Iterable.t 'a) (arr: t 'a): (t 'a) =>
   /* FIXME: This implemenation is particularly bad. We can improve it
    * by using dynamic array allocations.
    */
-  seq |> Seq.reduce (fun acc next => acc |> addLast next) arr;
+  iter |> Iterable.reduce (fun acc next => acc |> addLast next) arr;
 
 let compareWith
     (valueCompare: Comparator.t 'a)
@@ -141,11 +141,11 @@ let forEach (f: 'a => unit) (arr: t 'a): 'acc =>
 let forEachWithIndex (f: int => 'a => unit) (arr: t 'a): 'acc =>
   arr |> Array.iteri f;
 
-let fromSeq (seq: Seq.t 'a): (t 'a) =>
-  [||] |> addLastAll seq;
+let from (iter: Iterable.t 'a): (t 'a) =>
+  [||] |> addLastAll iter;
 
-let fromSeqReversed (seq: Seq.t 'a): (t 'a) =>
-  [||] |> addFirstAll seq;
+let fromReversed (iter: Iterable.t 'a): (t 'a) =>
+  [||] |> addFirstAll iter;
 
 let get (index: int) (arr: t 'a): 'a => arr.(index);
 
@@ -401,12 +401,20 @@ let take (newCount: int) (arr: t 'a): (t 'a) =>
   Array.sub arr 0 newCount;
 
 let toIterable (arr: t 'a): (Iterable.t 'a) =>
- if (isEmpty arr) Iterable.empty
- else { reduce: fun f acc => reduce f acc arr };
+  if (isEmpty arr) Iterable.empty
+  else { reduce: fun f acc => reduce f acc arr };
+
+let toIterableReversed (arr: t 'a): (Iterable.t 'a) =>
+  if (isEmpty arr) Iterable.empty
+  else { reduce: fun f acc => reduceRight f acc arr };
 
 let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) KeyedIterable.empty
   else { reduce: fun f acc => reduceWithIndex f acc arr };
+
+let toKeyedIterableReversed (arr: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty arr) KeyedIterable.empty
+  else { reduce: fun f acc => reduceRightWithIndex f acc arr };
 
 let toSeqReversed (arr: t 'a): (Seq.t 'a) =>
   if (isEmpty arr) Seq.empty

@@ -19,7 +19,7 @@ let module Set = {
   let every = SortedSet.every;
   let find = SortedSet.find;
   let forEach = SortedSet.forEach;
-  let fromSeq = SortedSet.fromSeq;
+  let from = SortedSet.from;
   let hash = SortedSet.hash;
   let intersect = SortedSet.intersect;
   let isEmpty = SortedSet.isEmpty;
@@ -42,33 +42,33 @@ let count = 10000;
 let test = describe "SortedSet" [
   it "compare" (fun () => {
     let set = IntRange.create 0 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
 
     let setEqual = IntRange.create 0 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
     expect (SortedSet.compare set setEqual) |> toBeEqualTo (fun _ => "") Ordering.equal;
 
     let setSameLengthLessThan = IntRange.create (-1) count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
     expect (SortedSet.compare set setSameLengthLessThan) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
 
 
     let setSameLengthGreaterThan = IntRange.create 1 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
     expect (SortedSet.compare set setSameLengthGreaterThan) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
 
     let setLonger = IntRange.create 0 (count + 1)
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
     expect (SortedSet.compare set setLonger) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
 
     let setShorter = IntRange.create 0 (count - 1)
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
     expect (SortedSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
 
     let setWithRandomComparator1 = SortedSet.emptyWith (fun _ _ => Ordering.greaterThan);
@@ -77,20 +77,19 @@ let test = describe "SortedSet" [
   }),
   it "last and tryLast" (fun () => {
     let set = IntRange.create 0 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
 
     expect (set |> SortedSet.last) |> toBeEqualToInt (count - 1);
     expect (set |> SortedSet.tryLast) |> toBeEqualToSomeOfInt (count - 1);
-
 
     defer (fun () => SortedSet.empty |> SortedSet.last) |> throws;
     expect (SortedSet.empty |> SortedSet.tryLast) |> toBeEqualToNoneOfInt;
   }),
   it "first and tryFirst" (fun () => {
     let set = IntRange.create 0 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq;
+      |> IntRange.toIterable
+      |> SortedSet.from;
 
     expect (set |> SortedSet.first) |> toBeEqualToInt 0;
     expect (set |> SortedSet.tryFirst) |> toBeEqualToSomeOfInt 0;
@@ -100,8 +99,8 @@ let test = describe "SortedSet" [
   }),
   it "reduceRight" (fun () => {
     IntRange.create 0 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq
+      |> IntRange.toIterable
+      |> SortedSet.from
       |> SortedSet.reduceRight
         (fun acc i => { expect (i < acc) |> toBeEqualToTrue; i })
         count
@@ -109,15 +108,15 @@ let test = describe "SortedSet" [
   }),
   it "removeLast" (fun () => {
     let set = IntRange.create 0 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq
+      |> IntRange.toIterable
+      |> SortedSet.from
       |> SortedSet.removeLast;
     expect (set |> Set.contains (count - 1)) |> toBeEqualToFalse;
   }),
   it "removeFirst" (fun () => {
     let set = IntRange.create 0 count
-      |> IntRange.toSeq
-      |> SortedSet.fromSeq
+      |> IntRange.toIterable
+      |> SortedSet.from
       |> SortedSet.removeFirst;
     expect (set |> Set.contains 0) |> toBeEqualToFalse;
   }),

@@ -13,7 +13,7 @@ let add (key: 'k) (value: 'v) ({ count, map }: t 'k 'v): (t 'k 'v) => {
   } |> Stack.addFirst value |> Option.return),
 };
 
-let addAllValues (key: 'k) (values: (Seq.t 'v)) ({ count, map } as multimap: t 'k 'v): (t 'k 'v) => {
+let addAllValues (key: 'k) (values: (Iterable.t 'v)) ({ count, map } as multimap: t 'k 'v): (t 'k 'v) => {
   let increment = ref 0;
 
   let newMap = map |> HashMap.alter key (fun stack => {
@@ -23,7 +23,7 @@ let addAllValues (key: 'k) (values: (Seq.t 'v)) ({ count, map } as multimap: t '
         increment := (Stack.count newStack) - (Stack.count stack);
         Some newStack;
     | None =>
-        let newStack = Stack.fromSeqReversed values;
+        let newStack = Stack.fromReversed values;
         if (Stack.isEmpty newStack) None else {
           increment := (Stack.count newStack);
           Some newStack;

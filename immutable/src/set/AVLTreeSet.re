@@ -204,6 +204,16 @@ let rec toSeq (tree: t 'a): (Seq.t 'a) => switch tree {
     ]
 };
 
+let rec toSeqReversed (tree: t 'a): (Seq.t 'a) => switch tree {
+  | Empty => Seq.empty
+  | Leaf v => Seq.return v
+  | Node _ left v right => Seq.concat [
+      Seq.defer(fun () => toSeqReversed right),
+      Seq.return v,
+      Seq.defer(fun () => toSeqReversed left),
+    ]
+};
+
 let rec tryFirst (tree: t 'a): (option 'a) => switch tree {
   | Empty => None
   | Leaf v => Some v

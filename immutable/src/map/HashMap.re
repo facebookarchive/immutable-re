@@ -583,8 +583,8 @@ let module TransientHashMap = {
   let put (key: 'k) (value: 'v) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> alter key (Functions.return @@ Option.return @@ value);
 
-  let putAll (seq: Seq.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
-    seq |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
+  let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
 
   let remove (key: 'k) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> alter key Functions.alwaysNone;
@@ -607,21 +607,14 @@ let map (f: 'k => 'a => 'b) ({ strategy } as map: t 'k 'a): (t 'k 'b) => map
   |> reduce (fun acc k v => acc |> TransientHashMap.put k (f k v)) (emptyWith strategy |> mutate)
   |> TransientHashMap.persist;
 
-let putAll (seq: Seq.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
-  map |> mutate |> TransientHashMap.putAll seq |> TransientHashMap.persist;
+let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+  map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
 
-let fromSeqWith (strategy: HashStrategy.t 'k) (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
-  emptyWith strategy |> putAll seq;
+let fromWith (strategy: HashStrategy.t 'k) (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+  emptyWith strategy |> putAll iter;
 
-let fromSeq (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
-  fromSeqWith (HashStrategy.structuralCompare) seq;
-
-let fromMapWith (strategy: HashStrategy.t 'k) (map: ImmMap.t 'k 'v): (t 'k 'v) =>
-  ImmMap.reduce (fun acc k v => acc |> TransientHashMap.put k v) (emptyWith strategy |> mutate) map
-  |> TransientHashMap.persist;
-
-let fromMap (map: ImmMap.t 'k 'v): (t 'k 'v) =>
-  fromMapWith HashStrategy.structuralCompare map;
+let from (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+  fromWith (HashStrategy.structuralCompare) iter;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))

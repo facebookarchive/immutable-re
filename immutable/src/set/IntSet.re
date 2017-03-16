@@ -232,11 +232,11 @@ let module TransientIntSet = {
 
   let addAllImpl
       (owner: Transient.Owner.t)
-      (seq: Seq.t int)
+      (iter: Iterable.t int)
       ({ count, root } as set: intSet): intSet => {
     let newCount = ref count;
 
-    let newRoot = seq |> Seq.reduce (fun acc value => {
+    let newRoot = iter |> Iterable.reduce (fun acc value => {
       if (acc |> BitmapTrieIntSet.contains 0 value) acc
       else  {
         let newRoot = acc |> BitmapTrieIntSet.add
@@ -254,8 +254,8 @@ let module TransientIntSet = {
     else { count: !newCount, root: newRoot };
   };
 
-  let addAll (seq: Seq.t int) (transient: t): t =>
-    transient |> Transient.update1 addAllImpl seq;
+  let addAll (iter: Iterable.t int) (transient: t): t =>
+    transient |> Transient.update1 addAllImpl iter;
 
   let contains (value: int) (transient: t): bool =>
     transient |> Transient.get |> contains value;
@@ -304,17 +304,20 @@ let module TransientIntSet = {
 
 let mutate = TransientIntSet.mutate;
 
-let addAll (seq: Seq.t int) (set: t): t =>
-  set |> mutate |> TransientIntSet.addAll seq |> TransientIntSet.persist;
+let addAll (iter: Iterable.t int) (set: t): t =>
+  set |> mutate |> TransientIntSet.addAll iter |> TransientIntSet.persist;
 
-let fromSeq (seq: Seq.t int): t =>
-  empty |> addAll seq;
+let from (iter: Iterable.t int): t =>
+  empty |> addAll iter;
 
 let intersect (this: t) (that: t): t =>
-  ImmSet.intersect (toSet this) (toSet that) |> fromSeq;
+  /* FIXME: Improve this implementation */
+  ImmSet.intersect (toSet this) (toSet that) |> Seq.toIterable |> from;
 
 let subtract (this: t) (that: t): t =>
-  ImmSet.subtract (toSet this) (toSet that) |> fromSeq;
+  /* FIXME: Improve this implementation */
+  ImmSet.subtract (toSet this) (toSet that) |> Seq.toIterable |> from;
 
 let union (this: t) (that: t): t =>
-  ImmSet.union (toSet this) (toSet that) |> fromSeq;
+  /* FIXME: Improve this implementation */
+  ImmSet.union (toSet this) (toSet that) |> Seq.toIterable |> from;

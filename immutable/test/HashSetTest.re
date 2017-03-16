@@ -16,7 +16,7 @@ let module ComparatorSet = {
   let every = HashSet.every;
   let find = HashSet.find;
   let forEach = HashSet.forEach;
-  let fromSeq = HashSet.fromSeq;
+  let from = HashSet.from;
   let hash = HashSet.hash;
   let intersect = HashSet.intersect;
   let isEmpty = HashSet.isEmpty;
@@ -46,7 +46,7 @@ let module EqualitySet = {
   let every = HashSet.every;
   let find = HashSet.find;
   let forEach = HashSet.forEach;
-  let fromSeq = HashSet.fromSeq;
+  let from = HashSet.from;
   let hash = HashSet.hash;
   let intersect = HashSet.intersect;
   let isEmpty = HashSet.isEmpty;
@@ -79,7 +79,7 @@ let module BadHashComparisonSet = {
   let every = HashSet.every;
   let find = HashSet.find;
   let forEach = HashSet.forEach;
-  let fromSeq = HashSet.fromSeq;
+  let from = HashSet.from;
   let hash = HashSet.hash;
   let intersect = HashSet.intersect;
   let isEmpty = HashSet.isEmpty;
@@ -112,7 +112,7 @@ let module BadHashEqualitySet = {
   let every = HashSet.every;
   let find = HashSet.find;
   let forEach = HashSet.forEach;
-  let fromSeq = HashSet.fromSeq;
+  let from = HashSet.from;
   let hash = HashSet.hash;
   let intersect = HashSet.intersect;
   let isEmpty = HashSet.isEmpty;
@@ -154,7 +154,7 @@ let transientHashSetTest (count: int): (list Test.t) => [
     let transient = HashSet.empty
       |> HashSet.mutate
       |> TransientHashSet.addAll (
-        IntRange.create 0 count |> IntRange.toSeq |> Seq.map hash
+        IntRange.create 0 count |> IntRange.toIterable |> Iterable.map hash
       );
 
     Seq.generate (fun i => i + 2) 0
@@ -183,35 +183,35 @@ let transientHashSetTest (count: int): (list Test.t) => [
     let transient = HashSet.empty
       |> HashSet.mutate
       |> TransientHashSet.addAll (
-          IntRange.create 0 count |> IntRange.toSeq |> Seq.map hash
+          IntRange.create 0 count |> IntRange.toIterable |> Iterable.map hash
       );
     transient |> TransientHashSet.removeAll |> ignore;
     expect (transient |> TransientHashSet.isEmpty) |> toBeEqualToTrue;
   }),
 ];
 
-let test = describe "HashSet" (List.fromSeqReversed @@ Seq.concat @@ [
-  describe "poor hash function comparator" (SetTester.test 100 (module BadHashComparisonSet)) |> Seq.return,
-  describe "poor hash function equality" (SetTester.test 100 (module BadHashEqualitySet)) |> Seq.return,
-  describe "comparator" (List.fromSeqReversed @@ Seq.concat @@ [
-    (SetTester.test 10 (module ComparatorSet)) |> List.toSeq,
-    (SetTester.test 48 (module ComparatorSet)) |> List.toSeq,
-    (SetTester.test 90 (module ComparatorSet)) |> List.toSeq,
-    (SetTester.test 500 (module ComparatorSet)) |> List.toSeq,
-    (SetTester.test 5000 (module ComparatorSet)) |> List.toSeq,
-  ]) |> Seq.return,
-  describe "equality" (List.fromSeqReversed @@ Seq.concat @@ [
-    (SetTester.test 10 (module EqualitySet)) |> List.toSeq,
-    (SetTester.test 48 (module EqualitySet)) |> List.toSeq,
-    (SetTester.test 90 (module EqualitySet)) |> List.toSeq,
-    (SetTester.test 500 (module EqualitySet)) |> List.toSeq,
-    (SetTester.test 5000 (module EqualitySet)) |> List.toSeq,
-  ]) |> Seq.return,
-  describe "TransientHashSet" (List.fromSeqReversed @@ Seq.concat @@ [
-    transientHashSetTest 10 |> List.toSeq,
-    transientHashSetTest 48 |> List.toSeq,
-    transientHashSetTest 90 |> List.toSeq,
-    transientHashSetTest 500 |> List.toSeq,
-    transientHashSetTest 5000 |> List.toSeq,
-  ]) |> Seq.return,
+let test = describe "HashSet" (List.fromReversed @@ Iterable.concat @@ [
+  describe "poor hash function comparator" (SetTester.test 100 (module BadHashComparisonSet)) |> Iterable.return,
+  describe "poor hash function equality" (SetTester.test 100 (module BadHashEqualitySet)) |> Iterable.return,
+  describe "comparator" (List.fromReversed @@ Iterable.concat @@ [
+    (SetTester.test 10 (module ComparatorSet)) |> List.toIterable,
+    (SetTester.test 48 (module ComparatorSet)) |> List.toIterable,
+    (SetTester.test 90 (module ComparatorSet)) |> List.toIterable,
+    (SetTester.test 500 (module ComparatorSet)) |> List.toIterable,
+    (SetTester.test 5000 (module ComparatorSet)) |> List.toIterable,
+  ]) |> Iterable.return,
+  describe "equality" (List.fromReversed @@ Iterable.concat @@ [
+    (SetTester.test 10 (module EqualitySet)) |> List.toIterable,
+    (SetTester.test 48 (module EqualitySet)) |> List.toIterable,
+    (SetTester.test 90 (module EqualitySet)) |> List.toIterable,
+    (SetTester.test 500 (module EqualitySet)) |> List.toIterable,
+    (SetTester.test 5000 (module EqualitySet)) |> List.toIterable,
+  ]) |> Iterable.return,
+  describe "TransientHashSet" (List.fromReversed @@ Iterable.concat @@ [
+    transientHashSetTest 10 |> List.toIterable,
+    transientHashSetTest 48 |> List.toIterable,
+    transientHashSetTest 90 |> List.toIterable,
+    transientHashSetTest 500 |> List.toIterable,
+    transientHashSetTest 5000 |> List.toIterable,
+  ]) |> Iterable.return,
 ]);

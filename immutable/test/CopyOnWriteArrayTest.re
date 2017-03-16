@@ -26,8 +26,8 @@ let module Vector = {
   let forEachReverse = CopyOnWriteArray.forEachReverse;
   let forEachReverseWithIndex = CopyOnWriteArray.forEachReverseWithIndex;
   let forEachWithIndex = CopyOnWriteArray.forEachWithIndex;
-  let fromSeq = CopyOnWriteArray.fromSeq;
-  let fromSeqReversed = CopyOnWriteArray.fromSeqReversed;
+  let from = CopyOnWriteArray.from;
+  let fromReversed = CopyOnWriteArray.fromReversed;
   let get = CopyOnWriteArray.get;
   let hash = CopyOnWriteArray.hash;
   let hashWith = CopyOnWriteArray.hashWith;
@@ -74,7 +74,7 @@ let module Vector = {
   let updateWith = CopyOnWriteArray.updateWith;
 };
 
-let test = describe "CopyOnWriteArray" (List.fromSeqReversed @@ Seq.concat @@ [
-  (VectorTester.test 10 (module Vector)) |> List.toSeq,
-  (VectorTester.test 5000 (module Vector)) |> List.toSeq,
+let test = describe "CopyOnWriteArray" (List.fromReversed @@ Iterable.concat @@ [
+  (VectorTester.test 10 (module Vector)) |> List.toIterable,
+  (VectorTester.test 5000 (module Vector)) |> List.toIterable,
 ]);

@@ -78,5 +78,15 @@ let ofList (list: list 'a): (t 'a) =>
     reduce: fun f acc => ImmList.reduce f acc list
   };
 
+let return (value: 'a): (t 'a) => {
+  reduce: fun f acc => f acc value
+};
+
 let concatMap = flatMap;
 let concatAll = flatten;
+
+let listAddFirstAll (iter: t 'a) (list: list 'a): (list 'a) =>
+  iter |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
+
+let listFromReverse (iter: t 'a): (list 'a) =>
+  [] |> listAddFirstAll iter;

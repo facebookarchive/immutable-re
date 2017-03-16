@@ -307,11 +307,11 @@ let module TransientHashSet = {
 
   let addAllImpl
       (owner: Transient.Owner.t)
-      (seq: Seq.t 'a)
+      (iter: Iterable.t 'a)
       ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
     let newCount = ref count;
 
-    let newRoot = seq |> Seq.reduce (fun acc value => {
+    let newRoot = iter |> Iterable.reduce (fun acc value => {
       let hash = HashStrategy.hash strategy value;
 
       if (acc |> BitmapTrieSet.contains strategy 0 hash value) acc
@@ -333,8 +333,8 @@ let module TransientHashSet = {
     else { count: !newCount, root: newRoot, strategy };
   };
 
-  let addAll (seq: Seq.t 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update1 addAllImpl seq;
+  let addAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+    transient |> Transient.update1 addAllImpl iter;
 
   let contains (value: 'a) (transient: t 'a): bool =>
     transient |> Transient.get |> contains value;
@@ -390,20 +390,29 @@ let module TransientHashSet = {
 
 let mutate = TransientHashSet.mutate;
 
-let addAll (seq: Seq.t 'a) (set: t 'a): (t 'a) =>
-  set |> mutate |> TransientHashSet.addAll seq |> TransientHashSet.persist;
+let addAll (iter: Iterable.t 'a) (set: t 'a): (t 'a) =>
+  set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
 
-let fromSeq (seq: Seq.t 'a): (t 'a) =>
-  empty |> addAll seq;
+let from (iter: Iterable.t 'a): (t 'a) =>
+  empty |> addAll iter;
 
-let fromSeqWith (strategy: HashStrategy.t 'a) (seq: Seq.t 'a): (t 'a) =>
-  emptyWith strategy |> addAll seq;
+let fromWith (strategy: HashStrategy.t 'a) (iter: Iterable.t 'a): (t 'a) =>
+  emptyWith strategy |> addAll iter;
 
 let intersect ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
-  ImmSet.intersect (toSet this) (toSet that) |> fromSeqWith strategy;
+  /* FIXME: Makes this more efficient */
+  ImmSet.intersect (toSet this) (toSet that)
+    |> Seq.toIterable
+    |> fromWith strategy;
 
 let subtract ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
-  ImmSet.subtract (toSet this) (toSet that) |> fromSeqWith strategy;
+  /* FIXME: Makes this more efficient */
+  ImmSet.subtract (toSet this) (toSet that)
+    |> Seq.toIterable
+    |> fromWith strategy;
 
 let union ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
-  ImmSet.union (toSet this) (toSet that) |> fromSeqWith strategy;
+  /* FIXME: Makes this more efficient */
+  ImmSet.union (toSet this) (toSet that)
+    |> Seq.toIterable
+    |> fromWith strategy;

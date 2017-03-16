@@ -389,9 +389,9 @@ let module TransientIntMap = {
     transient |> alter key (Functions.return @@ Option.return @@ value);
 
   let putAll
-      (seq: Seq.t (int, 'a))
-      (transient: t 'a): (t 'a) => seq
-    |> Seq.reduce (fun acc (k, v) => acc |> put k v) transient;
+      (iter: KeyedIterable.t int 'a)
+      (transient: t 'a): (t 'a) => iter
+    |> KeyedIterable.reduce (fun acc k v => acc |> put k v) transient;
 
   let remove (key: int) (transient: t 'a): (t 'a) =>
     transient |> alter key Functions.alwaysNone;
@@ -409,9 +409,9 @@ let module TransientIntMap = {
 
 let mutate = TransientIntMap.mutate;
 
-let putAll (seq: Seq.t (int, 'a)) (map: t 'a): (t 'a) => map
+let putAll (iter: KeyedIterable.t int 'a) (map: t 'a): (t 'a) => map
   |> mutate
-  |> TransientIntMap.putAll seq
+  |> TransientIntMap.putAll iter
   |> TransientIntMap.persist;
 
 let map (f: int => 'a => 'b) (map: t 'a): (t 'b) => map
@@ -420,11 +420,7 @@ let map (f: int => 'a => 'b) (map: t 'a): (t 'b) => map
     (mutate empty)
   |> TransientIntMap.persist;
 
-let fromSeq (seq: Seq.t (int, 'a)): (t 'a) => putAll seq empty;
-
-let fromMap (map: ImmMap.t int 'a): (t 'a) => map
-  |> ImmMap.reduce (fun acc k v => acc |> TransientIntMap.put k v) (mutate empty)
-  |> TransientIntMap.persist;
+let from (iter: KeyedIterable.t int 'a): (t 'a) => putAll iter empty;
 
 let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))

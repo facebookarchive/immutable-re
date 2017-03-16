@@ -89,7 +89,7 @@ let put
 
 let putAllValues
     (key: 'k)
-    (values: Seq.t 'v)
+    (values: Iterable.t 'v)
     ({ count, map, valueStrategy } as multimap: t 'k 'v): (t 'k 'v) => {
   let increment = ref 0;
   let newMap = map |> HashMap.alter key (fun oldSet => switch oldSet {
@@ -98,7 +98,7 @@ let putAllValues
         increment := (HashSet.count newSet) - (HashSet.count oldSet);
         newSet;
     | None =>
-        let newSet = HashSet.fromSeqWith valueStrategy values;
+        let newSet = HashSet.fromWith valueStrategy values;
         increment := HashSet.count newSet;
         newSet;
   } |> Option.return);

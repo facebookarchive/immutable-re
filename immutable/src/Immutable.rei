@@ -122,6 +122,7 @@ let module Iterable: {
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let map: ('a => 'b) => (t 'a) => (t 'b);
   let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let return: 'a => (t 'a);
 };
 
 let module Seq: {
@@ -660,7 +661,11 @@ let module IntRange: {
 
   let toIterable: t => (Iterable.t int);
 
+  let toIterableReversed: t => (Iterable.t int);
+
   let toKeyedIterable: t => (KeyedIterable.t int int);
+
+  let toKeyedIterableReversed: t => (KeyedIterable.t int int);
 
   let toMap: t => (Map.t int int);
 
@@ -690,8 +695,8 @@ let module CopyOnWriteArray: {
    *  Complexity: O(N)
    */
 
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll seq cow] returns a new CopyOnWriteArray with the values in [seq] prepended.
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll iter cow] returns a new CopyOnWriteArray with the values in [iter] prepended.
    *
    * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
    */
@@ -702,8 +707,8 @@ let module CopyOnWriteArray: {
    *  Complexity: O(N)
    */
 
-  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addLastAll seq cow] returns a new CopyOnWriteArray with the values in [seq] appended.
+  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addLastAll iter cow] returns a new CopyOnWriteArray with the values in [iter] appended.
    *
    * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
    */
@@ -795,14 +800,14 @@ let module CopyOnWriteArray: {
    *  invoking [f] on each index/element pair.
    */
 
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new CopyOnWriteArray containing the values in [seq].
+  let from: (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns a new CopyOnWriteArray containing the values in [iter].
    *
    * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
    */
 
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new CopyOnWriteArray containing the values in [seq]
+  let fromReversed: (Iterable.t 'a) => (t 'a);
+  /** [fromReverse iter] returns a new CopyOnWriteArray containing the values in [iter]
    *  in reverse order.
    *
    * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
@@ -964,7 +969,11 @@ let module CopyOnWriteArray: {
 
   let toIterable: (t 'a) => (Iterable.t 'a);
 
+  let toIterableReversed: (t 'a) => (Iterable.t 'a);
+
   let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+
+  let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
 
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap cow] returns a Map view of [cow] */
@@ -1036,11 +1045,8 @@ let module rec Deque: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll seq deque] returns a new Deque with the values in [seq] prepended.
-   *
-   *  Complexity: O(N) the number of elements in [seq].
-   */
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll iter deque] returns a new Deque with the values in [iter] prepended. */
 
   let addLast: 'a => (t 'a) => (t 'a);
   /** [addLast value deque] returns a new Deque with [value] appended.
@@ -1048,11 +1054,8 @@ let module rec Deque: {
    *  Complexity: O(1)
    */
 
-  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addLastAll seq deque] returns a new Deque with the values in [seq] appended.
-   *
-   *  Complexity: O(N) the number of elements in [seq].
-   */
+  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addLastAll iter deque] returns a new Deque with the values in [iter] appended. */
 
   let compare: (Comparator.t (t 'a));
   /** A comparator that compares two Deques
@@ -1117,14 +1120,14 @@ let module rec Deque: {
    *  invoking [f] for each element.
    */
 
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new Deque containing the values in [seq].
+  let from: (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns a new Deque containing the values in [iter].
    *
-   * Complexity: O(N) the number of elements in [seq].
+   * Complexity: O(N) the number of elements in [iter].
    */
 
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new Deque containing the values in [seq]
+  let fromReversed: (Iterable.t 'a) => (t 'a);
+  /** [fromReverse iter] returns a new Deque containing the values in [iter]
    *  in reverse order.
    *
    * Complexity: O(N) the number of elements in [seq].
@@ -1207,6 +1210,8 @@ let module rec Deque: {
    */
 
   let toIterable: (t 'a) => (Iterable.t 'a);
+
+  let toIterableReversed: (t 'a) => (Iterable.t 'a);
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq deque] returns a Seq of the elements in [deque] in order. */
@@ -1345,15 +1350,15 @@ let module rec HashBiMap: {
    *  If no value is found, an exception is thrown.
    */
 
-  let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeq seq] returns a HashBiMap including the key/value pairs in [seq]. If
-   *  [seq] includes duplicate keys or values, the last key/value pair with the duplicate
+  let from: (Iterable.t ('k, 'v)) => (t 'k 'v);
+  /** [from iter] returns a HashBiMap including the key/value pairs in [iter]. If
+   *  [iter] includes duplicate keys or values, the last key/value pair with the duplicate
    *  key or value is added to the HashBiMap.
    */
 
-  let fromSeqWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeqWith keyStrategy valueStrategy seq] returns a HashBiMap including the key/value
-   *  pairs in [seq] using the provided key and value [HashStrategy]'s. If [seq] includes duplicate
+  let fromWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (Iterable.t ('k, 'v)) => (t 'k 'v);
+  /** [fromWith keyStrategy valueStrategy iter] returns a HashBiMap including the key/value
+   *  pairs in [iter] using the provided key and value [HashStrategy]'s. If [iter] includes duplicate
    *  keys or values, the last key/value pair with the duplicate key or value is added to the HashBiMap.
    */
 
@@ -1402,9 +1407,9 @@ let module rec HashBiMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll seq bimap] returns a new HashBiMap including the key/value pairs in [seq].
-   *  Key value pairs in seq replace existing mappings in [bimap].
+  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll iter bimap] returns a new HashBiMap including the key/value pairs in [iter].
+   *  Key value pairs in [iter] replace existing mappings in [bimap].
    */
 
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
@@ -1504,9 +1509,9 @@ and TransientHashBiMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
-   *  Key value pairs in seq replace existing mappings in [transient].
+  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
+   *  Key value pairs in [iter] replace existing mappings in [transient].
    */
 
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
@@ -1601,23 +1606,13 @@ let module rec HashMap: {
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let fromMap: (Map.t 'k 'v) => (t 'k 'v);
-  /** [fromMap map] returns a HashMap including the key/value pairs in [map]
+  let from: (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  /** [from iter] returns a HashMap including the key/value pairs in [seq]
    *  using the structuralCompare HashStrategy.
    */
 
-  let fromMapWith: (HashStrategy.t 'k) => (Map.t 'k 'v) => (t 'k 'v);
-  /** [fromSeqWith strategy map] returns a HashMap including the key/value pairs in [map]
-   *  using the provided HashStrategy [strategy].
-   */
-
-  let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeq seq] returns a HashMap including the key/value pairs in [seq]
-   *  using the structuralCompare HashStrategy.
-   */
-
-  let fromSeqWith: (HashStrategy.t 'k) => (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeqWith strategy seq] returns a HashMap including the key/value pairs in [seq]
+  let fromWith: (HashStrategy.t 'k) => (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  /** [fromWith strategy iter] returns a HashMap including the key/value pairs in [seq]
    *  using the provided HashStrategy [strategy].
    */
 
@@ -1667,8 +1662,8 @@ let module rec HashMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll key values map] returns a new HashMap containing the key/value pairs in [values].
+  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll iter map] returns a new HashMap containing the key/value pairs in [iter].
    *
    *  Complexity: O(log32 N), effectively O(1)
    */
@@ -1771,9 +1766,9 @@ and TransientHashMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
-   *  Key value pairs in seq replace existing mappings in [transient].
+  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
+   *  Key value pairs in [iter] replace existing mappings in [transient].
    */
 
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
@@ -1809,8 +1804,8 @@ let module rec HashMultiset: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addAll values set] returns a new HashMultiset with all elements in [values] added.
+  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addAll iter set] returns a new HashMultiset with all elements in [iter] added.
    *
    *  Complexity: O(N log32 N)
    */
@@ -1851,11 +1846,11 @@ let module rec HashMultiset: {
   let forEach: ('a => int => unit) => (t 'a) => unit;
   /** [forEach f set] iterates through [set], invoking [f] for each value/count pair. */
 
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns an HashMultiset including the values in [seq]. */
+  let from: (Iterable.t 'a) => (t 'a);
+  /** [fromIter seq] returns an HashMultiset including the values in [iter]. */
 
-  let fromSeqWith: (HashStrategy.t 'a) => (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns an HashMultiset including the values in [seq]. */
+  let fromWith: (HashStrategy.t 'a) => (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns an HashMultiset including the values in [iter]. */
 
   let get: 'a => (t 'a) => int;
   /** [get value set] returns the number of times [value] has been added to [set] or 0. */
@@ -1941,8 +1936,8 @@ and TransientHashMultiset: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addAll values transient] adds all elements in [values] to [transient].
+  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addAll iter transient] adds all elements in [iter] to [transient].
    *
    *  Complexity: O(N log32 N)
    */
@@ -2015,8 +2010,8 @@ let module rec HashSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addAll values set] returns a new HashSet with all elements in [values] added.
+  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addAll iter set] returns a new HashSet with all elements in [iter] added.
    *
    *  Complexity: O(N log32 N)
    */
@@ -2057,11 +2052,11 @@ let module rec HashSet: {
   let forEach: ('a => unit) => (t 'a) => unit;
   /** [forEach f set] iterates through [set], invoking [f] for each element. */
 
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns an HashSet including the values in [seq]. */
+  let from: (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns an HashSet including the values in [iter]. */
 
-  let fromSeqWith: (HashStrategy.t 'a)  => (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns an HashSet including the values in [seq]. */
+  let fromWith: (HashStrategy.t 'a)  => (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns an HashSet including the values in [iter]. */
 
   let hash: (Hash.t (t 'a));
   /** [hash set] hashes [set]. */
@@ -2157,8 +2152,8 @@ and TransientHashSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addAll values transient] adds all elements in [values] to [transient].
+  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addAll iter transient] adds all elements in [iter] to [transient].
    *
    *  Complexity: O(N log32 N)
    */
@@ -2224,7 +2219,7 @@ let module HashSetMultimap: {
   let keys: (t 'k 'v) => (Set.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  let putAllValues: 'k => (Seq.t 'v) => (t 'k 'v) => (t 'k 'v);
+  let putAllValues: 'k => (Iterable.t 'v) => (t 'k 'v) => (t 'k 'v);
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
   let removeAll: (t 'k 'v) => (t 'k 'v);
@@ -2294,11 +2289,8 @@ let module rec IntMap: {
   let forEach: (int => 'a => unit) => (t 'a) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let fromMap: (Map.t int 'a) => (t 'a);
-  /** [fromMap map] returns an IntMap including the key/value pairs in [map]. */
-
-  let fromSeq: (Seq.t (int, 'a)) => (t 'a);
-  /** [fromSeq seq] returns an IntMap including the key/value pairs in [seq]. */
+  let from: (KeyedIterable.t int 'a) => (t 'a);
+  /** [from iter] returns an IntMap including the key/value pairs in [iter]. */
 
   let get: int => (t 'a) => 'a;
   /** [get key map] returns the value associated with [key] or throws */
@@ -2346,8 +2338,8 @@ let module rec IntMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (Seq.t (int, 'a)) => (t 'a) => (t 'a);
-  /** [putAll key values map] returns a new IntMap containing the key/value pairs in [values].
+  let putAll: (KeyedIterable.t int 'a) => (t 'a) => (t 'a);
+  /** [putAll iter map] returns a new IntMap containing the key/value pairs in [iter].
    *
    *  Complexity: O(log32 N), effectively O(1)
    */
@@ -2439,9 +2431,9 @@ and TransientIntMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (Seq.t (int, 'a)) => (t 'a) => (t 'a);
-  /** [putAll seq transient] adds the key/value pairs in [seq] to [transient].
-   *  Key value pairs in seq replace existing mappings in [transient].
+  let putAll: (KeyedIterable.t int 'a) => (t 'a) => (t 'a);
+  /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
+   *  Key value pairs in [iter] replace existing mappings in [transient].
    */
 
   let remove: int => (t 'a) => (t 'a);
@@ -2475,8 +2467,8 @@ let module rec IntSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Seq.t int) => t => t;
-  /** [addAll values set] returns a new IntSet with all elements in [values] added.
+  let addAll: (Iterable.t int) => t => t;
+  /** [addAll iter set] returns a new IntSet with all elements in [iter] added.
    *
    *  Complexity: O(N log32 N)
    */
@@ -2510,10 +2502,10 @@ let module rec IntSet: {
    */
 
   let forEach: (int => unit) => t => unit;
-  /** [forEach f set] iterates through [set], invoking [f] for each element until [seq] completes. */
+  /** [forEach f set] iterates through [set], invoking [f] for each element until [set] completes. */
 
-  let fromSeq: (Seq.t int) => t;
-  /** [fromSeq seq] returns an IntSet including the values in [seq]. */
+  let from: (Iterable.t int) => t;
+  /** [from iter] returns an IntSet including the values in [iter]. */
 
   let hash: (Hash.t t);
   /** [hash set] hashes [set], hashing elements using structural hashing. */
@@ -2609,8 +2601,8 @@ and TransientIntSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Seq.t int) => t => t;
-  /** [addAll values transient] adds all elements in [values] to [transient].
+  let addAll: (Iterable.t int) => t => t;
+  /** [addAll iter transient] adds all elements in [iter] to [transient].
    *
    *  Complexity: O(N log32 N)
    */
@@ -2666,11 +2658,8 @@ let module List: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll seq list] returns a new List with the values in [seq] prepended.
-   *
-   *  Complexity: O(N) the number of elements in [seq].
-   */
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll iter list] returns a new List with the values in [iter] prepended. */
 
   let compare: (Comparator.t (t 'a));
   /** A comparator that compares two Lists
@@ -2733,11 +2722,11 @@ let module List: {
   let forEach: ('a => unit) => (t 'a) => unit;
   /** [forEach f list] iterates through [list], invoking [f] for each element. */
 
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new List containing the values in [seq]
+  let fromReversed: (Iterable.t 'a) => (t 'a);
+  /** [fromReversed iter] returns a new List containing the values in [iter]
    *  in reverse order.
    *
-   * Complexity: O(N) the number of elements in [seq].
+   * Complexity: O(N) the number of elements in [iter].
    */
 
   let hash: (Hash.t (t 'a));
@@ -3015,23 +3004,14 @@ let module SortedMap: {
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let fromMap: (Map.t 'k 'v) => (t 'k 'v);
-  /** [fromMap map] returns a SortedMap including the key/value pairs in [map]
+
+  let from: (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  /** [from iter] returns a SortedMap including the key/value pairs in [iter]
    *  using the structural comparison.
    */
 
-  let fromMapWith: (Comparator.t 'k) => (Map.t 'k 'v) => (t 'k 'v);
-  /** [fromSeqWith comparator map] returns a SortedMap including the key/value pairs in [map]
-   *  using the provided Comparator.
-   */
-
-  let fromSeq: (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeq seq] returns a SortedMap including the key/value pairs in [seq]
-   *  using the structural comparison.
-   */
-
-  let fromSeqWith: (Comparator.t 'k) => (Seq.t ('k, 'v)) => (t 'k 'v);
-  /** [fromSeqWith comparator seq] returns a SortedMap including the key/value pairs in [seq]
+  let fromWith: (Comparator.t 'k) => (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  /** [fromWith comparator iter] returns a SortedMap including the key/value pairs in [iter]
    *  using the provided Comparator.
    */
 
@@ -3080,8 +3060,8 @@ let module SortedMap: {
    *  Complexity: O(log N)
    */
 
-  let putAll: (Seq.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll key values map] returns a new SortedMap containing the key/value pairs in [values].
+  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [putAll iter map] returns a new SortedMap containing the key/value pairs in [iter].
    *
    *  Complexity: O(log N)
    */
@@ -3127,13 +3107,19 @@ let module SortedMap: {
 
   let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
 
+  let toIterableReversed: (t 'k 'v) => (Iterable.t ('k, 'v));
+
   let toKeyedIterable: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+
+  let toKeyedIterableReversed: (t 'k 'v) => (KeyedIterable.t 'k 'v);
 
   let toMap: (t 'k 'v) => (Map.t 'k 'v);
   /** [toMap map] returns a Map view of [map]. */
 
   let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
   /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+
+  let toSeqReversed: (t 'k 'v) => (Seq.t ('k, 'v));
 
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
@@ -3173,8 +3159,8 @@ let module SortedSet: {
    *  Complexity: O(log N)
    */
 
-  let addAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addAll values set] returns a new SortedSet with all elements in [values] added.
+  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addAll iter set] returns a new SortedSet with all elements in [iter] added.
    *
    *  Complexity: O(N log N)
    */
@@ -3225,13 +3211,13 @@ let module SortedSet: {
    */
 
   let forEach: ('a => unit) => (t 'a) => unit;
-  /** [forEach f set] iterates through [set], invoking [f] for each element until [seq] completes. */
+  /** [forEach f set] iterates through [set], invoking [f] for each element until [set] completes. */
 
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a SortedSet including the values in [seq] using structural comparison. */
+  let from: (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns a SortedSet including the values in [iter] using structural comparison. */
 
-  let fromSeqWith: (Comparator.t 'a)  => (Seq.t 'a) => (t 'a);
-  /** [fromSeq comparator seq] returns a SortedSet including the values in [seq]
+  let fromWith: (Comparator.t 'a)  => (Iterable.t 'a) => (t 'a);
+  /** [fromWith comparator iter] returns a SortedSet including the values in [iter]
    *  the provided [comparator] comparison function.
    */
 
@@ -3315,13 +3301,19 @@ let module SortedSet: {
 
   let toIterable: (t 'a) => (Iterable.t 'a);
 
+  let toIterableReversed: (t 'a) => (Iterable.t 'a);
+
   let toKeyedIterable: (t 'a) => (KeyedIterable.t 'a 'a);
+
+  let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t 'a 'a);
 
   let toMap: (t 'a) => (Map.t 'a 'a);
   /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
   let toSeq: (t 'a) => (Seq.t 'a);
   /** [toSeq set] returns a Seq of the values in [set]. */
+
+  let toSeqReversed: (t 'a) => (Seq.t 'a);
 
   let toSet: (t 'a) => (Set.t 'a);
   /** [toSet set] returns a Set view of [set] */
@@ -3362,11 +3354,8 @@ let module Stack: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll seq stack] returns a new Stack with the values in [seq] prepended.
-   *
-   *  Complexity: O(N) the number of elements in [seq].
-   */
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
 
   let compare: (Comparator.t (t 'a));
   /** A comparator that compares two Stacks
@@ -3435,11 +3424,9 @@ let module Stack: {
    *  Complexity: O(N)
    */
 
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new Stack containing the values in [seq]
+  let fromReversed: (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns a new Stack containing the values in [iter]
    *  in reverse order.
-   *
-   * Complexity: O(N) the number of elements in [seq].
    */
 
   let hash: (Hash.t (t 'a));
@@ -3514,7 +3501,7 @@ let module StackMultimap: {
   type t 'k 'v;
 
   let add: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  let addAllValues: 'k => (Seq.t 'v) => (t 'k 'v) => (t 'k 'v);
+  let addAllValues: 'k => (Iterable.t 'v) => (t 'k 'v) => (t 'k 'v);
   let contains: 'k => 'v => (t 'k 'v) => bool;
   let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
   let containsKey: 'k => (t 'k 'v) => bool;
@@ -3593,11 +3580,8 @@ let module rec Vector: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll seq vec] returns a new Vector with the values in [seq] prepended.
-   *
-   *  Complexity: O(N) the number of elements in [seq].
-   */
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll iter vec] returns a new Vector with the values in [iter] prepended. */
 
   let addLast: 'a => (t 'a) => (t 'a);
   /** [addLast value vec] returns a new CopyOnWriteArray with [value] added at index [count vec].
@@ -3605,11 +3589,8 @@ let module rec Vector: {
    *  Complexity: O(1)
    */
 
-  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
-  /** [addLastAll seq vec] returns a new Vector with the values in [seq] appended.
-   *
-   *  Complexity: O(N) the number of elements in [seq].
-   */
+  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  /** [addLastAll iter vec] returns a new Vector with the values in [iter] appended. */
 
   let compare: (Comparator.t (t 'a));
   /** A comparator that compares two Vectors
@@ -3700,17 +3681,12 @@ let module rec Vector: {
    *  invoking [f] on each index/element pair.
    */
 
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new Vector containing the values in [seq].
-   *
-   * Complexity: O(N) the number of elements in [seq].
-   */
+  let from: (Iterable.t 'a) => (t 'a);
+  /** [from iter] returns a new Vector containing the values in [iter]. */
 
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
-  /** [fromSeq seq] returns a new Vector containing the values in [seq]
+  let fromReversed: (Iterable.t 'a) => (t 'a);
+  /** [fromReversed iter] returns a new Vector containing the values in [iter]
    *  in reverse order.
-   *
-   * Complexity: O(N) the number of elements in [seq].
    */
 
   let get: int => (t 'a) => 'a;
@@ -3871,7 +3847,11 @@ let module rec Vector: {
 
   let toIterable: (t 'a) => (Iterable.t 'a);
 
+  let toIterableReversed: (t 'a) => (Iterable.t 'a);
+
   let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+
+  let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
 
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap vec] returns a Map view of [vec] */

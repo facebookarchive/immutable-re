@@ -130,9 +130,20 @@ let toIterable (set: t): (Iterable.t int) =>
   if (isEmpty set) Iterable.empty
   else { reduce: fun f acc => reduce f acc set };
 
+let toIterableReversed (set: t): (Iterable.t int) =>
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduceRight f acc set };
+
 let toKeyedIterable (set: t): (KeyedIterable.t int int) =>
   if (isEmpty set) KeyedIterable.empty
   else { reduce: fun f acc => set |> reduce
+    (fun acc next => f acc next next)
+    acc
+  };
+
+let toKeyedIterableReversed (set: t): (KeyedIterable.t int int) =>
+  if (isEmpty set) KeyedIterable.empty
+  else { reduce: fun f acc => set |> reduceRight
     (fun acc next => f acc next next)
     acc
   };

@@ -8,10 +8,10 @@ let addFirst (value: 'a) ({ count, list }: t 'a): (t 'a) => ({
   list: [value, ...list],
 });
 
-let addFirstAll (values: Seq.t 'a) ({ count, list }: t 'a): (t 'a) => {
+let addFirstAll (values: Iterable.t 'a) ({ count, list }: t 'a): (t 'a) => {
   let newCount = ref count;
 
-  let newList = values |> Seq.reduce
+  let newList = values |> Iterable.reduce
     (fun acc next => {
       newCount := !newCount + 1;
       [next, ...acc]
@@ -76,7 +76,8 @@ let forEach (f: 'a => unit) ({ list }: t 'a): unit =>
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
 
-let fromSeqReversed (values: Seq.t 'a): (t 'a) => empty |> addFirstAll values;
+let fromReversed (iter: Iterable.t 'a): (t 'a) =>
+  empty |> addFirstAll iter;
 
 let hash ({ list }: t 'a): int =>
   ImmList.hash list;

@@ -8,9 +8,9 @@ module type Deque = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
-  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let contains: 'a => (t 'a) => bool;
@@ -24,8 +24,8 @@ module type Deque = {
   let first: (t 'a) => 'a;
   let forEach: ('a => unit) => (t 'a) => unit;
   let forEachReverse: ('a => unit) => (t 'a) => unit;
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  let from: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterable.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
@@ -67,7 +67,7 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
     let find = Deque.find;
     let first = Deque.first;
     let forEach = Deque.forEach;
-    let fromSeqReversed = Deque.fromSeqReversed;
+    let fromReversed = Deque.fromReversed;
     let hash = Deque.hash;
     let hashWith = Deque.hashWith;
     let isEmpty = Deque.isEmpty;
@@ -264,28 +264,23 @@ let test (count: int) (module Deque: Deque): (list Test.t) => {
 
     it (sprintf "addLastAll with %i elements" count) (fun () => {
       let seq = IntRange.create 0 count |> IntRange.toSeq;
-      let result = Deque.empty |> Deque.addLastAll seq;
+      let result = Deque.empty |> Deque.addLastAll (Seq.toIterable seq);
 
-      (Deque.toSeq result)
-        |> Seq.equals seq
-        |> expect
-        |> toBeEqualToTrue;
+      expect (Deque.toSeq result) |> toBeEqualToSeqOfInt seq;
     }),
 
     it (sprintf "fromSeq with %i elements" count) (fun () => {
       let seq = IntRange.create 0 count |> IntRange.toSeq;
-      let result = Deque.fromSeq seq;
+      let result = Deque.from (Seq.toIterable seq);
 
-      (Deque.toSeq result)
-        |> Seq.equals seq
-        |> expect
-        |> toBeEqualToTrue;
+      expect (Deque.toSeq result) |> toBeEqualToSeqOfInt seq;
     }),
 
     it (sprintf "forEachReverse with %i elements" count) (fun () => {
       let counted = ref count;
-      let seq = IntRange.create 0 count |> IntRange.toSeq;
-      let result = Deque.fromSeqReversed seq;
+      let result = IntRange.create 0 count
+        |> IntRange.toIterable
+        |> Deque.fromReversed;
       result |> Deque.forEachReverse (fun i => {
         expect (count - i) |> toBeEqualToInt !counted;
         counted := !counted - 1;

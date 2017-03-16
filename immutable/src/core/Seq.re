@@ -187,12 +187,6 @@ let hashWith (hash: (Hash.t 'a)) (seq: t 'a): int => seq
 let hash (seq: t 'a): int =>
   hashWith Hash.structural seq;
 
-let listAddFirstAll (seq: t 'a) (list: list 'a): (list 'a) =>
-  seq |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
-
-let listFromSeqReverse (seq: t 'a): (list 'a) =>
-  [] |> listAddFirstAll seq;
-
 let rec repeat (value: 'a) (count: option int): (t 'a) => switch count {
   | Some count when count > 0 => fun () => Next value (repeat value (Some (count - 1)))
   | Some count when count < 0 => failwith "count must be greater or equal to 0"

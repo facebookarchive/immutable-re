@@ -176,6 +176,16 @@ let rec toSeq (tree: t 'k 'v): (Seq.t ('k, 'v)) => switch tree {
     ]
 };
 
+let rec toSeqReversed (tree: t 'k 'v): (Seq.t ('k, 'v)) => switch tree {
+  | Empty => Seq.empty
+  | Leaf k v => Seq.return (k, v)
+  | Node _ left k v right => Seq.concat [
+      Seq.defer(fun () => toSeqReversed right),
+      Seq.return (k, v),
+      Seq.defer(fun () => toSeqReversed left),
+    ]
+};
+
 let rec tryFind (f: 'k => 'v => bool) (tree: t 'k 'v): (option ('k, 'v)) =>  switch tree {
   | Empty => None
   | Leaf k v => if (f k v) (Some (k, v)) else None;

@@ -42,11 +42,15 @@ let module VectorImpl = {
   let module Make = fun (X: VectorBase) => {
     type t 'a = X.t 'a;
 
-    let addFirstAll (owner: Transient.Owner.t) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
-      |> Seq.reduce (fun acc next => acc |> X.addFirst owner next) vector;
+    let addFirstAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
+      |> Iterable.reduce
+        (fun acc next => acc |> X.addFirst owner next)
+        vector;
 
-    let addLastAll (owner: Transient.Owner.t) (seq: Seq.t 'a) (vector: t 'a): (t 'a) => seq
-      |> Seq.reduce (fun acc next => acc |> X.addLast owner next) vector;
+    let addLastAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
+      |> Iterable.reduce
+        (fun acc next => acc |> X.addLast owner next)
+        vector;
 
     let addFirst = X.addFirst;
     let addLast = X.addLast;
@@ -629,14 +633,14 @@ module TransientVector = {
   let addFirst (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addFirst value;
 
-  let addFirstAll (seq: Seq.t 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update1 TransientVectorImpl.addFirstAll seq;
+  let addFirstAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+    transient |> Transient.update1 TransientVectorImpl.addFirstAll iter;
 
   let addLast (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addLast value;
 
-  let addLastAll (seq: Seq.t 'a) (transient: t 'a): (t 'a) =>
-    transient |> Transient.update1 TransientVectorImpl.addLastAll seq;
+  let addLastAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+    transient |> Transient.update1 TransientVectorImpl.addLastAll iter;
 
   let count (transient: t 'a): int =>
     transient |> Transient.get |> TransientVectorImpl.count;
@@ -785,14 +789,14 @@ module TransientVector = {
 
 let mutate = TransientVector.mutate;
 
-let addFirstAll (seq: Seq.t 'a) (vec: t 'a): (t 'a) => vec
+let addFirstAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
-  |> TransientVector.addFirstAll seq
+  |> TransientVector.addFirstAll iter
   |> TransientVector.persist;
 
-let addLastAll (seq: Seq.t 'a) (vec: t 'a): (t 'a) => vec
+let addLastAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
-  |> TransientVector.addLastAll seq
+  |> TransientVector.addLastAll iter
   |> TransientVector.persist;
 
 let every (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
@@ -848,11 +852,11 @@ let findWithIndex (f: int => 'a => bool) (vec: t 'a): 'a => {
   find f vec;
 };
 
-let fromSeq (seq: Seq.t 'a): (t 'a) =>
-  empty |> addLastAll seq;
+let from (iter: Iterable.t 'a): (t 'a) =>
+  empty |> addLastAll iter;
 
-let fromSeqReversed (seq: Seq.t 'a): (t 'a) =>
-  empty|> addFirstAll seq;
+let fromReversed (iter: Iterable.t 'a): (t 'a) =>
+  empty|> addFirstAll iter;
 
 let indexOf (f: 'a => bool) (vec: t 'a): int => {
   /* kind of a hack, but a lot less code to write */
@@ -1076,12 +1080,20 @@ let range (startIndex: int) (takeCount: option int) (vec: t 'a): (t 'a) =>
    vec |> skip startIndex |> take (takeCount |? (count vec));
 
 let toIterable (set: t 'a): (Iterable.t 'a) =>
- if (isEmpty set) Iterable.empty
- else { reduce: fun f acc => reduce f acc set };
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduce f acc set };
+
+let toIterableReversed (set: t 'a): (Iterable.t 'a) =>
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduceRight f acc set };
 
 let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) KeyedIterable.empty
   else { reduce: fun f acc => reduceWithIndex f acc arr };
+
+let toKeyedIterableReversed (arr: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty arr) KeyedIterable.empty
+  else { reduce: fun f acc => reduceRightWithIndex f acc arr };
 
 let toSeq ({ left, middle, right }: t 'a): (Seq.t 'a) => Seq.concat [
   CopyOnWriteArray.toSeq left,

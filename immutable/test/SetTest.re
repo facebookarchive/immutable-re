@@ -59,14 +59,15 @@ let test = describe "Set" [
     expect (Set.hash col) |> toBeEqualToInt (Set.hash dup);
   }),
   it "intersect" (fun () => {
-    let setA = ["a", "b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
-    let setB = ["b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
+    let setA = ["a", "b", "c"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
+    let setB = ["b", "c", "d"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     let intersection = Set.intersect setA setB
-      |> SortedSet.fromSeq
+      |> Seq.toIterable
+      |> SortedSet.from
       |> SortedSet.toSet;
 
-    let expected = ["b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
+    let expected = ["b", "c"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     expect (Set.equals intersection expected) |> toBeEqualToTrue;
   }),
@@ -83,26 +84,28 @@ let test = describe "Set" [
     ) |> toBeEqualToTrue;
   }),
   it "subtract" (fun () => {
-    let setA = ["a", "b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
-    let setB = ["b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
+    let setA = ["a", "b", "c"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
+    let setB = ["b", "c", "d"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     let subtracted = Set.subtract setA setB
-      |> SortedSet.fromSeq
+      |> Seq.toIterable
+      |> SortedSet.from
       |> SortedSet.toSet;
 
-    let expected = ["a"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
+    let expected = ["a"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     expect (Set.equals subtracted expected) |> toBeEqualToTrue;
   }),
   it "union" (fun () => {
-    let setA = ["a", "b", "c"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
-    let setB = ["b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
+    let setA = ["a", "b", "c"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
+    let setB = ["b", "c", "d"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     let union =  Set.union setA setB
-      |> SortedSet.fromSeq
+      |> Seq.toIterable
+      |> SortedSet.from
       |> SortedSet.toSet;
 
-    let expected = ["a", "b", "c", "d"] |> List.toSeq |> SortedSet.fromSeq |> SortedSet.toSet;
+    let expected = ["a", "b", "c", "d"] |> List.toIterable |> SortedSet.from |> SortedSet.toSet;
 
     expect (Set.equals union expected) |> toBeEqualToTrue;
   }),

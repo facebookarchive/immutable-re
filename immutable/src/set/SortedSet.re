@@ -11,8 +11,8 @@ let add (x: 'a) ({ comparator, count, tree } as sortedSet: t 'a): (t 'a) => {
   if (newTree === tree) sortedSet else { comparator, count: count + 1, tree: newTree }
 };
 
-let addAll (seq: Seq.t 'a) (sortedSet: t 'a): (t 'a) => seq
-  |> Seq.reduce (fun acc next => acc |> add next) sortedSet;
+let addAll (iter: Iterable.t 'a) (sortedSet: t 'a): (t 'a) => iter
+  |> Iterable.reduce (fun acc next => acc |> add next) sortedSet;
 
 let contains (x: 'a) ({ comparator, tree }: t 'a): bool =>
   AVLTreeSet.contains comparator x tree;
@@ -27,11 +27,11 @@ let isEmpty ({ count }: t 'a): bool => count == 0;
 
 let isNotEmpty ({ count }: t 'a): bool => count != 0;
 
-let fromSeq (seq: Seq.t 'a): (t 'a) =>
-  empty |> addAll seq;
+let from (iter: Iterable.t 'a): (t 'a) =>
+  empty |> addAll iter;
 
-let fromSeqWith (comparator: Comparator.t 'a) (seq: Seq.t 'a): (t 'a) =>
-  emptyWith comparator |> addAll seq;
+let fromWith (comparator: Comparator.t 'a) (iter: Iterable.t 'a): (t 'a) =>
+  emptyWith comparator |> addAll iter;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ tree }: t 'a): 'acc =>
   tree |> AVLTreeSet.reduce f acc;
@@ -59,6 +59,9 @@ let removeLast ({ comparator, count, tree } as sortedSet: t 'a): (t 'a) => {
 
 let toSeq ({ tree }: t 'a): (Seq.t 'a) =>
   tree |> AVLTreeSet.toSeq;
+
+let toSeqReversed ({ tree }: t 'a): (Seq.t 'a) =>
+  tree |> AVLTreeSet.toSeqReversed;
 
 let compare
     ({ comparator: thisCompare } as this: t 'a)
@@ -112,10 +115,22 @@ let toIterable (set: t 'a): (Iterable.t 'a) =>
   if (isEmpty set) Iterable.empty
   else { reduce: fun f acc => reduce f acc set };
 
+let toIterableReversed (set: t 'a): (Iterable.t 'a) =>
+  if (isEmpty set) Iterable.empty
+  else { reduce: fun f acc => reduceRight f acc set };
+
 let toKeyedIterable (set: t 'a): (KeyedIterable.t 'a 'a) =>
   if (isEmpty set) KeyedIterable.empty
   else {
     reduce: fun f acc => set |> reduce
+      (fun acc next => f acc next next)
+      acc
+  };
+
+let toKeyedIterableReversed (set: t 'a): (KeyedIterable.t 'a 'a) =>
+  if (isEmpty set) KeyedIterable.empty
+  else {
+    reduce: fun f acc => set |> reduceRight
       (fun acc next => f acc next next)
       acc
   };
@@ -169,10 +184,13 @@ let toMap (set: t 'a): (ImmMap.t 'a 'a) => {
 };
 
 let intersect ({ comparator } as this: t 'a) (that: t 'a): (t 'a) =>
-  ImmSet.intersect (toSet this) (toSet that) |> fromSeqWith comparator;
+  /* FIXME: Improve this implementation to be O(log N) */
+  ImmSet.intersect (toSet this) (toSet that) |> Seq.toIterable |> fromWith comparator;
 
 let subtract ({ comparator } as this: t 'a) (that: t 'a): (t 'a) =>
-  ImmSet.subtract (toSet this) (toSet that) |> fromSeqWith comparator;
+  /* FIXME: Improve this implementation to be O(log N) */
+  ImmSet.subtract (toSet this) (toSet that) |> Seq.toIterable |> fromWith comparator;
 
 let union ({ comparator } as this: t 'a) (that: t 'a): (t 'a) =>
-  ImmSet.union (toSet this) (toSet that) |> fromSeqWith comparator;
+  /* FIXME: Improve this implementation to be O(log N) */
+  ImmSet.union (toSet this) (toSet that) |> Seq.toIterable |> fromWith comparator;

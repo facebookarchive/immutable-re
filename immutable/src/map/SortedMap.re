@@ -77,14 +77,14 @@ let put (key: 'k) (value: 'v) ({ comparator, count, tree } as map: t 'k 'v): (t 
   };
 };
 
-let putAll (seq: Seq.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
-  seq |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
+let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+  iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
 
-let fromSeqWith (comparator: Comparator.t 'k) (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
-  emptyWith comparator |> putAll seq;
+let fromWith (comparator: Comparator.t 'k) (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+  emptyWith comparator |> putAll iter;
 
-let fromSeq (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
-  fromSeqWith (Comparator.structural) seq;
+let from (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+  fromWith Comparator.structural iter;
 
 let fromMapWith (comparator: Comparator.t 'k) (map: ImmMap.t 'k 'v): (t 'k 'v) =>
   map |> ImmMap.reduce (fun acc k v => acc |> put k v) (emptyWith comparator);
@@ -130,6 +130,9 @@ let some (f: 'k => 'v => bool) ({ tree }: t 'k 'v): bool =>
 let toSeq ({ tree }: t 'k 'v): (Seq.t ('k, 'v)) =>
   tree |> AVLTreeMap.toSeq;
 
+let toSeqReversed ({ tree }: t 'k 'v): (Seq.t ('k, 'v)) =>
+  tree |> AVLTreeMap.toSeqReversed;
+
 let tryFind (f: 'k => 'v => bool) ({ tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryFind f;
 
@@ -156,10 +159,24 @@ let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
       acc
   };
 
+let toIterableReversed (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
+  if (isEmpty map) Iterable.empty
+  else {
+    reduce: fun f acc => map |> reduceRight
+      (fun acc k v => f acc (k, v))
+      acc
+  };
+
 let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
   if (isEmpty map) KeyedIterable.empty
   else {
     reduce: fun f acc => map |> reduce f acc
+  };
+
+let toKeyedIterableReversed (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
+  if (isEmpty map) KeyedIterable.empty
+  else {
+    reduce: fun f acc => map |> reduceRight f acc
   };
 
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {

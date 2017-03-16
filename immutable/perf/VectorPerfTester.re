@@ -37,16 +37,16 @@ let test (n: int) (count: int): Test.t => {
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toSeq |> List.fromSeqReversed;
-  let stack = indexes |> IntRange.toSeq |> Stack.fromSeqReversed;
+  let list = indexes |> IntRange.toIterable |> List.fromReversed;
+  let stack = indexes |> IntRange.toIterable |> Stack.fromReversed;
   let vector = indexes
     |> IntRange.reduce (fun acc i => acc |> TransientVector.addLast i) (TransientVector.empty ())
     |> TransientVector.persist;
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toSeq |> List.fromSeqReversed;
-  let stack = indexes |> IntRange.toSeq |> Stack.fromSeqReversed;
+  let list = indexes |> IntRange.toIterable |> List.fromReversed;
+  let stack = indexes |> IntRange.toIterable |> Stack.fromReversed;
 
   let testGroup = [
     describe "CamlMutableArray" (
@@ -101,6 +101,9 @@ let test (n: int) (count: int): Test.t => {
     ),
   ];
 
-  let tests = Seq.repeat testGroup (Some n) |> Seq.flatMap List.toSeq |> List.fromSeqReversed;
+  let tests = Seq.repeat testGroup (Some n)
+    |> Seq.flatMap List.toSeq
+    |> Seq.toIterable
+    |> List.fromReversed;
   describe "VectorPerf" tests;
 };

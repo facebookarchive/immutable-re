@@ -174,6 +174,9 @@ let test (n: int) (count: int): Test.t => {
     ),
   ];
 
-  let tests = Seq.repeat testGroup (Some n) |> Seq.flatMap List.toSeq |> List.fromSeqReversed;
+  let tests = Seq.repeat testGroup (Some n)
+    |> Seq.flatMap List.toSeq
+    |> Seq.toIterable
+    |> List.fromReversed;
   describe (sprintf "MapPerf") tests
 };

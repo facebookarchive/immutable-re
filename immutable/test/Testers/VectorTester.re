@@ -8,9 +8,9 @@ module type Vector = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
-  let addFirstAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
   let addLast: 'a => (t 'a) => (t 'a);
-  let addLastAll: (Seq.t 'a) => (t 'a) => (t 'a);
+  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let concat: (list (t 'a)) => (t 'a);
@@ -29,8 +29,8 @@ module type Vector = {
   let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
   let forEachReverse: ('a => unit) => (t 'a) => unit;
   let forEachReverseWithIndex: (int => 'a => unit) => (t 'a) => unit;
-  let fromSeq: (Seq.t 'a) => (t 'a);
-  let fromSeqReversed: (Seq.t 'a) => (t 'a);
+  let from: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterable.t 'a) => (t 'a);
   let get: int => (t 'a) => 'a;
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
@@ -98,8 +98,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     let first = Vector.first;
     let forEach = Vector.forEach;
     let forEachReverse = Vector.forEachReverse;
-    let fromSeq = Vector.fromSeq;
-    let fromSeqReversed = Vector.fromSeqReversed;
+    let from = Vector.from;
+    let fromReversed = Vector.fromReversed;
     let hash = Vector.hash;
     let hashWith = Vector.hashWith;
     let isEmpty = Vector.isEmpty;
@@ -150,8 +150,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
 
     it (sprintf "updateAll with %i elements" count) (fun () => {
       let vector = IntRange.create 0 count
-        |> IntRange.toSeq
-        |> Vector.fromSeq;
+        |> IntRange.toIterable
+        |> Vector.from;
 
       expect (
         vector |> Vector.updateAll (
@@ -280,8 +280,9 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "forEachWithIndex with %i elements" count) (fun () => {
       let counted = ref 0;
-      let seq = IntRange.create 0 count |> IntRange.toSeqReversed;
-      let result = Vector.fromSeqReversed seq;
+      let result = IntRange.create 0 count
+        |> IntRange.toIterableReversed
+        |> Vector.fromReversed;
       result |> Vector.forEachWithIndex (fun i v => {
         expect i |> toBeEqualToInt v;
         expect i |> toBeEqualToInt !counted;
@@ -290,8 +291,11 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     }),
     it (sprintf "forEachReverseWithIndex with %i elements" count) (fun () => {
       let counted = ref (count - 1);
-      let seq = IntRange.create 0 count |> IntRange.toSeq;
-      let result = Vector.fromSeq seq;
+
+      let result = IntRange.create 0 count
+        |> IntRange.toIterable
+        |> Vector.from;
+
       result |> Vector.forEachReverseWithIndex (fun i v => {
         expect i |> toBeEqualToInt v;
         expect i |> toBeEqualToInt !counted;
@@ -490,7 +494,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         |> Seq.take count
         |> Seq.reduce
           (fun acc i => acc |> Vector.insertAt i 1)
-          (Vector.fromSeq @@ Seq.repeat 0 @@ (Some count));
+          (Seq.repeat 0 (Some count) |> Seq.toIterable |> Vector.from);
 
       expect @@ Vector.toSeq @@ result
         |> toBeEqualToSeqOfInt (Seq.repeat [0, 1] (Some count) |> Seq.flatMap List.toSeq);
@@ -498,7 +502,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     it (sprintf "removeAt with %i elements" count) (fun () => {
       let initialValue = Seq.repeat [0, 1] (Some count)
         |> Seq.flatMap List.toSeq
-        |> Vector.fromSeq;
+        |> Seq.toIterable
+        |> Vector.from;
 
       let result = IntRange.create 1 count |> IntRange.reduce
         (fun acc i => acc |> Vector.removeAt i)
@@ -510,8 +515,13 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
     describe (sprintf "concat with %i elements" count) [
       it "balanced segments" (fun () => {
         let segmentCount = count / 2;
-        let vecFirst = Seq.repeat 0 (Some segmentCount) |> Vector.fromSeq;
-        let vecSecond = Seq.repeat 1 (Some segmentCount) |> Vector.fromSeq;
+        let vecFirst = Seq.repeat 0 (Some segmentCount)
+          |> Seq.toIterable
+          |> Vector.from;
+
+        let vecSecond = Seq.repeat 1 (Some segmentCount)
+          |> Seq.toIterable
+          |> Vector.from;
 
         Vector.concat [vecFirst, vecSecond]
         |> Vector.toSeq
@@ -525,8 +535,13 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         let segmentRightCount = count / 4;
         let segmentLeftCount = count - segmentRightCount;
 
-        let vecLeft = Seq.repeat 0 (Some segmentLeftCount) |> Vector.fromSeq;
-        let vecRight = Seq.repeat 1 (Some segmentRightCount) |> Vector.fromSeq;
+        let vecLeft = Seq.repeat 0 (Some segmentLeftCount)
+          |> Seq.toIterable
+          |> Vector.from;
+
+        let vecRight = Seq.repeat 1 (Some segmentRightCount)
+          |> Seq.toIterable
+          |> Vector.from;
 
         Vector.concat [vecLeft, vecRight]
         |> Vector.toSeq
@@ -540,8 +555,13 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         let segmentLeftCount = count / 4;
         let segmentRightCount = count - segmentLeftCount;
 
-        let vecLeft = Seq.repeat 0 (Some segmentLeftCount) |> Vector.fromSeq;
-        let vecRight = Seq.repeat 1 (Some segmentRightCount) |> Vector.fromSeq;
+        let vecLeft = Seq.repeat 0 (Some segmentLeftCount)
+          |> Seq.toIterable
+          |> Vector.from;
+
+        let vecRight = Seq.repeat 1 (Some segmentRightCount)
+          |> Seq.toIterable
+          |> Vector.from;
 
         Vector.concat [vecLeft, vecRight]
         |> Vector.toSeq
@@ -553,32 +573,32 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
       }),
     ],
     it (sprintf "indexOf with %i elements" count) (fun () => {
-      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toIterable|> Vector.from;
       let f pos v => v == pos;
       expect (Vector.indexOf (f (count / 2)) vec) |> toBeEqualToInt (count / 2);
       defer (fun () => Vector.indexOf (f (-1)) vec) |> throws;
     }),
     it (sprintf "indexOfWithIndex with %i elements" count) (fun () => {
-      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toIterable |> Vector.from;
       let f pos i _ => i == pos;
       expect (Vector.indexOfWithIndex (f (count / 2)) vec) |> toBeEqualToInt (count / 2);
       defer (fun () => Vector.indexOfWithIndex (f (-1)) vec) |> throws;
     }),
     it (sprintf "tryIndexOf with %i elements" count) (fun () => {
-      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toIterable |> Vector.from;
       let f pos v => v == pos;
       expect (Vector.tryIndexOf (f (count / 2)) vec) |> toBeEqualToSomeOfInt (count / 2);
       expect (Vector.tryIndexOf (f (-1)) vec) |> toBeEqualToNoneOfInt;
     }),
     it (sprintf "tryIndexOfWithIndex with %i elements" count) (fun () => {
-      let vec = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq;
+      let vec = IntRange.create 0 count |> IntRange.toIterable |> Vector.from;
       let f pos i _ => i == pos;
       expect (Vector.tryIndexOfWithIndex (f (count / 2)) vec) |> toBeEqualToSomeOfInt (count / 2);
       expect (Vector.tryIndexOfWithIndex (f (-1)) vec) |> toBeEqualToNoneOfInt;
     }),
     describe (sprintf "toMap with %i elements" count) [
       it "containsWith" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         IntRange.create 0 count |> IntRange.forEach (fun i => {
           expect (map |> Map.contains i i) |> toBeEqualToTrue;
         });
@@ -588,7 +608,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect (map |> Map.contains 0 1) |> toBeEqualToFalse;
       }),
       it "containsKey" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         IntRange.create 0 10 |> IntRange.forEach (fun i => {
           expect (map |> Map.containsKey i) |> toBeEqualToTrue;
         });
@@ -597,21 +617,21 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect (map |> Map.containsKey count) |> toBeEqualToFalse;
       }),
       it "count" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         expect (map |> Map.count) |> toBeEqualToInt count;
       }),
       it "every" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         expect (map |> Map.every (fun i v => i == v)) |> toBeEqualToTrue;
         expect (map |> Map.every (fun i v => i != v)) |> toBeEqualToFalse;
       }),
       it "find" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         expect (map |> Map.find (fun i v => i == v)) |> toBeEqualTo (fun _ => "") (0, 0);
         defer (fun () => map |> Map.find (fun i v => i != v)) |> throws;
       }),
       it "forEach" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         let loopCount = ref 0;
         map |> Map.forEach (fun i v => {
           expect i |> toBeEqualToInt !loopCount;
@@ -622,7 +642,7 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         expect !loopCount |> toBeEqualToInt count;
       }),
       it "get" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         IntRange.create 0 10 |> IntRange.forEach (fun i => {
           expect (map |> Map.get i) |> toBeEqualToInt i;
         });
@@ -631,39 +651,39 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
         defer (fun () => map |> Map.get count) |> throws;
       }),
       it "keys" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         expect (map |> Map.keys |> Set.toSeq) |> toBeEqualToSeqOfInt (
           IntRange.create 0 count |> IntRange.toSeq
         );
       }),
       it "none" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         expect (map |> Map.none (fun i v => i != v)) |> toBeEqualToTrue;
         expect (map |> Map.none (fun i v => i == v)) |> toBeEqualToFalse;
       }),
       it "reduce" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         let reduced = map |> Map.reduce (fun acc _ _ => acc + 1) 0;
         expect reduced |> toBeEqualToInt count;
       }),
       it "some" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         expect (map |> Map.some (fun i v => i == v)) |> toBeEqualToTrue;
         expect (map |> Map.some (fun i v => i != v)) |> toBeEqualToFalse;
       }),
       it "toSeq" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         map |> Map.toSeq |> Seq.forEach (fun (i, v) => {
           expect i |> toBeEqualToInt v;
         });
       }),
       it "tryFind" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         expect (map |> Map.tryFind (fun i v => i == v)) |> toBeEqualToSome (fun _ => "") (0, 0);
         expect (map |> Map.tryFind (fun i v => i != v)) |> toBeEqualToNone (fun _ => "");
       }),
       it "tryGet" (fun () => {
-        let map = IntRange.create 0 count |> IntRange.toSeq |> Vector.fromSeq |> Vector.toMap;
+        let map = IntRange.create 0 count |> IntRange.toIterable |> Vector.from |> Vector.toMap;
         IntRange.create 0 10 |> IntRange.forEach (fun i => {
           expect (map |> Map.tryGet i) |> toBeEqualToSomeOfInt i;
         });
@@ -673,8 +693,8 @@ let test (count: int) (module Vector: Vector): (list Test.t) => {
       }),
       it "values" (fun () => {
         let map = IntRange.create 0 count
-          |> IntRange.toSeq
-          |> Vector.fromSeq
+          |> IntRange.toIterable
+          |> Vector.from
           |> Vector.toMap;
         expect (map |> Map.values) |> toBeEqualToSeqOfInt (
           IntRange.create 0 count |> IntRange.toSeq
