@@ -138,7 +138,7 @@ let toSet ({ map, inverse }: t 'k 'v): (ImmSet.t ('k, 'v)) =>
 
 let toMap ({ map }: t 'k 'v): (ImmMap.t 'k 'v) => map |> HashMap.toMap;
 
-let toSeq ({ map }: t 'k 'v): (Seq.t ('k, 'v)) => map |> HashMap.toSeq;
+let toSequence ({ map }: t 'k 'v): (Sequence.t ('k, 'v)) => map |> HashMap.toSequence;
 
 let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) =>
   map |> HashMap.tryFind f;
@@ -216,9 +216,9 @@ let module TransientHashBiMap = {
   };
 
   let putAll
-      (seq: Seq.t ('k, 'v))
+      (seq: Sequence.t ('k, 'v))
       (map: t 'k 'v): (t 'k 'v) => seq
-    |> Seq.reduce (fun acc (k, v) => acc |> put k v) map;
+    |> Sequence.reduce (fun acc (k, v) => acc |> put k v) map;
 
   let remove
       (key: 'k)
@@ -268,16 +268,16 @@ let module TransientHashBiMap = {
 
 let mutate = TransientHashBiMap.mutate;
 
-let putAll (seq: Seq.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) => map
+let putAll (seq: Sequence.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) => map
   |> mutate
   |> TransientHashBiMap.putAll seq
   |> TransientHashBiMap.persist;
 
-let fromSeq (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
+let fromSequence (seq: Sequence.t ('k, 'v)): (t 'k 'v) =>
   empty |> putAll seq;
 
-let fromSeqWith
+let fromSequenceWith
     (keyStrategy: HashStrategy.t 'k)
     (valueStrategy: HashStrategy.t 'v)
-    (seq: Seq.t ('k, 'v)): (t 'k 'v) =>
+    (seq: Sequence.t ('k, 'v)): (t 'k 'v) =>
   emptyWith keyStrategy valueStrategy |> putAll seq;

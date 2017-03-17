@@ -18,7 +18,7 @@ type t 'a = {
   none: ('a => bool) =>  bool,
   reduce: 'acc . ('acc => 'a => 'acc) => 'acc => 'acc,
   some: ('a => bool) => bool,
-  toSeq: (Seq.t 'a),
+  toSequence: (Sequence.t 'a),
   tryFind: ('a => bool) => (option 'a),
 };
 
@@ -36,7 +36,7 @@ let empty: (t 'a) = {
   none: fun _ => true,
   reduce: fun _ acc => acc,
   some: fun _ => false,
-  toSeq: Seq.empty,
+  toSequence: Sequence.empty,
   tryFind: Functions.alwaysNone,
 };
 
@@ -78,7 +78,7 @@ let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (t 'a) => {
   none: fun f => Option.none f opt,
   reduce: fun f acc => Option.reduce f acc opt,
   some: fun f => Option.some f opt,
-  toSeq: Seq.ofOption opt,
+  toSequence: Sequence.ofOption opt,
   tryFind: fun f => Option.tryFind f opt,
 };
 
@@ -91,32 +91,32 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ reduce }: t 'a): 'acc =>
 let some (f: 'a => bool) ({ some }: t 'a): bool =>
   some f;
 
-let toIterable ({ reduce } as set: t 'a): (Iterable.t 'a) =>
-  if (set === empty) Iterable.empty
+let toIterator ({ reduce } as set: t 'a): (Iterator.t 'a) =>
+  if (set === empty) Iterator.empty
   else {
     reduce: reduce
   };
 
-let toKeyedIterable ({ reduce } as set: t 'a): (KeyedIterable.t 'a 'a) =>
-  if (set == empty) KeyedIterable.empty
+let toKeyedIterator ({ reduce } as set: t 'a): (KeyedIterator.t 'a 'a) =>
+  if (set == empty) KeyedIterator.empty
   else {
     reduce: fun f acc => reduce
       (fun acc next => f acc next next)
       acc
     };
 
-let toSeq ({ toSeq }: t 'a): (Seq.t 'a) => toSeq;
+let toSequence ({ toSequence }: t 'a): (Sequence.t 'a) => toSequence;
 
 let tryFind (f: 'a => bool) ({ tryFind }: t 'a): (option 'a) =>
   tryFind f;
 
-let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (that.contains);
+let intersect (this: t 'a) (that: t 'a): (Iterator.t 'a) =>
+  this |> toIterator |> Iterator.filter (that.contains);
 
-let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (that.contains >> not);
+let subtract (this: t 'a) (that: t 'a): (Iterator.t 'a) =>
+  this |> toIterator |> Iterator.filter (that.contains >> not);
 
-let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
-  this |> toIterable,
+let union (this: t 'a) (that: t 'a): (Iterator.t 'a) => Iterator.concat [
+  this |> toIterator,
   subtract that this,
 ];

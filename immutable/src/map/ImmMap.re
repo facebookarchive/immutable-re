@@ -20,10 +20,10 @@ type t 'k 'v = {
   none: ('k => 'v => bool) => bool,
   reduce: 'acc . ('acc => 'k => 'v => 'acc) => 'acc => 'acc,
   some: ('k => 'v => bool) => bool,
-  toSeq: (Seq.t ('k, 'v)),
+  toSequence: (Sequence.t ('k, 'v)),
   tryFind: ('k => 'v => bool) => (option ('k, 'v)),
   tryGet: 'k => (option 'v),
-  values: (Iterable.t 'v),
+  values: (Iterator.t 'v),
 };
 
 let containsWith
@@ -55,10 +55,10 @@ let empty: (t 'k 'v) = {
   none: fun _ => true,
   reduce: fun _ acc => acc,
   some: fun _ => false,
-  toSeq: Seq.empty,
+  toSequence: Sequence.empty,
   tryFind: fun _ => None,
   tryGet: fun _ => None,
-  values: Iterable.empty,
+  values: Iterator.empty,
 };
 
 let equalsWith (valueEquality: Equality.t 'v) (that: t 'k 'v) (this: t 'k 'v): bool =>
@@ -109,7 +109,7 @@ let keys (map: t 'k 'v): (ImmSet.t 'k) => {
   none: fun f => map.none (fun k _ => f k),
   reduce: fun f acc => map.reduce (fun acc k _ => f acc k) acc,
   some: fun f => map.some (fun k _ => f k),
-  toSeq: map.toSeq |> Seq.map (fun (k, _) => k),
+  toSequence: map.toSequence |> Sequence.map (fun (k, _) => k),
   tryFind: fun f => map.tryFind (fun k _ => f k) >>| (fun (k, _) => k),
 };
 
@@ -131,12 +131,12 @@ let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
   none: fun f => set |> ImmSet.none (fun k => f k k),
   reduce: fun f acc => set |> ImmSet.reduce (fun acc k => f acc k k) acc,
   some: fun f => set |> ImmSet.some (fun k => f k k),
-  toSeq: ImmSet.toSeq set |> Seq.map (fun k => (k, k)),
+  toSequence: ImmSet.toSequence set |> Sequence.map (fun k => (k, k)),
   tryFind: fun f => set |> ImmSet.tryFind (fun k => f k k) >>| (fun k => (k, k)),
   tryGet: fun k =>
     if (set |> ImmSet.contains k) (Some k)
     else None,
-  values: ImmSet.toIterable set,
+  values: ImmSet.toIterator set,
 };
 
 let none (f: 'k => 'v => bool) ({ none }: t 'k 'v): bool =>
@@ -148,13 +148,13 @@ let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ reduce }: t 'k 'v): 'acc
 let some (f: 'k => 'v => bool) ({ some }: t 'k 'v): bool =>
   some f;
 
-let toIterable ({ reduce }: t 'k 'v): (Iterable.t ('k, 'v)) => {
+let toIterator ({ reduce }: t 'k 'v): (Iterator.t ('k, 'v)) => {
   reduce: fun f acc => reduce
     (fun acc k v => f acc (k, v))
     acc
 };
 
-let toKeyedIterable ({ reduce }: t 'k 'v): (KeyedIterable.t 'k 'v) => {
+let toKeyedIterator ({ reduce }: t 'k 'v): (KeyedIterator.t 'k 'v) => {
   reduce: reduce
 };
 
@@ -175,10 +175,10 @@ let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
   none: fun f => map.none (fun k a => f k (m k a)),
   reduce: fun f acc => map.reduce (fun acc k a => f acc k (m k a)) acc,
   some: fun f => map.some (fun k a => f k (m k a)),
-  toSeq: map.toSeq |> Seq.map (fun (k, v) => (k, m k v)),
+  toSequence: map.toSequence |> Sequence.map (fun (k, v) => (k, m k v)),
   tryFind: fun f => map.tryFind (fun k a => f k (m k a)) >>| (fun (k, v) => (k, m k v)),
   tryGet: fun k => map.tryGet k >>| m k,
-  values: map |> toIterable |> Iterable.map (fun (k, v) => m k v),
+  values: map |> toIterator |> Iterator.map (fun (k, v) => m k v),
 };
 
 let toSetWith
@@ -192,14 +192,14 @@ let toSetWith
   none: fun f => map.none (fun k v => f (k, v)),
   reduce: fun f acc => map.reduce (fun acc k v => f acc (k, v)) acc,
   some: fun f => map.some (fun k v => f (k, v)),
-  toSeq: map.toSeq,
+  toSequence: map.toSequence,
   tryFind: fun f => map.tryFind (fun k v => f (k, v)),
 };
 
 let toSet (map: t 'k 'v): (ImmSet.t ('k, 'v)) =>
   toSetWith Equality.structural map;
 
-let toSeq ({ toSeq }: t 'k 'v): (Seq.t ('k, 'v)) => toSeq;
+let toSequence ({ toSequence }: t 'k 'v): (Sequence.t ('k, 'v)) => toSequence;
 
 let tryFind (f: 'k => 'v => bool) ({ tryFind }: t 'k 'v): (option ('k, 'v)) =>
   tryFind f;
@@ -207,4 +207,4 @@ let tryFind (f: 'k => 'v => bool) ({ tryFind }: t 'k 'v): (option ('k, 'v)) =>
 let tryGet (key: 'k) ({ tryGet }: t 'k 'v): (option 'v) =>
   tryGet key;
 
-let values ({ values }: t 'k 'v): (Iterable.t 'v) => values;
+let values ({ values }: t 'k 'v): (Iterator.t 'v) => values;

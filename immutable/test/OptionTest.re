@@ -118,12 +118,12 @@ let test = describe "Option" [
   describe "toSet" [
     /* The set functions are straight pass through */
   ],
-  it "toSeq" (fun () => {
-    let emptySeq = None |> Option.toSeq;
-    expect emptySeq |> toBeEqualToEmptySeqOfString;
+  it "toSequence" (fun () => {
+    let emptySequence = None |> Option.toSequence;
+    expect emptySequence |> toBeEqualToEmptySequenceOfString;
 
-    let seqOfA = Some "a" |> Option.toSeq;
-    let first = Seq.tryFirst seqOfA;
+    let seqOfA = Some "a" |> Option.toSequence;
+    let first = Sequence.tryFirst seqOfA;
     expect first |> toBeEqualToSomeOfString "a";
   }),
   it "tryFind" (fun () => {

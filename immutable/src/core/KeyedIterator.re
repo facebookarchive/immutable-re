@@ -56,8 +56,8 @@ let hashWith (keyHash: Hash.t 'k) (valueHash: Hash.t 'v) (iter: t 'k 'v): int =>
 let hash (iter: t 'k 'v): int =>
   hashWith Hash.structural Hash.structural iter;
 
-let keys (iter: t 'k 'v): (Iterable.t 'k) =>
-  if (iter === empty) Iterable.empty
+let keys (iter: t 'k 'v): (Iterator.t 'k) =>
+  if (iter === empty) Iterator.empty
   else {
     reduce: fun f acc => iter |> reduce
       (fun acc k v => f acc k)
@@ -72,16 +72,16 @@ let map (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) =>
       acc
   };
 
-let values (iter: t 'k 'v): (Iterable.t 'v) =>
-  if (iter === empty ) Iterable.empty
+let values (iter: t 'k 'v): (Iterator.t 'v) =>
+  if (iter === empty ) Iterator.empty
   else {
     reduce: fun f acc => iter |> reduce
       (fun acc k v => f acc v)
       acc
   };
 
-let toIterable (iter: t 'k 'v): (Iterable.t ('k, 'v)) =>
-  if (iter === empty ) Iterable.empty
+let toIterator (iter: t 'k 'v): (Iterator.t ('k, 'v)) =>
+  if (iter === empty ) Iterator.empty
   else {
     reduce: fun f acc => iter |> reduce
       (fun acc k v => f acc (k, v))

@@ -14,7 +14,7 @@ let module Test: {
 
   let describe: string => (list t) => t;
   let it: string => (unit => unit) => t;
-  let toSeq: t => (Seq.t (string, unit => unit));
+  let toSequence: t => (Sequence.t (string, unit => unit));
 };
 
 let module Expect: {
@@ -33,17 +33,17 @@ let module Expect: {
   let return: 'a => (t 'a);
 
   let toBeEqualTo: ('a => string) => 'a => (t 'a) => unit;
-  let toBeEqualToEmptySeq: ('a => string) => (t (Seq.t 'a)) => unit;
-  let toBeEqualToEmptySeqOfString: (t (Seq.t string)) => unit;
+  let toBeEqualToEmptySequence: ('a => string) => (t (Sequence.t 'a)) => unit;
+  let toBeEqualToEmptySequenceOfString: (t (Sequence.t string)) => unit;
   let toBeEqualToFalse: (t bool) => unit;
   let toBeEqualToInt: int => (t int) => unit;
   let toBeEqualToNone: ('a => string) => (t (option 'a)) => unit;
   let toBeEqualToNoneOfInt: (t (option int)) => unit;
   let toBeEqualToNoneOfString: (t (option string)) => unit;
-  let toBeEqualToSeq: ('a => string) => (Seq.t 'a) => (t (Seq.t 'a)) => unit;
-  let toBeEqualToSeqOfInt: (Seq.t int) => (t (Seq.t int)) => unit;
-  let toBeEqualToSeqOfString: (Seq.t string) => (t (Seq.t string)) => unit;
-  let toBeEqualToSeqWith: (Equality.t 'a) => ('a => string) => (Seq.t 'a) => (t (Seq.t 'a)) => unit;
+  let toBeEqualToSequence: ('a => string) => (Sequence.t 'a) => (t (Sequence.t 'a)) => unit;
+  let toBeEqualToSequenceOfInt: (Sequence.t int) => (t (Sequence.t int)) => unit;
+  let toBeEqualToSequenceOfString: (Sequence.t string) => (t (Sequence.t string)) => unit;
+  let toBeEqualToSequenceWith: (Equality.t 'a) => ('a => string) => (Sequence.t 'a) => (t (Sequence.t 'a)) => unit;
   let toBeEqualToSome: ('a => string) => 'a => (t (option 'a)) => unit;
   let toBeEqualToSomeOfInt: int => (t (option int)) => unit;
   let toBeEqualToSomeOfString: string => (t (option string)) => unit;

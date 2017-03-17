@@ -28,9 +28,9 @@ let module VectorImpl = {
     type t 'a;
 
     let addFirst: Transient.Owner.t => 'a => (t 'a) => (t 'a);
-    let addFirstAll: Transient.Owner.t => (Seq.t 'a) => (t 'a) => (t 'a);
+    let addFirstAll: Transient.Owner.t => (Sequence.t 'a) => (t 'a) => (t 'a);
     let addLast: Transient.Owner.t => 'a => (t 'a) => (t 'a);
-    let addLastAll: Transient.Owner.t => (Seq.t 'a) => (t 'a) => (t 'a);
+    let addLastAll: Transient.Owner.t => (Sequence.t 'a) => (t 'a) => (t 'a);
     let count: (t 'a) => int;
     let empty: unit => (t 'a);
     let first: (t 'a) => 'a;
@@ -51,13 +51,13 @@ let module VectorImpl = {
   let module Make = fun (X: VectorBase) => {
     type t 'a = X.t 'a;
 
-    let addFirstAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
-      |> Iterable.reduce
+    let addFirstAll (owner: Transient.Owner.t) (iter: Iterator.t 'a) (vector: t 'a): (t 'a) => iter
+      |> Iterator.reduce
         (fun acc next => acc |> X.addFirst owner next)
         vector;
 
-    let addLastAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
-      |> Iterable.reduce
+    let addLastAll (owner: Transient.Owner.t) (iter: Iterator.t 'a) (vector: t 'a): (t 'a) => iter
+      |> Iterator.reduce
         (fun acc next => acc |> X.addLast owner next)
         vector;
 
@@ -642,13 +642,13 @@ module TransientVector = {
   let addFirst (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addFirst value;
 
-  let addFirstAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+  let addFirstAll (iter: Iterator.t 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addFirstAll iter;
 
   let addLast (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addLast value;
 
-  let addLastAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+  let addLastAll (iter: Iterator.t 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addLastAll iter;
 
   let count (transient: t 'a): int =>
@@ -798,12 +798,12 @@ module TransientVector = {
 
 let mutate = TransientVector.mutate;
 
-let addFirstAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
+let addFirstAll (iter: Iterator.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
   |> TransientVector.addFirstAll iter
   |> TransientVector.persist;
 
-let addLastAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
+let addLastAll (iter: Iterator.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
   |> TransientVector.addLastAll iter
   |> TransientVector.persist;
@@ -831,8 +831,8 @@ let equalsWith
   else if ((count this) != (count that)) false
   else (
     CopyOnWriteArray.equalsWith valueEquals thisLeft thatLeft &&
-    /* Perhaps could make this more efficient by avoiding use of Seq */
-    Seq.equalsWith valueEquals (IndexedTrie.toSeq thisMiddle) (IndexedTrie.toSeq thatMiddle) &&
+    /* Perhaps could make this more efficient by avoiding use of Sequence */
+    Sequence.equalsWith valueEquals (IndexedTrie.toSequence thisMiddle) (IndexedTrie.toSequence thatMiddle) &&
     CopyOnWriteArray.equalsWith valueEquals thisRight thatRight
   );
 
@@ -861,10 +861,10 @@ let findWithIndex (f: int => 'a => bool) (vec: t 'a): 'a => {
   find f vec;
 };
 
-let from (iter: Iterable.t 'a): (t 'a) =>
+let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addLastAll iter;
 
-let fromReversed (iter: Iterable.t 'a): (t 'a) =>
+let fromReversed (iter: Iterator.t 'a): (t 'a) =>
   empty|> addFirstAll iter;
 
 let indexOf (f: 'a => bool) (vec: t 'a): int => {
@@ -1088,26 +1088,26 @@ let take (takeCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
 let range (startIndex: int) (takeCount: option int) (vec: t 'a): (t 'a) =>
    vec |> skip startIndex |> take (takeCount |? (count vec));
 
-let toIterable (set: t 'a): (Iterable.t 'a) =>
-  if (isEmpty set) Iterable.empty
+let toIterator (set: t 'a): (Iterator.t 'a) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
 
-let toIterableReversed (set: t 'a): (Iterable.t 'a) =>
-  if (isEmpty set) Iterable.empty
+let toIteratorReversed (set: t 'a): (Iterator.t 'a) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc set };
 
-let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
-  if (isEmpty arr) KeyedIterable.empty
+let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
+  if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceWithIndex f acc arr };
 
-let toKeyedIterableReversed (arr: t 'a): (KeyedIterable.t int 'a) =>
-  if (isEmpty arr) KeyedIterable.empty
+let toKeyedIteratorReversed (arr: t 'a): (KeyedIterator.t int 'a) =>
+  if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceRightWithIndex f acc arr };
 
-let toSeq ({ left, middle, right }: t 'a): (Seq.t 'a) => Seq.concat [
-  CopyOnWriteArray.toSeq left,
-  IndexedTrie.toSeq middle,
-  CopyOnWriteArray.toSeq right,
+let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
+  CopyOnWriteArray.toSequence left,
+  IndexedTrie.toSequence middle,
+  CopyOnWriteArray.toSequence right,
 ];
 
 let compareWith
@@ -1115,15 +1115,15 @@ let compareWith
     (this: t 'a)
     (that: t 'a): Ordering.t =>
   if (this === that) Ordering.equal
-  else Seq.compareWith compareValue (toSeq this) (toSeq that);
+  else Sequence.compareWith compareValue (toSequence this) (toSequence that);
 
 let compare (this: t 'a) (that: t 'a): Ordering.t =>
   compareWith Comparator.structural this that;
 
-let toSeqReversed ({ left, middle, right }: t 'a): (Seq.t 'a) => Seq.concat [
-  CopyOnWriteArray.toSeqReversed right,
-  IndexedTrie.toSeqReversed middle,
-  CopyOnWriteArray.toSeqReversed left,
+let toSequenceReversed ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
+  CopyOnWriteArray.toSequenceReversed right,
+  IndexedTrie.toSequenceReversed middle,
+  CopyOnWriteArray.toSequenceReversed left,
 ];
 
 let tryFind (f: 'a => bool) ({ left, middle, right }: t 'a): (option 'a) =>
@@ -1188,12 +1188,12 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
   none: fun f => noneWithIndex f vec,
   reduce: fun f acc => reduceWithIndex f acc vec,
   some: fun f => someWithIndex f vec,
-  toSeq: Seq.zip2
-    (IntRange.create 0 (count vec) |> IntRange.toSeq)
-    (toSeq vec),
+  toSequence: Sequence.zip2
+    (IntRange.create 0 (count vec) |> IntRange.toSequence)
+    (toSequence vec),
   tryFind: fun f => tryIndexOfWithIndex f vec >>| fun index => (index, vec |> get index),
   tryGet: fun i => tryGet i vec,
-  values: toIterable vec,
+  values: toIterator vec,
 };
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec

@@ -21,7 +21,7 @@ ReUnit.run (describe "Immutable.re" [
   IntMapTest.test,*/
   MapTest.test,
   OptionTest.test,
-  SeqTest.test,
+  SequenceTest.test,
   SetTest.test,/*
   SortedMapTest.test,*/
   SortedSetTest.test,

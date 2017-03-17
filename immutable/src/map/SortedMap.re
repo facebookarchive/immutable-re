@@ -86,13 +86,13 @@ let put (key: 'k) (value: 'v) ({ comparator, count, tree } as map: t 'k 'v): (t 
   };
 };
 
-let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
-  iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
+let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+  iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) map;
 
-let fromWith (comparator: Comparator.t 'k) (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+let fromWith (comparator: Comparator.t 'k) (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
   emptyWith comparator |> putAll iter;
 
-let from (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+let from (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
   fromWith Comparator.structural iter;
 
 let fromMapWith (comparator: Comparator.t 'k) (map: ImmMap.t 'k 'v): (t 'k 'v) =>
@@ -136,11 +136,11 @@ let removeLast ({ comparator, count, tree } as map: t 'k 'v): (t 'k 'v) => {
 let some (f: 'k => 'v => bool) ({ tree }: t 'k 'v): bool =>
   tree |> AVLTreeMap.none f;
 
-let toSeq ({ tree }: t 'k 'v): (Seq.t ('k, 'v)) =>
-  tree |> AVLTreeMap.toSeq;
+let toSequence ({ tree }: t 'k 'v): (Sequence.t ('k, 'v)) =>
+  tree |> AVLTreeMap.toSequence;
 
-let toSeqReversed ({ tree }: t 'k 'v): (Seq.t ('k, 'v)) =>
-  tree |> AVLTreeMap.toSeqReversed;
+let toSequenceReversed ({ tree }: t 'k 'v): (Sequence.t ('k, 'v)) =>
+  tree |> AVLTreeMap.toSequenceReversed;
 
 let tryFind (f: 'k => 'v => bool) ({ tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryFind f;
@@ -157,33 +157,33 @@ let tryGet (key: 'k) ({ comparator, tree }: t 'k 'v): (option 'v) =>
 let tryLast ({ tree }: t 'k 'v): (option ('k, 'v)) =>
   tree |> AVLTreeMap.tryLast;
 
-let values ({ tree }: t 'k 'v): (Iterable.t 'v) =>
+let values ({ tree }: t 'k 'v): (Iterator.t 'v) =>
   tree |> AVLTreeMap.values;
 
-let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
-  if (isEmpty map) Iterable.empty
+let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
+  if (isEmpty map) Iterator.empty
   else {
     reduce: fun f acc => map |> reduce
       (fun acc k v => f acc (k, v))
       acc
   };
 
-let toIterableReversed (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
-  if (isEmpty map) Iterable.empty
+let toIteratorReversed (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
+  if (isEmpty map) Iterator.empty
   else {
     reduce: fun f acc => map |> reduceRight
       (fun acc k v => f acc (k, v))
       acc
   };
 
-let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
-  if (isEmpty map) KeyedIterable.empty
+let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
+  if (isEmpty map) KeyedIterator.empty
   else {
     reduce: fun f acc => map |> reduce f acc
   };
 
-let toKeyedIterableReversed (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
-  if (isEmpty map) KeyedIterable.empty
+let toKeyedIteratorReversed (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
+  if (isEmpty map) KeyedIterator.empty
   else {
     reduce: fun f acc => map |> reduceRight f acc
   };
@@ -199,7 +199,7 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   none: fun f => none f map,
   reduce: fun f acc => map |> reduce f acc,
   some: fun f => map |> some f,
-  toSeq: (toSeq map),
+  toSequence: (toSequence map),
   tryFind: fun f => tryFind f map,
   tryGet: fun i => tryGet i map,
   values: (values map),
@@ -213,11 +213,11 @@ let compareWith
   /* FIXME: Should be possible to make this more efficient
    * by recursively walking the tree.
    */
-  else Seq.compareWith (fun (k1, v1) (k2, v2) => {
+  else Sequence.compareWith (fun (k1, v1) (k2, v2) => {
     let cmp = thisComparator k1 k2;
     if (cmp === Ordering.equal) (compareValue v1 v2)
     else cmp
-  }) (toSeq this) (toSeq that);
+  }) (toSequence this) (toSequence that);
 
 let compare (this: t 'k 'v) (that: t 'k 'v): Ordering.t =>
   compareWith Comparator.structural this that;
@@ -226,11 +226,11 @@ let equalsWith
     (valueEquals: Equality.t 'v)
     ({ comparator } as this: t 'k 'v)
     (that: t 'k 'v): bool =>
-  Seq.equalsWith (fun (k1, v1) (k2, v2) =>
+  Sequence.equalsWith (fun (k1, v1) (k2, v2) =>
     if (k1 === k2) true
     else if (comparator k1 k2 === Ordering.equal) (valueEquals v1 v2)
     else false
-  ) (toSeq this) (toSeq that);
+  ) (toSequence this) (toSequence that);
 
 let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
   equalsWith Equality.structural this that;
@@ -248,7 +248,7 @@ let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: t 'k 'v)
     (map: t 'k 'vAcc): (t 'k 'vAcc) =>
-  ImmSet.union (keys map) (keys next) |> Iterable.reduce (
+  ImmSet.union (keys map) (keys next) |> Iterator.reduce (
     fun acc key => {
       let result = f key (map |> tryGet key) (next |> tryGet key);
       switch result {

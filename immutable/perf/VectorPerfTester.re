@@ -29,9 +29,9 @@ let generateTests
       |> IntRange.reduce (fun acc _ => acc |> removeLast) (getTestData ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, update %i elements alternating" n (n / 2)) (fun () => {
-    Seq.generate (fun i => i + 2) 0
-      |> Seq.take (n / 2)
-      |> Seq.reduce (fun acc i => acc |> update i (n - i)) (getTestData ()) |> ignore;
+    Sequence.generate (fun i => i + 2) 0
+      |> Sequence.take (n / 2)
+      |> Sequence.reduce (fun acc i => acc |> update i (n - i)) (getTestData ()) |> ignore;
   }),
   it (sprintf "tryGet %i values" n) (fun () => {
     let vec = getTestData ();
@@ -46,16 +46,16 @@ let test (n: int) (count: int): Test.t => {
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toIterable |> List.fromReversed;
-  let stack = indexes |> IntRange.toIterable |> Stack.fromReversed;
+  let list = indexes |> IntRange.toIterator |> List.fromReversed;
+  let stack = indexes |> IntRange.toIterator |> Stack.fromReversed;
   let vector = indexes
     |> IntRange.reduce (fun acc i => acc |> TransientVector.addLast i) (TransientVector.empty ())
     |> TransientVector.persist;
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toIterable |> List.fromReversed;
-  let stack = indexes |> IntRange.toIterable |> Stack.fromReversed;
+  let list = indexes |> IntRange.toIterator |> List.fromReversed;
+  let stack = indexes |> IntRange.toIterator |> Stack.fromReversed;
 
   let testGroup = [
     describe "CamlMutableArray" (
@@ -110,10 +110,10 @@ let test (n: int) (count: int): Test.t => {
     ),
   ];
 
-  let tests = Seq.repeat testGroup
-    |> Seq.take n
-    |> Seq.flatMap List.toSeq
-    |> Seq.toIterable
+  let tests = Sequence.repeat testGroup
+    |> Sequence.take n
+    |> Sequence.flatMap List.toSequence
+    |> Sequence.toIterator
     |> List.fromReversed;
   describe "VectorPerf" tests;
 };

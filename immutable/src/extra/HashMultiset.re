@@ -110,8 +110,8 @@ let some (f: 'a => int => bool) ({ map }: t 'a): bool =>
 
 let toMap ({ map }: t 'a): (ImmMap.t 'a int) => map |> HashMap.toMap;
 
-let toSeq ({ map }: t 'a): (Seq.t 'a) =>
-  map |> HashMap.toSeq |> Seq.flatMap (fun (v, i) => Seq.repeat v |> Seq.take i);
+let toSequence ({ map }: t 'a): (Sequence.t 'a) =>
+  map |> HashMap.toSequence |> Sequence.flatMap (fun (v, i) => Sequence.repeat v |> Sequence.take i);
 
 let tryFind (f: 'a => int => bool) ({ map }: t 'a): (option ('a, int)) =>
   map |> HashMap.tryFind f;
@@ -146,9 +146,9 @@ let module TransientHashMultiset = {
   };
 
   let addAll
-      (seq: Seq.t 'a)
+      (seq: Sequence.t 'a)
       (transient: t 'a): (t 'a) => seq
-    |> Seq.reduce (fun acc next => acc |> add next) transient;
+    |> Sequence.reduce (fun acc next => acc |> add next) transient;
 
   let contains (value: 'a) ({ map }: t 'a): bool =>
     map |> TransientHashMap.tryGet value >>| Functions.alwaysTrue |? false;
@@ -205,14 +205,14 @@ let module TransientHashMultiset = {
 let mutate = TransientHashMultiset.mutate;
 
 let addAll
-    (seq: Seq.t 'a)
+    (seq: Sequence.t 'a)
     (hashMultiset: t 'a): (t 'a) => hashMultiset
   |> mutate
   |> TransientHashMultiset.addAll seq
   |> TransientHashMultiset.persist;
 
-let fromSeq (seq: Seq.t 'a): (t 'a) =>
+let fromSequence (seq: Sequence.t 'a): (t 'a) =>
   empty |> addAll seq;
 
-let fromSeqWith (strategy: HashStrategy.t 'a) (seq: Seq.t 'a): (t 'a) =>
+let fromSequenceWith (strategy: HashStrategy.t 'a) (seq: Sequence.t 'a): (t 'a) =>
   (emptyWith strategy) |> addAll seq;

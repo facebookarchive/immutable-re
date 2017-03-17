@@ -48,14 +48,14 @@ let module Deque = {
   let return = Deque.return;
   let reverse = Deque.reverse;
   let some = Deque.some;
-  let toSeq = Deque.toSeq;
-  let toSeqReversed = Deque.toSeqReversed;
+  let toSequence = Deque.toSequence;
+  let toSequenceReversed = Deque.toSequenceReversed;
   let tryFind = Deque.tryFind;
   let tryFirst = Deque.tryFirst;
   let tryLast = Deque.tryLast;
 };
 
-let test = describe "Deque" (List.fromReversed @@ Iterable.concat @@ [
-  (DequeTester.test 1000 (module Deque)) |> List.toIterable,
-  describe "TransientDeque" (TransientDequeTester.test 1000 (module TransientDeque)) |> Iterable.return,
+let test = describe "Deque" (List.fromReversed @@ Iterator.concat @@ [
+  (DequeTester.test 1000 (module Deque)) |> List.toIterator,
+  describe "TransientDeque" (TransientDequeTester.test 1000 (module TransientDeque)) |> Iterator.return,
 ]);

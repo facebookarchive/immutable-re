@@ -22,7 +22,7 @@ let add (key: 'k) (value: 'v) ({ count, map }: t 'k 'v): (t 'k 'v) => {
   } |> Stack.addFirst value |> Option.return),
 };
 
-let addAllValues (key: 'k) (values: (Iterable.t 'v)) ({ count, map } as multimap: t 'k 'v): (t 'k 'v) => {
+let addAllValues (key: 'k) (values: (Iterator.t 'v)) ({ count, map } as multimap: t 'k 'v): (t 'k 'v) => {
   let increment = ref 0;
 
   let newMap = map |> HashMap.alter key (fun stack => {
@@ -138,11 +138,11 @@ let some (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: t 'k 'v): (Seq.t ('k, 'v)) => map
-  |> HashMap.toSeq
-  |> Seq.flatMap (
+let toSequence ({ map }: t 'k 'v): (Sequence.t ('k, 'v)) => map
+  |> HashMap.toSequence
+  |> Sequence.flatMap (
     fun (k, stack) =>
-      stack |> Stack.toSeq |> Seq.map (Pair.create k)
+      stack |> Stack.toSequence |> Sequence.map (Pair.create k)
   );
 
 let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) => {
@@ -157,5 +157,5 @@ let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) => {
 let find (f: 'k => 'v => bool) (multimap: t 'k 'v): ('k, 'v) =>
   multimap |> tryFind f |> Option.first;
 
-let values ({ map }: t 'k 'v): (Iterable.t 'v) =>
-  map |> HashMap.values |> Iterable.flatMap Stack.toIterable;
+let values ({ map }: t 'k 'v): (Iterator.t 'v) =>
+  map |> HashMap.values |> Iterator.flatMap Stack.toIterator;

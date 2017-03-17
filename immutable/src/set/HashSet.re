@@ -122,7 +122,7 @@ let module BitmapTrieSet = {
 
         if (newEntrySet === entrySet) set
         else if ((EqualitySet.count newEntrySet) == 1) {
-          let entryValue = entrySet |> EqualitySet.toSeq |> Seq.first;
+          let entryValue = entrySet |> EqualitySet.toSequence |> Sequence.first;
           (Entry entryHash entryValue)
         } else (EqualitySetCollision entryHash newEntrySet);
     | ComparatorCollision entryHash entrySet when hash == entryHash =>
@@ -137,12 +137,12 @@ let module BitmapTrieSet = {
     | _ => set
   };
 
-  let rec toSeq (set: t 'a): (Seq.t 'a) => switch set {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
-    | ComparatorCollision _ entrySet => AVLTreeSet.toSeq entrySet;
-    | EqualitySetCollision _ entrySet => EqualitySet.toSeq entrySet;
-    | Entry _ entryValue => Seq.return entryValue;
-    | Empty => Seq.empty;
+  let rec toSequence (set: t 'a): (Sequence.t 'a) => switch set {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
+    | ComparatorCollision _ entrySet => AVLTreeSet.toSequence entrySet;
+    | EqualitySetCollision _ entrySet => EqualitySet.toSequence entrySet;
+    | Entry _ entryValue => Sequence.return entryValue;
+    | Empty => Sequence.empty;
   };
 
   let updateLevelNodePersistent
@@ -224,37 +224,37 @@ let remove (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
 let removeAll ({ strategy }: t 'a): (t 'a) =>
   emptyWith strategy;
 
-let toSeq ({ root } as set: t 'a): (Seq.t 'a) =>
-  if (isEmpty set) Seq.empty
-  else root |> BitmapTrieSet.toSeq;
+let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
+  if (isEmpty set) Sequence.empty
+  else root |> BitmapTrieSet.toSequence;
 
 let every (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSeq |> Seq.every f;
+  set |> toSequence |> Sequence.every f;
 
 let find (f: 'a => bool) (set: t 'a): 'a =>
-  set |> toSeq |> Seq.find f;
+  set |> toSequence |> Sequence.find f;
 
 let forEach (f: 'a => unit) (set: t 'a): unit =>
-  set |> toSeq |> Seq.forEach f;
+  set |> toSequence |> Sequence.forEach f;
 
 let none (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSeq |> Seq.none f;
+  set |> toSequence |> Sequence.none f;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (set: t 'a): 'acc =>
-  set |> toSeq |> Seq.reduce f acc;
+  set |> toSequence |> Sequence.reduce f acc;
 
 let some (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSeq |> Seq.some f;
+  set |> toSequence |> Sequence.some f;
 
 let tryFind (f: 'a => bool) (set: t 'a): (option 'a) =>
-  set |> toSeq |> Seq.tryFind f;
+  set |> toSequence |> Sequence.tryFind f;
 
-let toIterable (set: t 'a): (Iterable.t 'a) =>
-  if (isEmpty set) Iterable.empty
+let toIterator (set: t 'a): (Iterator.t 'a) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
 
-let toKeyedIterable (set: t 'a): (KeyedIterable.t 'a 'a) =>
-  if (isEmpty set) KeyedIterable.empty
+let toKeyedIterator (set: t 'a): (KeyedIterator.t 'a 'a) =>
+  if (isEmpty set) KeyedIterator.empty
   else { reduce: fun f acc => set |> reduce
     (fun acc next => f acc next next)
     acc
@@ -271,7 +271,7 @@ let toSet (set: t 'a): (ImmSet.t 'a) =>
     none: fun f => set |> none f,
     reduce: fun f acc => set |> reduce f acc,
     some: fun f => set |> some f,
-    toSeq: toSeq set,
+    toSequence: toSequence set,
     tryFind: fun f => set |> tryFind f,
   };
 
@@ -316,11 +316,11 @@ let module TransientHashSet = {
 
   let addAllImpl
       (owner: Transient.Owner.t)
-      (iter: Iterable.t 'a)
+      (iter: Iterator.t 'a)
       ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
     let newCount = ref count;
 
-    let newRoot = iter |> Iterable.reduce (fun acc value => {
+    let newRoot = iter |> Iterator.reduce (fun acc value => {
       let hash = HashStrategy.hash strategy value;
 
       if (acc |> BitmapTrieSet.contains strategy 0 hash value) acc
@@ -342,7 +342,7 @@ let module TransientHashSet = {
     else { count: !newCount, root: newRoot, strategy };
   };
 
-  let addAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+  let addAll (iter: Iterator.t 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 addAllImpl iter;
 
   let contains (value: 'a) (transient: t 'a): bool =>
@@ -399,13 +399,13 @@ let module TransientHashSet = {
 
 let mutate = TransientHashSet.mutate;
 
-let addAll (iter: Iterable.t 'a) (set: t 'a): (t 'a) =>
+let addAll (iter: Iterator.t 'a) (set: t 'a): (t 'a) =>
   set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
 
-let from (iter: Iterable.t 'a): (t 'a) =>
+let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addAll iter;
 
-let fromWith (strategy: HashStrategy.t 'a) (iter: Iterable.t 'a): (t 'a) =>
+let fromWith (strategy: HashStrategy.t 'a) (iter: Iterator.t 'a): (t 'a) =>
   emptyWith strategy |> addAll iter;
 
 let intersect ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>

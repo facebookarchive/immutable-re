@@ -87,10 +87,10 @@ let module BitmapTrieIntSet = {
     | _ => set
   };
 
-  let rec toSeq (set: t): (Seq.t int) => switch set {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
-    | Entry entryValue => Seq.return entryValue;
-    | Empty => Seq.empty;
+  let rec toSequence (set: t): (Sequence.t int) => switch set {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
+    | Entry entryValue => Sequence.return entryValue;
+    | Empty => Sequence.empty;
   };
 
   let updateLevelNodePersistent
@@ -153,36 +153,36 @@ let remove (value: int) ({ count, root } as set: t): t => {
 let removeAll (_: t): t =>
   empty;
 
-let toSeq ({ root }: t): (Seq.t int) =>
-  root |> BitmapTrieIntSet.toSeq;
+let toSequence ({ root }: t): (Sequence.t int) =>
+  root |> BitmapTrieIntSet.toSequence;
 
 let every (f: int => bool) (set: t): bool =>
-  set |> toSeq |> Seq.every f;
+  set |> toSequence |> Sequence.every f;
 
 let find (f: int => bool) (set: t): int =>
-  set |> toSeq |> Seq.find f;
+  set |> toSequence |> Sequence.find f;
 
 let forEach (f: int => unit) (set: t): unit =>
-  set |> toSeq |> Seq.forEach f;
+  set |> toSequence |> Sequence.forEach f;
 
 let none (f: int => bool) (set: t): bool =>
-  set |> toSeq |> Seq.none f;
+  set |> toSequence |> Sequence.none f;
 
 let reduce (f: 'acc => int => 'acc) (acc: 'acc) (set: t): 'acc =>
-  set |> toSeq |> Seq.reduce f acc;
+  set |> toSequence |> Sequence.reduce f acc;
 
 let some (f: int => bool) (set: t): bool =>
-  set |> toSeq |> Seq.some f;
+  set |> toSequence |> Sequence.some f;
 
 let tryFind (f: int => bool) (set: t): (option int) =>
-  set |> toSeq |> Seq.tryFind f;
+  set |> toSequence |> Sequence.tryFind f;
 
-let toIterable (set: t): (Iterable.t int) =>
-  if (isEmpty set) Iterable.empty
+let toIterator (set: t): (Iterator.t int) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
 
-let toKeyedIterable (set: t): (KeyedIterable.t int int) =>
-  if (isEmpty set) KeyedIterable.empty
+let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
+  if (isEmpty set) KeyedIterator.empty
   else { reduce: fun f acc => set |> reduce
     (fun acc next => f acc next next)
     acc
@@ -199,7 +199,7 @@ let toSet (set: t): (ImmSet.t int) =>
     none: fun f => set |> none f,
     reduce: fun f acc => set |> reduce f acc,
     some: fun f => set |> some f,
-    toSeq: toSeq set,
+    toSequence: toSequence set,
     tryFind: fun f => set |> tryFind f,
   };
 
@@ -241,11 +241,11 @@ let module TransientIntSet = {
 
   let addAllImpl
       (owner: Transient.Owner.t)
-      (iter: Iterable.t int)
+      (iter: Iterator.t int)
       ({ count, root } as set: intSet): intSet => {
     let newCount = ref count;
 
-    let newRoot = iter |> Iterable.reduce (fun acc value => {
+    let newRoot = iter |> Iterator.reduce (fun acc value => {
       if (acc |> BitmapTrieIntSet.contains 0 value) acc
       else  {
         let newRoot = acc |> BitmapTrieIntSet.add
@@ -263,7 +263,7 @@ let module TransientIntSet = {
     else { count: !newCount, root: newRoot };
   };
 
-  let addAll (iter: Iterable.t int) (transient: t): t =>
+  let addAll (iter: Iterator.t int) (transient: t): t =>
     transient |> Transient.update1 addAllImpl iter;
 
   let contains (value: int) (transient: t): bool =>
@@ -313,10 +313,10 @@ let module TransientIntSet = {
 
 let mutate = TransientIntSet.mutate;
 
-let addAll (iter: Iterable.t int) (set: t): t =>
+let addAll (iter: Iterator.t int) (set: t): t =>
   set |> mutate |> TransientIntSet.addAll iter |> TransientIntSet.persist;
 
-let from (iter: Iterable.t int): t =>
+let from (iter: Iterator.t int): t =>
   empty |> addAll iter;
 
 let intersect (this: t) (that: t): t =>

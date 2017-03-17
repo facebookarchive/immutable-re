@@ -63,7 +63,7 @@ let concat (seqs: list (t 'a)): (t 'a) =>
 
 let rec containsWith (valueEquals: Equality.t 'a) (value: 'a) (seq: t 'a): bool => switch (seq ()) {
   | Next next _ when valueEquals next value => true
-  | Next _ nextSeq => containsWith valueEquals value nextSeq
+  | Next _ nextSequence => containsWith valueEquals value nextSequence
   | Completed => false
 };
 
@@ -213,8 +213,8 @@ let rec scan
   | Completed => Completed
 };
 
-let toIterable (seq: t 'a): (Iterable.t 'a) =>
-  if (isEmpty seq) Iterable.empty
+let toIterator (seq: t 'a): (Iterator.t 'a) =>
+  if (isEmpty seq) Iterator.empty
   else {
     reduce: fun f acc => reduce f acc seq
   };
@@ -227,15 +227,15 @@ let buffer
 
   let rec recurse (lst: list 'a) (counted: int) (skipped: int) (seq: t 'a) => fun () => switch (seq ()) {
     | Next value next =>
-        let nextSeq =
+        let nextSequence =
           if (counted < count && skipped < skip) (recurse [value, ...lst] (counted + 1) (skipped + 1) next)
           else if (skipped < skip) (recurse lst counted (skipped + 1) next)
           else if (counted < count) (recurse [value, ...lst] (counted + 1) skipped next)
           else if (skip < count) (recurse [value, ...(ImmList.take (count - skip) lst)] counted skipped next)
           else (recurse [value] 1 1 next);
 
-        if (counted == count && skipped == skip) (Next lst nextSeq)
-        else (nextSeq ())
+        if (counted == count && skipped == skip) (Next lst nextSequence)
+        else (nextSequence ())
     | Completed =>
         if (counted == count && skipped == skip) (Next lst empty)
         else Completed
@@ -347,7 +347,7 @@ let tryLast (seq: t 'a): (option 'a) => {
 let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {
   let iters = seqs |> ImmList.mapReverse Functions.call;
 
-  let nextSeq: (t (list 'a)) = fun () =>
+  let nextSequence: (t (list 'a)) = fun () =>
     (iters |> ImmList.mapReverse (fun next => switch next {
       | Next _ next => next
       | Completed => empty
@@ -358,9 +358,9 @@ let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {
       | (Some Completed      , _              ) => acc
       | (_                   , Completed      ) => Some Completed
       | (Some (Next values _), Next value _) =>
-          Next [value, ...values] nextSeq |> Option.return
+          Next [value, ...values] nextSequence |> Option.return
       | (None                , Next value _) =>
-          Next [value] nextSeq |> Option.return
+          Next [value] nextSequence |> Option.return
     }
   ) None |? Completed;
 };

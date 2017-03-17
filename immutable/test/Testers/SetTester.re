@@ -17,7 +17,7 @@ module type SetImpl = {
   type t;
 
   let add: int => t => t;
-  let addAll: (Iterable.t int) => t => t;
+  let addAll: (Iterator.t int) => t => t;
   let contains: int => t => bool;
   let count: t => int;
   let empty: unit => t;
@@ -25,7 +25,7 @@ module type SetImpl = {
   let every: (int => bool) => t => bool;
   let find: (int => bool) => t => int;
   let forEach: (int => unit) => t => unit;
-  let from: (Iterable.t int) => t;
+  let from: (Iterator.t int) => t;
   let hash: (Hash.t t);
   let intersect: t => t => t;
   let isEmpty: t => bool;
@@ -38,7 +38,7 @@ module type SetImpl = {
   let subtract: t => t => t;
   let toSet: t => (Set.t int);
   let toMap: t => (Map.t int int);
-  let toSeq: t => (Seq.t int);
+  let toSequence: t => (Sequence.t int);
   let tryFind: (int => bool) => t => (option int);
   let union: t => t => t;
 };
@@ -49,25 +49,25 @@ let intTupleToString (i, v) =>
 let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   it (sprintf "add %i elements" count) (fun () => {
     let src = IntRange.create 0 count
-      |> IntRange.toSeq
-      |> Seq.map (Hash.random ());
+      |> IntRange.toSequence
+      |> Sequence.map (Hash.random ());
 
     let (_, mapOfSizeN) = src
-      |> Seq.scan
+      |> Sequence.scan
         (fun (_, acc) i => (i, acc |> SetImpl.add i))
         (0, SetImpl.empty ())
-      |> Seq.doOnNext(fun (i, acc) =>
+      |> Sequence.doOnNext(fun (i, acc) =>
         expect (acc |> SetImpl.contains i) |> toBeEqualToTrue
       )
-      |> Seq.last;
+      |> Sequence.last;
 
-    src |> Seq.forEach (fun i =>
+    src |> Sequence.forEach (fun i =>
       expect (mapOfSizeN |> SetImpl.contains i) |> toBeEqualToTrue
     );
   }),
   it (sprintf "removeAll %i elements" count) (fun () => {
     let set = IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from;
 
     expect (SetImpl.isNotEmpty set) |> toBeEqualToTrue;
@@ -87,7 +87,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.count empty) |> toBeEqualToInt 0;
 
     let set = empty
-      |> SetImpl.addAll (IntRange.create 0 count |> IntRange.toIterable);
+      |> SetImpl.addAll (IntRange.create 0 count |> IntRange.toIterator);
 
     let shouldBeEmpty = IntRange.create 0 count |> IntRange.reduceRight (fun acc i => {
       expect (SetImpl.isNotEmpty acc) |> toBeEqualToTrue;
@@ -101,24 +101,24 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     expect (SetImpl.count shouldBeEmpty) |> toBeEqualToInt 0;
   }),
   it (sprintf "contains with %i elements" count) (fun () => {
-    let values = Seq.generate (fun i => i + 5) (-count) |> Seq.take count;
-    let set = values |> Seq.toIterable |> SetImpl.from;
-    values |> Seq.forEach (fun i => {
+    let values = Sequence.generate (fun i => i + 5) (-count) |> Sequence.take count;
+    let set = values |> Sequence.toIterator |> SetImpl.from;
+    values |> Sequence.forEach (fun i => {
       expect (SetImpl.contains i set) |> toBeEqualToTrue;
     });
   }),
   it (sprintf "count with %i elements" count) (fun () => {
-    let set = Seq.generate (fun i => i + 5) (-count)
-      |> Seq.take count
-      |> Seq.toIterable
+    let set = Sequence.generate (fun i => i + 5) (-count)
+      |> Sequence.take count
+      |> Sequence.toIterator
       |> SetImpl.from;
     expect (SetImpl.count set) |> toBeEqualToInt count;
   }),
   it (sprintf "equals %i elements" count) (fun () => {
-    let setCountMinusOne = IntRange.create 0 (count - 1) |> IntRange.toIterable |> SetImpl.from;
-    let setCount = IntRange.create 0 count |> IntRange.toIterable |> SetImpl.from;
-    let setCountDup = IntRange.create 0 count |> IntRange.toIterable|> SetImpl.from;
-    let setCountPlusOne = IntRange.create 0 (count + 1) |> IntRange.toIterable |> SetImpl.from;
+    let setCountMinusOne = IntRange.create 0 (count - 1) |> IntRange.toIterator |> SetImpl.from;
+    let setCount = IntRange.create 0 count |> IntRange.toIterator |> SetImpl.from;
+    let setCountDup = IntRange.create 0 count |> IntRange.toIterator|> SetImpl.from;
+    let setCountPlusOne = IntRange.create 0 (count + 1) |> IntRange.toIterator |> SetImpl.from;
 
     expect (SetImpl.equals setCount setCount) |> toBeEqualToTrue;
     expect (SetImpl.equals setCount setCountDup) |> toBeEqualToTrue;
@@ -127,32 +127,32 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   }),
   it (sprintf "every with %i elements" count) (fun () => {
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.every (fun v => v > (count / 2))
       |> expect |> toBeEqualToFalse;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.every (fun v => v > 0)
       |> expect |> toBeEqualToFalse;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.every (fun v => v > (count - 2))
       |> expect |> toBeEqualToFalse;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.every (fun v => v < count)
       |> expect |> toBeEqualToTrue;
   }),
   it (sprintf "find and tryFind in %i elements" count) (fun () => {
     let set = IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from;
 
     let find0 i => i == 0;
@@ -172,7 +172,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   }),
   it (sprintf "forEach with %i elements" count) (fun () => {
     let seq = IntRange.create 0 count
-      |> IntRange.toIterableReversed;
+      |> IntRange.toIteratorReversed;
     let set = SetImpl.from seq;
     set |> SetImpl.forEach (fun i => {
       expect (set |> SetImpl.contains i) |> toBeEqualToTrue;
@@ -180,52 +180,52 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   }),
   it (sprintf "hash with %i elements" count) (fun () => {
     let col = IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from;
 
     let dup = IntRange.create 0 count
-      |> IntRange.toIterableReversed
+      |> IntRange.toIteratorReversed
       |> SetImpl.from;
 
     expect (SetImpl.hash col) |> toBeEqualToInt (SetImpl.hash col);
     expect (SetImpl.hash col) |> toBeEqualToInt (SetImpl.hash dup);
   }),
   it (sprintf "intersect with %i elements" count) (fun () => {
-    let setA = IntRange.create 0 count |> IntRange.toIterable |> SetImpl.from;
-    let setB = Seq.generate (fun i => i + 2) 0
-      |> Seq.take (count / 2)
-      |> Seq.toIterable
+    let setA = IntRange.create 0 count |> IntRange.toIterator |> SetImpl.from;
+    let setB = Sequence.generate (fun i => i + 2) 0
+      |> Sequence.take (count / 2)
+      |> Sequence.toIterator
       |> SetImpl.from;
 
     let intersection = SetImpl.intersect setA setB;
-    let expected = Seq.generate (fun i => i + 2) 0
-      |> Seq.take (count / 2)
-      |> Seq.toIterable
+    let expected = Sequence.generate (fun i => i + 2) 0
+      |> Sequence.take (count / 2)
+      |> Sequence.toIterator
       |> SetImpl.from;
 
     expect (SetImpl.equals intersection expected) |> toBeEqualToTrue;
   }),
   it (sprintf "none with %i elements" count) (fun () => {
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.none (fun v => v > 0)
       |> expect |> toBeEqualToFalse;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.none (fun v => v > (count / 2))
       |> expect |> toBeEqualToFalse;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.none (fun v => v > (count - 2))
       |> expect |> toBeEqualToFalse;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.none (fun v => v < 0)
       |> expect |> toBeEqualToTrue;
@@ -233,58 +233,58 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   it (sprintf "reduce with %i elements" count) (fun () => {
     /* FIXME: This test could be better by not using a single repeated value. */
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.reduce (fun acc _ => acc + 1) 0
       |> expect
       |> toBeEqualToInt count;
   }),
   it (sprintf "remove %i elements" count) (fun () => {
-    let src = IntRange.create 0 count |> IntRange.toIterable;
+    let src = IntRange.create 0 count |> IntRange.toIterator;
     let mapOfSizeN = src |> SetImpl.from;
 
-    /* FIMXE: Maybe add Seq.sample, Seq.filteri */
+    /* FIMXE: Maybe add Sequence.sample, Sequence.filteri */
     let removed = src
-      |> Iterable.map (fun i => (i, i))
-      |> Iterable.filter (fun (i, _) => i mod 3 == 0)
-      |> Iterable.map (fun (_, v) => v);
+      |> Iterator.map (fun i => (i, i))
+      |> Iterator.filter (fun (i, _) => i mod 3 == 0)
+      |> Iterator.map (fun (_, v) => v);
 
     let remaining = src
-      |> Iterable.map (fun i => (i, i))
-      |> Iterable.filter (fun (i, _) => i mod 3 != 0)
-      |> Iterable.map (fun (_, v) => v);
+      |> Iterator.map (fun i => (i, i))
+      |> Iterator.filter (fun (i, _) => i mod 3 != 0)
+      |> Iterator.map (fun (_, v) => v);
 
-    let mapOfSizeNdiv3 = removed |> Iterable.reduce (fun acc i => acc |> SetImpl.remove i) mapOfSizeN;
+    let mapOfSizeNdiv3 = removed |> Iterator.reduce (fun acc i => acc |> SetImpl.remove i) mapOfSizeN;
 
-    removed |> Iterable.forEach(fun i =>
+    removed |> Iterator.forEach(fun i =>
       expect (mapOfSizeNdiv3 |> SetImpl.contains i) |> toBeEqualToFalse
     );
 
-    remaining |> Iterable.forEach(fun i =>
+    remaining |> Iterator.forEach(fun i =>
       expect (mapOfSizeNdiv3 |> SetImpl.contains i) |> toBeEqualToTrue
     );
   }),
   it (sprintf "some with %i elements" count) (fun () => {
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.some (fun v => v > 0)
       |> expect |> toBeEqualToTrue;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.some (fun v => v > (count - 2))
       |> expect |> toBeEqualToTrue;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.some (fun v => v > (count / 2))
       |> expect |> toBeEqualToTrue;
 
     IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from
       |> SetImpl.some (fun v => v < 0)
       |> expect |> toBeEqualToFalse;
@@ -292,37 +292,37 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
   }),
   it (sprintf "subtract with %i elements" count) (fun () => {
     let setA = IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> SetImpl.from;
-    let setB =  Seq.generate (fun i => i + 2) 0
-      |> Seq.take (count / 2)
-      |> Seq.toIterable
+    let setB =  Sequence.generate (fun i => i + 2) 0
+      |> Sequence.take (count / 2)
+      |> Sequence.toIterator
       |> SetImpl.from;
 
     let subtracted = SetImpl.subtract setA setB;
-    let expected =  Seq.generate (fun i => i + 2) 1
-      |> Seq.take (count / 2)
-      |> Seq.toIterable
+    let expected =  Sequence.generate (fun i => i + 2) 1
+      |> Sequence.take (count / 2)
+      |> Sequence.toIterator
       |> SetImpl.from;
 
     expect (SetImpl.equals subtracted expected) |> toBeEqualToTrue;
   }),
   describe "toSet" [
     it (sprintf "contains with %i elements" count) (fun () => {
-      let set = Seq.generate (fun i => i + 3) 0
-        |> Seq.take count
-        |> Seq.toIterable
+      let set = Sequence.generate (fun i => i + 3) 0
+        |> Sequence.take count
+        |> Sequence.toIterator
         |> SetImpl.from
         |> SetImpl.toSet;
 
-      Seq.generate (fun i => i + 3) 0 |> Seq.take count |> Seq.forEach (fun i => {
+      Sequence.generate (fun i => i + 3) 0 |> Sequence.take count |> Sequence.forEach (fun i => {
         expect (set |> Set.contains i) |> toBeEqualToTrue;
       });
     }),
     it (sprintf "count with %i elements" count) (fun () => {
-      let set = Seq.generate (fun i => i + 3) 0
-        |> Seq.take count
-        |> Seq.toIterable
+      let set = Sequence.generate (fun i => i + 3) 0
+        |> Sequence.take count
+        |> Sequence.toIterator
         |> SetImpl.from
         |> SetImpl.toSet;
 
@@ -330,28 +330,28 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "every with %i elements" count) (fun () => {
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.every (fun v => v > (count / 2))
         |> expect |> toBeEqualToFalse;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.every (fun v => v > 0)
         |> expect |> toBeEqualToFalse;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.every (fun v => v > (count - 2))
         |> expect |> toBeEqualToFalse;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.every (fun v => v < count)
@@ -359,7 +359,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "find and tryFind with %i elements" count) (fun () => {
       let set = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet;
 
@@ -380,7 +380,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "forEach and tryFind with %i elements" count) (fun () => {
       let set = IntRange.create 0 count
-        |> IntRange.toIterableReversed
+        |> IntRange.toIteratorReversed
         |> SetImpl.from
         |> SetImpl.toSet;
       set |> Set.forEach (fun i => {
@@ -389,28 +389,28 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "none with %i elements" count) (fun () => {
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.none (fun v => v > 0)
         |> expect |> toBeEqualToFalse;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.none (fun v => v > (count / 2))
         |> expect |> toBeEqualToFalse;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.none (fun v => v > (count - 2))
         |> expect |> toBeEqualToFalse;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.none (fun v => v < 0)
@@ -418,7 +418,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "reduce with %i elements" count) (fun () => {
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.reduce (fun acc _ => acc + 1) 0
@@ -427,41 +427,41 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "some with %i elements" count) (fun () => {
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.some (fun v => v > 0)
         |> expect |> toBeEqualToTrue;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.some (fun v => v > (count - 2))
         |> expect |> toBeEqualToTrue;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.some (fun v => v > (count / 2))
         |> expect |> toBeEqualToTrue;
 
       IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toSet
         |> Set.some (fun v => v < 0)
         |> expect |> toBeEqualToFalse;
     }),
-    describe "toSeq" [
+    describe "toSequence" [
 
     ],
   ],
   describe "toMap" [
     it (sprintf "containsWith with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
 
@@ -475,7 +475,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "containsKey with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       IntRange.create 0 count |> IntRange.forEach (fun i => {
@@ -487,14 +487,14 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "count with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       expect (map |> Map.count) |> toBeEqualToInt count;
     }),
     it (sprintf "every with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       expect (map |> Map.every (fun i v => i == v)) |> toBeEqualToTrue;
@@ -502,7 +502,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "find with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       expect (map |> Map.find (fun i v =>
@@ -512,7 +512,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "forEach with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       let loopCount = ref 0;
@@ -525,7 +525,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "get with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       IntRange.create 0 count |> IntRange.forEach (fun i => {
@@ -537,7 +537,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "keys with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       map
@@ -548,7 +548,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "none with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       expect (map |> Map.none (fun i v => i != v)) |> toBeEqualToTrue;
@@ -556,7 +556,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "reduce with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       let reduced = map |> Map.reduce (fun acc _ _ => acc + 1) 0;
@@ -564,18 +564,18 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "some with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       expect (map |> Map.some (fun i v => i == v)) |> toBeEqualToTrue;
       expect (map |> Map.some (fun i v => i != v)) |> toBeEqualToFalse;
     }),
-    describe "toSeq" [
+    describe "toSequence" [
 
     ],
     it (sprintf "tryFind with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       expect (map |> Map.tryFind (fun i v =>
@@ -585,7 +585,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "tryGet with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       IntRange.create 0 count |> IntRange.forEach (fun i => {
@@ -597,7 +597,7 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
     }),
     it (sprintf "values with %i elements" count) (fun () => {
       let map = IntRange.create 0 count
-        |> IntRange.toIterable
+        |> IntRange.toIterator
         |> SetImpl.from
         |> SetImpl.toMap;
       map
@@ -609,23 +609,23 @@ let test (count: int) (module SetImpl: SetImpl): (list Test.t) => [
         |> toBeEqualToTrue;
     }),
   ],
-  describe "toSeq" [
+  describe "toSequence" [
 
   ],
   it (sprintf "union with %i elements" count) (fun () => {
-    let setA = Seq.generate (fun i => i + 2) 1
-      |> Seq.take (count / 2)
-      |> Seq.toIterable
+    let setA = Sequence.generate (fun i => i + 2) 1
+      |> Sequence.take (count / 2)
+      |> Sequence.toIterator
       |> SetImpl.from;
 
-    let setB = Seq.generate (fun i => i + 2) 0
-      |> Seq.take (count / 2)
-      |> Seq.toIterable
+    let setB = Sequence.generate (fun i => i + 2) 0
+      |> Sequence.take (count / 2)
+      |> Sequence.toIterator
       |> SetImpl.from;
 
     let union = SetImpl.union setA setB;
     let expected = IntRange.create 0 count
-    |> IntRange.toIterable
+    |> IntRange.toIterator
     |> SetImpl.from;
 
     expect (SetImpl.equals union expected) |> toBeEqualToTrue;

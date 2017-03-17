@@ -175,23 +175,23 @@ let rec some (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
       (some f left) || (f k v) || (none f right)
 };
 
-let rec toSeq (tree: t 'k 'v): (Seq.t ('k, 'v)) => switch tree {
-  | Empty => Seq.empty
-  | Leaf k v => Seq.return (k, v)
-  | Node _ left k v right => Seq.concat [
-      Seq.defer(fun () => toSeq left),
-      Seq.return (k, v),
-      Seq.defer(fun () => toSeq right),
+let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
+  | Empty => Sequence.empty
+  | Leaf k v => Sequence.return (k, v)
+  | Node _ left k v right => Sequence.concat [
+      Sequence.defer(fun () => toSequence left),
+      Sequence.return (k, v),
+      Sequence.defer(fun () => toSequence right),
     ]
 };
 
-let rec toSeqReversed (tree: t 'k 'v): (Seq.t ('k, 'v)) => switch tree {
-  | Empty => Seq.empty
-  | Leaf k v => Seq.return (k, v)
-  | Node _ left k v right => Seq.concat [
-      Seq.defer(fun () => toSeqReversed right),
-      Seq.return (k, v),
-      Seq.defer(fun () => toSeqReversed left),
+let rec toSequenceReversed (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
+  | Empty => Sequence.empty
+  | Leaf k v => Sequence.return (k, v)
+  | Node _ left k v right => Sequence.concat [
+      Sequence.defer(fun () => toSequenceReversed right),
+      Sequence.return (k, v),
+      Sequence.defer(fun () => toSequenceReversed left),
     ]
 };
 
@@ -248,12 +248,12 @@ let rec trySearch (predicate: 'k => Ordering.t) (tree: t 'k 'v): (option ('k, 'v
       else Some (k, v)
 };
 
-let rec values (tree: t 'k 'v): (Iterable.t 'v) => switch tree {
-  | Empty => Iterable.empty
-  | Leaf _ v => Iterable.return v
-  | Node _ left _ v right => Iterable.concat [
+let rec values (tree: t 'k 'v): (Iterator.t 'v) => switch tree {
+  | Empty => Iterator.empty
+  | Leaf _ v => Iterator.return v
+  | Node _ left _ v right => Iterator.concat [
       values left,
-      Iterable.return v,
+      Iterator.return v,
       values right,
     ]
 };

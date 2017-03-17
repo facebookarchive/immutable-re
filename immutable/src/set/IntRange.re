@@ -112,17 +112,17 @@ let some (f: int => bool) ({ count, start }: t): bool => {
   recurse f start count;
 };
 
-let toSeq ({ count, start }: t): (Seq.t int) => {
+let toSequence ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
-    if (count == 0) Seq.Completed
-    else Seq.Next start (recurse (start + 1) (count - 1));
+    if (count == 0) Sequence.Completed
+    else Sequence.Next start (recurse (start + 1) (count - 1));
   recurse start count
 };
 
-let toSeqReversed ({ count, start }: t): (Seq.t int) => {
+let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
-    if (count == 0) Seq.Completed
-    else Seq.Next start (recurse (start - 1) (count - 1));
+    if (count == 0) Sequence.Completed
+    else Sequence.Next start (recurse (start - 1) (count - 1));
   recurse (start + count - 1) count
 };
 
@@ -135,23 +135,23 @@ let tryFind (f: int => bool) ({ count, start }: t): (option int) => {
   recurse f start count;
 };
 
-let toIterable (set: t): (Iterable.t int) =>
-  if (isEmpty set) Iterable.empty
+let toIterator (set: t): (Iterator.t int) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
 
-let toIterableReversed (set: t): (Iterable.t int) =>
-  if (isEmpty set) Iterable.empty
+let toIteratorReversed (set: t): (Iterator.t int) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc set };
 
-let toKeyedIterable (set: t): (KeyedIterable.t int int) =>
-  if (isEmpty set) KeyedIterable.empty
+let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
+  if (isEmpty set) KeyedIterator.empty
   else { reduce: fun f acc => set |> reduce
     (fun acc next => f acc next next)
     acc
   };
 
-let toKeyedIterableReversed (set: t): (KeyedIterable.t int int) =>
-  if (isEmpty set) KeyedIterable.empty
+let toKeyedIteratorReversed (set: t): (KeyedIterator.t int int) =>
+  if (isEmpty set) KeyedIterator.empty
   else { reduce: fun f acc => set |> reduceRight
     (fun acc next => f acc next next)
     acc
@@ -166,7 +166,7 @@ let toSet (set: t): (ImmSet.t int) => {
   none: fun f => set |> none f,
   reduce: fun f acc => set |> reduce f acc,
   some: fun f => set |> some f,
-  toSeq: toSeq set,
+  toSequence: toSequence set,
   tryFind: fun f => set |> tryFind f,
 };
 

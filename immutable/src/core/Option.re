@@ -133,8 +133,8 @@ let some (f: 'a => bool) (opt: option 'a): bool => switch opt {
   | _ => false
 };
 
-let toIterable (opt: option 'a): (Iterable.t 'a) =>
-  if (isEmpty opt) Iterable.empty
+let toIterator (opt: option 'a): (Iterator.t 'a) =>
+  if (isEmpty opt) Iterator.empty
   else {
     reduce: fun f acc => reduce f acc opt
   };

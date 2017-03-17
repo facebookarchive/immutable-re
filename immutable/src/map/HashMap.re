@@ -300,12 +300,12 @@ let module BitmapTrieMap = {
     | Empty => false
   };
 
-  let rec toSeq (map: t 'k 'v): (Seq.t ('k, 'v)) => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
-    | ComparatorCollision _ entryMap => AVLTreeMap.toSeq entryMap
-    | EqualityCollision _ entryMap => EqualityMap.toSeq entryMap;
-    | Entry _ entryKey entryValue => Seq.return (entryKey, entryValue);
-    | Empty => Seq.empty;
+  let rec toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
+    | ComparatorCollision _ entryMap => AVLTreeMap.toSequence entryMap
+    | EqualityCollision _ entryMap => EqualityMap.toSequence entryMap;
+    | Entry _ entryKey entryValue => Sequence.return (entryKey, entryValue);
+    | Empty => Sequence.empty;
   };
 
   let rec tryFind (f: 'k => 'v => bool) (map: t 'k 'v): (option ('k, 'v)) => switch map {
@@ -351,12 +351,12 @@ let module BitmapTrieMap = {
     | Empty => None;
   };
 
-  let rec values (map: t 'k 'v): (Iterable.t 'v) => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterable |> Iterable.flatMap values
+  let rec values (map: t 'k 'v): (Iterator.t 'v) => switch map {
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
     | ComparatorCollision _ entryMap => AVLTreeMap.values entryMap
     | EqualityCollision _ entryMap => EqualityMap.values entryMap;
-    | Entry _ _ entryValue => Iterable.return entryValue;
-    | Empty => Iterable.empty;
+    | Entry _ _ entryValue => Iterator.return entryValue;
+    | Empty => Iterator.empty;
   };
 };
 
@@ -452,22 +452,22 @@ let removeAll ({ strategy }: t 'k 'v): (t 'k 'v) =>
 let some (f: 'k => 'v => bool) ({ root }: t 'k 'v): bool =>
   root |> BitmapTrieMap.some f;
 
-let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
-  if (isEmpty map) Iterable.empty
+let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
+  if (isEmpty map) Iterator.empty
   else {
     reduce: fun f acc => map |> reduce
       (fun acc k v => f acc (k, v))
       acc
   };
 
-let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
-  if (isEmpty map) KeyedIterable.empty
+let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
+  if (isEmpty map) KeyedIterator.empty
   else {
     reduce: fun f acc => map |> reduce f acc
   };
 
-let toSeq ({ root }: t 'k 'v): (Seq.t ('k, 'v)) =>
-  root |> BitmapTrieMap.toSeq;
+let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
+  root |> BitmapTrieMap.toSequence;
 
 let tryFind (f: 'k => 'v => bool) ({ root }: t 'k 'v): (option ('k, 'v)) =>
   root |> BitmapTrieMap.tryFind f;
@@ -480,7 +480,7 @@ let tryGet (key: 'k) ({ strategy, root }: t 'k 'v): (option 'v) => {
   root |> BitmapTrieMap.tryGet strategy 0 hash key;
 };
 
-let values ({ root }: t 'k 'v): (Iterable.t 'v) =>
+let values ({ root }: t 'k 'v): (Iterator.t 'v) =>
   root |> BitmapTrieMap.values;
 
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
@@ -494,7 +494,7 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   none: fun f => none f map,
   reduce: fun f acc => map |> reduce f acc,
   some: fun f => map |> some f,
-  toSeq: (toSeq map),
+  toSequence: (toSequence map),
   tryFind: fun f => tryFind f map,
   tryGet: fun i => tryGet i map,
   values: (values map),
@@ -504,11 +504,11 @@ let equalsWith
     (valueEquals: Equality.t 'v)
     ({ strategy } as this: t 'k 'v)
     (that: t 'k 'v): bool =>
-  Seq.equalsWith (fun (k1, v1) (k2, v2) =>
+  Sequence.equalsWith (fun (k1, v1) (k2, v2) =>
     if (k1 === k2) true
     else if (HashStrategy.equals strategy k1 k2) (valueEquals v1 v2)
     else false
-  ) (toSeq this) (toSeq that);
+  ) (toSequence this) (toSequence that);
 
 let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
   equalsWith Equality.structural this that;
@@ -592,8 +592,8 @@ let module TransientHashMap = {
   let put (key: 'k) (value: 'v) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> alter key (Functions.return @@ Option.return @@ value);
 
-  let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
-    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
+  let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+    iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) map;
 
   let remove (key: 'k) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> alter key Functions.alwaysNone;
@@ -616,13 +616,13 @@ let map (f: 'k => 'a => 'b) ({ strategy } as map: t 'k 'a): (t 'k 'b) => map
   |> reduce (fun acc k v => acc |> TransientHashMap.put k (f k v)) (emptyWith strategy |> mutate)
   |> TransientHashMap.persist;
 
-let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
 
-let fromWith (strategy: HashStrategy.t 'k) (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+let fromWith (strategy: HashStrategy.t 'k) (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
   emptyWith strategy |> putAll iter;
 
-let from (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+let from (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
   fromWith (HashStrategy.structuralCompare) iter;
 
 let merge
@@ -630,7 +630,7 @@ let merge
     (next: t 'k 'v)
     (map: t 'k 'vAcc): (t 'k 'vAcc) =>
   ImmSet.union (keys map) (keys next)
-    |> Iterable.reduce (
+    |> Iterator.reduce (
         fun acc key => {
           let result = f key (map |> tryGet key) (next |> tryGet key);
           switch result {

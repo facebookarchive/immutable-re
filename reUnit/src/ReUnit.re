@@ -22,16 +22,16 @@ let module Test = {
   let it (label: string) (f: unit => unit): t =>
     It label f;
 
-  let toSeq (test: t): (Seq.t (string, unit => unit)) => {
-    let rec toSeqImpl (context: string) (test: t): (Seq.t (string, unit => unit)) => switch test {
+  let toSequence (test: t): (Sequence.t (string, unit => unit)) => {
+    let rec toSequenceImpl (context: string) (test: t): (Sequence.t (string, unit => unit)) => switch test {
       | Describe label tests =>
           let label = context ^ "[" ^ label ^ "]";
-          tests |> List.toSeq |> Seq.flatMap (toSeqImpl label)
+          tests |> List.toSequence |> Sequence.flatMap (toSequenceImpl label)
       | It label f =>
           let label = context ^ ", (" ^ label ^ ")";
-          Seq.return (label, f)
+          Sequence.return (label, f)
     };
-    toSeqImpl "" test
+    toSequenceImpl "" test
   };
 };
 
@@ -69,8 +69,8 @@ let module Expect = {
   let return = expect;
 
   /* FIXME: this is so broken */
-  let stringOfSeq (toString: 'a => string) (seq: Seq.t 'a): string =>
-    "["  ^ (seq |> Seq.reduce
+  let stringOfSequence (toString: 'a => string) (seq: Sequence.t 'a): string =>
+    "["  ^ (seq |> Sequence.reduce
       (fun acc next => acc ^ ", " ^ (toString next))
       ""
     ) ^ "]";
@@ -92,24 +92,24 @@ let module Expect = {
   let toBeEqualTo (toString: 'a => string) =>
    toBeEqualToWith Equality.structural toString;
 
-  let toBeEqualToSeqWith
+  let toBeEqualToSequenceWith
       (equals: Equality.t 'a)
       (toString: 'a => string) =>
-    toBeEqualToWith (Seq.equalsWith equals) (stringOfSeq toString);
+    toBeEqualToWith (Sequence.equalsWith equals) (stringOfSequence toString);
 
-  let toBeEqualToSeq (toString: 'a => string) =>
-    toBeEqualToWith Seq.equals (stringOfSeq toString);
+  let toBeEqualToSequence (toString: 'a => string) =>
+    toBeEqualToWith Sequence.equals (stringOfSequence toString);
 
-  let toBeEqualToSeqOfInt (seq: Seq.t int) (expect: t (Seq.t int)) =>
-    toBeEqualToSeq string_of_int seq expect;
+  let toBeEqualToSequenceOfInt (seq: Sequence.t int) (expect: t (Sequence.t int)) =>
+    toBeEqualToSequence string_of_int seq expect;
 
-  let toBeEqualToSeqOfString (seq: Seq.t string) (expect: t (Seq.t string)) =>
-    toBeEqualToSeq identity seq expect;
+  let toBeEqualToSequenceOfString (seq: Sequence.t string) (expect: t (Sequence.t string)) =>
+    toBeEqualToSequence identity seq expect;
 
-  let toBeEqualToEmptySeq (toString: 'a => string) =>
-    toBeEqualToSeq toString Seq.empty;
+  let toBeEqualToEmptySequence (toString: 'a => string) =>
+    toBeEqualToSequence toString Sequence.empty;
 
-  let toBeEqualToEmptySeqOfString = toBeEqualToEmptySeq identity;
+  let toBeEqualToEmptySequenceOfString = toBeEqualToEmptySequence identity;
 
   let toBeEqualToFalse = toBeEqualTo string_of_bool false;
 
@@ -162,9 +162,9 @@ let run (tests: Test.t): unit => {
   };
 
   let (total, success) = tests
-    |> Test.toSeq
-    |> Seq.map execute
-    |> Seq.reduce
+    |> Test.toSequence
+    |> Sequence.map execute
+    |> Sequence.reduce
       (fun (total, success) result => (total + 1, success + result))
       (0, 0);
 

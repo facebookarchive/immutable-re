@@ -61,16 +61,16 @@ let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => sw
       nodes |> CopyOnWriteArray.reduceRight reducer acc
 };
 
-let rec toSeq (trie: t 'a): (Seq.t 'a) => switch trie {
-  | Empty => Seq.empty
-  | Leaf _ values => values |> CopyOnWriteArray.toSeq
-  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
+let rec toSequence (trie: t 'a): (Sequence.t 'a) => switch trie {
+  | Empty => Sequence.empty
+  | Leaf _ values => values |> CopyOnWriteArray.toSequence
+  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
 };
 
-let rec toSeqReversed (trie: t 'a): (Seq.t 'a) => switch trie {
-  | Empty => Seq.empty
-  | Leaf _ values => values |> CopyOnWriteArray.toSeqReversed
-  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSeqReversed |> Seq.flatMap toSeqReversed
+let rec toSequenceReversed (trie: t 'a): (Sequence.t 'a) => switch trie {
+  | Empty => Sequence.empty
+  | Leaf _ values => values |> CopyOnWriteArray.toSequenceReversed
+  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceReversed |> Sequence.flatMap toSequenceReversed
 };
 
 let rec tryFind (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {

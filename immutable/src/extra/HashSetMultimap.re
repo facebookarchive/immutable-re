@@ -98,7 +98,7 @@ let put
 
 let putAllValues
     (key: 'k)
-    (values: Iterable.t 'v)
+    (values: Iterator.t 'v)
     ({ count, map, valueStrategy } as multimap: t 'k 'v): (t 'k 'v) => {
   let increment = ref 0;
   let newMap = map |> HashMap.alter key (fun oldSet => switch oldSet {
@@ -144,9 +144,9 @@ let some (f: 'k => 'v => bool) ({ map }: t 'k 'v): bool => {
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: t 'k 'v): (Seq.t ('k, 'v)) =>
-  map |> HashMap.toSeq |> Seq.flatMap (
-    fun (k, set) => set |> HashSet.toSeq |> Seq.map (Pair.create k)
+let toSequence ({ map }: t 'k 'v): (Sequence.t ('k, 'v)) =>
+  map |> HashMap.toSequence |> Sequence.flatMap (
+    fun (k, set) => set |> HashSet.toSequence |> Sequence.map (Pair.create k)
   );
 
 let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) => {
@@ -161,8 +161,8 @@ let tryFind (f: 'k => 'v => bool) ({ map }: t 'k 'v): (option ('k, 'v)) => {
 let find (f: 'k => 'v => bool) (multimap: t 'k 'v): ('k, 'v) =>
   multimap |> tryFind f |> Option.first;
 
-let values ({ map }: t 'k 'v): (Iterable.t 'v) =>
-  map |> HashMap.values |> Iterable.flatMap HashSet.toIterable;
+let values ({ map }: t 'k 'v): (Iterator.t 'v) =>
+  map |> HashMap.values |> Iterator.flatMap HashSet.toIterator;
 
 let toSet
     ({ count } as multimap: t 'k 'v): (ImmSet.t ('k, 'v)) => {
@@ -174,6 +174,6 @@ let toSet
   none: fun f => multimap |> none (fun k v => f (k, v)),
   reduce: fun f acc => multimap |> reduce (fun acc k v => f acc (k, v)) acc,
   some: fun f => multimap |> some (fun k v => f (k, v)),
-  toSeq: (toSeq multimap),
+  toSequence: (toSequence multimap),
   tryFind: fun f => multimap |> tryFind (fun k v => f (k, v)),
 };

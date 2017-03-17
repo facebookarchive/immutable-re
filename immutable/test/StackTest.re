@@ -40,7 +40,7 @@ let test = describe "Stack" (StackTester.test 10 (module {
   let return = Stack.return;
   let reverse = Stack.reverse;
   let some = Stack.some;
-  let toSeq = Stack.toSeq;
+  let toSequence = Stack.toSequence;
   let tryFind = Stack.tryFind;
   let tryFirst = Stack.tryFirst;
 }));

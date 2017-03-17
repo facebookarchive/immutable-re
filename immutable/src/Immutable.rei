@@ -115,7 +115,7 @@ let module HashStrategy: {
   /** A HashStrategy using structural hashing and structural equality. */
 };
 
-let module Iterable: {
+let module Iterator: {
   type t 'a;
 
   let concat: (list (t 'a)) => (t 'a);
@@ -134,32 +134,50 @@ let module Iterable: {
   let return: 'a => (t 'a);
 };
 
-let module Seq: {
+let module KeyedIterator: {
+  type t 'k 'v;
+
+  let count: (t 'k 'v) => int;
+  let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
+  let empty: (t 'k 'v);
+  let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+  let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+  let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
+  let hash: (Hash.t (t 'k 'v));
+  let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
+  let keys: (t 'k 'v) => (Iterator.t 'k);
+  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k ' b);
+  let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
+  let values: (t 'k 'v) => Iterator.t 'v;
+};
+
+let module Sequence: {
   /** Functional sequence iterators. */
 
   type t 'a;
-  /** The Seq type. */
+  /** The Sequence type. */
 
   let buffer: int => int => (t 'a) => (t (list 'a));
-  /** [buffer count skip seq] returns a Seq that collects elements from [seq]
+  /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
    *  into buffer lists of size [count], skipping [skip] number of elements in between
    *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
    *  and elements are dropped if [seq] completes before filling the last buffer.
    */
 
   let compare: (Comparator.t (t 'a));
-  /** A comparator that compares two Seq instances using structural comparison to compare elements. */
+  /** A comparator that compares two Sequence instances using structural comparison to compare elements. */
 
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
-  /** [compareWith comparator] returns a Comparator that compares two Seq instances
+  /** [compareWith comparator] returns a Comparator that compares two Sequence instances
    *  using [comparator] to compare elements.
    */
 
   let concat: (list (t 'a)) => (t 'a);
-  /** [concat seqs] returns a Seq that concatenates all Seq's in the list [seqs]. */
+  /** [concat seqs] returns a Sequence that concatenates all Sequence's in the list [seqs]. */
 
   let concatAll: (t (t 'a)) => (t 'a);
-  /** [concatAll seq] returns a Seq that is the concatenation of all the Seqs produced by [seq]. */
+  /** [concatAll seq] returns a Sequence that is the concatenation of all the Sequences produced by [seq]. */
 
   let concatMap: ('a => (t 'b)) => (t 'a) => (t 'b);
   /** An alias for [flatMap] */
@@ -185,23 +203,23 @@ let module Seq: {
    */
 
   let defer: (unit => t 'a) => (t 'a);
-  /** [defer f] returns a Seq that invokes the function [f] whenever the Seq is iterated. */
+  /** [defer f] returns a Sequence that invokes the function [f] whenever the Sequence is iterated. */
 
   let distinctUntilChanged: (t 'a) => (t 'a);
-  /** [distinctUntilChanged seq] returns a Seq that contains only
+  /** [distinctUntilChanged seq] returns a Sequence that contains only
    *  distinct contiguous elements from [seq] using structural equality.
    */
 
   let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
-  /** [distinctUntilChangedWith equals seq] returns a Seq that contains only
+  /** [distinctUntilChangedWith equals seq] returns a Sequence that contains only
    *  distinct contiguous elements from [seq] using [equals] to equate elements.
    */
 
   let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-  /** [doOnNext f seq] returns a Seq that invokes the function [f] on every element produced by [seq]. */
+  /** [doOnNext f seq] returns a Sequence that invokes the function [f] on every element produced by [seq]. */
 
   let empty: (t 'a);
-  /** The empty Seq. */
+  /** The empty Sequence. */
 
   let equals: (Equality.t (t 'a));
   /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
@@ -293,7 +311,7 @@ let module Seq: {
    */
 
   let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map f seq] returns a Seq whose elements are the result of applying [f] to each element in [seq]. */
+  /** [map f seq] returns a Sequence whose elements are the result of applying [f] to each element in [seq]. */
 
   let none: ('a => bool) => (t 'a) => bool;
   /** [none f seq] returns true if the predicate [f] returns false for every
@@ -310,22 +328,22 @@ let module Seq: {
    */
 
   let repeat: 'a => (t 'a);
-  /** [repeat value] returns a Seq that repeats [value] forever. */
+  /** [repeat value] returns a Sequence that repeats [value] forever. */
 
   let return: 'a => (t 'a);
-  /** [return value] returns a single element Seq containing [value]. */
+  /** [return value] returns a single element Sequence containing [value]. */
 
   let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
-  /** [scan f acc seq] returns a Seq of accumulated values resulting from the
+  /** [scan f acc seq] returns a Sequence of accumulated values resulting from the
    *  application of the accumulator function [f] to each element in [seq] with the
    *  specified seed value [acc].
    */
 
   let skip: int => (t 'a) => (t 'a);
-  /** [skip count seq] returns a Seq that skips the first [count] elements in [seq]. */
+  /** [skip count seq] returns a Sequence that skips the first [count] elements in [seq]. */
 
   let skipWhile: ('a => bool) => (t 'a) => (t 'a);
-  /** [skipWhile f seq] returns a Seq that applies the predicate [f] to each element in [seq],
+  /** [skipWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
    *  skipping elements until [f] first returns false.
    */
 
@@ -340,13 +358,13 @@ let module Seq: {
   /** [startWith value seq] returns a seq whose first elements is [value]. */
 
   let take: int => (t 'a) => (t 'a);
-  /** [take count seq] returns a Seq that includes the first [count] elements in [seq]. */
+  /** [take count seq] returns a Sequence that includes the first [count] elements in [seq]. */
 
   let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-  /** [takeWhile f seq] returns a Seq that applies the predicate [f] to each element in [seq],
+  /** [takeWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
    *  taking elements until [f] first returns false.  */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
@@ -373,52 +391,34 @@ let module Seq: {
    */
 
   let zip: (list (t 'a)) => (t (list 'a));
-  /** [zip seqs] merges a list of n Seqs into a Seq of lists with n values.
-   *  Elements are produce until any Seq in [seq] completes.
+  /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
+   *  Elements are produce until any Sequence in [seq] completes.
    */
 
   let zip2: (t 'a) => (t 'b) => (t ('a, 'b));
-  /** [zip2 first second] merges two Seqs into a Seq of tuples.
+  /** [zip2 first second] merges two Sequences into a Sequence of tuples.
    *  Elements are produce until either first or second complete.
    */
 
   let zip3: (t 'a) => (t 'b) => (t 'c) => (t ('a, 'b, 'c));
-  /** [zip3 first second third] merges two Seqs into a Seq of triples.
+  /** [zip3 first second third] merges two Sequences into a Sequence of triples.
    *  Elements are produce until either first, second, or third complete.
    */
 
   let zipLongest: (list (t 'a)) => (t (list (option 'a)));
-  /** [zip seqs] merges a list of n Seqs into a Seq of lists with n values.
-   *  Elements are produce until all Seqs in [seq] complete.
+  /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
+   *  Elements are produce until all Sequences in [seq] complete.
    */
 
   let zipLongest2: (t 'a) => (t 'b) => (t (option 'a, option 'b));
-  /** [zip2 first second] merges two Seqs into a Seq of tuples.
+  /** [zip2 first second] merges two Sequences into a Sequence of tuples.
    *  Elements are produce until both first and second complete.
    */
 
   let zipLongest3: (t 'a) => (t 'b) => (t 'c) => (t (option 'a, option 'b, option 'c));
-  /** [zip3 first second third] merges two Seq into a Seq of triples.
+  /** [zip3 first second third] merges two Sequence into a Sequence of triples.
    *  Elements are produce until first, second, and third all complete.
    */
-};
-
-let module KeyedIterable: {
-  type t 'k 'v;
-
-  let count: (t 'k 'v) => int;
-  let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
-  let empty: (t 'k 'v);
-  let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
-  let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
-  let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-  let hash: (Hash.t (t 'k 'v));
-  let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
-  let keys: (t 'k 'v) => (Iterable.t 'k);
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k ' b);
-  let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
-  let values: (t 'k 'v) => Iterable.t 'v;
 };
 
 let module rec Set: {
@@ -463,8 +463,8 @@ let module rec Set: {
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
 
-  let intersect: (t 'a) => (t 'a) => (Iterable.t 'a);
-  /** [intersect this that] returns an Iterable of unique elements
+  let intersect: (t 'a) => (t 'a) => (Iterator.t 'a);
+  /** [intersect this that] returns an Iterator of unique elements
    *  which occur in both [this] and [that].
    */
 
@@ -489,26 +489,26 @@ let module rec Set: {
    *  any element in [set], otherwise false. If [set] is empty, returns false.
    */
 
-  let subtract: (t 'a) => (t 'a) => (Iterable.t 'a);
-  /** [subtract this that] returns an Iterable of unique element
+  let subtract: (t 'a) => (t 'a) => (Iterator.t 'a);
+  /** [subtract this that] returns an Iterator of unique element
    *  which occur in [this] but not in [that].
    */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
-  let toKeyedIterable: (t 'a) => (KeyedIterable.t 'a 'a);
+  let toKeyedIterator: (t 'a) => (KeyedIterator.t 'a 'a);
 
   let toMap: (t 'a) => (Map.t 'a 'a);
   /** [toMap set] returns a Map view of [set] as a mapping of values to themselves. */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq set] returns a Seq of the values in [set]. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence set] returns a Sequence of the values in [set]. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [find f set] returns the first value for which the predicate [f] returns true or None. */
 
-  let union: (t 'a) => (t 'a) => (Iterable.t 'a);
-  /** [union this that] returns an Iterable of unique elements which occur in either [this] or [that]. */
+  let union: (t 'a) => (t 'a) => (Iterator.t 'a);
+  /** [union this that] returns an Iterator of unique elements which occur in either [this] or [that]. */
 }
 
 and Map: {
@@ -603,12 +603,12 @@ and Map: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
-  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
+  let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
 
-  let toKeyedIterable: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+  let toKeyedIterator: (t 'k 'v) => (KeyedIterator.t 'k 'v);
 
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+  /** [toSequence map] returns a Sequence of the key/value pairs in [map]. */
 
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
@@ -626,8 +626,8 @@ and Map: {
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'k 'v) => (Iterable.t 'v);
-  /** [values map] returns a Iterable of non-unique values in [map]. */
+  let values: (t 'k 'v) => (Iterator.t 'v);
+  /** [values map] returns a Iterator of non-unique values in [map]. */
 };
 
 let module IntRange: {
@@ -666,19 +666,19 @@ let module IntRange: {
 
   let some: (int => bool) => t => bool;
 
-  let toIterable: t => (Iterable.t int);
+  let toIterator: t => (Iterator.t int);
 
-  let toIterableReversed: t => (Iterable.t int);
+  let toIteratorReversed: t => (Iterator.t int);
 
-  let toKeyedIterable: t => (KeyedIterable.t int int);
+  let toKeyedIterator: t => (KeyedIterator.t int int);
 
-  let toKeyedIterableReversed: t => (KeyedIterable.t int int);
+  let toKeyedIteratorReversed: t => (KeyedIterator.t int int);
 
   let toMap: t => (Map.t int int);
 
-  let toSeq: t => (Seq.t int);
+  let toSequence: t => (Sequence.t int);
 
-  let toSeqReversed: t => (Seq.t int);
+  let toSequenceReversed: t => (Sequence.t int);
 
   let toSet: t => (Set.t int);
 
@@ -702,7 +702,7 @@ let module CopyOnWriteArray: {
    *  Complexity: O(N)
    */
 
-  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter cow] returns a new CopyOnWriteArray with the values in [iter] prepended.
    *
    * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
@@ -714,7 +714,7 @@ let module CopyOnWriteArray: {
    *  Complexity: O(N)
    */
 
-  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addLastAll iter cow] returns a new CopyOnWriteArray with the values in [iter] appended.
    *
    * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
@@ -807,13 +807,13 @@ let module CopyOnWriteArray: {
    *  invoking [f] on each index/element pair.
    */
 
-  let from: (Iterable.t 'a) => (t 'a);
+  let from: (Iterator.t 'a) => (t 'a);
   /** [from iter] returns a new CopyOnWriteArray containing the values in [iter].
    *
    * Complexity: O(really expensive). don't use this, its for API equivalence to Vector.
    */
 
-  let fromReversed: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterator.t 'a) => (t 'a);
   /** [fromReverse iter] returns a new CopyOnWriteArray containing the values in [iter]
    *  in reverse order.
    *
@@ -974,22 +974,22 @@ let module CopyOnWriteArray: {
   let take: int => (t 'a) => (t 'a);
   /** [take count cow] returns a new CopyOnWriteArray that includes the first [count] elements in [cow]. */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
-  let toIterableReversed: (t 'a) => (Iterable.t 'a);
+  let toIteratorReversed: (t 'a) => (Iterator.t 'a);
 
-  let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+  let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
 
-  let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
+  let toKeyedIteratorReversed: (t 'a) => (KeyedIterator.t int 'a);
 
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap cow] returns a Map view of [cow] */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq cow] returns a Seq of the elements in [cow] in order. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence cow] returns a Sequence of the elements in [cow] in order. */
 
-  let toSeqReversed: (t 'a) => (Seq.t 'a);
-  /** [toSeqReversed cow] returns a Seq of the elements in [cow] in reverse order. */
+  let toSequenceReversed: (t 'a) => (Sequence.t 'a);
+  /** [toSequenceReversed cow] returns a Sequence of the elements in [cow] in reverse order. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f cow] returns the first value for which the predicate [f] returns true or None. */
@@ -1052,7 +1052,7 @@ let module rec Deque: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter deque] returns a new Deque with the values in [iter] prepended. */
 
   let addLast: 'a => (t 'a) => (t 'a);
@@ -1061,7 +1061,7 @@ let module rec Deque: {
    *  Complexity: O(1)
    */
 
-  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addLastAll iter deque] returns a new Deque with the values in [iter] appended. */
 
   let compare: (Comparator.t (t 'a));
@@ -1127,13 +1127,13 @@ let module rec Deque: {
    *  invoking [f] for each element.
    */
 
-  let from: (Iterable.t 'a) => (t 'a);
+  let from: (Iterator.t 'a) => (t 'a);
   /** [from iter] returns a new Deque containing the values in [iter].
    *
    * Complexity: O(N) the number of elements in [iter].
    */
 
-  let fromReversed: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterator.t 'a) => (t 'a);
   /** [fromReverse iter] returns a new Deque containing the values in [iter]
    *  in reverse order.
    *
@@ -1216,15 +1216,15 @@ let module rec Deque: {
    *  If [deque] is empty, returns false.
    */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
-  let toIterableReversed: (t 'a) => (Iterable.t 'a);
+  let toIteratorReversed: (t 'a) => (Iterator.t 'a);
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq deque] returns a Seq of the elements in [deque] in order. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence deque] returns a Sequence of the elements in [deque] in order. */
 
-  let toSeqReversed: (t 'a) => (Seq.t 'a);
-  /** [toSeqReversed deque] returns a Seq of the elements in [deque] in reverse order. */
+  let toSequenceReversed: (t 'a) => (Sequence.t 'a);
+  /** [toSequenceReversed deque] returns a Sequence of the elements in [deque] in reverse order. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f deque] returns the first value for which the predicate [f] returns true or None. */
@@ -1357,13 +1357,13 @@ let module rec HashBiMap: {
    *  If no value is found, an exception is thrown.
    */
 
-  let from: (Iterable.t ('k, 'v)) => (t 'k 'v);
+  let from: (Iterator.t ('k, 'v)) => (t 'k 'v);
   /** [from iter] returns a HashBiMap including the key/value pairs in [iter]. If
    *  [iter] includes duplicate keys or values, the last key/value pair with the duplicate
    *  key or value is added to the HashBiMap.
    */
 
-  let fromWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (Iterable.t ('k, 'v)) => (t 'k 'v);
+  let fromWith: (HashStrategy.t 'k) => (HashStrategy.t 'v) => (Iterator.t ('k, 'v)) => (t 'k 'v);
   /** [fromWith keyStrategy valueStrategy iter] returns a HashBiMap including the key/value
    *  pairs in [iter] using the provided key and value [HashStrategy]'s. If [iter] includes duplicate
    *  keys or values, the last key/value pair with the duplicate key or value is added to the HashBiMap.
@@ -1414,7 +1414,7 @@ let module rec HashBiMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
   /** [putAll iter bimap] returns a new HashBiMap including the key/value pairs in [iter].
    *  Key value pairs in [iter] replace existing mappings in [bimap].
    */
@@ -1450,8 +1450,8 @@ let module rec HashBiMap: {
   let toMap: (t 'k 'v) => (Map.t 'k 'v);
   /** [toMap bimap] returns a Map view of [bimap]. */
 
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq bimap] returns a Seq of the key/value pairs in [bimap]. */
+  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+  /** [toSequence bimap] returns a Sequence of the key/value pairs in [bimap]. */
 
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   /** [tryFind f bimap] returns the first key/value pair for which the predicate [f] returns true.
@@ -1516,7 +1516,7 @@ and TransientHashBiMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
   /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
    *  Key value pairs in [iter] replace existing mappings in [transient].
    */
@@ -1613,12 +1613,12 @@ let module rec HashMap: {
   let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let from: (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  let from: (KeyedIterator.t 'k 'v) => (t 'k 'v);
   /** [from iter] returns a HashMap including the key/value pairs in [seq]
    *  using the structuralCompare HashStrategy.
    */
 
-  let fromWith: (HashStrategy.t 'k) => (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  let fromWith: (HashStrategy.t 'k) => (KeyedIterator.t 'k 'v) => (t 'k 'v);
   /** [fromWith strategy iter] returns a HashMap including the key/value pairs in [seq]
    *  using the provided HashStrategy [strategy].
    */
@@ -1669,7 +1669,7 @@ let module rec HashMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
   /** [putAll iter map] returns a new HashMap containing the key/value pairs in [iter].
    *
    *  Complexity: O(log32 N), effectively O(1)
@@ -1697,15 +1697,15 @@ let module rec HashMap: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
-  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
+  let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
 
-  let toKeyedIterable: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+  let toKeyedIterator: (t 'k 'v) => (KeyedIterator.t 'k 'v);
 
   let toMap: (t 'k 'v) => (Map.t 'k 'v);
   /** [toMap map] returns a Map view of [map]. */
 
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+  /** [toSequence map] returns a Sequence of the key/value pairs in [map]. */
 
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
@@ -1723,8 +1723,8 @@ let module rec HashMap: {
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'k 'v) => (Iterable.t 'v);
-  /** [values map] returns a Seq of non-unique values in [map]. */
+  let values: (t 'k 'v) => (Iterator.t 'v);
+  /** [values map] returns a Sequence of non-unique values in [map]. */
 }
 
 and TransientHashMap: {
@@ -1773,7 +1773,7 @@ and TransientHashMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
   /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
    *  Key value pairs in [iter] replace existing mappings in [transient].
    */
@@ -1811,7 +1811,7 @@ let module rec HashMultiset: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addAll iter set] returns a new HashMultiset with all elements in [iter] added.
    *
    *  Complexity: O(N log32 N)
@@ -1853,10 +1853,10 @@ let module rec HashMultiset: {
   let forEach: ('a => int => unit) => (t 'a) => unit;
   /** [forEach f set] iterates through [set], invoking [f] for each value/count pair. */
 
-  let from: (Iterable.t 'a) => (t 'a);
+  let from: (Iterator.t 'a) => (t 'a);
   /** [fromIter seq] returns an HashMultiset including the values in [iter]. */
 
-  let fromWith: (HashStrategy.t 'a) => (Iterable.t 'a) => (t 'a);
+  let fromWith: (HashStrategy.t 'a) => (Iterator.t 'a) => (t 'a);
   /** [from iter] returns an HashMultiset including the values in [iter]. */
 
   let get: 'a => (t 'a) => int;
@@ -1914,9 +1914,9 @@ let module rec HashMultiset: {
   let toMap: (t 'a) => (Map.t 'a int);
   /** [toMap set] returns a Map view of [set] mapping values to their count */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq set] returns a Seq of the values in [set]. If the HashMultiset contains more than
-   *  one instance of a value, it will occur in the Seq multiple times.
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence set] returns a Sequence of the values in [set]. If the HashMultiset contains more than
+   *  one instance of a value, it will occur in the Sequence multiple times.
    */
 
   let tryFind: ('a => int => bool) => (t 'a) => (option ('a, int));
@@ -1943,7 +1943,7 @@ and TransientHashMultiset: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addAll iter transient] adds all elements in [iter] to [transient].
    *
    *  Complexity: O(N log32 N)
@@ -2017,7 +2017,7 @@ let module rec HashSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addAll iter set] returns a new HashSet with all elements in [iter] added.
    *
    *  Complexity: O(N log32 N)
@@ -2059,10 +2059,10 @@ let module rec HashSet: {
   let forEach: ('a => unit) => (t 'a) => unit;
   /** [forEach f set] iterates through [set], invoking [f] for each element. */
 
-  let from: (Iterable.t 'a) => (t 'a);
+  let from: (Iterator.t 'a) => (t 'a);
   /** [from iter] returns an HashSet including the values in [iter]. */
 
-  let fromWith: (HashStrategy.t 'a)  => (Iterable.t 'a) => (t 'a);
+  let fromWith: (HashStrategy.t 'a)  => (Iterator.t 'a) => (t 'a);
   /** [from iter] returns an HashSet including the values in [iter]. */
 
   let hash: (Hash.t (t 'a));
@@ -2120,15 +2120,15 @@ let module rec HashSet: {
    *  Complexity: O(N) currently, ideally O(log32 N) if [this] and [that] use the same HashStrategy.
    */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
-  let toKeyedIterable: (t 'a) => (KeyedIterable.t 'a 'a);
+  let toKeyedIterator: (t 'a) => (KeyedIterator.t 'a 'a);
 
   let toMap: (t 'a) => (Map.t 'a 'a);
   /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq set] returns a Seq of the values in [set]. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence set] returns a Sequence of the values in [set]. */
 
   let toSet: (t 'a) => (Set.t 'a);
   /** [toSet set] returns a Set view of [set] */
@@ -2159,7 +2159,7 @@ and TransientHashSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addAll iter transient] adds all elements in [iter] to [transient].
    *
    *  Complexity: O(N log32 N)
@@ -2226,15 +2226,15 @@ let module HashSetMultimap: {
   let keys: (t 'k 'v) => (Set.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  let putAllValues: 'k => (Iterable.t 'v) => (t 'k 'v) => (t 'k 'v);
+  let putAllValues: 'k => (Iterator.t 'v) => (t 'k 'v) => (t 'k 'v);
   let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  let values: (t 'k 'v) => (Iterable.t 'v);
+  let values: (t 'k 'v) => (Iterator.t 'v);
 };
 */
 let module rec IntMap: {
@@ -2296,7 +2296,7 @@ let module rec IntMap: {
   let forEach: (int => 'a => unit) => (t 'a) => unit;
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
-  let from: (KeyedIterable.t int 'a) => (t 'a);
+  let from: (KeyedIterator.t int 'a) => (t 'a);
   /** [from iter] returns an IntMap including the key/value pairs in [iter]. */
 
   let get: int => (t 'a) => 'a;
@@ -2345,7 +2345,7 @@ let module rec IntMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (KeyedIterable.t int 'a) => (t 'a) => (t 'a);
+  let putAll: (KeyedIterator.t int 'a) => (t 'a) => (t 'a);
   /** [putAll iter map] returns a new IntMap containing the key/value pairs in [iter].
    *
    *  Complexity: O(log32 N), effectively O(1)
@@ -2378,15 +2378,15 @@ let module rec IntMap: {
    *  to equate values.
    */
 
-  let toIterable: (t 'a) => (Iterable.t (int, 'a));
+  let toIterator: (t 'a) => (Iterator.t (int, 'a));
 
-  let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+  let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
 
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap map] returns a Map view of [map]. */
 
-  let toSeq: (t 'a) => (Seq.t ((int, 'a)));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+  let toSequence: (t 'a) => (Sequence.t ((int, 'a)));
+  /** [toSequence map] returns a Sequence of the key/value pairs in [map]. */
 
   let toSetWith: (Equality.t 'a) => (t 'a) => (Set.t (int, 'a));
   /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
@@ -2394,13 +2394,13 @@ let module rec IntMap: {
    */
 
   let tryFind: (int => 'a => bool) => (t 'a) => (option (int, 'a));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+  /** [toSequence map] returns a Sequence of the key/value pairs in [map]. */
 
   let tryGet: int => (t 'a) => (option 'a);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'a) => (Iterable.t 'a);
-  /** [values map] returns a Seq of non-unique values in [map]. */
+  let values: (t 'a) => (Iterator.t 'a);
+  /** [values map] returns a Sequence of non-unique values in [map]. */
 }
 
 and TransientIntMap: {
@@ -2438,7 +2438,7 @@ and TransientIntMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
-  let putAll: (KeyedIterable.t int 'a) => (t 'a) => (t 'a);
+  let putAll: (KeyedIterator.t int 'a) => (t 'a) => (t 'a);
   /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
    *  Key value pairs in [iter] replace existing mappings in [transient].
    */
@@ -2474,7 +2474,7 @@ let module rec IntSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Iterable.t int) => t => t;
+  let addAll: (Iterator.t int) => t => t;
   /** [addAll iter set] returns a new IntSet with all elements in [iter] added.
    *
    *  Complexity: O(N log32 N)
@@ -2511,7 +2511,7 @@ let module rec IntSet: {
   let forEach: (int => unit) => t => unit;
   /** [forEach f set] iterates through [set], invoking [f] for each element until [set] completes. */
 
-  let from: (Iterable.t int) => t;
+  let from: (Iterator.t int) => t;
   /** [from iter] returns an IntSet including the values in [iter]. */
 
   let hash: (Hash.t t);
@@ -2569,15 +2569,15 @@ let module rec IntSet: {
    *  Complexity: O(N) currently, ideally O(log32 N).
    */
 
-  let toIterable: t => (Iterable.t int);
+  let toIterator: t => (Iterator.t int);
 
-  let toKeyedIterable: t => (KeyedIterable.t int int);
+  let toKeyedIterator: t => (KeyedIterator.t int int);
 
   let toMap: t => (Map.t int int);
   /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
-  let toSeq: t => (Seq.t int);
-  /** [toSeq set] returns a Seq of the values in [set]. */
+  let toSequence: t => (Sequence.t int);
+  /** [toSequence set] returns a Sequence of the values in [set]. */
 
   let toSet: t => (Set.t int);
   /** [toSet set] returns a Set view of [set] */
@@ -2608,7 +2608,7 @@ and TransientIntSet: {
    *  Complexity: O(log32 N)
    */
 
-  let addAll: (Iterable.t int) => t => t;
+  let addAll: (Iterator.t int) => t => t;
   /** [addAll iter transient] adds all elements in [iter] to [transient].
    *
    *  Complexity: O(N log32 N)
@@ -2665,7 +2665,7 @@ let module List: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter list] returns a new List with the values in [iter] prepended. */
 
   let compare: (Comparator.t (t 'a));
@@ -2729,7 +2729,7 @@ let module List: {
   let forEach: ('a => unit) => (t 'a) => unit;
   /** [forEach f list] iterates through [list], invoking [f] for each element. */
 
-  let fromReversed: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterator.t 'a) => (t 'a);
   /** [fromReversed iter] returns a new List containing the values in [iter]
    *  in reverse order.
    *
@@ -2789,10 +2789,10 @@ let module List: {
    *  If [list] is empty, returns false.
    */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq list] returns a Seq of the elements in [list] in order. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence list] returns a Sequence of the elements in [list] in order. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f list] returns the first value for which the predicate [f] returns true or None. */
@@ -2910,7 +2910,7 @@ let module Option: {
    *  If [option] is empty, returns false.
    */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
   let toSet: (option 'a) => (Set.t 'a);
   /* [toSet option] returns a Set view of the option using structural equality equate values. */
@@ -2918,8 +2918,8 @@ let module Option: {
   let toSetWith: (Equality.t 'a) => (option 'a) => (Set.t 'a);
   /* [toSetWith equals option] returns a Set view of the option using [equals] equate values. */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /* [toSeq option] returns a Seq of the values in [option]. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /* [toSequence option] returns a Sequence of the values in [option]. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [find f option] returns the first value for which the predicate [f] returns true or None. */
@@ -3012,12 +3012,12 @@ let module SortedMap: {
   /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
 
-  let from: (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  let from: (KeyedIterator.t 'k 'v) => (t 'k 'v);
   /** [from iter] returns a SortedMap including the key/value pairs in [iter]
    *  using the structural comparison.
    */
 
-  let fromWith: (Comparator.t 'k) => (KeyedIterable.t 'k 'v) => (t 'k 'v);
+  let fromWith: (Comparator.t 'k) => (KeyedIterator.t 'k 'v) => (t 'k 'v);
   /** [fromWith comparator iter] returns a SortedMap including the key/value pairs in [iter]
    *  using the provided Comparator.
    */
@@ -3067,7 +3067,7 @@ let module SortedMap: {
    *  Complexity: O(log N)
    */
 
-  let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
   /** [putAll iter map] returns a new SortedMap containing the key/value pairs in [iter].
    *
    *  Complexity: O(log N)
@@ -3112,21 +3112,21 @@ let module SortedMap: {
    *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
    */
 
-  let toIterable: (t 'k 'v) => (Iterable.t ('k, 'v));
+  let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
 
-  let toIterableReversed: (t 'k 'v) => (Iterable.t ('k, 'v));
+  let toIteratorReversed: (t 'k 'v) => (Iterator.t ('k, 'v));
 
-  let toKeyedIterable: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+  let toKeyedIterator: (t 'k 'v) => (KeyedIterator.t 'k 'v);
 
-  let toKeyedIterableReversed: (t 'k 'v) => (KeyedIterable.t 'k 'v);
+  let toKeyedIteratorReversed: (t 'k 'v) => (KeyedIterator.t 'k 'v);
 
   let toMap: (t 'k 'v) => (Map.t 'k 'v);
   /** [toMap map] returns a Map view of [map]. */
 
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
-  /** [toSeq map] returns a Seq of the key/value pairs in [map]. */
+  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+  /** [toSequence map] returns a Sequence of the key/value pairs in [map]. */
 
-  let toSeqReversed: (t 'k 'v) => (Seq.t ('k, 'v));
+  let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
 
   let toSet: (t 'k 'v) => (Set.t ('k, 'v));
   /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
@@ -3150,8 +3150,8 @@ let module SortedMap: {
   let tryGet: 'k => (t 'k 'v) => (option 'v);
   /** [tryGet key map] returns the value associated with [key] or None */
 
-  let values: (t 'k 'v) => (Iterable.t 'v);
-  /** [values map] returns a Seq of non-unique values in [map]. */
+  let values: (t 'k 'v) => (Iterator.t 'v);
+  /** [values map] returns a Sequence of non-unique values in [map]. */
 };
 
 let module SortedSet: {
@@ -3166,7 +3166,7 @@ let module SortedSet: {
    *  Complexity: O(log N)
    */
 
-  let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addAll iter set] returns a new SortedSet with all elements in [iter] added.
    *
    *  Complexity: O(N log N)
@@ -3220,10 +3220,10 @@ let module SortedSet: {
   let forEach: ('a => unit) => (t 'a) => unit;
   /** [forEach f set] iterates through [set], invoking [f] for each element until [set] completes. */
 
-  let from: (Iterable.t 'a) => (t 'a);
+  let from: (Iterator.t 'a) => (t 'a);
   /** [from iter] returns a SortedSet including the values in [iter] using structural comparison. */
 
-  let fromWith: (Comparator.t 'a)  => (Iterable.t 'a) => (t 'a);
+  let fromWith: (Comparator.t 'a)  => (Iterator.t 'a) => (t 'a);
   /** [fromWith comparator iter] returns a SortedSet including the values in [iter]
    *  the provided [comparator] comparison function.
    */
@@ -3306,21 +3306,21 @@ let module SortedSet: {
    *  the same comparator (NOT IMPLEMENTED).
    */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
-  let toIterableReversed: (t 'a) => (Iterable.t 'a);
+  let toIteratorReversed: (t 'a) => (Iterator.t 'a);
 
-  let toKeyedIterable: (t 'a) => (KeyedIterable.t 'a 'a);
+  let toKeyedIterator: (t 'a) => (KeyedIterator.t 'a 'a);
 
-  let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t 'a 'a);
+  let toKeyedIteratorReversed: (t 'a) => (KeyedIterator.t 'a 'a);
 
   let toMap: (t 'a) => (Map.t 'a 'a);
   /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq set] returns a Seq of the values in [set]. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence set] returns a Sequence of the values in [set]. */
 
-  let toSeqReversed: (t 'a) => (Seq.t 'a);
+  let toSequenceReversed: (t 'a) => (Sequence.t 'a);
 
   let toSet: (t 'a) => (Set.t 'a);
   /** [toSet set] returns a Set view of [set] */
@@ -3361,7 +3361,7 @@ let module Stack: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
 
   let compare: (Comparator.t (t 'a));
@@ -3431,7 +3431,7 @@ let module Stack: {
    *  Complexity: O(N)
    */
 
-  let fromReversed: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterator.t 'a) => (t 'a);
   /** [from iter] returns a new Stack containing the values in [iter]
    *  in reverse order.
    */
@@ -3489,13 +3489,13 @@ let module Stack: {
    *  If [stack] is empty, returns false.
    */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
   let toList: (t 'a) => (list 'a);
   /** [toList stack] returns the underlying List backing the stack */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq stack] returns a Seq of the elements in [stack] in order. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence stack] returns a Sequence of the elements in [stack] in order. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f stack] returns the first value for which the predicate [f] returns true or None. */
@@ -3508,7 +3508,7 @@ let module StackMultimap: {
   type t 'k 'v;
 
   let add: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  let addAllValues: 'k => (Iterable.t 'v) => (t 'k 'v) => (t 'k 'v);
+  let addAllValues: 'k => (Iterator.t 'v) => (t 'k 'v) => (t 'k 'v);
   let contains: 'k => 'v => (t 'k 'v) => bool;
   let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
   let containsKey: 'k => (t 'k 'v) => bool;
@@ -3531,15 +3531,15 @@ let module StackMultimap: {
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
   let removeAll: (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let toSeq: (t 'k 'v) => (Seq.t ('k, 'v));
+  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
   let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  let values: (t 'k 'v) => (Iterable.t 'v);
+  let values: (t 'k 'v) => (Iterator.t 'v);
 };
 
 let module Table: {
   type t 'row 'column 'value;
 
-  let columns: (t 'row 'column 'value) => (Iterable.t 'column);
+  let columns: (t 'row 'column 'value) => (Iterator.t 'column);
   let contains: 'row => 'column => 'value => (t 'row 'column 'value) => bool;
   let containsWith: (Equality.t 'value) => 'row => 'column => 'value => (t 'row 'column 'value) => bool;
   let containsRow: 'row => (t 'row 'column 'value) => bool;
@@ -3566,10 +3566,10 @@ let module Table: {
   let removeRow: 'row => (t 'row 'column 'value) => (t 'row 'column 'value);
   let rows: (t 'row 'column 'value) => (Set.t 'row);
   let some: ('row => 'column => 'value=> bool) => (t 'row 'column 'value) => bool;
-  let toSeq: (t 'row 'column 'value) => (Seq.t ('row, 'column, 'value));
+  let toSequence: (t 'row 'column 'value) => (Sequence.t ('row, 'column, 'value));
   let tryFind: ('row => 'column => 'value => bool) => (t 'row 'column 'value) => (option ('row, 'column, 'value));
   let tryGet: 'row => 'column => (t 'row 'column 'value) => (option 'value);
-  let values: (t 'row 'column 'value) => (Iterable.t 'value);
+  let values: (t 'row 'column 'value) => (Iterator.t 'value);
 };
 */
 let module rec Vector: {
@@ -3587,7 +3587,7 @@ let module rec Vector: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter vec] returns a new Vector with the values in [iter] prepended. */
 
   let addLast: 'a => (t 'a) => (t 'a);
@@ -3596,7 +3596,7 @@ let module rec Vector: {
    *  Complexity: O(1)
    */
 
-  let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addLastAll iter vec] returns a new Vector with the values in [iter] appended. */
 
   let compare: (Comparator.t (t 'a));
@@ -3688,10 +3688,10 @@ let module rec Vector: {
    *  invoking [f] on each index/element pair.
    */
 
-  let from: (Iterable.t 'a) => (t 'a);
+  let from: (Iterator.t 'a) => (t 'a);
   /** [from iter] returns a new Vector containing the values in [iter]. */
 
-  let fromReversed: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterator.t 'a) => (t 'a);
   /** [fromReversed iter] returns a new Vector containing the values in [iter]
    *  in reverse order.
    */
@@ -3852,22 +3852,22 @@ let module rec Vector: {
   let take: int => (t 'a) => (t 'a);
   /** [take count vec] returns a new Vector that includes the first [count] elements in [vec]. */
 
-  let toIterable: (t 'a) => (Iterable.t 'a);
+  let toIterator: (t 'a) => (Iterator.t 'a);
 
-  let toIterableReversed: (t 'a) => (Iterable.t 'a);
+  let toIteratorReversed: (t 'a) => (Iterator.t 'a);
 
-  let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+  let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
 
-  let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
+  let toKeyedIteratorReversed: (t 'a) => (KeyedIterator.t int 'a);
 
   let toMap: (t 'a) => (Map.t int 'a);
   /** [toMap vec] returns a Map view of [vec] */
 
-  let toSeq: (t 'a) => (Seq.t 'a);
-  /** [toSeq vec] returns a Seq of the elements in [vec] in order. */
+  let toSequence: (t 'a) => (Sequence.t 'a);
+  /** [toSequence vec] returns a Sequence of the elements in [vec] in order. */
 
-  let toSeqReversed: (t 'a) => (Seq.t 'a);
-  /** [toSeqReversed vec] returns a Seq of the elements in [vec] in reverse order. */
+  let toSequenceReversed: (t 'a) => (Sequence.t 'a);
+  /** [toSequenceReversed vec] returns a Sequence of the elements in [vec] in reverse order. */
 
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   /** [tryFind f vec] returns the first value for which the predicate [f] returns true or None. */

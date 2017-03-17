@@ -172,10 +172,10 @@ let module BitmapTrieIntMap = {
     | Empty => false
   };
 
-  let rec toSeq (map: t 'a): (Seq.t (int, 'a)) => switch map {
-    | Entry key value => Seq.return (key, value)
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSeq |> Seq.flatMap toSeq
-    | Empty => Seq.empty;
+  let rec toSequence (map: t 'a): (Sequence.t (int, 'a)) => switch map {
+    | Entry key value => Sequence.return (key, value)
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
+    | Empty => Sequence.empty;
   };
 
   let rec tryFind (f: int => 'a => bool) (map: t 'a): (option (int, 'a)) => switch map {
@@ -204,10 +204,10 @@ let module BitmapTrieIntMap = {
     | _ => None
   };
 
-  let rec values (map: t 'a): (Iterable.t 'a) => switch map {
-    | Entry _ value => Iterable.return value
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterable |> Iterable.flatMap values
-    | Empty => Iterable.empty;
+  let rec values (map: t 'a): (Iterator.t 'a) => switch map {
+    | Entry _ value => Iterator.return value
+    | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
+    | Empty => Iterator.empty;
   };
 };
 
@@ -280,22 +280,22 @@ let removeAll (_: t 'a): (t 'a) => empty;
 let some (f: int => 'a => bool) ({ root }: t 'a): bool =>
   root |> BitmapTrieIntMap.some f;
 
-let toIterable (map: t 'a): (Iterable.t (int, 'a)) =>
-  if (isEmpty map) Iterable.empty
+let toIterator (map: t 'a): (Iterator.t (int, 'a)) =>
+  if (isEmpty map) Iterator.empty
   else {
     reduce: fun f acc => map |> reduce
       (fun acc k v => f acc (k, v))
       acc
   };
 
-let toKeyedIterable (map: t 'a): (KeyedIterable.t int 'a) =>
-  if (isEmpty map) KeyedIterable.empty
+let toKeyedIterator (map: t 'a): (KeyedIterator.t int 'a) =>
+  if (isEmpty map) KeyedIterator.empty
   else {
     reduce: fun f acc => map |> reduce f acc
   };
 
-let toSeq ({ root }: t 'a): (Seq.t ((int, 'a))) =>
-  root |> BitmapTrieIntMap.toSeq;
+let toSequence ({ root }: t 'a): (Sequence.t ((int, 'a))) =>
+  root |> BitmapTrieIntMap.toSequence;
 
 let tryFind (f: int => 'a => bool) ({ root }: t 'a): (option (int, 'a)) =>
   root |> BitmapTrieIntMap.tryFind f;
@@ -303,7 +303,7 @@ let tryFind (f: int => 'a => bool) ({ root }: t 'a): (option (int, 'a)) =>
 let tryGet (key: int) ({ root }: t 'a): (option 'a) =>
   root |> BitmapTrieIntMap.tryGet 0 key;
 
-let values ({ root }: t 'a): (Iterable.t 'a) =>
+let values ({ root }: t 'a): (Iterator.t 'a) =>
   root |> BitmapTrieIntMap.values;
 
 let toMap (map: t 'a): (ImmMap.t int 'a) => {
@@ -317,7 +317,7 @@ let toMap (map: t 'a): (ImmMap.t int 'a) => {
   none: fun f => none f map,
   reduce: fun f acc => map |> reduce f acc,
   some: fun f => map |> some f,
-  toSeq: (toSeq map),
+  toSequence: (toSequence map),
   tryFind: fun f => tryFind f map,
   tryGet: fun i => tryGet i map,
   values: (values map),
@@ -398,9 +398,9 @@ let module TransientIntMap = {
     transient |> alter key (Functions.return @@ Option.return @@ value);
 
   let putAll
-      (iter: KeyedIterable.t int 'a)
+      (iter: KeyedIterator.t int 'a)
       (transient: t 'a): (t 'a) => iter
-    |> KeyedIterable.reduce (fun acc k v => acc |> put k v) transient;
+    |> KeyedIterator.reduce (fun acc k v => acc |> put k v) transient;
 
   let remove (key: int) (transient: t 'a): (t 'a) =>
     transient |> alter key Functions.alwaysNone;
@@ -418,7 +418,7 @@ let module TransientIntMap = {
 
 let mutate = TransientIntMap.mutate;
 
-let putAll (iter: KeyedIterable.t int 'a) (map: t 'a): (t 'a) => map
+let putAll (iter: KeyedIterator.t int 'a) (map: t 'a): (t 'a) => map
   |> mutate
   |> TransientIntMap.putAll iter
   |> TransientIntMap.persist;
@@ -429,14 +429,14 @@ let map (f: int => 'a => 'b) (map: t 'a): (t 'b) => map
     (mutate empty)
   |> TransientIntMap.persist;
 
-let from (iter: KeyedIterable.t int 'a): (t 'a) => putAll iter empty;
+let from (iter: KeyedIterator.t int 'a): (t 'a) => putAll iter empty;
 
 let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (next: t 'v)
     (map: t 'vAcc): (t 'vAcc) =>
   ImmSet.union (keys map) (keys next)
-    |> Iterable.reduce (
+    |> Iterator.reduce (
         fun acc key => {
           let result = f key (map |> tryGet key) (next |> tryGet key);
           switch result {

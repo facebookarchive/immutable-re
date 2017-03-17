@@ -21,11 +21,11 @@ let addFirst (item: 'a) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let addFirstAll (iter: Iterable.t 'a) (arr: t 'a): (t 'a) =>
+let addFirstAll (iter: Iterator.t 'a) (arr: t 'a): (t 'a) =>
   /* FIXME: This implemenation is particularly bad. We can improve it
    * by using dynamic array allocations.
    */
-  iter |> Iterable.reduce (fun acc next => acc |> addFirst next) arr;
+  iter |> Iterator.reduce (fun acc next => acc |> addFirst next) arr;
 
 let addLast (item: 'a) (arr: t 'a): (t 'a) => {
   let count = count arr;
@@ -35,11 +35,11 @@ let addLast (item: 'a) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let addLastAll (iter: Iterable.t 'a) (arr: t 'a): (t 'a) =>
+let addLastAll (iter: Iterator.t 'a) (arr: t 'a): (t 'a) =>
   /* FIXME: This implemenation is particularly bad. We can improve it
    * by using dynamic array allocations.
    */
-  iter |> Iterable.reduce (fun acc next => acc |> addLast next) arr;
+  iter |> Iterator.reduce (fun acc next => acc |> addLast next) arr;
 
 let compareWith
     (valueCompare: Comparator.t 'a)
@@ -150,10 +150,10 @@ let forEach (f: 'a => unit) (arr: t 'a): 'acc =>
 let forEachWithIndex (f: int => 'a => unit) (arr: t 'a): 'acc =>
   arr |> Array.iteri f;
 
-let from (iter: Iterable.t 'a): (t 'a) =>
+let from (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addLastAll iter;
 
-let fromReversed (iter: Iterable.t 'a): (t 'a) =>
+let fromReversed (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addFirstAll iter;
 
 let get (index: int) (arr: t 'a): 'a => arr.(index);
@@ -409,46 +409,46 @@ let someWithIndex (f: int => 'a => bool) (arr: t 'a): bool => {
 let take (newCount: int) (arr: t 'a): (t 'a) =>
   Array.sub arr 0 newCount;
 
-let toIterable (arr: t 'a): (Iterable.t 'a) =>
-  if (isEmpty arr) Iterable.empty
+let toIterator (arr: t 'a): (Iterator.t 'a) =>
+  if (isEmpty arr) Iterator.empty
   else { reduce: fun f acc => reduce f acc arr };
 
-let toIterableReversed (arr: t 'a): (Iterable.t 'a) =>
-  if (isEmpty arr) Iterable.empty
+let toIteratorReversed (arr: t 'a): (Iterator.t 'a) =>
+  if (isEmpty arr) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc arr };
 
-let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
-  if (isEmpty arr) KeyedIterable.empty
+let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
+  if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceWithIndex f acc arr };
 
-let toKeyedIterableReversed (arr: t 'a): (KeyedIterable.t int 'a) =>
-  if (isEmpty arr) KeyedIterable.empty
+let toKeyedIteratorReversed (arr: t 'a): (KeyedIterator.t int 'a) =>
+  if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceRightWithIndex f acc arr };
 
-let toSeqReversed (arr: t 'a): (Seq.t 'a) =>
-  if (isEmpty arr) Seq.empty
+let toSequenceReversed (arr: t 'a): (Sequence.t 'a) =>
+  if (isEmpty arr) Sequence.empty
   else {
     let rec loop index => fun () =>
-      if (index < 0) Seq.Completed
-      else Seq.Next arr.(index) (loop (index - 1));
+      if (index < 0) Sequence.Completed
+      else Sequence.Next arr.(index) (loop (index - 1));
     loop (count arr - 1);
   };
 
-let toSeq (arr: t 'a): (Seq.t 'a) =>
-  if (isEmpty arr) Seq.empty
+let toSequence (arr: t 'a): (Sequence.t 'a) =>
+  if (isEmpty arr) Sequence.empty
   else {
     let arrCount = count arr;
     let rec loop index => fun () =>
-      if (index < arrCount) (Seq.Next arr.(index) (loop (index + 1)))
-      else Seq.Completed;
+      if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
+      else Sequence.Completed;
     loop 0;
   };
 
-let toSeqWithIndex (arr: t 'a): (Seq.t (int, 'a)) => {
+let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   let arrCount = count arr;
   let rec loop index => fun () =>
-    if (index < arrCount) (Seq.Next (index, arr.(index)) (loop (index + 1)))
-    else Seq.Completed;
+    if (index < arrCount) (Sequence.Next (index, arr.(index)) (loop (index + 1)))
+    else Sequence.Completed;
   loop 0;
 };
 
@@ -568,8 +568,8 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   none: fun f => noneWithIndex f arr,
   reduce: fun f acc => reduceWithIndex f acc arr,
   some: fun f => someWithIndex f arr,
-  toSeq: toSeqWithIndex arr,
+  toSequence: toSequenceWithIndex arr,
   tryFind: fun f => tryIndexOfWithIndex f arr >>| fun index => (index, arr.(index)),
   tryGet: fun i => tryGet i arr,
-  values: toIterable arr,
+  values: toIterator arr,
 };

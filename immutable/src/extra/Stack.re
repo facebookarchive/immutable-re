@@ -17,10 +17,10 @@ let addFirst (value: 'a) ({ count, list }: t 'a): (t 'a) => ({
   list: [value, ...list],
 });
 
-let addFirstAll (values: Iterable.t 'a) ({ count, list }: t 'a): (t 'a) => {
+let addFirstAll (values: Iterator.t 'a) ({ count, list }: t 'a): (t 'a) => {
   let newCount = ref count;
 
-  let newList = values |> Iterable.reduce
+  let newList = values |> Iterator.reduce
     (fun acc next => {
       newCount := !newCount + 1;
       [next, ...acc]
@@ -85,7 +85,7 @@ let forEach (f: 'a => unit) ({ list }: t 'a): unit =>
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
 
-let fromReversed (iter: Iterable.t 'a): (t 'a) =>
+let fromReversed (iter: Iterator.t 'a): (t 'a) =>
   empty |> addFirstAll iter;
 
 let hash ({ list }: t 'a): int =>
@@ -134,12 +134,12 @@ let reverse ({ count, list }: t 'a): (t 'a) => {
 let some (f: 'a => bool) ({ list }: t 'a): bool =>
   list |> ImmList.some f;
 
-let toIterable ({ list }: t 'a): (Iterable.t 'a) =>
-  Iterable.ofList list;
+let toIterator ({ list }: t 'a): (Iterator.t 'a) =>
+  Iterator.ofList list;
 
 let toList ({ list }: t 'a): (list 'a) => list;
 
-let toSeq ({ list }: t 'a): (Seq.t 'a) => Seq.ofList list;
+let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
 
 let tryFind (f: 'a => bool) ({ list }: t 'a): (option 'a) =>
   list |> ImmList.tryFind f;

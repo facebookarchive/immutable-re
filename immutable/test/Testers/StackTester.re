@@ -17,7 +17,7 @@ module type Stack = {
   type t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
-  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   let compare: (Comparator.t (t 'a));
   let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
   let contains: 'a => (t 'a) => bool;
@@ -30,7 +30,7 @@ module type Stack = {
   let find: ('a => bool) => (t 'a) => 'a;
   let first: (t 'a) => 'a;
   let forEach: ('a => unit) => (t 'a) => unit;
-  let fromReversed: (Iterable.t 'a) => (t 'a);
+  let fromReversed: (Iterator.t 'a) => (t 'a);
   let hash: (Hash.t (t 'a));
   let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
   let isEmpty: t 'a => bool;
@@ -43,7 +43,7 @@ module type Stack = {
   let return: 'a => (t 'a);
   let reverse: (t 'a) => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
-  let toSeq: (t 'a) => (Seq.t 'a);
+  let toSequence: (t 'a) => (Sequence.t 'a);
   let tryFind: ('a => bool) => (t 'a) => (option 'a);
   let tryFirst: (t 'a) => (option 'a);
 };
@@ -85,88 +85,88 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     defer (fun () => shouldBeEmpty |> Stack.first) |> throws;
     expect (shouldBeEmpty |> Stack.tryFirst) |>  toBeEqualToNoneOfInt;
 
-    expect @@ Stack.toSeq @@ stack |> toBeEqualToSeqOfInt (
-      IntRange.create 0 count |> IntRange.toSeqReversed
+    expect @@ Stack.toSequence @@ stack |> toBeEqualToSequenceOfInt (
+      IntRange.create 0 count |> IntRange.toSequenceReversed
     );
   }),
 
   it (sprintf "every with %i elements" count) (fun () => {
-    Seq.concat [Seq.return false, Seq.repeat true |> Seq.take (count - 1)]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.concat [Sequence.return false, Sequence.repeat true |> Sequence.take (count - 1)]
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [Seq.repeat true |> Seq.take (count - 1), Seq.return false]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.concat [Sequence.repeat true |> Sequence.take (count - 1), Sequence.return false]
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [
-      Seq.repeat true |> Seq.take (count / 2 - 1),
-      Seq.return false,
-      Seq.repeat true |> Seq.take (count / 2 - 1),
+    Sequence.concat [
+      Sequence.repeat true |> Sequence.take (count / 2 - 1),
+      Sequence.return false,
+      Sequence.repeat true |> Sequence.take (count / 2 - 1),
     ]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.repeat true
-      |> Seq.take count
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.repeat true
+      |> Sequence.take count
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.every (fun v => v)
       |> expect |> toBeEqualToTrue;
   }),
 
   it (sprintf "none with %i elements" count) (fun () => {
-    Seq.concat [Seq.repeat false |> Seq.take (count - 1), Seq.return true]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.concat [Sequence.repeat false |> Sequence.take (count - 1), Sequence.return true]
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [Seq.return true, Seq.repeat false |> Seq.take (count - 1)]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.concat [Sequence.return true, Sequence.repeat false |> Sequence.take (count - 1)]
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.concat [
-      Seq.repeat false |> Seq.take (count / 2 - 1),
-      Seq.return true,
-      Seq.repeat false |> Seq.take (count / 2 - 1),
+    Sequence.concat [
+      Sequence.repeat false |> Sequence.take (count / 2 - 1),
+      Sequence.return true,
+      Sequence.repeat false |> Sequence.take (count / 2 - 1),
     ]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToFalse;
 
-    Seq.repeat false
-      |> Seq.take count
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.repeat false
+      |> Sequence.take count
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.none (fun v => v)
       |> expect |> toBeEqualToTrue;
   }),
 
   it (sprintf "some with %i elements" count) (fun () => {
-    Seq.concat [Seq.repeat false |> Seq.take (count - 1), Seq.return true]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.concat [Sequence.repeat false |> Sequence.take (count - 1), Sequence.return true]
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToTrue;
 
-    Seq.concat [Seq.return true, Seq.repeat false |> Seq.take (count - 1)]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.concat [Sequence.return true, Sequence.repeat false |> Sequence.take (count - 1)]
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToTrue;
 
-    Seq.concat [
-      Seq.repeat false |> Seq.take (count / 2 - 1),
-      Seq.return true,
-      Seq.repeat false |> Seq.take (count / 2 - 1),
+    Sequence.concat [
+      Sequence.repeat false |> Sequence.take (count / 2 - 1),
+      Sequence.return true,
+      Sequence.repeat false |> Sequence.take (count / 2 - 1),
     ]
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToTrue;
 
-    Seq.repeat false
-      |> Seq.take count
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.repeat false
+      |> Sequence.take count
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.some (fun v => v)
       |> expect |> toBeEqualToFalse;
   }),
@@ -175,9 +175,9 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     IntRange.create 0 count
       |> IntRange.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.mapReverse (fun i => i + 1)
-      |> Stack.toSeq
+      |> Stack.toSequence
       |> expect
-      |> toBeEqualToSeqOfInt (IntRange.create 1 count |> IntRange.toSeq);
+      |> toBeEqualToSequenceOfInt (IntRange.create 1 count |> IntRange.toSequence);
   }),
 
   it (sprintf "reverse %i elements" count) (fun () => {
@@ -187,15 +187,15 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
     let reversed = stack |> Stack.reverse;
 
     reversed
-      |> Stack.toSeq
+      |> Stack.toSequence
       |> expect
-      |> toBeEqualToSeqOfInt (IntRange.create 0 count |> IntRange.toSeq);
+      |> toBeEqualToSequenceOfInt (IntRange.create 0 count |> IntRange.toSequence);
 
     reversed
       |> Stack.reverse
-      |> Stack.toSeq
+      |> Stack.toSequence
       |> expect
-      |> toBeEqualToSeqOfInt (stack |> Stack.toSeq);
+      |> toBeEqualToSequenceOfInt (stack |> Stack.toSequence);
   }),
 
   it (sprintf "addFirst and removeAll %i elements" count) (fun () => {
@@ -214,9 +214,9 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
 
   it (sprintf "reduce with %i elements" count) (fun () => {
     /* FIXME: This test could be better by not using a single repeated value. */
-    Seq.repeat 1
-      |> Seq.take count
-      |> Seq.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
+    Sequence.repeat 1
+      |> Sequence.take count
+      |> Sequence.reduce (fun acc i => acc |> Stack.addFirst i) Stack.empty
       |> Stack.reduce (fun acc i => acc + i) 0
       |> expect
       |> toBeEqualToInt count;
@@ -308,22 +308,22 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
 
   it (sprintf "addFirstAll with %i elements" count) (fun () => {
     let result = IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> Stack.fromReversed;
 
-    (Stack.toSeq result)
-      |> Seq.equals (IntRange.create 0 count |> IntRange.toSeqReversed)
+    (Stack.toSequence result)
+      |> Sequence.equals (IntRange.create 0 count |> IntRange.toSequenceReversed)
       |> expect
       |> toBeEqualToTrue;
   }),
 
-  it (sprintf "fromSeqReversed with %i elements" count) (fun () => {
+  it (sprintf "fromSequenceReversed with %i elements" count) (fun () => {
     let result = IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> Stack.fromReversed;
 
-    (Stack.toSeq result)
-      |> Seq.equals (IntRange.create 0 count |> IntRange.toSeqReversed)
+    (Stack.toSequence result)
+      |> Sequence.equals (IntRange.create 0 count |> IntRange.toSequenceReversed)
       |> expect
       |> toBeEqualToTrue;
   }),
@@ -331,7 +331,7 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
   it (sprintf "forEach with %i elements" count) (fun () => {
     let counted = ref 0;
     let result = IntRange.create 0 count
-      |> IntRange.toIterableReversed
+      |> IntRange.toIteratorReversed
       |> Stack.fromReversed;
 
     result |> Stack.forEach (fun i => {
@@ -348,7 +348,7 @@ let test (count: int) (module Stack: Stack): (list Test.t) => [
 
   it (sprintf "contains with %i elements" count) (fun () => {
     let result = IntRange.create 0 count
-      |> IntRange.toIterable
+      |> IntRange.toIterator
       |> Stack.fromReversed;
 
     result

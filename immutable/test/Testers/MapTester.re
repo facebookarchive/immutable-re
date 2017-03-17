@@ -20,44 +20,44 @@ let test
     (tryGet: int => 'map => option int)
     (n: int): list Test.t => [
   it (sprintf "put %i elements" n) (fun () => {
-    let src = IntRange.create 0 n |> IntRange.toSeq |> Seq.map (Hash.random ());
+    let src = IntRange.create 0 n |> IntRange.toSequence |> Sequence.map (Hash.random ());
 
     let (_, mapOfSizeN) = src
-      |> Seq.scan
+      |> Sequence.scan
         (fun (_, acc) i => (i, acc |> put i i))
         (0, empty ())
-      |> Seq.doOnNext(fun (i, acc) =>
+      |> Sequence.doOnNext(fun (i, acc) =>
         expect (acc |> tryGet i) |> toBeEqualToSomeOfInt i
       )
-      |> Seq.tryLast |> Option.get;
+      |> Sequence.tryLast |> Option.get;
 
-    src |> Seq.forEach (fun i =>
+    src |> Sequence.forEach (fun i =>
       expect (mapOfSizeN |> tryGet i) |> toBeEqualToSomeOfInt i
     )
   }),
 
   it (sprintf "remove %i elements" n) (fun () => {
-    let src = IntRange.create 0 n |> IntRange.toSeq
-    let mapOfSizeN = src |> Seq.reduce (fun acc i => acc |> put i i) (empty ());
+    let src = IntRange.create 0 n |> IntRange.toSequence
+    let mapOfSizeN = src |> Sequence.reduce (fun acc i => acc |> put i i) (empty ());
 
-    /* FIMXE: Maybe add Seq.sample, Seq.filteri */
+    /* FIMXE: Maybe add Sequence.sample, Sequence.filteri */
     let removed = src
-      |> Seq.map(fun i => (i, i))
-      |> Seq.filter (fun (i, v) => i mod 3 == 0)
-      |> Seq.map (fun (i, v) => v);
+      |> Sequence.map(fun i => (i, i))
+      |> Sequence.filter (fun (i, v) => i mod 3 == 0)
+      |> Sequence.map (fun (i, v) => v);
 
     let remaining = src
-      |> Seq.map (fun i => (i, i))
-      |> Seq.filter (fun (i, v) => i mod 3 != 0)
-      |> Seq.map (fun (i, v) => v);
+      |> Sequence.map (fun i => (i, i))
+      |> Sequence.filter (fun (i, v) => i mod 3 != 0)
+      |> Sequence.map (fun (i, v) => v);
 
-    let mapOfSizeNdiv3 = removed |> Seq.reduce (fun acc i => acc |> remove i) mapOfSizeN;
+    let mapOfSizeNdiv3 = removed |> Sequence.reduce (fun acc i => acc |> remove i) mapOfSizeN;
 
-    removed |> Seq.forEach(fun i =>
+    removed |> Sequence.forEach(fun i =>
       expect (mapOfSizeNdiv3 |> tryGet i) |> toBeEqualToNoneOfInt
     );
 
-    remaining |> Seq.forEach(fun i =>
+    remaining |> Sequence.forEach(fun i =>
       expect (mapOfSizeNdiv3 |> tryGet i) |> toBeEqualToSomeOfInt i
     );
   }),

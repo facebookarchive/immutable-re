@@ -32,17 +32,17 @@ let generateTests
 
   it (sprintf "map with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> IntRange.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToRemove = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
 
-    keysToRemove |> Seq.reduce (fun acc i => acc |> remove i) map |> ignore;
+    keysToRemove |> Sequence.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "map with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> IntRange.toSeq |> Seq.buffer 1 3 |> Seq.map (fun [i] => i);
+    let keysToUpdate = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
 
     /* Multiply the updated value to avoid optimizations */
-    keysToUpdate |> Seq.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
+    keysToUpdate |> Sequence.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
   }),
 
   it (sprintf "tryGet %i values" n) (fun () => {
@@ -183,10 +183,10 @@ let test (n: int) (count: int): Test.t => {
     ),
   ];
 
-  let tests = Seq.repeat testGroup
-    |> Seq.take n
-    |> Seq.flatMap List.toSeq
-    |> Seq.toIterable
+  let tests = Sequence.repeat testGroup
+    |> Sequence.take n
+    |> Sequence.flatMap List.toSequence
+    |> Sequence.toIterator
     |> List.fromReversed;
   describe (sprintf "MapPerf") tests
 };

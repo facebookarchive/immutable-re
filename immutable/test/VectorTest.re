@@ -69,8 +69,8 @@ let module Vector = {
   let someWithIndex = Vector.someWithIndex;
   let take = Vector.take;
   let toMap = Vector.toMap;
-  let toSeq = Vector.toSeq;
-  let toSeqReversed = Vector.toSeqReversed;
+  let toSequence = Vector.toSequence;
+  let toSequenceReversed = Vector.toSequenceReversed;
   let tryFind = Vector.tryFind;
   let tryFindWithIndex = Vector.tryFindWithIndex;
   let tryFirst = Vector.tryFirst;
@@ -83,23 +83,23 @@ let module Vector = {
   let updateWith = Vector.updateWith;
 };
 
-let test = describe "Vector" (List.fromReversed @@ Iterable.concat @@ [
-  (VectorTester.test 10 (module Vector)) |> List.toIterable,
-  (VectorTester.test 48 (module Vector)) |> List.toIterable,
-  (VectorTester.test 90 (module Vector)) |> List.toIterable,
-  (VectorTester.test 500 (module Vector)) |> List.toIterable,
-  (VectorTester.test 5000 (module Vector)) |> List.toIterable,
-  (VectorTester.test 50000 (module Vector)) |> List.toIterable,
-  (VectorTester.test 100000 (module Vector)) |> List.toIterable,
-  (VectorTester.test 1000000 (module Vector)) |> List.toIterable,
-  describe "TransientVector" (List.fromReversed @@ Iterable.concat @@ [
-    (TransientVectorTester.test 10 (module TransientVector)) |> List.toIterable,
-    (TransientVectorTester.test 48 (module TransientVector)) |> List.toIterable,
-    (TransientVectorTester.test 90 (module TransientVector)) |> List.toIterable,
-    (TransientVectorTester.test 500 (module TransientVector)) |> List.toIterable,
-    (TransientVectorTester.test 5000 (module TransientVector)) |> List.toIterable,
-    (TransientVectorTester.test 50000 (module TransientVector)) |> List.toIterable,
-    (TransientVectorTester.test 100000 (module TransientVector)) |> List.toIterable,
-    (TransientVectorTester.test 1000000 (module TransientVector)) |> List.toIterable,
-  ]) |> Iterable.return,
+let test = describe "Vector" (List.fromReversed @@ Iterator.concat @@ [
+  (VectorTester.test 10 (module Vector)) |> List.toIterator,
+  (VectorTester.test 48 (module Vector)) |> List.toIterator,
+  (VectorTester.test 90 (module Vector)) |> List.toIterator,
+  (VectorTester.test 500 (module Vector)) |> List.toIterator,
+  (VectorTester.test 5000 (module Vector)) |> List.toIterator,
+  (VectorTester.test 50000 (module Vector)) |> List.toIterator,
+  (VectorTester.test 100000 (module Vector)) |> List.toIterator,
+  (VectorTester.test 1000000 (module Vector)) |> List.toIterator,
+  describe "TransientVector" (List.fromReversed @@ Iterator.concat @@ [
+    (TransientVectorTester.test 10 (module TransientVector)) |> List.toIterator,
+    (TransientVectorTester.test 48 (module TransientVector)) |> List.toIterator,
+    (TransientVectorTester.test 90 (module TransientVector)) |> List.toIterator,
+    (TransientVectorTester.test 500 (module TransientVector)) |> List.toIterator,
+    (TransientVectorTester.test 5000 (module TransientVector)) |> List.toIterator,
+    (TransientVectorTester.test 50000 (module TransientVector)) |> List.toIterator,
+    (TransientVectorTester.test 100000 (module TransientVector)) |> List.toIterator,
+    (TransientVectorTester.test 1000000 (module TransientVector)) |> List.toIterator,
+  ]) |> Iterator.return,
 ]);

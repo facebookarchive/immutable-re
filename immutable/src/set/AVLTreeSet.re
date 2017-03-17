@@ -203,23 +203,23 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
     }
 };
 
-let rec toSeq (tree: t 'a): (Seq.t 'a) => switch tree {
-  | Empty => Seq.empty
-  | Leaf v => Seq.return v
-  | Node _ left v right => Seq.concat [
-      Seq.defer(fun () => toSeq left),
-      Seq.return v,
-      Seq.defer(fun () => toSeq right),
+let rec toSequence (tree: t 'a): (Sequence.t 'a) => switch tree {
+  | Empty => Sequence.empty
+  | Leaf v => Sequence.return v
+  | Node _ left v right => Sequence.concat [
+      Sequence.defer(fun () => toSequence left),
+      Sequence.return v,
+      Sequence.defer(fun () => toSequence right),
     ]
 };
 
-let rec toSeqReversed (tree: t 'a): (Seq.t 'a) => switch tree {
-  | Empty => Seq.empty
-  | Leaf v => Seq.return v
-  | Node _ left v right => Seq.concat [
-      Seq.defer(fun () => toSeqReversed right),
-      Seq.return v,
-      Seq.defer(fun () => toSeqReversed left),
+let rec toSequenceReversed (tree: t 'a): (Sequence.t 'a) => switch tree {
+  | Empty => Sequence.empty
+  | Leaf v => Sequence.return v
+  | Node _ left v right => Sequence.concat [
+      Sequence.defer(fun () => toSequenceReversed right),
+      Sequence.return v,
+      Sequence.defer(fun () => toSequenceReversed left),
     ]
 };
 

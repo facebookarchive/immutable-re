@@ -69,8 +69,8 @@ let module Vector = {
   let someWithIndex = CopyOnWriteArray.someWithIndex;
   let take = CopyOnWriteArray.take;
   let toMap = CopyOnWriteArray.toMap;
-  let toSeq = CopyOnWriteArray.toSeq;
-  let toSeqReversed = CopyOnWriteArray.toSeqReversed;
+  let toSequence = CopyOnWriteArray.toSequence;
+  let toSequenceReversed = CopyOnWriteArray.toSequenceReversed;
   let tryFind = CopyOnWriteArray.tryFind;
   let tryFindWithIndex = CopyOnWriteArray.tryFindWithIndex;
   let tryFirst = CopyOnWriteArray.tryFirst;
@@ -83,7 +83,7 @@ let module Vector = {
   let updateWith = CopyOnWriteArray.updateWith;
 };
 
-let test = describe "CopyOnWriteArray" (List.fromReversed @@ Iterable.concat @@ [
-  (VectorTester.test 10 (module Vector)) |> List.toIterable,
-  (VectorTester.test 5000 (module Vector)) |> List.toIterable,
+let test = describe "CopyOnWriteArray" (List.fromReversed @@ Iterator.concat @@ [
+  (VectorTester.test 10 (module Vector)) |> List.toIterator,
+  (VectorTester.test 5000 (module Vector)) |> List.toIterator,
 ]);

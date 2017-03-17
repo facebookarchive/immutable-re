@@ -16,8 +16,8 @@ type t 'row 'column 'value = {
   columnStrategy: HashStrategy.t 'column,
 };
 
-let columns ({ map }: t 'row 'column 'value): (Iterable.t 'column) =>
-  map |> HashMap.values |> Iterable.flatMap (HashMap.keys >> ImmSet.toIterable);
+let columns ({ map }: t 'row 'column 'value): (Iterator.t 'column) =>
+  map |> HashMap.values |> Iterator.flatMap (HashMap.keys >> ImmSet.toIterator);
 
 let contains (row: 'row) (column: 'column) (value: 'value) ({ map }: t 'row 'column 'value): bool =>
   map |> HashMap.tryGet row >>| (HashMap.contains column value) |? false;
@@ -163,9 +163,9 @@ let some (f: 'row => 'column => 'value => bool) ({ map }: t 'row 'column 'value)
   map |> HashMap.some f';
 };
 
-let toSeq ({ map }: t 'row 'column 'value): (Seq.t ('row, 'column, 'value)) =>
-  map |> HashMap.toSeq |> Seq.flatMap (
-    fun (row, columnToValue) => columnToValue |> HashMap.toSeq |> Seq.map (
+let toSequence ({ map }: t 'row 'column 'value): (Sequence.t ('row, 'column, 'value)) =>
+  map |> HashMap.toSequence |> Sequence.flatMap (
+    fun (row, columnToValue) => columnToValue |> HashMap.toSequence |> Sequence.map (
       fun (column, value) => (row, column, value)
     )
   );
@@ -194,5 +194,5 @@ let find
 let tryGet (row: 'row) (column: 'column) ({ map }: t 'row 'column 'value): (option 'value) =>
   map |> (HashMap.tryGet row) >>= (HashMap.tryGet column);
 
-let values ({ map }: t 'row 'column 'value): (Iterable.t 'value) =>
-  map |> HashMap.values |> Iterable.flatMap HashMap.values;
+let values ({ map }: t 'row 'column 'value): (Iterator.t 'value) =>
+  map |> HashMap.values |> Iterator.flatMap HashMap.values;

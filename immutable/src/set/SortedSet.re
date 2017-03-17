@@ -20,8 +20,8 @@ let add (x: 'a) ({ comparator, count, tree } as sortedSet: t 'a): (t 'a) => {
   if (newTree === tree) sortedSet else { comparator, count: count + 1, tree: newTree }
 };
 
-let addAll (iter: Iterable.t 'a) (sortedSet: t 'a): (t 'a) => iter
-  |> Iterable.reduce (fun acc next => acc |> add next) sortedSet;
+let addAll (iter: Iterator.t 'a) (sortedSet: t 'a): (t 'a) => iter
+  |> Iterator.reduce (fun acc next => acc |> add next) sortedSet;
 
 let contains (x: 'a) ({ comparator, tree }: t 'a): bool =>
   AVLTreeSet.contains comparator x tree;
@@ -36,10 +36,10 @@ let isEmpty ({ count }: t 'a): bool => count == 0;
 
 let isNotEmpty ({ count }: t 'a): bool => count != 0;
 
-let from (iter: Iterable.t 'a): (t 'a) =>
+let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addAll iter;
 
-let fromWith (comparator: Comparator.t 'a) (iter: Iterable.t 'a): (t 'a) =>
+let fromWith (comparator: Comparator.t 'a) (iter: Iterator.t 'a): (t 'a) =>
   emptyWith comparator |> addAll iter;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ tree }: t 'a): 'acc =>
@@ -66,11 +66,11 @@ let removeLast ({ comparator, count, tree } as sortedSet: t 'a): (t 'a) => {
   if (newTree === tree) sortedSet else { comparator, count: count - 1, tree: newTree }
 };
 
-let toSeq ({ tree }: t 'a): (Seq.t 'a) =>
-  tree |> AVLTreeSet.toSeq;
+let toSequence ({ tree }: t 'a): (Sequence.t 'a) =>
+  tree |> AVLTreeSet.toSequence;
 
-let toSeqReversed ({ tree }: t 'a): (Seq.t 'a) =>
-  tree |> AVLTreeSet.toSeqReversed;
+let toSequenceReversed ({ tree }: t 'a): (Sequence.t 'a) =>
+  tree |> AVLTreeSet.toSequenceReversed;
 
 let compare
     ({ comparator: thisCompare } as this: t 'a)
@@ -79,7 +79,7 @@ let compare
   /* FIXME: Should be possible to make this more efficient
    * by recursively walking the tree.
    */
-  else Seq.compareWith thisCompare (toSeq this) (toSeq that);
+  else Sequence.compareWith thisCompare (toSequence this) (toSequence that);
 
 let equals
     ({ comparator: thisCompare } as this: t 'a)
@@ -90,14 +90,14 @@ let equals
     /* FIXME: Should be possible to make this more efficient
      * by recursively walking the tree.
      */
-    Seq.equalsWith (fun a b => (thisCompare a b) === Ordering.equal) (toSeq this) (toSeq that)
+    Sequence.equalsWith (fun a b => (thisCompare a b) === Ordering.equal) (toSequence this) (toSequence that)
   );
 
 let every (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSeq |> Seq.every f;
+  set |> toSequence |> Sequence.every f;
 
 let find (f: 'a => bool) (set: t 'a): 'a =>
-  set |> toSeq |> Seq.find f;
+  set |> toSequence |> Sequence.find f;
 
 let first ({ tree }: t 'a): 'a =>
   AVLTreeSet.first tree;
@@ -115,29 +115,29 @@ let last ({ tree }: t 'a): 'a =>
   AVLTreeSet.last tree;
 
 let none (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSeq |> Seq.none f;
+  set |> toSequence |> Sequence.none f;
 
 let some (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSeq |> Seq.some f;
+  set |> toSequence |> Sequence.some f;
 
-let toIterable (set: t 'a): (Iterable.t 'a) =>
-  if (isEmpty set) Iterable.empty
+let toIterator (set: t 'a): (Iterator.t 'a) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
 
-let toIterableReversed (set: t 'a): (Iterable.t 'a) =>
-  if (isEmpty set) Iterable.empty
+let toIteratorReversed (set: t 'a): (Iterator.t 'a) =>
+  if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc set };
 
-let toKeyedIterable (set: t 'a): (KeyedIterable.t 'a 'a) =>
-  if (isEmpty set) KeyedIterable.empty
+let toKeyedIterator (set: t 'a): (KeyedIterator.t 'a 'a) =>
+  if (isEmpty set) KeyedIterator.empty
   else {
     reduce: fun f acc => set |> reduce
       (fun acc next => f acc next next)
       acc
   };
 
-let toKeyedIterableReversed (set: t 'a): (KeyedIterable.t 'a 'a) =>
-  if (isEmpty set) KeyedIterable.empty
+let toKeyedIteratorReversed (set: t 'a): (KeyedIterator.t 'a 'a) =>
+  if (isEmpty set) KeyedIterator.empty
   else {
     reduce: fun f acc => set |> reduceRight
       (fun acc next => f acc next next)
@@ -145,7 +145,7 @@ let toKeyedIterableReversed (set: t 'a): (KeyedIterable.t 'a 'a) =>
   };
 
 let tryFind (f: 'a => bool) (set: t 'a): (option 'a) =>
-  set |> toSeq |> Seq.tryFind f;
+  set |> toSequence |> Sequence.tryFind f;
 
 let tryFirst ({ tree }: t 'a): (option 'a) =>
   AVLTreeSet.tryFirst tree;
@@ -162,7 +162,7 @@ let toSet (set: t 'a): (ImmSet.t 'a) => {
   none: fun f => none f set,
   reduce: fun f acc => reduce f acc set,
   some: fun f => some f set,
-  toSeq: toSeq set,
+  toSequence: toSequence set,
   tryFind: fun f => tryFind f set,
 };
 
@@ -184,12 +184,12 @@ let toMap (set: t 'a): (ImmMap.t 'a 'a) => {
   none: fun f => set |> none (fun k => f k k),
   reduce: fun f acc => set |> reduce (fun acc k => f acc k k) acc,
   some: fun f => set |> some (fun k => f k k),
-  toSeq: toSeq set |> Seq.map (fun k => (k, k)),
+  toSequence: toSequence set |> Sequence.map (fun k => (k, k)),
   tryFind: fun f => set |> tryFind (fun k => f k k) >>| (fun k => (k, k)),
   tryGet: fun k =>
     if (set |> contains k) (Some k)
     else None,
-  values: toIterable set,
+  values: toIterator set,
 };
 
 let intersect ({ comparator } as this: t 'a) (that: t 'a): (t 'a) =>

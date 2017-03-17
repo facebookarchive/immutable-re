@@ -27,4 +27,4 @@ let remove (equality: Equality.t 'a) (value: 'a) (set: t 'a): (t 'a) =>
     set |> CopyOnWriteArray.removeAt index
   ) |? set;
 
-let toSeq = CopyOnWriteArray.toSeq;
+let toSequence = CopyOnWriteArray.toSequence;

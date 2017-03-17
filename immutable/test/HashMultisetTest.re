@@ -39,10 +39,10 @@ let test = describe "HashMultiset" [
     expect (set |> HashMultiset.contains "d") |> toBeEqualToFalse;
   }),
 
-  it "fromSeq" (fun () => {
+  it "fromSequence" (fun () => {
     let set = ["a", "b", "c", "d", "a", "a", "a", "d"]
-      |> List.toSeq
-      |> HashMultiset.fromSeq;
+      |> List.toSequence
+      |> HashMultiset.fromSequence;
 
     expect (set |> HashMultiset.count) |> toBeEqualToInt 8;
     expect (set |> HashMultiset.get "a") |> toBeEqualToInt 4;

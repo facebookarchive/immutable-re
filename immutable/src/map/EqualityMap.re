@@ -70,7 +70,7 @@ let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc =>
 let some (f: 'k => 'v => bool) (map: t 'k 'v): bool =>
   map |> CopyOnWriteArray.some (fun (k, v) => f k v);
 
-let toSeq = CopyOnWriteArray.toSeq;
+let toSequence = CopyOnWriteArray.toSequence;
 
 let tryFind (f: 'k => 'v => bool) (map: t 'k 'v): (option ('k, 'v)) =>
   map |> CopyOnWriteArray.tryFind (fun (k, v) => f k v);
@@ -78,5 +78,5 @@ let tryFind (f: 'k => 'v => bool) (map: t 'k 'v): (option ('k, 'v)) =>
 let tryGet (equals: Equality.t 'k) (key: 'k) (map: t 'k 'v): (option 'v) =>
   map |> CopyOnWriteArray.tryFind (entryFinder equals key) >>= (fun (_, v) => Some v);
 
-let values (map: t 'k 'v): (Iterable.t 'v) =>
-  map |> CopyOnWriteArray.toIterable |> Iterable.map (fun (_, v) => v);
+let values (map: t 'k 'v): (Iterator.t 'v) =>
+  map |> CopyOnWriteArray.toIterator |> Iterator.map (fun (_, v) => v);
