@@ -89,6 +89,14 @@ let module Comparator: {
   /** The default structural comparison function. */
 };
 
+let module Comparable: {
+  module type S = {
+    type t;
+
+    let compare: Comparator.t t;
+  };
+};
+
 let module HashStrategy: {
   /** Strategies for hashing values and resolving conflicts either using equality or comparison. */
 
@@ -2933,420 +2941,414 @@ let module Option: {
 
 let module SortedMap: {
   /** AVL tree based Map. */
+  module type S = {
+    type key;
 
-  type t 'k 'v;
-  /** The SortedMap type. */
+    type t +'v;
+    /** The SortedMap type. */
 
-  let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
-  /** [alter key f map] enables efficient deep updates to an existing
-   *  mapping from [key] in [map]. If [map] already has a mapping from [key],
-   *  [f] will be called with Some, otherwise it will be called with None.
-   *  If [f] returns None, alter returns a new SortedMap without a mapping from [key].
-   *  If [f] returns Some, alter returns a new SortedMap with an updated
-   *  mapping from [key].
-   */
+    let alter: key => (option 'v => option 'v) => (t 'v) => (t 'v);
+    /** [alter key f map] enables efficient deep updates to an existing
+     *  mapping from [key] in [map]. If [map] already has a mapping from [key],
+     *  [f] will be called with Some, otherwise it will be called with None.
+     *  If [f] returns None, alter returns a new SortedMap without a mapping from [key].
+     *  If [f] returns Some, alter returns a new SortedMap with an updated
+     *  mapping from [key].
+     */
 
-  let compare: (Comparator.t (t 'k 'v));
-  /** A comparator that compares two SortedMap instances, comparing values using structural
-   *  comparison. [compare this that] will throw if [this] and [that] do not use the
-   *  same key comparison function.
-   */
+    let compare: (Comparator.t (t 'v));
+    /** A comparator that compares two SortedMap instances, comparing values using structural
+     *  comparison. [compare this that] will throw if [this] and [that] do not use the
+     *  same key comparison function.
+     */
 
-  let compareWith: (Comparator.t 'v) => (Comparator.t (t 'k 'v));
-  /** [compareWith comparator this that] returns a comparator that compares two SortedMap instances,
-   *  comparing values with [comparator]. Throws if [this] and [that] do not use the
-   *  same key comparison function.
-   */
+    let compareWith: (Comparator.t 'v) => (Comparator.t (t 'v));
+    /** [compareWith comparator this that] returns a comparator that compares two SortedMap instances,
+     *  comparing values with [comparator]. Throws if [this] and [that] do not use the
+     *  same key comparison function.
+     */
 
-  let contains: 'k => 'v => (t 'k 'v) => bool;
-  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
-   *  using structural equality to equate [value].
-   *
-   *  Complexity: O(log N)
-   */
+    let contains: key => 'v => (t 'v) => bool;
+    /** [contains key value map] returns true if [map] contains the [key] [value] pair,
+     *  using structural equality to equate [value].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
-  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
-   *  using [equals] to equate [value].
-   *
-   *  Complexity: O(log N)
-   */
+    let containsWith: (Equality.t 'v) => key => 'v => (t 'v) => bool;
+    /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
+     *  using [equals] to equate [value].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let containsKey: 'k => (t 'k 'v) => bool;
-  /** [containsKey key map] returns true if [map] contains a mapping from [key].
-   *
-   *  Complexity: O(log N)
-   */
+    let containsKey: key => (t 'v) => bool;
+    /** [containsKey key map] returns true if [map] contains a mapping from [key].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let count: (t 'k 'v) => int;
-  /** [count map] returns the number of key/value pairs in [map]. */
+    let count: (t 'v) => int;
+    /** [count map] returns the number of key/value pairs in [map]. */
 
-  let empty: (t 'k 'v);
-  /** The empty SortedMap using the structural comparator. */
+    let empty: (t 'v);
+    /** The empty SortedMap using the structural comparator. */
 
-  let emptyWith: (Comparator.t 'k) => (t 'k 'v);
-  /** [emptyWith comparator] returns an empty SortedMap using the provided comparator. */
+    let equals: (t 'v) => (t 'v) => bool;
+    /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
 
-  let equals: (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
+    let equalsWith: (Equality.t 'v) => (t 'v) => (t 'v) => bool;
+    /** [equalsWith equals this that] equates [this] and [that].
+     *  [equals] is used to equate values.
+     */
 
-  let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equalsWith equals this that] equates [this] and [that].
-   *  [equals] is used to equate values.
-   */
+    let every: (key => 'v => bool) => (t 'v) => bool;
+    /** [every f map] returns true if the predicate [f] returns true for every
+     *  key/value pair in [map], otherwise false. If [map] is empty, returns true.
+     */
 
-  let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [every f map] returns true if the predicate [f] returns true for every
-   *  key/value pair in [map], otherwise false. If [map] is empty, returns true.
-   */
+    let find: (key => 'v => bool) => (t 'v) => (key, 'v);
+    /** [find f map] returns the first key/value pair for which the predicate [f] returns true.
+     *  If no value is found, an exception is thrown.
+     */
 
-  let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  /** [find f map] returns the first key/value pair for which the predicate [f] returns true.
-   *  If no value is found, an exception is thrown.
-   */
+    let first: (t 'v) => (key, 'v);
+    /** [first map] returns the first key/value pair in [set] or throws. */
 
-  let first: (t 'k 'v) => ('k, 'v);
-  /** [first map] returns the first key/value pair in [set] or throws. */
-
-  let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-  /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
+    let forEach: (key => 'v => unit) => (t 'v) => unit;
+    /** [forEach f map] iterates through [map], invoking [f] for each key/value pair. */
 
 
-  let from: (KeyedIterator.t 'k 'v) => (t 'k 'v);
-  /** [from iter] returns a SortedMap including the key/value pairs in [iter]
-   *  using the structural comparison.
-   */
+    let from: (KeyedIterator.t key 'v) => (t 'v);
+    /** [from iter] returns a SortedMap including the key/value pairs in [iter]
+     *  using the structural comparison.
+     */
 
-  let fromWith: (Comparator.t 'k) => (KeyedIterator.t 'k 'v) => (t 'k 'v);
-  /** [fromWith comparator iter] returns a SortedMap including the key/value pairs in [iter]
-   *  using the provided Comparator.
-   */
+    let get: key => (t 'v) => 'v;
+    /** [get key map] returns the value associated with [key] or throws */
 
-  let get: 'k => (t 'k 'v) => 'v;
-  /** [get key map] returns the value associated with [key] or throws */
+    let hash: (Hash.t (t 'v));
+    /** [hash map] hashes [map], hashing keys and values using structural hashing. */
 
-  let hash: (Hash.t (t 'k 'v));
-  /** [hash map] hashes [map], hashing keys and values using structural hashing. */
+    let hashWith: (Hash.t key) => (Hash.t 'v) => (Hash.t (t 'v));
+    /** [hashWith keyHash valueHash map] hashes [map], hashing keys and
+     *  values using [keyHash] and [valueHash] respectively.
+     */
 
-  let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
-  /** [hashWith keyHash valueHash map] hashes [map], hashing keys and
-   *  values using [keyHash] and [valueHash] respectively.
-   */
+    let isEmpty: t 'v => bool;
+    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
 
-  let isEmpty: t 'k 'v => bool;
-  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+    let isNotEmpty: t 'v => bool;
+    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
-  let isNotEmpty: t 'k 'v => bool;
-  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+    let keys: (t 'v) => (Set.t key);
+    /** [keys map] returns a Set view of keys in [map]. */
 
-  let keys: (t 'k 'v) => (Set.t 'k);
-  /** [keys map] returns a Set view of keys in [map]. */
+    let last: (t 'v) => (key, 'v);
+    /** [last map] returns the last key/value pair in [set] or throws. */
 
-  let last: (t 'k 'v) => ('k, 'v);
-  /** [last map] returns the last key/value pair in [set] or throws. */
+    let map: (key => 'a => 'b) => (t 'a) => (t 'b);
+    /** [map f map] returns a new SortedMap whose values are the result of
+     *  applying [f] each key/value pair in [map].
+     */
 
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  /** [map f map] returns a new SortedMap whose values are the result of
-   *  applying [f] each key/value pair in [map].
-   */
+    let merge: (key => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'v) => (t 'vAcc)  => (t 'vAcc);
+    /** [merge f next acc] returns a new SortedMap that is the result of applying [f] to
+     *  the union of keys in [next] and [acc]. For each key, [f] is called with the mapped
+     *  values in [next] and [acc] or None. If [f] returns Some the value is added to the returned Map.
+     */
 
-  let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'v) => (t 'k 'vAcc)  => (t 'k 'vAcc);
-  /** [merge f next acc] returns a new SortedMap that is the result of applying [f] to
-   *  the union of keys in [next] and [acc]. For each key, [f] is called with the mapped
-   *  values in [next] and [acc] or None. If [f] returns Some the value is added to the returned Map.
-   */
+    let none: (key => 'v => bool) => (t 'v) => bool;
+    /** [none f map] returns true if the predicate [f] returns false for
+     *  every key/value pair in [map], otherwise true. If [map] is empty, returns true.
+     */
 
-  let none: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [none f map] returns true if the predicate [f] returns false for
-   *  every key/value pair in [map], otherwise true. If [map] is empty, returns true.
-   */
+    let put: key => 'v => (t 'v) => (t 'v);
+    /** [put key value map] returns a new SortedMap containing a mapping from [key] to [value].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  /** [put key value map] returns a new SortedMap containing a mapping from [key] to [value].
-   *
-   *  Complexity: O(log N)
-   */
+    let putAll: (KeyedIterator.t key 'v) => (t 'v) => (t 'v);
+    /** [putAll iter map] returns a new SortedMap containing the key/value pairs in [iter].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll iter map] returns a new SortedMap containing the key/value pairs in [iter].
-   *
-   *  Complexity: O(log N)
-   */
+    let reduce: ('acc => key => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduce f acc map] applies the accumulator function [f] to each key/value pair in [map]
+     *  with the specified seed value [acc], returning the final accumulated value.
+     */
 
-  let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  /** [reduce f acc map] applies the accumulator function [f] to each key/value pair in [map]
-   *  with the specified seed value [acc], returning the final accumulated value.
-   */
+    let reduceRight: ('acc => key => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduceRight f acc map] applies the accumulator function [f] to each key/value pair in [map]
+     *  in reverse order with the specified seed value [acc], returning the final accumulated value.
+     */
 
-  let reduceRight: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  /** [reduceRight f acc map] applies the accumulator function [f] to each key/value pair in [map]
-   *  in reverse order with the specified seed value [acc], returning the final accumulated value.
-   */
+    let remove: key => (t 'v) => (t 'v);
+    /** [remove key map] returns a new SortedMap without any mapping from [key].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let remove: 'k => (t 'k 'v) => (t 'k 'v);
-  /** [remove key map] returns a new SortedMap without any mapping from [key].
-   *
-   *  Complexity: O(log N)
-   */
+    let removeAll: (t 'v) => (t 'v);
+    /** [removeAll map] returns an empty SortedMap with the same key Comparator as [map].
+     *
+     *  Complexity: O(1)
+     */
 
-  let removeAll: (t 'k 'v) => (t 'k 'v);
-  /** [removeAll map] returns an empty SortedMap with the same key Comparator as [map].
-   *
-   *  Complexity: O(1)
-   */
+    let removeFirst: (t 'v) => (t 'v);
+    /** [removeFirst map] returns a new SortedMap without the first element.
+     *
+     *  Complexity: O(log N)
+     */
 
-  let removeFirst: (t 'k 'v) => (t 'k 'v);
-  /** [removeFirst map] returns a new SortedMap without the first element.
-   *
-   *  Complexity: O(log N)
-   */
+    let removeLast: (t 'v) => (t 'v);
+    /** [removeLast map] returns a new SortedMap without the last element.
+     *
+     *  Complexity: O(log N)
+     */
 
-  let removeLast: (t 'k 'v) => (t 'k 'v);
-  /** [removeLast map] returns a new SortedMap without the last element.
-   *
-   *  Complexity: O(log N)
-   */
+    let some: (key => 'v => bool) => (t 'v) => bool;
+    /** [some f map] returns true if the predicate [f] returns true for
+     *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
+     */
 
-  let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [some f map] returns true if the predicate [f] returns true for
-   *  any key/value pair in [map], otherwise false. If [map] is empty, returns false.
-   */
+    let toIterator: (t 'v) => (Iterator.t (key, 'v));
 
-  let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
+    let toIteratorReversed: (t 'v) => (Iterator.t (key, 'v));
 
-  let toIteratorReversed: (t 'k 'v) => (Iterator.t ('k, 'v));
+    let toKeyedIterator: (t 'v) => (KeyedIterator.t key 'v);
 
-  let toKeyedIterator: (t 'k 'v) => (KeyedIterator.t 'k 'v);
+    let toKeyedIteratorReversed: (t 'v) => (KeyedIterator.t key 'v);
 
-  let toKeyedIteratorReversed: (t 'k 'v) => (KeyedIterator.t 'k 'v);
+    let toMap: (t 'v) => (Map.t key 'v);
+    /** [toMap map] returns a Map view of [map]. */
 
-  let toMap: (t 'k 'v) => (Map.t 'k 'v);
-  /** [toMap map] returns a Map view of [map]. */
+    let toSequence: (t 'v) => (Sequence.t (key, 'v));
+    /** [toSequence map] returns a Sequence of the key/value pairs in [map]. */
 
-  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
-  /** [toSequence map] returns a Sequence of the key/value pairs in [map]. */
+    let toSequenceReversed: (t 'v) => (Sequence.t (key, 'v));
 
-  let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
+    let toSet: (t 'v) => (Set.t (key, 'v));
+    /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
+     *  to equate values.
+     */
 
-  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
-   *  to equate values.
-   */
+    let toSetWith: (Equality.t 'v) => (t 'v) => (Set.t (key, 'v));
+    /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
+     *  using [equals] to equate values.
+     */
 
-  let toSetWith: (Equality.t 'v) => (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
-   *  using [equals] to equate values.
-   */
+    let tryFind: (key => 'v => bool) => (t 'v) => (option (key, 'v));
+    /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
 
-  let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  /** [find f map] returns the first key/value pair for which the predicate [f] returns true or None. */
+    let tryFirst: (t 'v) => (option (key, 'v));
+    /** [tryFirst map] returns the first key/value pair in [set] or None. */
 
-  let tryFirst: (t 'k 'v) => (option ('k, 'v));
-  /** [tryFirst map] returns the first key/value pair in [set] or None. */
+    let tryLast: (t 'v) => (option (key, 'v));
+    /** [tryLast map] returns the last key/value pair in [set] or None. */
 
-  let tryLast: (t 'k 'v) => (option ('k, 'v));
-  /** [tryLast map] returns the last key/value pair in [set] or None. */
+    let tryGet: key => (t 'v) => (option 'v);
+    /** [tryGet key map] returns the value associated with [key] or None */
 
-  let tryGet: 'k => (t 'k 'v) => (option 'v);
-  /** [tryGet key map] returns the value associated with [key] or None */
+    let values: (t 'v) => (Iterator.t 'v);
+    /** [values map] returns a Sequence of non-unique values in [map]. */
+  };
 
-  let values: (t 'k 'v) => (Iterator.t 'v);
-  /** [values map] returns a Sequence of non-unique values in [map]. */
+  let module Make: (Comparable: Comparable.S) => S with type key = Comparable.t;
 };
 
 let module SortedSet: {
   /** AVL tree based Set implementation. */
+  module type S = {
+    type elt;
 
-  type t 'a;
-  /** The SortedSet type */
+    type t;
+    /** The SortedSet type */
 
-  let add: 'a => (t 'a) => (t 'a);
-  /** [add value set] returns a new SortedSet with [value], if [set] does not already contain [value].
-   *
-   *  Complexity: O(log N)
-   */
+    let add: elt => t => t;
+    /** [add value set] returns a new SortedSet with [value], if [set] does not already contain [value].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  /** [addAll iter set] returns a new SortedSet with all elements in [iter] added.
-   *
-   *  Complexity: O(N log N)
-   */
+    let addAll: (Iterator.t elt) => t => t;
+    /** [addAll iter set] returns a new SortedSet with all elements in [iter] added.
+     *
+     *  Complexity: O(N log N)
+     */
 
-  let compare: (Comparator.t (t 'a));
-  /** A comparator that compares two SortedSet instances.
-   *  [compare this that] will throw if [this] and [that] do not use the
-   *  same comparison function.
-   */
+    let compare: (Comparator.t t);
+    /** A comparator that compares two SortedSet instances.
+     *  [compare this that] will throw if [this] and [that] do not use the
+     *  same comparison function.
+     */
 
-  let contains: 'a => (t 'a) => bool;
-  /** [contains value set] returns true if any element in [set] is equal to [value].
-   *
-   *  Complexity: O(log N)
-   */
+    let contains: elt => t => bool;
+    /** [contains value set] returns true if any element in [set] is equal to [value].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let count: (t 'a) => int;
-  /** [count set] returns the number of elements in the set.
-   *
-   *  Complexity: O(1)
-   */
+    let count: t => int;
+    /** [count set] returns the number of elements in the set.
+     *
+     *  Complexity: O(1)
+     */
 
-  let empty: (t 'a);
-  /** The empty SortedSet using structural comparison */
+    let empty: t;
+    /** The empty SortedSet using structural comparison */
 
-  let emptyWith: (Comparator.t 'a) => (t 'a);
-  /** [empty comparator] returns an empty SortedSet using the provided [comparator]. */
+    let equals: t => t => bool;
+    /** [equals this that] compares [this] and [that] for equality. Two SortedSet are only
+     *  equal if they use the same the comparison function and contain the same values.
+     */
 
-  let equals: (t 'a) => (t 'a) => bool;
-  /** [equals this that] compares [this] and [that] for equality. Two SortedSet are only
-   *  equal if they use the same the comparison function and contain the same values.
-   */
+    let every: (elt => bool) => t => bool;
+    /** [every f set] returns true if the predicate [f] returns true for every
+     *  element in [set], otherwise false. If [set] is empty, returns true.
+     */
 
-  let every: ('a => bool) => (t 'a) => bool;
-  /** [every f set] returns true if the predicate [f] returns true for every
-   *  element in [set], otherwise false. If [set] is empty, returns true.
-   */
+    let find: (elt => bool) => t => elt;
+    /** [find f set] returns the first value for which the predicate [f] returns true.
+     *  If no value is found, an exception is thrown.
+     */
 
-  let find: ('a => bool) => (t 'a) => 'a;
-  /** [find f set] returns the first value for which the predicate [f] returns true.
-   *  If no value is found, an exception is thrown.
-   */
+    let first: t => elt;
+    /** [first set] returns the first element in [set] or throws.
+     *
+     * Complexity: O(log n)
+     */
 
-  let first: (t 'a) => 'a;
-  /** [first set] returns the first element in [set] or throws.
-   *
-   * Complexity: O(log n)
-   */
+    let forEach: (elt => unit) => t => unit;
+    /** [forEach f set] iterates through [set], invoking [f] for each element until [set] completes. */
 
-  let forEach: ('a => unit) => (t 'a) => unit;
-  /** [forEach f set] iterates through [set], invoking [f] for each element until [set] completes. */
+    let from: (Iterator.t elt) => t;
+    /** [from iter] returns a SortedSet including the values in [iter] using structural comparison. */
 
-  let from: (Iterator.t 'a) => (t 'a);
-  /** [from iter] returns a SortedSet including the values in [iter] using structural comparison. */
+    let hash: (Hash.t t);
+    /** [hash set] hashes [set], hashing elements using structural hashing. */
 
-  let fromWith: (Comparator.t 'a)  => (Iterator.t 'a) => (t 'a);
-  /** [fromWith comparator iter] returns a SortedSet including the values in [iter]
-   *  the provided [comparator] comparison function.
-   */
+    let hashWith: (Hash.t elt) => (Hash.t t);
+    /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
 
-  let hash: (Hash.t (t 'a));
-  /** [hash set] hashes [set], hashing elements using structural hashing. */
+    let intersect: t => t => t;
+    /** [intersect this that] returns a new SortedSet containing only elements that appear in
+     *  both [this] and [that]. The returned SortedSet uses [this]'s comparator function.
+     *
+     *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
+     *  the same comparator (NOT IMPLEMENTED).
+     */
 
-  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-  /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
+    let isEmpty: t => bool;
+    /** [isEmpty set] returns true if [set] contains no elements. */
 
-  let intersect: (t 'a) => (t 'a) => (t 'a);
-  /** [intersect this that] returns a new SortedSet containing only elements that appear in
-   *  both [this] and [that]. The returned SortedSet uses [this]'s comparator function.
-   *
-   *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
-   *  the same comparator (NOT IMPLEMENTED).
-   */
+    let isNotEmpty: t => bool;
+    /** [isNotEmpty set] returns true if [set] contains at least one element. */
 
-  let isEmpty: (t 'a) => bool;
-  /** [isEmpty set] returns true if [set] contains no elements. */
+    let last: t => elt;
+    /** [last set] returns the last element in [set] or throws.
+     *
+     * Complexity: O(log n)
+     */
 
-  let isNotEmpty: (t 'a) => bool;
-  /** [isNotEmpty set] returns true if [set] contains at least one element. */
+    let none: (elt => bool) => t => bool;
+    /** [none f set] returns true if the predicate [f] returns false for every
+     *  elements in [set], otherwise true. If [set] is empty, returns true.
+     */
 
-  let last: (t 'a) => 'a;
-  /** [last set] returns the last element in [set] or throws.
-   *
-   * Complexity: O(log n)
-   */
+    let reduce: ('acc => elt => 'acc) => 'acc => t => 'acc;
+    /** [reduce f acc set] applies the accumulator function [f] to each element in [set]
+     *  with the specified seed value [acc], returning the final accumulated value.
+     */
 
-  let none: ('a => bool) => (t 'a) => bool;
-  /** [none f set] returns true if the predicate [f] returns false for every
-   *  elements in [set], otherwise true. If [set] is empty, returns true.
-   */
+    let reduceRight: ('acc => elt => 'acc) => 'acc => t => 'acc;
+    /** [reduceRight f acc set] applies the accumulator function [f] to each element in [set]
+     *  in reverse order with the specified seed value [acc], returning the final accumulated value.
+     */
 
-  let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  /** [reduce f acc set] applies the accumulator function [f] to each element in [set]
-   *  with the specified seed value [acc], returning the final accumulated value.
-   */
+    let remove: elt => t => t;
+    /** [remove value set] returns a new SortedSet without [value].
+     *
+     *  Complexity: O(log N)
+     */
 
-  let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  /** [reduceRight f acc set] applies the accumulator function [f] to each element in [set]
-   *  in reverse order with the specified seed value [acc], returning the final accumulated value.
-   */
+    let removeAll: t => t;
+    /** [removeAll set] returns the empty SortedSet with the same comparator as [set].
+     *
+     *  Complexity: O(1)
+     */
 
-  let remove: 'a => (t 'a) => (t 'a);
-  /** [remove value set] returns a new SortedSet without [value].
-   *
-   *  Complexity: O(log N)
-   */
+    let removeFirst: t => t;
+    /** [removeFirst set] returns a new SortedSet without the first element.
+     *
+     *  Complexity: O(log N)
+     */
 
-  let removeAll: (t 'a) => (t 'a);
-  /** [removeAll set] returns the empty SortedSet with the same comparator as [set].
-   *
-   *  Complexity: O(1)
-   */
+    let removeLast: t => t;
+    /** [removeLast set] returns a new SortedSet without the last element.
+     *
+     *  Complexity: O(log N)
+     */
 
-  let removeFirst: (t 'a) => (t 'a);
-  /** [removeFirst set] returns a new SortedSet without the first element.
-   *
-   *  Complexity: O(log N)
-   */
+    let some: (elt => bool) => t => bool;
+    /** [some f set] returns true if the predicate [f] returns true for any element in [set], otherwise false.
+     *  If [set] is empty, returns false.
+     */
 
-  let removeLast: (t 'a) => (t 'a);
-  /** [removeLast set] returns a new SortedSet without the last element.
-   *
-   *  Complexity: O(log N)
-   */
+    let subtract: t => t => t;
+    /** [substract this that] returns a new SortedSet with the elements of [that] removed from [this].
+     *  The returned SortedSet uses [this]'s comparator function.
+     *
+     *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
+     *  the same comparator (NOT IMPLEMENTED).
+     */
 
-  let some: ('a => bool) => (t 'a) => bool;
-  /** [some f set] returns true if the predicate [f] returns true for any element in [set], otherwise false.
-   *  If [set] is empty, returns false.
-   */
+    let toIterator: t => (Iterator.t elt);
 
-  let subtract: (t 'a) => (t 'a) => (t 'a);
-  /** [substract this that] returns a new SortedSet with the elements of [that] removed from [this].
-   *  The returned SortedSet uses [this]'s comparator function.
-   *
-   *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
-   *  the same comparator (NOT IMPLEMENTED).
-   */
+    let toIteratorReversed: t => (Iterator.t elt);
 
-  let toIterator: (t 'a) => (Iterator.t 'a);
+    let toKeyedIterator: t => (KeyedIterator.t elt elt);
 
-  let toIteratorReversed: (t 'a) => (Iterator.t 'a);
+    let toKeyedIteratorReversed: t => (KeyedIterator.t elt elt);
 
-  let toKeyedIterator: (t 'a) => (KeyedIterator.t 'a 'a);
+    let toMap: t => (Map.t elt elt);
+    /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
 
-  let toKeyedIteratorReversed: (t 'a) => (KeyedIterator.t 'a 'a);
+    let toSequence: t => (Sequence.t elt);
+    /** [toSequence set] returns a Sequence of the values in [set]. */
 
-  let toMap: (t 'a) => (Map.t 'a 'a);
-  /** [toMap set] returns a Map view of [set] as mapping of values to themselves. */
+    let toSequenceReversed: t => (Sequence.t elt);
 
-  let toSequence: (t 'a) => (Sequence.t 'a);
-  /** [toSequence set] returns a Sequence of the values in [set]. */
+    let toSet: t => (Set.t elt);
+    /** [toSet set] returns a Set view of [set] */
 
-  let toSequenceReversed: (t 'a) => (Sequence.t 'a);
+    let tryFind: (elt => bool) => t => (option elt);
+    /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
 
-  let toSet: (t 'a) => (Set.t 'a);
-  /** [toSet set] returns a Set view of [set] */
+    let tryFirst: t => (option elt);
+    /** [tryFirst seq] returns first element in [seq] or None.
+     *
+     * Complexity: O(log n)
+     */
 
-  let tryFind: ('a => bool) => (t 'a) => (option 'a);
-  /** [tryFind f set] returns the first value for which the predicate [f] returns true or None. */
+    let tryLast: t => (option elt);
+    /** [tryLast seq] returns the last element in [seq] or None.
+     *
+     *  Complexity: O(1)
+     */
 
-  let tryFirst: (t 'a) => (option 'a);
-  /** [tryFirst seq] returns first element in [seq] or None.
-   *
-   * Complexity: O(log n)
-   */
+    let union: t => t => t;
+    /** [union this that] returns a new SortedSet containing all the elements in
+     *  both [this] and [that]. The returned SortedSet uses [this]'s comparator function.
+     *
+     *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
+     *  the same comparator (NOT IMPLEMENTED).
+     */
+  };
 
-  let tryLast: (t 'a) => (option 'a);
-  /** [tryLast seq] returns the last element in [seq] or None.
-   *
-   *  Complexity: O(1)
-   */
-
-  let union: (t 'a) => (t 'a) => (t 'a);
-  /** [union this that] returns a new SortedSet containing all the elements in
-   *  both [this] and [that]. The returned SortedSet uses [this]'s comparator function.
-   *
-   *  Complexity: O(N) if [this] and [that] use different comparators. O(log N) if they use
-   *  the same comparator (NOT IMPLEMENTED).
-   */
+  let module Make: (Comparable: Comparable.S) => S with type elt = Comparable.t;
 };
 
 let module Stack: {

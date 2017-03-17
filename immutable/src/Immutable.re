@@ -61,6 +61,8 @@ let module Comparator = {
   let structural = Comparator.structural;
 };
 
+let module Comparable = Comparable;
+
 let module HashStrategy = {
   type t 'a = HashStrategy.t 'a;
 
@@ -830,108 +832,9 @@ let module Option = {
   let tryLast = Option.tryLast;
 };
 
-let module SortedMap = {
-  type t 'k 'v = SortedMap.t 'k 'v;
+let module SortedMap = SortedMap;
 
-  let alter = SortedMap.alter;
-  let compare = SortedMap.compare;
-  let compareWith = SortedMap.compareWith;
-  let contains = SortedMap.contains;
-  let containsWith = SortedMap.containsWith;
-  let containsKey = SortedMap.containsKey;
-  let count = SortedMap.count;
-  let empty = SortedMap.empty;
-  let emptyWith = SortedMap.emptyWith;
-  let equals = SortedMap.equals;
-  let equalsWith = SortedMap.equalsWith;
-  let every = SortedMap.every;
-  let find = SortedMap.find;
-  let first = SortedMap.first;
-  let forEach = SortedMap.forEach;
-  let fromMap = SortedMap.fromMap;
-  let fromMapWith = SortedMap.fromMapWith;
-  let from = SortedMap.from;
-  let fromWith = SortedMap.fromWith;
-  let get = SortedMap.get;
-  let hash = SortedMap.hash;
-  let hashWith = SortedMap.hashWith;
-  let isEmpty = SortedMap.isEmpty;
-  let isNotEmpty = SortedMap.isNotEmpty;
-  let keys = SortedMap.keys;
-  let last = SortedMap.last;
-  let map = SortedMap.map;
-  let merge = SortedMap.merge;
-  let none = SortedMap.none;
-  let put = SortedMap.put;
-  let putAll = SortedMap.putAll;
-  let reduce = SortedMap.reduce;
-  let reduceRight = SortedMap.reduceRight;
-  let remove = SortedMap.remove;
-  let removeAll = SortedMap.removeAll;
-  let removeFirst = SortedMap.removeFirst;
-  let removeLast = SortedMap.removeLast;
-  let some = SortedMap.some;
-  let toIterator = SortedMap.toIterator;
-  let toIteratorReversed = SortedMap.toIteratorReversed;
-  let toKeyedIterator = SortedMap.toKeyedIterator;
-  let toKeyedIteratorReversed = SortedMap.toKeyedIteratorReversed;
-  let toMap = SortedMap.toMap;
-  let toSequence = SortedMap.toSequence;
-  let toSequenceReversed = SortedMap.toSequenceReversed;
-  let toSet = SortedMap.toSet;
-  let toSetWith = SortedMap.toSetWith;
-  let tryFind = SortedMap.tryFind;
-  let tryFirst = SortedMap.tryFirst;
-  let tryGet = SortedMap.tryGet;
-  let tryLast = SortedMap.tryLast;
-  let values = SortedMap.values;
-};
-
-let module SortedSet = {
-  type t 'a = SortedSet.t 'a;
-
-  let add = SortedSet.add;
-  let addAll = SortedSet.addAll;
-  let compare = SortedSet.compare;
-  let contains = SortedSet.contains;
-  let count = SortedSet.count;
-  let empty = SortedSet.empty;
-  let emptyWith = SortedSet.emptyWith;
-  let equals = SortedSet.equals;
-  let every = SortedSet.every;
-  let find = SortedSet.find;
-  let first = SortedSet.first;
-  let forEach = SortedSet.forEach;
-  let from = SortedSet.from;
-  let fromWith = SortedSet.fromWith;
-  let hash = SortedSet.hash;
-  let hashWith = SortedSet.hashWith;
-  let intersect = SortedSet.intersect;
-  let isEmpty = SortedSet.isEmpty;
-  let isNotEmpty = SortedSet.isNotEmpty;
-  let last = SortedSet.last;
-  let none = SortedSet.none;
-  let reduce = SortedSet.reduce;
-  let reduceRight = SortedSet.reduceRight;
-  let remove = SortedSet.remove;
-  let removeFirst = SortedSet.removeFirst;
-  let removeLast = SortedSet.removeLast;
-  let removeAll = SortedSet.removeAll;
-  let some = SortedSet.some;
-  let subtract = SortedSet.subtract;
-  let toIterator = SortedSet.toIterator;
-  let toIteratorReversed = SortedSet.toIteratorReversed;
-  let toKeyedIterator = SortedSet.toKeyedIterator;
-  let toKeyedIteratorReversed = SortedSet.toKeyedIteratorReversed;
-  let toSet = SortedSet.toSet;
-  let toMap = SortedSet.toMap;
-  let toSequence = SortedSet.toSequence;
-  let toSequenceReversed = SortedSet.toSequenceReversed;
-  let tryFind = SortedSet.tryFind;
-  let tryFirst = SortedSet.tryFirst;
-  let tryLast= SortedSet.tryLast;
-  let union = SortedSet.union;
-};
+let module SortedSet = SortedSet;
 
 let module Stack = {
   type t 'a = Stack.t 'a;

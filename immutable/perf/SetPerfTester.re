@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
- 
+
 let module CamlSet = Set;
 open Immutable;
 open Printf;
@@ -58,6 +58,12 @@ let module CamlIntSet = CamlSet.Make {
   let compare = Pervasives.compare;
 };
 
+let module SortedIntSet = SortedSet.Make {
+  type t = int;
+  let compare = Comparator.structural;
+};
+
+
 let test (n: int) (count: int): Test.t => {
   let keys = IntRange.create 0 count;
 
@@ -88,8 +94,8 @@ let test (n: int) (count: int): Test.t => {
 
   let sortedSet = keys
     |> IntRange.reduce
-      (fun acc i => acc |> SortedSet.add i)
-      SortedSet.empty;
+      (fun acc i => acc |> SortedIntSet.add i)
+      SortedIntSet.empty;
 
   let testGroup = [
     describe "CamlIntSet" (
@@ -103,14 +109,14 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "SortedSet" (
+    describe "SortedIntSet" (
       generateTests
         (fun () => sortedSet)
         (fun () => keys)
-        (fun () => SortedSet.empty)
-        SortedSet.add
-        SortedSet.remove
-        SortedSet.contains
+        (fun () => SortedIntSet.empty)
+        SortedIntSet.add
+        SortedIntSet.remove
+        SortedIntSet.contains
         count
     ),
 

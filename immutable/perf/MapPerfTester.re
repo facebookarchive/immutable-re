@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
- 
+
 let module CamlMap = Map;
 open Immutable;
 open Printf;
@@ -57,6 +57,11 @@ let module CamlIntMap = CamlMap.Make {
   let compare = Pervasives.compare;
 };
 
+let module SortedIntMap = SortedMap.Make {
+  type t = int;
+  let compare = Comparator.structural;
+};
+
 let test (n: int) (count: int): Test.t => {
   let keys = IntRange.create 0 count;
 
@@ -84,8 +89,8 @@ let test (n: int) (count: int): Test.t => {
 
   let sortedMap = keys
     |> IntRange.reduce
-      (fun acc i => acc |> SortedMap.put i i)
-      SortedMap.empty;
+      (fun acc i => acc |> SortedIntMap.put i i)
+      SortedIntMap.empty;
 
   let testGroup = [
     describe "CamlIntMap" (
@@ -102,14 +107,14 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "SortedMap" (
+    describe "SortedIntMap" (
       generateTests
         (fun () => sortedMap)
         (fun () => keys)
-        (fun () => SortedMap.empty)
-        SortedMap.put
-        SortedMap.remove
-        SortedMap.tryGet
+        (fun () => SortedIntMap.empty)
+        SortedIntMap.put
+        SortedIntMap.remove
+        SortedIntMap.tryGet
         count
     ),
 

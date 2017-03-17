@@ -11,39 +11,39 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
-/*
-let emptyWith: (Comparator.t 'a) => (t 'a);
-let fromSequenceWith: (Comparator.t 'a)  => (Sequence.t 'a) => (t 'a);
-*/
+let module SortedIntSet = SortedSet.Make {
+  type t = int;
+  let compare = Comparator.structural;
+};
 
 let module Set = {
-  type t = SortedSet.t int;
+  type t = SortedIntSet.t;
 
-  let add = SortedSet.add;
-  let addAll = SortedSet.addAll;
-  let contains = SortedSet.contains;
-  let count = SortedSet.count;
-  let empty = fun () => SortedSet.empty;
-  let equals = SortedSet.equals;
-  let every = SortedSet.every;
-  let find = SortedSet.find;
-  let forEach = SortedSet.forEach;
-  let from = SortedSet.from;
-  let hash = SortedSet.hash;
-  let intersect = SortedSet.intersect;
-  let isEmpty = SortedSet.isEmpty;
-  let isNotEmpty = SortedSet.isNotEmpty;
-  let none = SortedSet.none;
-  let reduce = SortedSet.reduce;
-  let remove = SortedSet.remove;
-  let removeAll = SortedSet.removeAll;
-  let some = SortedSet.some;
-  let subtract = SortedSet.subtract;
-  let toSet = SortedSet.toSet;
-  let toMap = SortedSet.toMap;
-  let toSequence = SortedSet.toSequence;
-  let tryFind = SortedSet.tryFind;
-  let union = SortedSet.union;
+  let add = SortedIntSet.add;
+  let addAll = SortedIntSet.addAll;
+  let contains = SortedIntSet.contains;
+  let count = SortedIntSet.count;
+  let empty = fun () => SortedIntSet.empty;
+  let equals = SortedIntSet.equals;
+  let every = SortedIntSet.every;
+  let find = SortedIntSet.find;
+  let forEach = SortedIntSet.forEach;
+  let from = SortedIntSet.from;
+  let hash = SortedIntSet.hash;
+  let intersect = SortedIntSet.intersect;
+  let isEmpty = SortedIntSet.isEmpty;
+  let isNotEmpty = SortedIntSet.isNotEmpty;
+  let none = SortedIntSet.none;
+  let reduce = SortedIntSet.reduce;
+  let remove = SortedIntSet.remove;
+  let removeAll = SortedIntSet.removeAll;
+  let some = SortedIntSet.some;
+  let subtract = SortedIntSet.subtract;
+  let toSet = SortedIntSet.toSet;
+  let toMap = SortedIntSet.toMap;
+  let toSequence = SortedIntSet.toSequence;
+  let tryFind = SortedIntSet.tryFind;
+  let union = SortedIntSet.union;
 };
 
 let count = 10000;
@@ -52,65 +52,61 @@ let test = describe "SortedSet" [
   it "compare" (fun () => {
     let set = IntRange.create 0 count
       |> IntRange.toIterator
-      |> SortedSet.from;
+      |> SortedIntSet.from;
 
     let setEqual = IntRange.create 0 count
       |> IntRange.toIterator
-      |> SortedSet.from;
-    expect (SortedSet.compare set setEqual) |> toBeEqualTo (fun _ => "") Ordering.equal;
+      |> SortedIntSet.from;
+    expect (SortedIntSet.compare set setEqual) |> toBeEqualTo (fun _ => "") Ordering.equal;
 
     let setSameLengthLessThan = IntRange.create (-1) count
       |> IntRange.toIterator
-      |> SortedSet.from;
-    expect (SortedSet.compare set setSameLengthLessThan) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
+      |> SortedIntSet.from;
+    expect (SortedIntSet.compare set setSameLengthLessThan) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
 
 
     let setSameLengthGreaterThan = IntRange.create 1 count
       |> IntRange.toIterator
-      |> SortedSet.from;
-    expect (SortedSet.compare set setSameLengthGreaterThan) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
+      |> SortedIntSet.from;
+    expect (SortedIntSet.compare set setSameLengthGreaterThan) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
 
     let setLonger = IntRange.create 0 (count + 1)
       |> IntRange.toIterator
-      |> SortedSet.from;
-    expect (SortedSet.compare set setLonger) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
+      |> SortedIntSet.from;
+    expect (SortedIntSet.compare set setLonger) |> toBeEqualTo (fun _ => "") Ordering.lessThan;
 
     let setShorter = IntRange.create 0 (count - 1)
       |> IntRange.toIterator
-      |> SortedSet.from;
-    expect (SortedSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
-
-    let setWithRandomComparator1 = SortedSet.emptyWith (fun _ _ => Ordering.greaterThan);
-    let setWithRandomComparator2 = SortedSet.emptyWith (fun _ _ => Ordering.lessThan);
-    defer (fun () => SortedSet.compare setWithRandomComparator1 setWithRandomComparator2) |> throws;
+      |> SortedIntSet.from;
+    expect (SortedIntSet.compare set setShorter) |> toBeEqualTo (fun _ => "") Ordering.greaterThan;
   }),
   it "last and tryLast" (fun () => {
     let set = IntRange.create 0 count
       |> IntRange.toIterator
-      |> SortedSet.from;
+      |> SortedIntSet.from;
 
-    expect (set |> SortedSet.last) |> toBeEqualToInt (count - 1);
-    expect (set |> SortedSet.tryLast) |> toBeEqualToSomeOfInt (count - 1);
+    expect (set |> SortedIntSet.last) |> toBeEqualToInt (count - 1);
+    expect (set |> SortedIntSet.tryLast) |> toBeEqualToSomeOfInt (count - 1);
 
-    defer (fun () => SortedSet.empty |> SortedSet.last) |> throws;
-    expect (SortedSet.empty |> SortedSet.tryLast) |> toBeEqualToNoneOfInt;
+    defer (fun () => SortedIntSet.empty |> SortedIntSet.last) |> throws;
+    expect (SortedIntSet.empty |> SortedIntSet.tryLast) |> toBeEqualToNoneOfInt;
   }),
   it "first and tryFirst" (fun () => {
     let set = IntRange.create 0 count
       |> IntRange.toIterator
-      |> SortedSet.from;
+      |> SortedIntSet.from;
 
-    expect (set |> SortedSet.first) |> toBeEqualToInt 0;
-    expect (set |> SortedSet.tryFirst) |> toBeEqualToSomeOfInt 0;
+    expect (set |> SortedIntSet.first) |> toBeEqualToInt 0;
+    expect (set |> SortedIntSet.tryFirst) |> toBeEqualToSomeOfInt 0;
 
-    defer (fun () => SortedSet.empty |> SortedSet.first) |> throws;
-    expect (SortedSet.empty |> SortedSet.tryFirst) |> toBeEqualToNoneOfInt;
+    defer (fun () => SortedIntSet.empty |> SortedIntSet.first) |> throws;
+    expect (SortedIntSet.empty |> SortedIntSet.tryFirst) |> toBeEqualToNoneOfInt;
   }),
   it "reduceRight" (fun () => {
     IntRange.create 0 count
       |> IntRange.toIterator
-      |> SortedSet.from
-      |> SortedSet.reduceRight
+      |> SortedIntSet.from
+      |> SortedIntSet.reduceRight
         (fun acc i => { expect (i < acc) |> toBeEqualToTrue; i })
         count
       |> ignore;
@@ -118,15 +114,15 @@ let test = describe "SortedSet" [
   it "removeLast" (fun () => {
     let set = IntRange.create 0 count
       |> IntRange.toIterator
-      |> SortedSet.from
-      |> SortedSet.removeLast;
+      |> SortedIntSet.from
+      |> SortedIntSet.removeLast;
     expect (set |> Set.contains (count - 1)) |> toBeEqualToFalse;
   }),
   it "removeFirst" (fun () => {
     let set = IntRange.create 0 count
       |> IntRange.toIterator
-      |> SortedSet.from
-      |> SortedSet.removeFirst;
+      |> SortedIntSet.from
+      |> SortedIntSet.removeFirst;
     expect (set |> Set.contains 0) |> toBeEqualToFalse;
   }),
   ...(SetTester.test count (module Set))

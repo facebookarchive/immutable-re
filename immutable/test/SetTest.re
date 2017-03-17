@@ -11,6 +11,11 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
+let module SortedStringSet = SortedSet.Make {
+  type t = string;
+  let compare = Comparator.string;
+};
+
 let test = describe "Set" [
   describe "empty" [
     it "contains" (fun () => {
@@ -68,14 +73,14 @@ let test = describe "Set" [
     expect (Set.hash col) |> toBeEqualToInt (Set.hash dup);
   }),
   it "intersect" (fun () => {
-    let setA = ["a", "b", "c"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
-    let setB = ["b", "c", "d"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
+    let setA = ["a", "b", "c"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
+    let setB = ["b", "c", "d"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
 
     let intersection = Set.intersect setA setB
-      |> SortedSet.from
-      |> SortedSet.toSet;
+      |> SortedStringSet.from
+      |> SortedStringSet.toSet;
 
-    let expected = ["b", "c"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
+    let expected = ["b", "c"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
 
     expect (Set.equals intersection expected) |> toBeEqualToTrue;
   }),
@@ -92,26 +97,26 @@ let test = describe "Set" [
     ) |> toBeEqualToTrue;
   }),
   it "subtract" (fun () => {
-    let setA = ["a", "b", "c"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
-    let setB = ["b", "c", "d"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
+    let setA = ["a", "b", "c"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
+    let setB = ["b", "c", "d"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
 
     let subtracted = Set.subtract setA setB
-      |> SortedSet.from
-      |> SortedSet.toSet;
+      |> SortedStringSet.from
+      |> SortedStringSet.toSet;
 
-    let expected = ["a"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
+    let expected = ["a"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
 
     expect (Set.equals subtracted expected) |> toBeEqualToTrue;
   }),
   it "union" (fun () => {
-    let setA = ["a", "b", "c"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
-    let setB = ["b", "c", "d"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
+    let setA = ["a", "b", "c"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
+    let setB = ["b", "c", "d"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
 
     let union =  Set.union setA setB
-      |> SortedSet.from
-      |> SortedSet.toSet;
+      |> SortedStringSet.from
+      |> SortedStringSet.toSet;
 
-    let expected = ["a", "b", "c", "d"] |> List.toIterator |> SortedSet.from |> SortedSet.toSet;
+    let expected = ["a", "b", "c", "d"] |> List.toIterator |> SortedStringSet.from |> SortedStringSet.toSet;
 
     expect (Set.equals union expected) |> toBeEqualToTrue;
   }),
