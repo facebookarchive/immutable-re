@@ -41,7 +41,7 @@ let equalsWith (valueEquals: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
         Vector.equalsWith valueEquals this that
     | (Ascending this, Descending that)
     | (Descending this, Ascending that) =>
-        Sequence.equalsWith valueEquals (Vector.toSequence this) (Vector.toSequenceReversed that)
+        Sequence.equalsWith valueEquals (Vector.toSequence this) (Vector.toSequenceRight that)
   };
 
 let equals (this: t 'a) (that: t 'a): bool =>
@@ -128,7 +128,7 @@ let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switc
   | Descending vector => vector |> Vector.reduce f acc;
 };
 
-let forEachReverse (f: 'a => unit) (deque: t 'a): unit =>
+let forEachRight (f: 'a => unit) (deque: t 'a): unit =>
   deque |> reduceRight (fun _ next => f next) ();
 
 let removeAll (_: t 'a): (t 'a) => empty;
@@ -137,17 +137,17 @@ let toIterator (deque: t 'a): (Iterator.t 'a) =>
  if (isEmpty deque) Iterator.empty
  else { reduce: fun f acc => reduce f acc deque };
 
-let toIteratorReversed (deque: t 'a): (Iterator.t 'a) =>
+let toIteratorRight (deque: t 'a): (Iterator.t 'a) =>
   if (isEmpty deque) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc deque };
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequence
-  | Descending vector => vector |> Vector.toSequenceReversed;
+  | Descending vector => vector |> Vector.toSequenceRight;
 };
 
-let toSequenceReversed (deque: t 'a): (Sequence.t 'a) => switch deque {
-  | Ascending vector => vector |> Vector.toSequenceReversed
+let toSequenceRight (deque: t 'a): (Sequence.t 'a) => switch deque {
+  | Ascending vector => vector |> Vector.toSequenceRight
   | Descending vector => vector |> Vector.toSequence;
 };
 
@@ -326,7 +326,7 @@ let every (f: 'a => bool) (deque: t 'a): bool => switch deque {
 let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addLastAll iter;
 
-let fromReversed (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   empty|> addFirstAll iter;
 
 let map (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {

@@ -107,6 +107,8 @@ let toKeyedIterator ({ reduce } as set: t 'a): (KeyedIterator.t 'a 'a) =>
 
 let toSequence ({ toSequence }: t 'a): (Sequence.t 'a) => toSequence;
 
+let toSet (set: t 'a): (t 'a) => set;
+
 let tryFind (f: 'a => bool) ({ tryFind }: t 'a): (option 'a) =>
   tryFind f;
 

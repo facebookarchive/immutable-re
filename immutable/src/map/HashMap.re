@@ -366,11 +366,13 @@ type t 'k 'v = {
   strategy: HashStrategy.t 'k,
 };
 
-let empty: (t 'k 'v) = {
+let emptyInstance = {
   count: 0,
   root: BitmapTrieMap.Empty,
   strategy: HashStrategy.structuralCompare,
 };
+
+let empty (): (t 'k 'v) => emptyInstance;
 
 let emptyWith (strategy: HashStrategy.t 'k): (t 'k 'v) => {
   count: 0,
@@ -573,7 +575,10 @@ let module TransientHashMap = {
     transient |> Transient.get |> count;
 
   let empty (): (t 'k 'v) =>
-    empty |> mutate;
+    empty () |> mutate;
+
+  let get (key: 'k) (transient: t 'k 'v): 'v =>
+    transient |> Transient.get |> get key;
 
   let persistentEmptyWith = emptyWith;
 

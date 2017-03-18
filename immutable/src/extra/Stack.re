@@ -85,7 +85,7 @@ let forEach (f: 'a => unit) ({ list }: t 'a): unit =>
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
 
-let fromReversed (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   empty |> addFirstAll iter;
 
 let hash ({ list }: t 'a): int =>

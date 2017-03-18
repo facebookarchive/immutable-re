@@ -10,69 +10,70 @@
 open Option.Operators;
 
 module type S = {
-  type elt;
+  type a;
   type t;
 
-  let add: elt => t => t;
-  let addAll: (Iterator.t elt) => t => t;
-  let compare: (Comparator.t t);
-  let contains: elt => t => bool;
-  let count: t => int;
-  let empty: t;
-  let equals: t => t => bool;
-  let every: (elt => bool) => t => bool;
-  let find: (elt => bool) => t => elt;
-  let first: t => elt;
-  let forEach: (elt => unit) => t => unit;
-  let from: (Iterator.t elt) => t;
-  let hash: (Hash.t t);
-  let hashWith: (Hash.t elt) => (Hash.t t);
-  let intersect: t => t => t;
+  let compare: t => t => Ordering.t;
+  let first: t => a;
+  let tryFirst: t => option a;
+  let forEachRight: (a => unit) => t => unit;
+  let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
+  let last: t => a;
+  let toIteratorRight: t => Iterator.t a;
+  let toSequenceRight: t => Sequence.t a;
+  let tryLast: t => option a;
+  let toKeyedIteratorRight: t => KeyedIterator.t a a;
+  let forEach: (a => unit) => t => unit;
+  let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
+  let every: (a => bool) => t => bool;
+  let find: (a => bool) => t => a;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
-  let last: t => elt;
-  let none: (elt => bool) => t => bool;
-  let reduce: ('acc => elt => 'acc) => 'acc => t => 'acc;
-  let reduceRight: ('acc => elt => 'acc) => 'acc => t => 'acc;
-  let remove: elt => t => t;
+  let none: (a => bool) => t => bool;
+  let some: (a => bool) => t => bool;
+  let toIterator: t => Iterator.t a;
+  let tryFind: (a => bool) => t => option a;
+  let count: t => int;
+  let toSequence: t => Sequence.t a;
+  let contains: a => t => bool;
+  let equals: Equality.t t;
+  let toKeyedIterator: t => KeyedIterator.t a a;
+  let toMap: t => ImmMap.t a a;
+  let toSet: t => ImmSet.t a;
+  let add: a => t => t;
+  let addAll: Iterator.t a => t => t;
+  let intersect: t => t => t;
+  let remove: a => t => t;
   let removeAll: t => t;
+  let subtract: t => t => t;
+  let union: t => t => t;
   let removeFirst: t => t;
   let removeLast: t => t;
-  let some: (elt => bool) => t => bool;
-  let subtract: t => t => t;
-  let toIterator: t => (Iterator.t elt);
-  let toIteratorReversed: t => (Iterator.t elt);
-  let toKeyedIterator: t => (KeyedIterator.t elt elt);
-  let toKeyedIteratorReversed: t => (KeyedIterator.t elt elt);
-  let toMap: t => (ImmMap.t elt elt);
-  let toSequence: t => (Sequence.t elt);
-  let toSequenceReversed: t => (Sequence.t elt);
-  let toSet: t => (ImmSet.t elt);
-  let tryFind: (elt => bool) => t => (option elt);
-  let tryFirst: t => (option elt);
-  let tryLast: t => (option elt);
-  let union: t => t => t;
+  let empty: t;
+  let from: (Iterator.t a) => t;
+  let hash: (Hash.t t);
+  let hashWith: (Hash.t a) => (Hash.t t);
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
-  type elt = Comparable.t;
+  type a = Comparable.t;
 
   type t = {
     count: int,
-    tree: AVLTreeSet.t elt,
+    tree: AVLTreeSet.t a,
   };
 
   let comparator = Comparable.compare;
 
-  let add (x: elt) ({ count, tree } as sortedSet: t): t => {
+  let add (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = tree |> AVLTreeSet.add comparator x;
     if (newTree === tree) sortedSet else { count: count + 1, tree: newTree }
   };
 
-  let addAll (iter: Iterator.t elt) (sortedSet: t): t => iter
+  let addAll (iter: Iterator.t a) (sortedSet: t): t => iter
     |> Iterator.reduce (fun acc next => acc |> add next) sortedSet;
 
-  let contains (x: elt) ({ tree }: t): bool =>
+  let contains (x: a) ({ tree }: t): bool =>
     AVLTreeSet.contains comparator x tree;
 
   let count ({ count }: t): int => count;
@@ -83,16 +84,16 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let isNotEmpty ({ count }: t): bool => count != 0;
 
-  let from (iter: Iterator.t elt): t =>
+  let from (iter: Iterator.t a): t =>
     empty |> addAll iter;
 
-  let reduce (f: 'acc => elt => 'acc) (acc: 'acc) ({ tree }: t): 'acc =>
+  let reduce (f: 'acc => a => 'acc) (acc: 'acc) ({ tree }: t): 'acc =>
     tree |> AVLTreeSet.reduce f acc;
 
-  let reduceRight (f: 'acc => elt => 'acc) (acc: 'acc) ({ tree }: t): 'acc =>
+  let reduceRight (f: 'acc => a => 'acc) (acc: 'acc) ({ tree }: t): 'acc =>
     tree |> AVLTreeSet.reduceRight f acc;
 
-  let remove (x: elt) ({ count, tree } as sortedSet: t): t => {
+  let remove (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = AVLTreeSet.remove comparator x tree;
     if (newTree === tree) sortedSet else { count: count - 1, tree: newTree }
   };
@@ -110,11 +111,11 @@ let module Make = fun (Comparable: Comparable.S) => {
     if (newTree === tree) sortedSet else { count: count - 1, tree: newTree }
   };
 
-  let toSequence ({ tree }: t): (Sequence.t elt) =>
+  let toSequence ({ tree }: t): (Sequence.t a) =>
     tree |> AVLTreeSet.toSequence;
 
-  let toSequenceReversed ({ tree }: t): (Sequence.t elt) =>
-    tree |> AVLTreeSet.toSequenceReversed;
+  let toSequenceRight ({ tree }: t): (Sequence.t a) =>
+    tree |> AVLTreeSet.toSequenceRight;
 
   let compare
       (this: t)
@@ -137,42 +138,45 @@ let module Make = fun (Comparable: Comparable.S) => {
         (toSequence that)
     );
 
-  let every (f: elt => bool) (set: t): bool =>
+  let every (f: a => bool) (set: t): bool =>
     set |> toSequence |> Sequence.every f;
 
-  let find (f: elt => bool) (set: t): elt =>
+  let find (f: a => bool) (set: t): a =>
     set |> toSequence |> Sequence.find f;
 
-  let first ({ tree }: t): elt =>
+  let first ({ tree }: t): a =>
     AVLTreeSet.first tree;
 
-  let forEach (f: elt => unit) ({ tree }: t) =>
+  let forEach (f: a => unit) ({ tree }: t) =>
     tree |> AVLTreeSet.forEach f;
 
-  let hashWith (hash: (Hash.t elt)) (set: t): int => set
+  let forEachRight (f: a => unit) ({ tree }: t) =>
+    tree |> AVLTreeSet.forEach f;
+
+  let hashWith (hash: (Hash.t a)) (set: t): int => set
     |> reduce (Hash.reducer hash) Hash.initialValue;
 
   let hash (set: t): int =>
     hashWith Hash.structural set;
 
-  let last ({ tree }: t): elt =>
+  let last ({ tree }: t): a =>
     AVLTreeSet.last tree;
 
-  let none (f: elt => bool) (set: t): bool =>
+  let none (f: a => bool) (set: t): bool =>
     set |> toSequence |> Sequence.none f;
 
-  let some (f: elt => bool) (set: t): bool =>
+  let some (f: a => bool) (set: t): bool =>
     set |> toSequence |> Sequence.some f;
 
-  let toIterator (set: t): (Iterator.t elt) =>
+  let toIterator (set: t): (Iterator.t a) =>
     if (isEmpty set) Iterator.empty
     else { reduce: fun f acc => reduce f acc set };
 
-  let toIteratorReversed (set: t): (Iterator.t elt) =>
+  let toIteratorRight (set: t): (Iterator.t a) =>
     if (isEmpty set) Iterator.empty
     else { reduce: fun f acc => reduceRight f acc set };
 
-  let toKeyedIterator (set: t): (KeyedIterator.t elt elt)  =>
+  let toKeyedIterator (set: t): (KeyedIterator.t a a)  =>
     if (isEmpty set) KeyedIterator.empty
     else {
       reduce: fun f acc => set |> reduce
@@ -180,7 +184,7 @@ let module Make = fun (Comparable: Comparable.S) => {
         acc
     };
 
-  let toKeyedIteratorReversed (set: t): (KeyedIterator.t elt elt) =>
+  let toKeyedIteratorRight (set: t): (KeyedIterator.t a a) =>
     if (isEmpty set) KeyedIterator.empty
     else {
       reduce: fun f acc => set |> reduceRight
@@ -188,16 +192,16 @@ let module Make = fun (Comparable: Comparable.S) => {
         acc
     };
 
-  let tryFind (f: elt => bool) (set: t): (option elt) =>
+  let tryFind (f: a => bool) (set: t): (option a) =>
     set |> toSequence |> Sequence.tryFind f;
 
-  let tryFirst ({ tree }: t): (option elt) =>
+  let tryFirst ({ tree }: t): (option a) =>
     AVLTreeSet.tryFirst tree;
 
-  let tryLast ({ tree }: t): (option elt) =>
+  let tryLast ({ tree }: t): (option a) =>
     AVLTreeSet.tryLast tree;
 
-  let toSet (set: t): (ImmSet.t elt) => {
+  let toSet (set: t): (ImmSet.t a) => {
     contains: fun a => contains a set,
     count: count set,
     every: fun f => every f set,
@@ -210,7 +214,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     tryFind: fun f => tryFind f set,
   };
 
-  let toMap (set: t): (ImmMap.t elt elt) => {
+  let toMap (set: t): (ImmMap.t a a) => {
     containsWith: fun equals k v =>
       if (set |> contains k) (equals k v)
       else false,

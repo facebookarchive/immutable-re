@@ -63,6 +63,16 @@ let forEach (f: int => unit) ({ count, start }: t) => {
   recurse f start count;
 };
 
+let forEachRight (f: int => unit) ({ count, start }: t) => {
+  let rec recurse f start count =>
+    if (count == 0) ()
+    else {
+      f start;
+      recurse f (start - 1) (count - 1);
+    };
+  recurse f (count - 1) count;
+};
+
 let isEmpty ({ count }: t): bool => count == 0;
 
 let isNotEmpty ({ count }: t): bool => count != 0;
@@ -119,7 +129,7 @@ let toSequence ({ count, start }: t): (Sequence.t int) => {
   recurse start count
 };
 
-let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
+let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
     if (count == 0) Sequence.Completed
     else Sequence.Next start (recurse (start - 1) (count - 1));
@@ -139,7 +149,7 @@ let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
 
-let toIteratorReversed (set: t): (Iterator.t int) =>
+let toIteratorRight (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc set };
 
@@ -150,7 +160,7 @@ let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
     acc
   };
 
-let toKeyedIteratorReversed (set: t): (KeyedIterator.t int int) =>
+let toKeyedIteratorRight (set: t): (KeyedIterator.t int int) =>
   if (isEmpty set) KeyedIterator.empty
   else { reduce: fun f acc => set |> reduceRight
     (fun acc next => f acc next next)

@@ -153,7 +153,7 @@ let forEachWithIndex (f: int => 'a => unit) (arr: t 'a): 'acc =>
 let from (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addLastAll iter;
 
-let fromReversed (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addFirstAll iter;
 
 let get (index: int) (arr: t 'a): 'a => arr.(index);
@@ -277,7 +277,7 @@ let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc =>
   Array.fold_right (Functions.flip f) arr acc;
 
-let forEachReverse (f: 'a => unit) (arr: t 'a): unit =>
+let forEachRight (f: 'a => unit) (arr: t 'a): unit =>
   arr |> reduceRight (fun _ next => f next) ();
 
 let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc => {
@@ -292,7 +292,7 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a):
   loop acc arrLastIndex;
 };
 
-let forEachReverseWithIndex (f: int => 'a => unit) (arr: t 'a): unit =>
+let forEachRightWithIndex (f: int => 'a => unit) (arr: t 'a): unit =>
   arr |> reduceRightWithIndex (fun _ index next => f index next) ();
 
 let hashWith (hash: Hash.t 'a) (arr: t 'a): int =>
@@ -413,7 +413,7 @@ let toIterator (arr: t 'a): (Iterator.t 'a) =>
   if (isEmpty arr) Iterator.empty
   else { reduce: fun f acc => reduce f acc arr };
 
-let toIteratorReversed (arr: t 'a): (Iterator.t 'a) =>
+let toIteratorRight (arr: t 'a): (Iterator.t 'a) =>
   if (isEmpty arr) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc arr };
 
@@ -421,11 +421,11 @@ let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
   if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceWithIndex f acc arr };
 
-let toKeyedIteratorReversed (arr: t 'a): (KeyedIterator.t int 'a) =>
+let toKeyedIteratorRight (arr: t 'a): (KeyedIterator.t int 'a) =>
   if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceRightWithIndex f acc arr };
 
-let toSequenceReversed (arr: t 'a): (Sequence.t 'a) =>
+let toSequenceRight (arr: t 'a): (Sequence.t 'a) =>
   if (isEmpty arr) Sequence.empty
   else {
     let rec loop index => fun () =>

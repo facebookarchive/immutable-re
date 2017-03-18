@@ -18,6 +18,15 @@ let empty: t 'k 'v = {
   reduce: fun _ acc => acc
 };
 
+let concat (iters: list (t 'k 'v)): (t 'k 'v) => switch iters {
+  | [] => empty
+  | _ => {
+    reduce: fun f acc => iters |> ImmList.reduce
+      (fun acc next => next |> reduce f acc)
+      acc
+    }
+};
+
 let counter acc _ _ => acc + 1;
 
 let count (iter: t 'k 'v): int =>

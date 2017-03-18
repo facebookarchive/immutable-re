@@ -120,6 +120,15 @@ let rec forEach (f: 'a => unit) (tree: t 'a) => switch tree {
      forEach f right;
 };
 
+let rec forEachRight (f: 'a => unit) (tree: t 'a) => switch tree {
+  | Empty  => ()
+  | Leaf v => f v
+  | Node _ left v right =>
+     forEachRight f right;
+     f v;
+     forEachRight f left;
+};
+
 let rec last (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ _ v Empty => v
@@ -213,13 +222,13 @@ let rec toSequence (tree: t 'a): (Sequence.t 'a) => switch tree {
     ]
 };
 
-let rec toSequenceReversed (tree: t 'a): (Sequence.t 'a) => switch tree {
+let rec toSequenceRight (tree: t 'a): (Sequence.t 'a) => switch tree {
   | Empty => Sequence.empty
   | Leaf v => Sequence.return v
   | Node _ left v right => Sequence.concat [
-      Sequence.defer(fun () => toSequenceReversed right),
+      Sequence.defer(fun () => toSequenceRight right),
       Sequence.return v,
-      Sequence.defer(fun () => toSequenceReversed left),
+      Sequence.defer(fun () => toSequenceRight left),
     ]
 };
 

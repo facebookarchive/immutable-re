@@ -181,6 +181,8 @@ let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
   values: map |> toIterator |> Iterator.map (fun (k, v) => m k v),
 };
 
+let toMap (map: t 'k 'v): (t 'k 'v) => map;
+
 let toSetWith
     (equals: Equality.t 'v)
     (map: t 'k 'v): (ImmSet.t ('k, 'v)) => {

@@ -213,6 +213,8 @@ let toMap (set: t): (ImmMap.t int int) =>
   set |> toSet |> ImmMap.ofSet;
 
 let module TransientIntSet = {
+  type a = int;
+
   type intSet = t;
 
   type t = Transient.t intSet;

@@ -864,7 +864,7 @@ let findWithIndex (f: int => 'a => bool) (vec: t 'a): 'a => {
 let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addLastAll iter;
 
-let fromReversed (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   empty|> addFirstAll iter;
 
 let indexOf (f: 'a => bool) (vec: t 'a): int => {
@@ -963,7 +963,7 @@ let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 
   acc;
 };
 
-let forEachReverse (f: 'a => unit) (vec: t 'a): unit =>
+let forEachRight (f: 'a => unit) (vec: t 'a): unit =>
   vec |> reduceRight (fun _ next => f next) ();
 
 let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
@@ -978,7 +978,7 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a):
   reduceRight reducer acc vec;
 };
 
-let forEachReverseWithIndex (f: int => 'a => unit) (vec: t 'a): unit =>
+let forEachRightWithIndex (f: int => 'a => unit) (vec: t 'a): unit =>
   vec |> reduceRightWithIndex (fun _ index next => f index next) ();
 
 let hashWith (hash: Hash.t 'a) (vec: t 'a): int =>
@@ -1092,7 +1092,7 @@ let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
 
-let toIteratorReversed (set: t 'a): (Iterator.t 'a) =>
+let toIteratorRight (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduceRight f acc set };
 
@@ -1100,7 +1100,7 @@ let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
   if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceWithIndex f acc arr };
 
-let toKeyedIteratorReversed (arr: t 'a): (KeyedIterator.t int 'a) =>
+let toKeyedIteratorRight (arr: t 'a): (KeyedIterator.t int 'a) =>
   if (isEmpty arr) KeyedIterator.empty
   else { reduce: fun f acc => reduceRightWithIndex f acc arr };
 
@@ -1120,10 +1120,10 @@ let compareWith
 let compare (this: t 'a) (that: t 'a): Ordering.t =>
   compareWith Comparator.structural this that;
 
-let toSequenceReversed ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
-  CopyOnWriteArray.toSequenceReversed right,
-  IndexedTrie.toSequenceReversed middle,
-  CopyOnWriteArray.toSequenceReversed left,
+let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
+  CopyOnWriteArray.toSequenceRight right,
+  IndexedTrie.toSequenceRight middle,
+  CopyOnWriteArray.toSequenceRight left,
 ];
 
 let tryFind (f: 'a => bool) ({ left, middle, right }: t 'a): (option 'a) =>

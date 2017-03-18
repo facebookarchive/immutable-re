@@ -67,10 +67,10 @@ let rec toSequence (trie: t 'a): (Sequence.t 'a) => switch trie {
   | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
 };
 
-let rec toSequenceReversed (trie: t 'a): (Sequence.t 'a) => switch trie {
+let rec toSequenceRight (trie: t 'a): (Sequence.t 'a) => switch trie {
   | Empty => Sequence.empty
-  | Leaf _ values => values |> CopyOnWriteArray.toSequenceReversed
-  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceReversed |> Sequence.flatMap toSequenceReversed
+  | Leaf _ values => values |> CopyOnWriteArray.toSequenceRight
+  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceRight |> Sequence.flatMap toSequenceRight
 };
 
 let rec tryFind (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
