@@ -18,8 +18,8 @@ let module VectorImpl = {
     let count: (t 'a) => int;
     let empty: unit => (t 'a);
     let getOrRaiseUnsafe: int => (t 'a) => 'a;
-    let removeFirst: Transient.Owner.t => (t 'a) => (t 'a);
-    let removeLast: Transient.Owner.t => (t 'a) => (t 'a);
+    let removeFirstOrRaise: Transient.Owner.t => (t 'a) => (t 'a);
+    let removeLastOrRaise: Transient.Owner.t => (t 'a) => (t 'a);
     let updateUnsafe: Transient.Owner.t => int => 'a => (t 'a) => (t 'a);
     let updateWithUnsafe: Transient.Owner.t => int => ('a => 'a) => (t 'a) => (t 'a);
   };
@@ -42,8 +42,8 @@ let module VectorImpl = {
     let last: (t 'a) => (option 'a);
     let lastOrRaise: (t 'a) => 'a;
     let removeAll: (t 'a) => (t 'a);
-    let removeFirst: Transient.Owner.t => (t 'a) => (t 'a);
-    let removeLast: Transient.Owner.t => (t 'a) => (t 'a);
+    let removeFirstOrRaise: Transient.Owner.t => (t 'a) => (t 'a);
+    let removeLastOrRaise: Transient.Owner.t => (t 'a) => (t 'a);
     let update: Transient.Owner.t => int => 'a => (t 'a) => (t 'a);
     let updateWith: Transient.Owner.t => int => ('a => 'a) => (t 'a) => (t 'a);
   };
@@ -98,9 +98,9 @@ let module VectorImpl = {
 
     let removeAll (_: t 'a): (t 'a) => X.empty ();
 
-    let removeFirst = X.removeFirst;
+    let removeFirstOrRaise = X.removeFirstOrRaise;
 
-    let removeLast = X.removeLast;
+    let removeLastOrRaise = X.removeLastOrRaise;
 
     let update (owner: Transient.Owner.t) (index: int) (value: 'a) (vector: t 'a): (t 'a) => {
       Preconditions.failIfOutOfRange (X.count vector) index;
@@ -177,13 +177,13 @@ let module PersistentVector = VectorImpl.Make {
       right: [| value |],
     };
 
-  let removeFirst (_: Transient.Owner.t) ({ left, middle, right }: t 'a): (t 'a) => {
+  let removeFirstOrRaise (_: Transient.Owner.t) ({ left, middle, right }: t 'a): (t 'a) => {
     let leftCount = CopyOnWriteArray.count left;
     let middleCount = IndexedTrie.count middle;
     let rightCount = CopyOnWriteArray.count right;
 
     if (leftCount > 1) {
-      left: CopyOnWriteArray.removeFirst left,
+      left: CopyOnWriteArray.removeFirstOrRaise left,
       middle,
       right,
     }
@@ -201,7 +201,7 @@ let module PersistentVector = VectorImpl.Make {
     else failwith "vector is empty";
   };
 
-  let removeLast (_: Transient.Owner.t) ({ left, middle, right }: t 'a): (t 'a) => {
+  let removeLastOrRaise (_: Transient.Owner.t) ({ left, middle, right }: t 'a): (t 'a) => {
     let leftCount = CopyOnWriteArray.count left;
     let middleCount = IndexedTrie.count middle;
     let rightCount = CopyOnWriteArray.count right;
@@ -209,7 +209,7 @@ let module PersistentVector = VectorImpl.Make {
     if (rightCount > 1) {
       left,
       middle,
-      right: CopyOnWriteArray.removeLast right,
+      right: CopyOnWriteArray.removeLastOrRaise right,
     }
     else if (middleCount > 0) {
       let (middle, IndexedTrie.Leaf _ right) =
@@ -222,7 +222,7 @@ let module PersistentVector = VectorImpl.Make {
       right: [||],
     }
     else if (leftCount > 0) {
-      left: CopyOnWriteArray.removeLast left,
+      left: CopyOnWriteArray.removeLastOrRaise left,
       middle,
       right,
     }
@@ -448,7 +448,7 @@ let module TransientVectorImpl = VectorImpl.Make {
     transientVec
   };
 
-  let removeFirst
+  let removeFirstOrRaise
       (owner: Transient.Owner.t)
       ({
         left,
@@ -488,7 +488,7 @@ let module TransientVectorImpl = VectorImpl.Make {
     transientVec
   };
 
-  let removeLast
+  let removeLastOrRaise
       (owner: Transient.Owner.t)
       ({
         left,
@@ -627,8 +627,8 @@ let isNotEmpty = PersistentVector.isNotEmpty;
 let last = PersistentVector.last;
 let lastOrRaise = PersistentVector.lastOrRaise;
 let removeAll = PersistentVector.removeAll;
-let removeFirst vector => PersistentVector.removeFirst Transient.Owner.none vector;
-let removeLast vector => PersistentVector.removeLast Transient.Owner.none vector;
+let removeFirstOrRaise vector => PersistentVector.removeFirstOrRaise Transient.Owner.none vector;
+let removeLastOrRaise vector => PersistentVector.removeLastOrRaise Transient.Owner.none vector;
 let update index => PersistentVector.update Transient.Owner.none index;
 let updateWith index => PersistentVector.updateWith Transient.Owner.none index;
 
@@ -703,11 +703,11 @@ module TransientVector = {
   let removeAll (transient: t 'a): (t 'a) =>
       transient |> Transient.update removeImpl;
 
-  let removeFirst (transient: t 'a): (t 'a) =>
-    transient |> Transient.update TransientVectorImpl.removeFirst;
+  let removeFirstOrRaise (transient: t 'a): (t 'a) =>
+    transient |> Transient.update TransientVectorImpl.removeFirstOrRaise;
 
-  let removeLast (transient: t 'a): (t 'a) =>
-    transient |> Transient.update TransientVectorImpl.removeLast;
+  let removeLastOrRaise (transient: t 'a): (t 'a) =>
+    transient |> Transient.update TransientVectorImpl.removeLastOrRaise;
 
   let get (index: int) (transient: t 'a): (option 'a) =>
     transient |> Transient.get |> TransientVectorImpl.get index;

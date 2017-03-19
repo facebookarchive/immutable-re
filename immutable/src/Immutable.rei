@@ -565,8 +565,8 @@ let module List: {
    *  Complexity: O(1)
    */
 
-  let removeFirst: (t 'a) => (t 'a);
-  /** [removeFirst list] returns a new List without the first element.
+  let removeFirstOrRaise: (t 'a) => (t 'a);
+  /** [removeFirstOrRaise list] returns a new List without the first element.
    *
    *  Complexity: O(1)
    */
@@ -761,8 +761,8 @@ let module Stack: {
      *  Complexity: O(1)
      */
 
-    let removeFirst: (t 'a) => (t 'a);
-    /** [removeFirst stack] returns a new Stack without the first element.
+    let removeFirstOrRaise: (t 'a) => (t 'a);
+    /** [removeFirstOrRaise stack] returns a new Stack without the first element.
      *
      *  Complexity: O(1)
      */
@@ -804,8 +804,8 @@ let module TransientStack: {
     let firstOrRaise: (t 'a) => 'a;
     /** [first transient] returns the first element in [transient] or throws. */
 
-    let removeFirst: (t 'a) => (t 'a);
-    /** [removeFirst transient] removes the first element from [transient].
+    let removeFirstOrRaise: (t 'a) => (t 'a);
+    /** [removeFirstOrRaise transient] removes the first element from [transient].
      *
      *  Complexity: O(1)
      */
@@ -814,7 +814,7 @@ let module TransientStack: {
 
 let module rec Deque: {
   /** A double-ended queue with efficient appends [addLast], prepends [addFirst]
-   *  and removals from either end of the queue [removeFirst] [removeLast].
+   *  and removals from either end of the queue [removeFirstOrRaise] [removeLastOrRaise].
    */
 
   module type S1 = {
@@ -839,8 +839,8 @@ let module rec Deque: {
      * Complexity: O(N) the number of elements in [iter].
      */
 
-    let removeLast: (t 'a) => (t 'a);
-    /** [removeLast deque] returns a new Deque without the last element.
+    let removeLastOrRaise: (t 'a) => (t 'a);
+    /** [removeLastOrRaise deque] returns a new Deque without the last element.
      *
      *  Complexity: O(1)
      */
@@ -886,8 +886,8 @@ and TransientDeque: {
     let lastOrRaise: (t 'a) => 'a;
     /** [last transient] returns the last element in [transient] or throws. */
 
-    let removeLast: (t 'a) => (t 'a);
-    /** [removeLast transient] removes the last element from [transient].
+    let removeLastOrRaise: (t 'a) => (t 'a);
+    /** [removeLastOrRaise transient] removes the last element from [transient].
      *
      *  Complexity: O(1)
      */
@@ -1487,9 +1487,9 @@ let module PersistentNavigableSet: {
     include NavigableSet.S with type a := a and type t := t;
     include PersistentSet.S with type a := a and type t := t;
 
-    let removeFirst: t => t;
+    let removeFirstOrRaise: t => t;
 
-    let removeLast: t => t;
+    let removeLastOrRaise: t => t;
   };
 
   module type S1 = {
@@ -1498,9 +1498,9 @@ let module PersistentNavigableSet: {
     include NavigableSet.S1 with type t 'a := t 'a;
     include PersistentSet.S1 with type t 'a := t 'a;
 
-    let removeFirst: t 'a => t 'a;
+    let removeFirstOrRaise: t 'a => t 'a;
 
-    let removeLast: t 'a => t 'a;
+    let removeLastOrRaise: t 'a => t 'a;
   };
 };
 
@@ -1762,14 +1762,14 @@ let module PersistentNavigableMap: {
     include NavigableMap.S1 with type k := k and type t 'v := t 'v;
     include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
-    let removeFirst: (t 'v) => (t 'v);
-    /** [removeFirst map] returns a new SortedMap without the first element.
+    let removeFirstOrRaise: (t 'v) => (t 'v);
+    /** [removeFirstOrRaise map] returns a new SortedMap without the first element.
      *
      *  Complexity: O(log N)
      */
 
-    let removeLast: (t 'v) => (t 'v);
-    /** [removeLast map] returns a new SortedMap without the last element.
+    let removeLastOrRaise: (t 'v) => (t 'v);
+    /** [removeLastOrRaise map] returns a new SortedMap without the last element.
      *
      *  Complexity: O(log N)
      */

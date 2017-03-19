@@ -136,7 +136,7 @@ let hash (list: t 'a): int => hashWith Hash.structural list;
 
 let removeAll (_: t 'a): (t 'a) => [];
 
-let removeFirst (list: t 'a): (t 'a) => switch list {
+let removeFirstOrRaise (list: t 'a): (t 'a) => switch list {
   | [_, ...tail] => tail
   | [] => failwith "List is empty"
 };

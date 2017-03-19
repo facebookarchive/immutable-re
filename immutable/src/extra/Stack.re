@@ -118,7 +118,7 @@ let reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) ({ list }: t 'a): 'acc =>
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
-let removeFirst ({ count, list }: t 'a): (t 'a) => ({
+let removeFirstOrRaise ({ count, list }: t 'a): (t 'a) => ({
   count: count - 1,
   list: switch list {
     | [_, ...tail] => tail

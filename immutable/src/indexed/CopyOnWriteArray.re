@@ -421,7 +421,7 @@ let mapReverseWithIndex (f: int => 'a => 'b) (arr: t 'a): (t 'b) =>
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
-let removeLast (arr: t 'a): (t 'a) => {
+let removeLastOrRaise (arr: t 'a): (t 'a) => {
   let count = count arr;
 
   if (count == 0) (failwith "Array is empty")
@@ -444,7 +444,7 @@ let removeAt (index: int) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let removeFirst (arr: t 'a): (t 'a) =>
+let removeFirstOrRaise (arr: t 'a): (t 'a) =>
   removeAt 0 arr;
 
 let return (value: 'a): (t 'a) => [| value |];

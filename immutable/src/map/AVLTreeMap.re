@@ -268,18 +268,18 @@ let rebalance (left: t 'k 'v) (k: 'k) (v: 'v) (right: t 'k 'v): (t 'k 'v) => {
   };
 };
 
-let rec removeFirst (tree: t 'k 'v): (t 'k 'v) => switch tree {
-  | Empty => Empty
+let rec removeFirstOrRaise (tree: t 'k 'v): (t 'k 'v) => switch tree {
+  | Empty => failwith "empty"
   | Leaf _ _ => Empty
   | Node _ Empty _ _ right => right
-  | Node _ left k v right => rebalance (removeFirst left) k v right;
+  | Node _ left k v right => rebalance (removeFirstOrRaise left) k v right;
 };
 
-let rec removeLast (tree: t 'k 'v): (t 'k 'v) => switch tree {
-  | Empty => Empty
+let rec removeLastOrRaise (tree: t 'k 'v): (t 'k 'v) => switch tree {
+  | Empty => failwith "empty"
   | Leaf _ _ => Empty
   | Node _ left _ _ Empty => left
-  | Node _ left k v right => rebalance left k v (removeLast right);
+  | Node _ left k v right => rebalance left k v (removeLastOrRaise right);
 };
 
 type alterResult =
@@ -358,7 +358,7 @@ let rec alter
             | _ =>
               result := Removed;
               let (k, v) = firstOrRaise right;
-              rebalance left k v (removeFirst right);
+              rebalance left k v (removeFirstOrRaise right);
           }
         | Some xV =>
             result := Replace;

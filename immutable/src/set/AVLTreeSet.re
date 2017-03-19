@@ -170,29 +170,29 @@ let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => sw
      acc
 };
 
-let rec removeFirst (tree: t 'a): (t 'a) => switch tree {
-  | Empty => Empty
+let rec removeFirstOrRaise (tree: t 'a): (t 'a) => switch tree {
+  | Empty => failwith "empty"
   | Leaf _ => Empty
   | Node _ Empty _ right => right
-  | Node _ left v right => rebalance (removeFirst left) v right;
+  | Node _ left v right => rebalance (removeFirstOrRaise left) v right;
 };
 
-let rec removeFirstWithValue (first: ref 'a) (tree: t 'a): (t 'a) => switch tree {
-  | Empty => Empty
+let rec removeFirstOrRaiseWithValue (first: ref 'a) (tree: t 'a): (t 'a) => switch tree {
+  | Empty => failwith "empty"
   | Leaf v =>
       first := v;
       Empty
   | Node _ Empty v right =>
       first := v;
       right
-  | Node _ left v right => rebalance (removeFirstWithValue first left) v right;
+  | Node _ left v right => rebalance (removeFirstOrRaiseWithValue first left) v right;
 };
 
-let rec removeLast (tree: t 'a): (t 'a) => switch tree {
-  | Empty => Empty
+let rec removeLastOrRaise (tree: t 'a): (t 'a) => switch tree {
+  | Empty => failwith "empty"
   | Leaf _ => Empty
   | Node _ left _ Empty => left
-  | Node _ left v right => rebalance left v (removeLast right);
+  | Node _ left v right => rebalance left v (removeLastOrRaise right);
 };
 
 let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => switch tree {
@@ -204,7 +204,7 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
   | Node height left v right => if (x === v) (switch (left, right) {
       | (Empty, _) => right
       | (_, Empty) => left
-      | _ => rebalance left (firstOrRaise right) (removeFirst right)
+      | _ => rebalance left (firstOrRaise right) (removeFirstOrRaise right)
     }) else {
       let cmp = comparator x v;
       if (cmp === Ordering.lessThan) {
@@ -219,9 +219,9 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
         | _ =>
             if (height > 4) {
               let first = ref x;
-              let newRight = removeFirstWithValue first right;
+              let newRight = removeFirstOrRaiseWithValue first right;
               rebalance left (!first) newRight
-            } else rebalance left (firstOrRaise right) (removeFirst right)
+            } else rebalance left (firstOrRaise right) (removeFirstOrRaise right)
       }
     }
 };

@@ -48,8 +48,8 @@ module type S = {
   let putAll: KeyedIterator.t k 'v => t 'v => t 'v;
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
-  let removeFirst: t 'v => t 'v;
-  let removeLast: t 'v => t 'v;
+  let removeFirstOrRaise: t 'v => t 'v;
+  let removeLastOrRaise: t 'v => t 'v;
   let compare: Comparator.t (t 'v);
   let compareWith: Comparator.t 'v => Comparator.t (t 'v);
   let contains: k => 'v => t 'v => bool;
@@ -179,18 +179,14 @@ let module Make = fun (Comparable: Comparable.S) => {
   let removeAll (_: t 'v): (t 'v) =>
     empty;
 
-  let removeFirst ({ count, tree } as map: t 'v): (t 'v) => {
-    let newTree = tree |> AVLTreeMap.removeFirst;
-
-    if (tree === newTree) map
-    else { count: count - 1, tree: newTree }
+  let removeFirstOrRaise ({ count, tree }: t 'v): (t 'v) => {
+    let newTree = tree |> AVLTreeMap.removeFirstOrRaise;
+    { count: count - 1, tree: newTree }
   };
 
-  let removeLast ({ count, tree } as map: t 'v): (t 'v) => {
-    let newTree = tree |> AVLTreeMap.removeLast;
-
-    if (tree === newTree) map
-    else { count: count - 1, tree: newTree }
+  let removeLastOrRaise ({ count, tree }: t 'v): (t 'v) => {
+    let newTree = tree |> AVLTreeMap.removeLastOrRaise;
+    { count: count - 1, tree: newTree }
   };
 
   let some (f: k => 'v => bool) ({ tree }: t 'v): bool =>

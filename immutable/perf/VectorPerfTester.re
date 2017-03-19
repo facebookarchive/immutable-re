@@ -74,7 +74,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => [])
         List.addFirst
         (fun _ _ v => v)
-        List.removeFirst
+        List.removeFirstOrRaise
         (fun _ _ => None)
         count
     ),
@@ -84,7 +84,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => Stack.empty)
         Stack.addFirst
         (fun _ _ v => v)
-        Stack.removeFirst
+        Stack.removeFirstOrRaise
         (fun _ _ => None)
         count
     ),
@@ -94,7 +94,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => Vector.empty)
         Vector.addLast
         Vector.update
-        Vector.removeLast
+        Vector.removeLastOrRaise
         Vector.get
         count
     ),
@@ -104,7 +104,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => Vector.empty |> Vector.mutate)
         TransientVector.addLast
         TransientVector.update
-        TransientVector.removeLast
+        TransientVector.removeLastOrRaise
         TransientVector.get
         count
     ),

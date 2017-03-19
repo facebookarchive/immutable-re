@@ -95,18 +95,18 @@ let lastOrRaise (deque: t 'a): 'a => switch deque {
   | Descending vector => Vector.firstOrRaise vector
 };
 
-let removeFirst (deque: t 'a): (t 'a) => switch deque {
+let removeFirstOrRaise (deque: t 'a): (t 'a) => switch deque {
   | Ascending vector =>
-      Ascending (Vector.removeFirst vector)
+      Ascending (Vector.removeFirstOrRaise vector)
   | Descending vector =>
-      Descending (Vector.removeLast vector)
+      Descending (Vector.removeLastOrRaise vector)
 };
 
-let removeLast (deque: t 'a): (t 'a) => switch deque {
+let removeLastOrRaise (deque: t 'a): (t 'a) => switch deque {
   | Ascending vector =>
-      Ascending (Vector.removeLast vector)
+      Ascending (Vector.removeLastOrRaise vector)
   | Descending vector =>
-      Descending (Vector.removeFirst vector)
+      Descending (Vector.removeFirstOrRaise vector)
 };
 
 let return (value: 'a): (t 'a) =>
@@ -278,21 +278,21 @@ let module TransientDeque = {
   let removeAll (transient: t 'a): (t 'a) =>
     transient |> Transient.update removeAllImpl;
 
-  let removeFirst (transient: t 'a): (t 'a) => switch (Transient.get transient) {
+  let removeFirstOrRaise (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.removeFirst vector |> ignore;
+        TransientVector.removeFirstOrRaise vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.removeLast vector |> ignore;
+        TransientVector.removeLastOrRaise vector |> ignore;
         transient;
   };
 
-  let removeLast (transient: t 'a): (t 'a) => switch (Transient.get transient) {
+  let removeLastOrRaise (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.removeLast vector |> ignore;
+        TransientVector.removeLastOrRaise vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.removeFirst vector |> ignore;
+        TransientVector.removeFirstOrRaise vector |> ignore;
         transient;
   };
 

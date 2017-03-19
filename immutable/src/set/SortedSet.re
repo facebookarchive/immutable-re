@@ -47,8 +47,8 @@ module type S = {
   let removeAll: t => t;
   let subtract: t => t => t;
   let union: t => t => t;
-  let removeFirst: t => t;
-  let removeLast: t => t;
+  let removeFirstOrRaise: t => t;
+  let removeLastOrRaise: t => t;
   let empty: t;
   let from: (Iterator.t a) => t;
   let hash: (Hash.t t);
@@ -101,14 +101,14 @@ let module Make = fun (Comparable: Comparable.S) => {
   let removeAll (_: t): t =>
     empty;
 
-  let removeFirst ({ count, tree } as sortedSet: t): t => {
-    let newTree = AVLTreeSet.removeFirst tree;
-    if (newTree === tree) sortedSet else { count: count - 1, tree: newTree }
+  let removeFirstOrRaise ({ count, tree }: t): t => {
+    let newTree = AVLTreeSet.removeFirstOrRaise tree;
+    { count: count - 1, tree: newTree }
   };
 
-  let removeLast ({ count, tree } as sortedSet: t): t => {
-    let newTree = AVLTreeSet.removeLast tree;
-    if (newTree === tree) sortedSet else { count: count - 1, tree: newTree }
+  let removeLastOrRaise ({ count, tree }: t): t => {
+    let newTree = AVLTreeSet.removeLastOrRaise tree;
+    { count: count - 1, tree: newTree }
   };
 
   let toSequence ({ tree }: t): (Sequence.t a) =>

@@ -253,8 +253,6 @@ let module NavigableCollection = {
 };
 
 let module Stack = {
-  /** A singly-linked stack with an O(1) count operation. */
-
   module type S1 = {
     type t 'a;
 
@@ -275,7 +273,7 @@ let module Stack = {
     let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
     let return: 'a => (t 'a);
     let removeAll: (t 'a) => (t 'a);
-    let removeFirst: (t 'a) => (t 'a);
+    let removeFirstOrRaise: (t 'a) => (t 'a);
   };
 
   include Stack;
@@ -291,7 +289,7 @@ let module TransientStack = {
     let empty: unit => (t 'a);
     let first: (t 'a) => option 'a;
     let firstOrRaise: (t 'a) => 'a;
-    let removeFirst: (t 'a) => (t 'a);
+    let removeFirstOrRaise: (t 'a) => (t 'a);
   };
 };
 
@@ -304,7 +302,7 @@ let module TransientDeque = {
     let addLast: 'a => (t 'a) => (t 'a);
     let last: (t 'a) => option 'a;
     let lastOrRaise: (t 'a) => 'a;
-    let removeLast: (t 'a) => (t 'a);
+    let removeLastOrRaise: (t 'a) => (t 'a);
   };
 
   include Deque.TransientDeque;
@@ -320,7 +318,7 @@ let module Deque = {
     let addLast: 'a => (t 'a) => (t 'a);
     let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
     let from: (Iterator.t 'a) => (t 'a);
-    let removeLast: (t 'a) => (t 'a);
+    let removeLastOrRaise: (t 'a) => (t 'a);
   };
 
   include Deque;
@@ -613,8 +611,8 @@ let module PersistentNavigableSet = {
     include NavigableSet.S with type a := a and type t := t;
     include PersistentSet.S with type a := a and type t := t;
 
-    let removeFirst: t => t;
-    let removeLast: t => t;
+    let removeFirstOrRaise: t => t;
+    let removeLastOrRaise: t => t;
   };
 
   module type S1 = {
@@ -623,8 +621,8 @@ let module PersistentNavigableSet = {
     include NavigableSet.S1 with type t 'a := t 'a;
     include PersistentSet.S1 with type t 'a := t 'a;
 
-    let removeFirst: t 'a => t 'a;
-    let removeLast: t 'a => t 'a;
+    let removeFirstOrRaise: t 'a => t 'a;
+    let removeLastOrRaise: t 'a => t 'a;
   };
 };
 
@@ -693,17 +691,8 @@ let module PersistentNavigableMap = {
     include NavigableMap.S1 with type k := k and type t 'v := t 'v;
     include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
-    let removeFirst: (t 'v) => (t 'v);
-    /** [removeFirst map] returns a new SortedMap without the first element.
-     *
-     *  Complexity: O(log N)
-     */
-
-    let removeLast: (t 'v) => (t 'v);
-    /** [removeLast map] returns a new SortedMap without the last element.
-     *
-     *  Complexity: O(log N)
-     */
+    let removeFirstOrRaise: (t 'v) => (t 'v);
+    let removeLastOrRaise: (t 'v) => (t 'v);
   };
 };
 

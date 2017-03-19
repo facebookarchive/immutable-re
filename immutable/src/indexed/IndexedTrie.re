@@ -241,7 +241,7 @@ let rec removeFirstLeafUsingMutator
       switch newFirstChild {
         | Empty when triesWidth > 2 =>
             let newLevelCount = !levelCount - (count firstLeaf);
-            let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeFirst tries);
+            let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeFirstOrRaise tries);
             (firstLeaf, newTrie)
         | Empty =>
             (firstLeaf, CopyOnWriteArray.lastOrRaise tries)
@@ -255,7 +255,7 @@ let rec removeFirstLeafUsingMutator
 
       if (triesWidth > 2) {
         let newLevelCount = !levelCount - (count firstChild);
-        (firstChild, Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeFirst tries))
+        (firstChild, Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeFirstOrRaise tries))
       }
       else (firstChild, CopyOnWriteArray.lastOrRaise tries);
   | _ => failwith "invalid state"
@@ -275,7 +275,7 @@ let rec removeLastLeafUsingMutator
       switch newLastChild {
         | Empty when triesWidth > 2 =>
             let newLevelCount = !levelCount - (count lastLeaf);
-            let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries);
+            let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeLastOrRaise tries);
             (newTrie, lastLeaf)
         | Empty =>
             (CopyOnWriteArray.firstOrRaise tries, lastLeaf)
@@ -289,7 +289,7 @@ let rec removeLastLeafUsingMutator
 
       if (triesWidth > 2) {
         let newLevelCount = !levelCount - (count lastChild);
-        (Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries), lastChild)
+        (Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLastOrRaise tries), lastChild)
       }
       else (CopyOnWriteArray.firstOrRaise tries, lastChild);
   | _ => failwith "invalid state"
