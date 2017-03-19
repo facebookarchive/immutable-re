@@ -834,6 +834,26 @@ let findOrRaise (f: 'a => bool) ({ left, middle, right }: t 'a): 'a =>
     }
   };
 
+let findRight (f: 'a => bool) ({ left, middle, right }: t 'a): (option 'a) =>
+  /* FIXME: Add an operator to Option for this use case */
+  switch (left |> CopyOnWriteArray.findRight f) {
+    | Some _ as v => v
+    | _ => switch (middle |> IndexedTrie.findRight f) {
+      | Some _ as v => v
+      | _ => right |> CopyOnWriteArray.findRight f
+    }
+  };
+
+let findRightOrRaise (f: 'a => bool) ({ left, middle, right }: t 'a): 'a =>
+  /* FIXME: Add an operator to Option for this use case */
+  switch (left |> CopyOnWriteArray.findRight f) {
+    | Some v => v
+    | _ => switch (middle |> IndexedTrie.findRight f) {
+      | Some v => v
+      | _ => right |> CopyOnWriteArray.findRightOrRaise f
+    }
+  };
+
 let findWithIndex (f: int => 'a => bool) (vec: t 'a): (option 'a) => {
   /* kind of a hack, but a lot less code to write */
   let index = ref 0;

@@ -50,12 +50,22 @@ let equals (this: t 'a) (that: t 'a): bool =>
   equalsWith Equality.structural this that;
 
 let find (f: 'a => bool) (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector
-  | Descending vector => Vector.find f vector
+  | Ascending vector => Vector.find f vector
+  | Descending vector => Vector.findRight f vector
 };
 
 let findOrRaise (f: 'a => bool) (deque: t 'a): 'a => switch deque {
-  | Ascending vector
+  | Ascending vector => Vector.findOrRaise f vector
+  | Descending vector => Vector.findRightOrRaise f vector
+};
+
+let findRight (f: 'a => bool) (deque: t 'a): (option 'a) => switch deque {
+  | Ascending vector => Vector.findRight f vector
+  | Descending vector => Vector.find f vector
+};
+
+let findRightOrRaise (f: 'a => bool) (deque: t 'a): 'a => switch deque {
+  | Ascending vector => Vector.findRightOrRaise f vector
   | Descending vector => Vector.findOrRaise f vector
 };
 

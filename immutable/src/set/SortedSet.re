@@ -16,6 +16,8 @@ module type S = {
   let compare: Comparator.t t;
   let first: t => option a;
   let firstOrRaise: t => a;
+  let findRight: (a => bool) => t => option a;
+  let findRightOrRaise: (a => bool) => t => a;
   let forEachRight: (a => unit) => t => unit;
   let forEachRightWhile: (a => bool) => (a => unit) => t => unit;
   let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -137,6 +139,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toSequenceRight ({ tree }: t): (Sequence.t a) =>
     tree |> AVLTreeSet.toSequenceRight;
 
+  /* FIXME: Don't use seq to implement these functions */
+
   let compare
       (this: t)
       (that: t): Ordering.t =>
@@ -251,6 +255,12 @@ let module Make = fun (Comparable: Comparable.S) => {
     keyedIterator: toKeyedIterator set,
     sequence: toSequence set |> Sequence.map (fun k => (k, k)),
   };
+
+  let findRight (f: a => bool) (set: t): (option a) =>
+    set |> toIteratorRight |> Iterator.find f;
+
+  let findRightOrRaise (f: a => bool) (set: t): a =>
+    set |> toIteratorRight |> Iterator.findOrRaise f;
 
   let intersect (this: t) (that: t): t =>
     /* FIXME: Improve this implementation to be O(log N) */

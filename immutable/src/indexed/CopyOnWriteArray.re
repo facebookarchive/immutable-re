@@ -127,6 +127,21 @@ let find (f: 'a => bool) (arr: t 'a): (option 'a) => {
   loop 0;
 };
 
+let findRight (f: 'a => bool) (arr: t 'a): (option 'a) => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index >= 0) {
+      let v = arr.(index);
+
+      if (f v) (Some v)
+      else loop (index - 1)
+    }
+    else None;
+
+  loop (arrCount - 1);
+};
+
 let findOrRaise (f: 'a => bool) (arr: t 'a): 'a => {
   let arrCount = count arr;
 
@@ -140,6 +155,21 @@ let findOrRaise (f: 'a => bool) (arr: t 'a): 'a => {
     else failwith "not found";
 
   loop 0;
+};
+
+let findRightOrRaise (f: 'a => bool) (arr: t 'a): 'a => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index >= 0) {
+      let v = arr.(index);
+
+      if (f v) v
+      else loop (index - 1)
+    }
+    else failwith "not found";
+
+  loop (arrCount - 1);
 };
 
 let findWithIndex (f: int => 'a => bool) (arr: t 'a): (option 'a) => {

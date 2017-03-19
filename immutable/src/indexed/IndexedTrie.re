@@ -154,6 +154,21 @@ let rec find (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
       loop 0
 };
 
+let rec findRight (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
+  | Empty => None
+  | Leaf _ values =>
+      values |> CopyOnWriteArray.findRight f
+  | Level _ _ _ nodes =>
+      let nodesCount = CopyOnWriteArray.count nodes;
+      let rec loop index =>
+        if (index >= 0) (switch (findRight f nodes.(index)) {
+          | Some _ as result => result
+          | _ => loop (index - 1)
+        })
+        else None;
+      loop (nodesCount - 1)
+};
+
 let depth (trie: t 'a): int => switch trie {
   | Empty => failwith "invalid state"
   | Leaf _ _ => 0

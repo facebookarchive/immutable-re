@@ -58,6 +58,24 @@ let findOrRaise (f: int => bool) ({ count, start }: t): int => {
   recurse f start count;
 };
 
+let findRight (f: int => bool) ({ count, start }: t): (option int) => {
+  let rec recurse f start count =>
+    if (count == 0) None
+    else if (f start) (Some start)
+    else recurse f (start - 1) (count - 1);
+
+  recurse f (count - 1) count;
+};
+
+let findRightOrRaise (f: int => bool) ({ count, start }: t): int => {
+  let rec recurse f start count =>
+    if (count == 0) (failwith "not found")
+    else if (f start) start
+    else recurse f (start - 1) (count - 1);
+
+  recurse f (count - 1) count;
+};
+
 let first ({ count, start }: t): (option int) =>
   if (count == 0) None
   else (Some start);

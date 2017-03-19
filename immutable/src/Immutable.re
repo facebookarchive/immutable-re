@@ -98,6 +98,8 @@ let module ReduceableRight = {
     type a;
     type t;
 
+    let findRight: (a => bool) => t => (option a);
+    let findRightOrRaise: (a => bool) => t => a;
     let forEachRight: (a => unit) => t => unit;
     let forEachRightWhile: (a => bool) => (a => unit) => t => unit;
     let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -107,6 +109,8 @@ let module ReduceableRight = {
   module type S1 = {
     type t 'a;
 
+    let findRight: ('a => bool) => (t 'a) => (option 'a);
+    let findRightOrRaise: ('a => bool) => (t 'a) => 'a;
     let forEachRight: ('a => unit) => (t 'a) => unit;
     let forEachRightWhile: ('a => bool) => ('a => unit) => (t 'a) => unit;
     let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
