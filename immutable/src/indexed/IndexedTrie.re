@@ -73,14 +73,14 @@ let rec toSequenceRight (trie: t 'a): (Sequence.t 'a) => switch trie {
   | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceRight |> Sequence.flatMap toSequenceRight
 };
 
-let rec tryFind (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
+let rec find (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
   | Empty => None
   | Leaf _ values =>
-      values |> CopyOnWriteArray.tryFind f
+      values |> CopyOnWriteArray.find f
   | Level _ _ _ nodes =>
       let nodesCount = CopyOnWriteArray.count nodes;
       let rec loop index =>
-        if (index < nodesCount) (switch (tryFind f nodes.(index)) {
+        if (index < nodesCount) (switch (find f nodes.(index)) {
           | Some _ as result => result
           | _ => loop (index + 1)
         })
@@ -117,7 +117,7 @@ let rec tryAddFirstLeafToTrieUsingMutator
     (values: array 'a)
     (Level levelDepth levelCount _ tries as trie: t 'a): (option (t 'a)) => {
   let firstIndex = 0;
-  let firstChild = tries |> CopyOnWriteArray.first;
+  let firstChild = tries |> CopyOnWriteArray.firstOrRaise;
   let firstChildCount = count firstChild;
   let firstChildDepth = depth firstChild;
   let triesWidth = CopyOnWriteArray.count tries;
@@ -174,8 +174,8 @@ let rec tryAddLastLeafToTrieUsingMutator
     (owner: Transient.Owner.t)
     (values: array 'a)
     (Level levelDepth levelCount _ tries as trie: t 'a): (option (t 'a)) => {
-  let lastIndex = tries |> CopyOnWriteArray.lastIndex;
-  let lastChild = tries |> CopyOnWriteArray.last;
+  let lastIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
+  let lastChild = tries |> CopyOnWriteArray.lastOrRaise;
   let lastChildCount = count lastChild;
   let lastChildDepth = depth lastChild;
   let triesWidth = CopyOnWriteArray.count tries;
@@ -235,7 +235,7 @@ let rec removeFirstLeafUsingMutator
   | Level levelDepth levelCount _ tries when levelDepth > 1 =>
       let triesWidth = CopyOnWriteArray.count tries;
       let firstChildIndex = 0;
-      let firstChild = tries |> CopyOnWriteArray.first;
+      let firstChild = tries |> CopyOnWriteArray.firstOrRaise;
       let (firstLeaf, newFirstChild) = firstChild |> removeFirstLeafUsingMutator updateLevel owner;
 
       switch newFirstChild {
@@ -244,20 +244,20 @@ let rec removeFirstLeafUsingMutator
             let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeFirst tries);
             (firstLeaf, newTrie)
         | Empty =>
-            (firstLeaf, CopyOnWriteArray.last tries)
+            (firstLeaf, CopyOnWriteArray.lastOrRaise tries)
         | _ =>
             let newLevelCount = !levelCount - (count firstLeaf);
             (firstLeaf, updateLevel owner newLevelCount firstChildIndex newFirstChild trie)
       };
   | Level 1 levelCount _ tries =>
       let triesWidth = CopyOnWriteArray.count tries;
-      let firstChild = tries |> CopyOnWriteArray.first;
+      let firstChild = tries |> CopyOnWriteArray.firstOrRaise;
 
       if (triesWidth > 2) {
         let newLevelCount = !levelCount - (count firstChild);
         (firstChild, Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeFirst tries))
       }
-      else (firstChild, CopyOnWriteArray.last tries);
+      else (firstChild, CopyOnWriteArray.lastOrRaise tries);
   | _ => failwith "invalid state"
 };
 
@@ -268,8 +268,8 @@ let rec removeLastLeafUsingMutator
   | Leaf _ _ => (Empty, trie);
   | Level levelDepth levelCount _ tries when levelDepth > 1 =>
       let triesWidth = CopyOnWriteArray.count tries;
-      let lastChildIndex = tries |> CopyOnWriteArray.lastIndex;
-      let lastChild = tries |> CopyOnWriteArray.last;
+      let lastChildIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
+      let lastChild = tries |> CopyOnWriteArray.lastOrRaise;
       let (newLastChild, lastLeaf) = lastChild |> removeLastLeafUsingMutator updateLevel owner;
 
       switch newLastChild {
@@ -278,20 +278,20 @@ let rec removeLastLeafUsingMutator
             let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries);
             (newTrie, lastLeaf)
         | Empty =>
-            (CopyOnWriteArray.first tries, lastLeaf)
+            (CopyOnWriteArray.firstOrRaise tries, lastLeaf)
         | _ =>
             let newLevelCount = !levelCount - (count lastLeaf);
             (updateLevel owner newLevelCount lastChildIndex newLastChild trie, lastLeaf)
       };
   | Level 1 levelCount _ tries =>
       let triesWidth = CopyOnWriteArray.count tries;
-      let lastChild = tries |> CopyOnWriteArray.last;
+      let lastChild = tries |> CopyOnWriteArray.lastOrRaise;
 
       if (triesWidth > 2) {
         let newLevelCount = !levelCount - (count lastChild);
         (Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLast tries), lastChild)
       }
-      else (CopyOnWriteArray.first tries, lastChild);
+      else (CopyOnWriteArray.firstOrRaise tries, lastChild);
   | _ => failwith "invalid state"
 };
 
@@ -343,7 +343,7 @@ let getImplLevelContinuation
     (Level _ _ _ tries: t 'a)
     (effectiveIndex: int)
     (childIndex: int): 'a => {
-  let childNode = tries |> CopyOnWriteArray.get childIndex;
+  let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
   childNode |> get effectiveIndex;
 };
 
@@ -390,14 +390,14 @@ let skipImpl
     (result, empty)
   | Level _ _ _ _ =>
     trie |> computeLevelIndex (skipCount - 1) (fun (Level depth _ _ tries) _ childIndex => {
-      let triesLastIndex = CopyOnWriteArray.lastIndex tries;
+      let triesLastIndex = CopyOnWriteArray.lastIndexOrRaise tries;
       let childNode = tries.(childIndex);
       let (tail, newChildNode) as childResult = childNode |> skip owner skipCount;
 
       switch newChildNode {
         | Empty when childIndex == triesLastIndex => childResult
         | Empty when childIndex == (triesLastIndex - 1) =>
-          (tail, tries |> CopyOnWriteArray.last)
+          (tail, tries |> CopyOnWriteArray.lastOrRaise)
         | Empty =>
           let newTries = tries |> CopyOnWriteArray.skip (childIndex + 1);
           let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
@@ -520,7 +520,7 @@ let updateUsingMutatorImpl
   | Leaf _ _ => trie |> updateLeaf owner (computeIndexUsingRadixSearch 0 index) value;
   | Level _ _ _ _ =>
       trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
-        let childNode = tries |> CopyOnWriteArray.get childIndex;
+        let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
         let newChildNode = childNode |> updateUsingMutator updateLevel updateLeaf owner index value;
 
         if (childNode === newChildNode) trie
@@ -629,7 +629,7 @@ let updateWithUsingMutatorImpl
       trie |> updateLeaf owner arrIndex newValue;
   | Level _ _ _ _ =>
       trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
-        let childNode = tries |> CopyOnWriteArray.get childIndex;
+        let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
         let newChildNode = childNode |> updateWithUsingMutator updateLevel updateLeaf owner index f;
 
         if (childNode === newChildNode) trie
@@ -729,7 +729,7 @@ let rec validate (trie: t 'a) => switch trie {
       print_string "count: "; print_int !levelCount; print_newline ();
       print_string "triesWidth: "; print_int (CopyOnWriteArray.count tries); print_newline ();
       print_newline ();
-      let firstTrie = tries |> CopyOnWriteArray.first;
+      let firstTrie = tries |> CopyOnWriteArray.firstOrRaise;
       if (levelDepth != ((depth firstTrie) + 1)) (failwith "parent level higher than child");
       if ((count firstTrie) != (capacity firstTrie)) {
         print_string "firstTrie count: "; print_int (count firstTrie); print_newline ();

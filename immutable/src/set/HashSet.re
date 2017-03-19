@@ -122,7 +122,7 @@ let module BitmapTrieSet = {
 
         if (newEntrySet === entrySet) set
         else if ((EqualitySet.count newEntrySet) == 1) {
-          let entryValue = entrySet |> EqualitySet.toSequence |> Sequence.first;
+          let entryValue = entrySet |> EqualitySet.toSequence |> Sequence.firstOrRaise;
           (Entry entryHash entryValue)
         } else (EqualitySetCollision entryHash newEntrySet);
     | ComparatorCollision entryHash entrySet when hash == entryHash =>
@@ -234,8 +234,11 @@ let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
 let every (f: 'a => bool) (set: t 'a): bool =>
   set |> toSequence |> Sequence.every f;
 
-let find (f: 'a => bool) (set: t 'a): 'a =>
+let find (f: 'a => bool) (set: t 'a): (option 'a) =>
   set |> toSequence |> Sequence.find f;
+
+let findOrRaise (f: 'a => bool) (set: t 'a): 'a =>
+  set |> toSequence |> Sequence.findOrRaise f;
 
 let forEach (f: 'a => unit) (set: t 'a): unit =>
   set |> toSequence |> Sequence.forEach f;
@@ -248,9 +251,6 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (set: t 'a): 'acc =>
 
 let some (f: 'a => bool) (set: t 'a): bool =>
   set |> toSequence |> Sequence.some f;
-
-let tryFind (f: 'a => bool) (set: t 'a): (option 'a) =>
-  set |> toSequence |> Sequence.tryFind f;
 
 let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) Iterator.empty
@@ -270,12 +270,12 @@ let toSet (set: t 'a): (ImmSet.t 'a) =>
     count: count set,
     every: fun f => set |> every f,
     find: fun f => set |> find f,
+    findOrRaise: fun f => set |> findOrRaise f,
     forEach: fun f => set |> forEach f,
     none: fun f => set |> none f,
     reduce: fun f acc => set |> reduce f acc,
     some: fun f => set |> some f,
     toSequence: toSequence set,
-    tryFind: fun f => set |> tryFind f,
   };
 
 let equals (this: t 'a) (that: t 'a): bool =>

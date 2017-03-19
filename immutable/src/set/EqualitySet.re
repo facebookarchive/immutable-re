@@ -23,7 +23,7 @@ let count = CopyOnWriteArray.count;
 let empty = [||];
 
 let remove (equality: Equality.t 'a) (value: 'a) (set: t 'a): (t 'a) =>
-  set |> CopyOnWriteArray.tryIndexOf (equality value) >>| (fun index =>
+  set |> CopyOnWriteArray.indexOf (equality value) >>| (fun index =>
     set |> CopyOnWriteArray.removeAt index
   ) |? set;
 

@@ -14,25 +14,25 @@ module type S = {
   type t;
 
   let compare: t => t => Ordering.t;
-  let first: t => a;
-  let tryFirst: t => option a;
+  let first: t => option a;
+  let firstOrRaise: t => a;
   let forEachRight: (a => unit) => t => unit;
   let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
-  let last: t => a;
+  let last: t => option a;
+  let lastOrRaise: t => a;
   let toIteratorRight: t => Iterator.t a;
   let toSequenceRight: t => Sequence.t a;
-  let tryLast: t => option a;
   let toKeyedIteratorRight: t => KeyedIterator.t a a;
   let forEach: (a => unit) => t => unit;
   let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
   let every: (a => bool) => t => bool;
-  let find: (a => bool) => t => a;
+  let find: (a => bool) => t => option a;
+  let findOrRaise: (a => bool) => t => a;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
   let none: (a => bool) => t => bool;
   let some: (a => bool) => t => bool;
   let toIterator: t => Iterator.t a;
-  let tryFind: (a => bool) => t => option a;
   let count: t => int;
   let toSequence: t => Sequence.t a;
   let contains: a => t => bool;
@@ -141,11 +141,17 @@ let module Make = fun (Comparable: Comparable.S) => {
   let every (f: a => bool) (set: t): bool =>
     set |> toSequence |> Sequence.every f;
 
-  let find (f: a => bool) (set: t): a =>
+  let find (f: a => bool) (set: t): (option a) =>
     set |> toSequence |> Sequence.find f;
 
-  let first ({ tree }: t): a =>
+  let findOrRaise (f: a => bool) (set: t): a =>
+    set |> toSequence |> Sequence.findOrRaise f;
+
+  let first ({ tree }: t): (option a) =>
     AVLTreeSet.first tree;
+
+  let firstOrRaise ({ tree }: t): a =>
+    AVLTreeSet.firstOrRaise tree;
 
   let forEach (f: a => unit) ({ tree }: t) =>
     tree |> AVLTreeSet.forEach f;
@@ -159,8 +165,11 @@ let module Make = fun (Comparable: Comparable.S) => {
   let hash (set: t): int =>
     hashWith Hash.structural set;
 
-  let last ({ tree }: t): a =>
+  let last ({ tree }: t): (option a) =>
     AVLTreeSet.last tree;
+
+  let lastOrRaise ({ tree }: t): a =>
+    AVLTreeSet.lastOrRaise tree;
 
   let none (f: a => bool) (set: t): bool =>
     set |> toSequence |> Sequence.none f;
@@ -192,26 +201,17 @@ let module Make = fun (Comparable: Comparable.S) => {
         acc
     };
 
-  let tryFind (f: a => bool) (set: t): (option a) =>
-    set |> toSequence |> Sequence.tryFind f;
-
-  let tryFirst ({ tree }: t): (option a) =>
-    AVLTreeSet.tryFirst tree;
-
-  let tryLast ({ tree }: t): (option a) =>
-    AVLTreeSet.tryLast tree;
-
   let toSet (set: t): (ImmSet.t a) => {
     contains: fun a => contains a set,
     count: count set,
     every: fun f => every f set,
     find: fun f => find f set,
+    findOrRaise: fun f => findOrRaise f set,
     forEach: fun f => forEach f set,
     none: fun f => none f set,
     reduce: fun f acc => reduce f acc set,
     some: fun f => some f set,
     toSequence: toSequence set,
-    tryFind: fun f => tryFind f set,
   };
 
   let toMap (set: t): (ImmMap.t a a) => {
@@ -221,22 +221,22 @@ let module Make = fun (Comparable: Comparable.S) => {
     containsKey: fun k => set |> contains k,
     count: count set,
     every: fun f => set |> every (fun k => f k k),
-    find: fun f => {
-      let k = set |> find (fun k => f k k);
+    find: fun f => set |> find (fun k => f k k) >>| (fun k => (k, k)),
+    findOrRaise: fun f => {
+      let k = set |> findOrRaise (fun k => f k k);
       (k, k)
     },
     forEach: fun f => set |> forEach (fun k => f k k),
     get: fun k =>
+      if (set |> contains k) (Some k)
+      else None,
+    getOrRaise: fun k =>
       if (set |> contains k) k
       else failwith "not found",
     none: fun f => set |> none (fun k => f k k),
     reduce: fun f acc => set |> reduce (fun acc k => f acc k k) acc,
     some: fun f => set |> some (fun k => f k k),
     toSequence: toSequence set |> Sequence.map (fun k => (k, k)),
-    tryFind: fun f => set |> tryFind (fun k => f k k) >>| (fun k => (k, k)),
-    tryGet: fun k =>
-      if (set |> contains k) (Some k)
-      else None,
     values: toIterator set,
   };
 

@@ -13,13 +13,13 @@ type t 'a = {
   contains: 'a => bool,
   count: int,
   every: ('a => bool) => bool,
-  find: ('a => bool) => 'a,
+  find: ('a => bool) => (option 'a),
+  findOrRaise: ('a => bool) => 'a,
   forEach: ('a => unit) => unit,
   none: ('a => bool) =>  bool,
   reduce: 'acc . ('acc => 'a => 'acc) => 'acc => 'acc,
   some: ('a => bool) => bool,
   toSequence: (Sequence.t 'a),
-  tryFind: ('a => bool) => (option 'a),
 };
 
 let contains (value: 'a) ({ contains }: t 'a): bool =>
@@ -31,13 +31,13 @@ let empty: (t 'a) = {
   contains: fun _ => false,
   count: 0,
   every: fun _ => true,
-  find: fun _ => failwith "set is empty",
+  find: Functions.alwaysNone,
+  findOrRaise: fun _ => failwith "set is empty",
   forEach: fun _ => (),
   none: fun _ => true,
   reduce: fun _ acc => acc,
   some: fun _ => false,
   toSequence: Sequence.empty,
-  tryFind: Functions.alwaysNone,
 };
 
 let equals (that: t 'a) (this: t 'a): bool =>
@@ -48,8 +48,11 @@ let equals (that: t 'a) (this: t 'a): bool =>
 let every (f: 'a => bool) ({ every }: t 'a): bool =>
   every f;
 
-let find (f: 'a => bool) ({ find }: t 'a): 'a =>
+let find (f: 'a => bool) ({ find }: t 'a): (option 'a) =>
   find f;
+
+let findOrRaise (f: 'a => bool) ({ findOrRaise }: t 'a): 'a =>
+  findOrRaise f;
 
 let forEach (f: 'a => unit) ({ forEach }: t 'a): unit =>
   forEach f;
@@ -74,12 +77,12 @@ let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (t 'a) => {
   count: Option.count opt,
   every: fun f => Option.every f opt,
   find: fun f => Option.find f opt,
+  findOrRaise: fun f => Option.findOrRaise f opt,
   forEach: fun f => Option.forEach f opt,
   none: fun f => Option.none f opt,
   reduce: fun f acc => Option.reduce f acc opt,
   some: fun f => Option.some f opt,
   toSequence: Sequence.ofOption opt,
-  tryFind: fun f => Option.tryFind f opt,
 };
 
 let ofOption (opt: option 'a): (t 'a) =>
@@ -108,9 +111,6 @@ let toKeyedIterator ({ reduce } as set: t 'a): (KeyedIterator.t 'a 'a) =>
 let toSequence ({ toSequence }: t 'a): (Sequence.t 'a) => toSequence;
 
 let toSet (set: t 'a): (t 'a) => set;
-
-let tryFind (f: 'a => bool) ({ tryFind }: t 'a): (option 'a) =>
-  tryFind f;
 
 let intersect (this: t 'a) (that: t 'a): (Iterator.t 'a) =>
   this |> toIterator |> Iterator.filter (that.contains);

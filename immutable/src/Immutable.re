@@ -110,13 +110,13 @@ let module Iterable = {
     include Reduceable.S with type a := a and type t := t;
 
     let every: (a => bool) => t => bool;
-    let find: (a => bool) => t => a;
+    let find: (a => bool) => t => (option a);
+    let findOrRaise: (a => bool) => t => a;
     let isEmpty: t => bool;
     let isNotEmpty: t => bool;
     let none: (a => bool) => t => bool;
     let some: (a => bool) => t => bool;
     let toIterator: t => (Iterator.t a);
-    let tryFind: (a => bool) => t => (option a);
   };
 
   module type S1 = {
@@ -125,13 +125,13 @@ let module Iterable = {
     include Reduceable.S1 with type t 'a := t 'a;
 
     let every: ('a => bool) => (t 'a) => bool;
-    let find: ('a => bool) => (t 'a) => 'a;
+    let find: ('a => bool) => (t 'a) => (option 'a);
+    let findOrRaise: ('a => bool) => (t 'a) => 'a;
     let isEmpty: (t 'a) => bool;
     let isNotEmpty: (t 'a) => bool;
     let none: ('a => bool) => (t 'a) => bool;
     let some: ('a => bool) => (t 'a) => bool;
     let toIterator: t 'a => (Iterator.t 'a);
-    let tryFind: ('a => bool) => (t 'a) => (option 'a);
   };
 };
 
@@ -142,8 +142,8 @@ let module Sequential = {
 
     include Iterable.S with type a := a and type t := t;
 
-    let first: t => a;
-    let tryFirst: t => (option a);
+    let first: t => (option a);
+    let firstOrRaise: t => a;
   };
 
   module type S1 = {
@@ -151,8 +151,8 @@ let module Sequential = {
 
     include Iterable.S1 with type t 'a := t 'a;
 
-    let first: (t 'a) => 'a;
-    let tryFirst: (t 'a) => (option 'a);
+    let first: (t 'a) => (option 'a);
+    let firstOrRaise: (t 'a) => 'a;
   };
 };
 
@@ -233,10 +233,10 @@ let module NavigableCollection = {
     include SequentialCollection.S with type a := a and type t := t;
     include ReduceableRight.S with type a := a and type t := t;
 
-    let last: t => a;
+    let last: t => (option a);
+    let lastOrRaise: t => a;
     let toIteratorRight: t => (Iterator.t a);
     let toSequenceRight: t => (Sequence.t a);
-    let tryLast: t => (option a);
   };
 
   module type S1 = {
@@ -245,10 +245,10 @@ let module NavigableCollection = {
     include SequentialCollection.S1 with type t 'a := t 'a;
     include ReduceableRight.S1 with type t 'a := t 'a;
 
-    let last: (t 'a) => 'a;
+    let last: (t 'a) => (option 'a);
+    let lastOrRaise: (t 'a) => 'a;
     let toIteratorRight: (t 'a) => (Iterator.t 'a);
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
-    let tryLast: (t 'a) => (option 'a);
   };
 };
 
@@ -289,9 +289,9 @@ let module TransientStack = {
 
     let addFirst: 'a => (t 'a) => (t 'a);
     let empty: unit => (t 'a);
-    let first: (t 'a) => 'a;
+    let first: (t 'a) => option 'a;
+    let firstOrRaise: (t 'a) => 'a;
     let removeFirst: (t 'a) => (t 'a);
-    let tryFirst: (t 'a) => option 'a;
   };
 };
 
@@ -302,9 +302,9 @@ let module TransientDeque = {
     include TransientStack.S1 with type t 'a := t 'a;
 
     let addLast: 'a => (t 'a) => (t 'a);
-    let last: (t 'a) => 'a;
+    let last: (t 'a) => option 'a;
+    let lastOrRaise: (t 'a) => 'a;
     let removeLast: (t 'a) => (t 'a);
-    let tryLast: (t 'a) => option 'a;
   };
 
   include Deque.TransientDeque;
@@ -353,14 +353,14 @@ let module KeyedIterable = {
     include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
 
     let every: (k => 'v => bool) => (t 'v) => bool;
-    let find: (k => 'v => bool) => (t 'v) => (k, 'v);
+    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
     let isEmpty: (t 'v) => bool;
     let isNotEmpty: (t 'v) => bool;
     let none: (k => 'v => bool) => (t 'v) => bool;
     let some: (k => 'v => bool) => (t 'v) => bool;
     let toIterator: t 'v => Iterator.t (k, 'v);
     let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
-    let tryFind: (k => 'v => bool) => (t 'v) => (option (k, 'v));
   };
 
   module type S2 = {
@@ -369,14 +369,14 @@ let module KeyedIterable = {
     include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
 
     let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-    let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
     let isEmpty: (t 'k 'v) => bool;
     let isNotEmpty: (t 'k 'v) => bool;
     let none: ('k => 'v => bool) => (t 'k 'v) => bool;
     let some: ('k => 'v => bool) => (t 'k 'v) => bool;
     let toIterator: t 'k 'v => Iterator.t ('k, 'v);
     let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
-    let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   };
 };
 
@@ -456,9 +456,9 @@ let module Map = {
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
-    let get: k => (t 'v) => 'v;
+    let get: k => (t 'v) => (option 'v);
+    let getOrRaise: k => (t 'v) => 'v;
     let keys: (t 'v) => (ImmSet.t k);
-    let tryGet: k => (t 'v) => (option 'v);
     let values: (t 'v) => (Iterator.t 'v);
     let toMap: (t 'v) => (ImmMap.t k 'v);
   };
@@ -468,9 +468,9 @@ let module Map = {
 
     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
-    let get: 'k => (t 'k 'v) => 'v;
+    let get: 'k => (t 'k 'v) => (option 'v);
+    let getOrRaise: 'k => (t 'k 'v) => 'v;
     let keys: (t 'k 'v) => (ImmSet.t 'k);
-    let tryGet: 'k => (t 'k 'v) => (option 'v);
     let values: (t 'k 'v) => (Iterator.t 'v);
     let toMap: (t 'k 'v) => (ImmMap.t 'k 'v);
   };
@@ -493,12 +493,16 @@ let module IndexedCollection = {
     include NavigableCollection.S1 with type t 'a := t 'a;
 
     let everyWithIndex: (int => 'a => bool) => (t 'a) => bool;
-    let findWithIndex: (int => 'a => bool) => (t 'a) => 'a;
+    let findWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
+    let findWithIndexOrRaise: (int => 'a => bool) => (t 'a) => 'a;
     let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
     let forEachRightWithIndex: (int => 'a => unit) => (t 'a) => unit;
-    let get: int => (t 'a) => 'a;
-    let indexOf: ('a => bool) => (t 'a) => int;
-    let indexOfWithIndex: (int => 'a => bool) => (t 'a) => int;
+    let get: int => (t 'a) => (option 'a);
+    let getOrRaise: int => (t 'a) => 'a;
+    let indexOf: ('a => bool) => (t 'a) => (option int);
+    let indexOfOrRaise: ('a => bool) => (t 'a) => int;
+    let indexOfWithIndex: (int => 'a => bool) => (t 'a) => (option int);
+    let indexOfWithIndexOrRaise: (int => 'a => bool) => (t 'a) => int;
     let noneWithIndex: (int => 'a => bool) => (t 'a) => bool;
     let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
     let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
@@ -506,10 +510,6 @@ let module IndexedCollection = {
     let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
     let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
     let toMap: (t 'a) => (Map.t int 'a);
-    let tryFindWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
-    let tryGet: int => (t 'a) => (option 'a);
-    let tryIndexOf: ('a => bool) => (t 'a) => (option int);
-    let tryIndexOfWithIndex: (int => 'a => bool) => (t 'a) => (option int);
   };
 };
 
@@ -643,28 +643,14 @@ let module NavigableMap = {
 
     include Map.S1 with type k := k and type t 'v := t 'v;
 
-    let first: (t 'v) => (k, 'v);
-    /** [first map] returns the first key/value pair in [set] or throws. */
-
-    let last: (t 'v) => (k, 'v);
-    /** [last map] returns the last key/value pair in [set] or throws. */
-
+    let first: (t 'v) => (option (k, 'v));
+    let firstOrRaise: (t 'v) => (k, 'v);
+    let last: (t 'v) => (option (k, 'v));
+    let lastOrRaise: (t 'v) => (k, 'v);
     let reduceRight: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    /** [reduceRight f acc map] applies the accumulator function [f] to each key/value pair in [map]
-     *  in reverse order with the specified seed value [acc], returning the final accumulated value.
-     */
-
     let toIteratorRight: (t 'v) => (Iterator.t (k, 'v));
-
     let toKeyedIteratorRight: (t 'v) => (KeyedIterator.t k 'v);
-
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-
-    let tryFirst: (t 'v) => (option (k, 'v));
-    /** [tryFirst map] returns the first key/value pair in [set] or None. */
-
-    let tryLast: (t 'v) => (option (k, 'v));
-    /** [tryLast map] returns the last key/value pair in [set] or None. */
   };
 };
 
@@ -729,14 +715,14 @@ let module TransientMap = {
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
     let count: (t 'v) => int;
-    let get: k => (t 'v) => 'v;
+    let get: 'k => (t 'v) => (option 'v);
+    let getOrRaise: k => (t 'v) => 'v;
     let isEmpty: (t 'v) => bool;
     let isNotEmpty: (t 'v) => bool;
     let put: k => 'v => (t 'v) => (t 'v);
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
     let remove: k => (t 'v) => (t 'v);
     let removeAll: (t 'v) => (t 'v);
-    let tryGet: 'k => (t 'v) => (option 'v);
   };
 
   module type S2 = {
@@ -744,14 +730,14 @@ let module TransientMap = {
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
     let count: (t 'k 'v) => int;
-    let get: 'k => (t 'k 'v) => 'v;
+    let get: 'k => (t 'k 'v) => (option 'v);
+    let getOrRaise: 'k => (t 'k 'v) => 'v;
     let isEmpty: (t 'k 'v) => bool;
     let isNotEmpty: (t 'k 'v) => bool;
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
     let remove: 'k => (t 'k 'v) => (t 'k 'v);
     let removeAll: (t 'k 'v) => (t 'k 'v);
-    let tryGet: 'k => (t 'k 'v) => (option 'v);
   };
 };
 

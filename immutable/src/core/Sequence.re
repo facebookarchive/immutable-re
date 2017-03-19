@@ -43,7 +43,7 @@ let rec compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): O
 let compare (this: t 'a) (that: t 'a): Ordering.t =>
   compareWith Comparator.structural this that;
 
-let concatAll (seq: t (t 'a)): (t 'a) => {
+let flatten (seq: t (t 'a)): (t 'a) => {
   let rec continuedWith (continuation: t (t 'a)) (iter: (iterator 'a)): (iterator 'a) => switch (iter) {
     | Next value next =>
         Next value (next >> continuedWith continuation);
@@ -59,7 +59,7 @@ let concatAll (seq: t (t 'a)): (t 'a) => {
 };
 
 let concat (seqs: list (t 'a)): (t 'a) =>
-  seqs |> ofList |> concatAll;
+  seqs |> ofList |> flatten;
 
 let rec containsWith (valueEquals: Equality.t 'a) (value: 'a) (seq: t 'a): bool => switch (seq ()) {
   | Next next _ when valueEquals next value => true
@@ -82,9 +82,6 @@ let rec equalsWith (equality: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
     | _ => false
   };
 
-let equals (that: t 'a) (this: t 'a): bool =>
-  equalsWith Equality.structural that this;
-
 let rec every (f: 'a => bool) (seq: t 'a): bool => switch ( seq () ) {
   | Next value next =>
       if (f value) (every f next)
@@ -103,20 +100,29 @@ let rec filter (f: 'a => bool) (seq: t 'a): (t 'a) => {
   fun () => seq () |> filterIter f
 };
 
-let rec find (predicate: 'a => bool) (seq: t 'a): 'a => switch (seq ()) {
+let rec find (predicate: 'a => bool) (seq: t 'a): (option 'a) => switch (seq ()) {
+  | Next value next =>
+      if (predicate value) (Some value)
+      else (find predicate next)
+  | Completed => None
+};
+
+let rec findOrRaise (predicate: 'a => bool) (seq: t 'a): 'a => switch (seq ()) {
   | Next value next =>
       if (predicate value) value
-      else (find predicate next)
+      else (findOrRaise predicate next)
   | Completed => failwith "not found"
 };
 
-let first (seq: t 'a): 'a => switch (seq ()) {
+let first (seq: t 'a): (option 'a) => switch (seq ()) {
+  | Next value _ => Some value
+  | Completed => None
+};
+
+let firstOrRaise (seq: t 'a): 'a => switch (seq ()) {
   | Next value _ => value
   | Completed => failwith "empty"
 };
-
-let flatten (seq: t (t 'a)): (t 'a) =>
-  concatAll seq;
 
 let rec forEach (f: 'a => unit) (seq: t 'a) => switch (seq ()) {
   | Next value next =>
@@ -138,7 +144,19 @@ let isNotEmpty (seq: t 'a): bool => switch (seq ()) {
   | Completed => false
 };
 
-let last (seq: t 'a): 'a => {
+let last (seq: t 'a): (option 'a) => {
+  let rec loop acc seq => switch (seq ()) {
+    | Next v next => loop v next
+    | Completed => Some acc
+  };
+
+  switch (seq ()) {
+    | Next v next => loop v next
+    | Completed => None
+  }
+};
+
+let lastOrRaise (seq: t 'a): 'a => {
   let rec loop acc seq => switch (seq ()) {
     | Next v next => loop v next
     | Completed => acc
@@ -155,9 +173,6 @@ let rec map (f: 'a => 'b) (seq: t 'a): (t 'b) => fun () => switch (seq ()) {
       Next (f value) (map f next)
   | Completed => Completed
 };
-
-let concatMap (f: 'a => (t 'b)) (seq: t 'a): (t 'b) =>
-  seq |> map f |> concatAll;
 
 let doOnNext (f: 'a => unit) (seq: t 'a): (t 'a) =>
   seq |> map (fun next => { f next; next });
@@ -186,15 +201,6 @@ let rec reduce
       reduce reducer acc next
   | Completed => acc
 };
-
-let count (seq: t 'a): int => seq
-  |> reduce (fun acc _ => succ acc) 0;
-
-let hashWith (hash: (Hash.t 'a)) (seq: t 'a): int => seq
-  |> reduce (Hash.reducer hash) Hash.initialValue;
-
-let hash (seq: t 'a): int =>
-  hashWith Hash.structural seq;
 
 let rec repeat (value: 'a): (t 'a) => {
   let rec repeatForever value () =>
@@ -277,10 +283,6 @@ let skip (count: int) (seq: t 'a): (t 'a) => fun () => {
   skipIter count (seq ())
 };
 
-let get (index: int) (seq: t 'a): 'a =>
-  if (index < 0) (failwith "index < 0")
-  else seq |> skip index |> first;
-
 let skipWhile (f: 'a => bool) (seq: t 'a): (t 'a) => fun () => {
   let rec skipIter f (iter: iterator 'a): (iterator 'a) => switch iter {
     | Next value next =>
@@ -315,34 +317,6 @@ let rec take (count: int) (seq: t 'a): (t 'a) => fun () =>
   })
   else if (count == 0) Completed
   else failwith "count must be greater or equal to 0";
-
-let rec tryFind (predicate: 'a => bool) (seq: t 'a): (option 'a) => switch (seq ()) {
-  | Next value next =>
-      if (predicate value) (Some value)
-      else (tryFind predicate next)
-  | Completed => None
-};
-
-let tryFirst (seq: t 'a): (option 'a) => switch (seq ()) {
-  | Next value _ => Some value
-  | Completed => None
-};
-
-let tryGet (index: int) (seq: t 'a): (option 'a) =>
-  if (index < 0) None
-  else seq |> skip index |> tryFirst;
-
-let tryLast (seq: t 'a): (option 'a) => {
-  let rec loop acc seq => switch (seq ()) {
-    | Next v next => loop v next
-    | Completed => Some acc
-  };
-
-  switch (seq ()) {
-    | Next v next => loop v next
-    | Completed => None
-  }
-};
 
 let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {
   let iters = seqs |> ImmList.mapReverse Functions.call;

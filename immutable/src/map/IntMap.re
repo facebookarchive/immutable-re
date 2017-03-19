@@ -178,12 +178,12 @@ let module BitmapTrieIntMap = {
     | Empty => Sequence.empty;
   };
 
-  let rec tryFind (f: int => 'v => bool) (map: t 'v): (option (int, 'v)) => switch map {
+  let rec find (f: int => 'v => bool) (map: t 'v): (option (int, 'v)) => switch map {
     | Level _ nodes _ =>
         let nodesCount = CopyOnWriteArray.count nodes;
         let rec loop index =>
           if (index < nodesCount) {
-            switch (tryFind f nodes.(index)) {
+            switch (find f nodes.(index)) {
               | Some _ as result => result
               | _ => loop (index + 1)
             }
@@ -193,12 +193,12 @@ let module BitmapTrieIntMap = {
     | Empty => None
   };
 
-  let rec tryGet (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
+  let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos key depth;
         let index = BitmapTrie.index bitmap bit;
 
-        if (BitmapTrie.containsNode bitmap bit) (tryGet (depth + 1) key nodes.(index))
+        if (BitmapTrie.containsNode bitmap bit) (get (depth + 1) key nodes.(index))
         else None;
     | Entry entryKey entryValue when key == entryKey => Some entryValue
     | _ => None
@@ -252,14 +252,20 @@ let count ({ count }: t 'v): int => count;
 let every (f: int => 'v => bool) ({ root }: t 'v): bool =>
   root |> BitmapTrieIntMap.every f;
 
-let find (f: int => 'v => bool) ({ root }: t 'v): (int, 'v) =>
-  root |> BitmapTrieIntMap.tryFind f |> Option.first;
+let find (f: int => 'v => bool) ({ root }: t 'v): (option (int, 'v)) =>
+  root |> BitmapTrieIntMap.find f;
+
+let findOrRaise (f: int => 'v => bool) ({ root }: t 'v): (int, 'v) =>
+  root |> BitmapTrieIntMap.find f |> Option.firstOrRaise;
 
 let forEach (f: int => 'v => unit) ({ root }: t 'v): unit =>
   root |> BitmapTrieIntMap.forEach f;
 
-let get (key: int) ({ root }: t 'v): 'v =>
-  root |> BitmapTrieIntMap.tryGet 0 key |> Option.first;
+let get (key: int) ({ root }: t 'v): (option 'v) =>
+  root |> BitmapTrieIntMap.get 0 key;
+
+let getOrRaise (key: int) ({ root }: t 'v): 'v =>
+  root |> BitmapTrieIntMap.get 0 key |> Option.firstOrRaise;
 
 let isEmpty ({ count }: t 'v): bool => count == 0;
 
@@ -299,12 +305,6 @@ let toKeyedIterator (map: t 'v): (KeyedIterator.t int 'v) =>
 let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
   root |> BitmapTrieIntMap.toSequence;
 
-let tryFind (f: int => 'v => bool) ({ root }: t 'v): (option (int, 'v)) =>
-  root |> BitmapTrieIntMap.tryFind f;
-
-let tryGet (key: int) ({ root }: t 'v): (option 'v) =>
-  root |> BitmapTrieIntMap.tryGet 0 key;
-
 let values ({ root }: t 'v): (Iterator.t 'v) =>
   root |> BitmapTrieIntMap.values;
 
@@ -314,14 +314,14 @@ let toMap (map: t 'v): (ImmMap.t int 'v) => {
   count: (count map),
   every: fun f => every f map,
   find: fun f => find f map,
+  findOrRaise: fun f => findOrRaise f map,
   forEach: fun f => forEach f map,
   get: fun i => get i map,
+  getOrRaise: fun i => getOrRaise i map,
   none: fun f => none f map,
   reduce: fun f acc => map |> reduce f acc,
   some: fun f => map |> some f,
   toSequence: (toSequence map),
-  tryFind: fun f => tryFind f map,
-  tryGet: fun i => tryGet i map,
   values: (values map),
 };
 
@@ -388,8 +388,11 @@ let module TransientIntMap = {
   let empty (): t 'v =>
     empty |> mutate;
 
-  let get (key: int) (transient: t 'v): 'v =>
+  let get (key: int) (transient: t 'v): (option 'v) =>
     transient |> Transient.get |> get key;
+
+  let getOrRaise (key: int) (transient: t 'v): 'v =>
+    transient |> Transient.get |> getOrRaise key;
 
   let isEmpty (transient: t 'v): bool =>
     transient |> Transient.get |> isEmpty;
@@ -417,9 +420,6 @@ let module TransientIntMap = {
 
   let removeAll (transient: t 'v): (t 'v) =>
       transient |> Transient.update removeAllImpl;
-
-  let tryGet (key: int) (transient: t 'v): (option 'v) =>
-    transient |> Transient.get |> tryGet key;
 };
 
 let mutate = TransientIntMap.mutate;
@@ -444,7 +444,7 @@ let merge
   ImmSet.union (keys map) (keys next)
     |> Iterator.reduce (
         fun acc key => {
-          let result = f key (map |> tryGet key) (next |> tryGet key);
+          let result = f key (map |> get key) (next |> get key);
           switch result {
             | None => acc |> TransientIntMap.remove key
             | Some value => acc |> TransientIntMap.put key value

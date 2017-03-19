@@ -112,7 +112,22 @@ let everyWithIndex (f: int => 'a => bool) (arr: t 'a): bool => {
   loop 0;
 };
 
-let find (f: 'a => bool) (arr: t 'a): 'a => {
+let find (f: 'a => bool) (arr: t 'a): (option 'a) => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index < arrCount) {
+      let v = arr.(index);
+
+      if (f v) (Some v)
+      else loop (index + 1)
+    }
+    else None;
+
+  loop 0;
+};
+
+let findOrRaise (f: 'a => bool) (arr: t 'a): 'a => {
   let arrCount = count arr;
 
   let rec loop index =>
@@ -127,7 +142,22 @@ let find (f: 'a => bool) (arr: t 'a): 'a => {
   loop 0;
 };
 
-let findWithIndex (f: int => 'a => bool) (arr: t 'a): 'a => {
+let findWithIndex (f: int => 'a => bool) (arr: t 'a): (option 'a) => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index < arrCount) {
+      let v = arr.(index);
+
+      if (f index v) (Some v)
+      else loop (index + 1)
+    }
+    else None;
+
+  loop 0;
+};
+
+let findWithIndexOrRaise (f: int => 'a => bool) (arr: t 'a): 'a => {
   let arrCount = count arr;
 
   let rec loop index =>
@@ -142,8 +172,6 @@ let findWithIndex (f: int => 'a => bool) (arr: t 'a): 'a => {
   loop 0;
 };
 
-let first (arr: t 'a): 'a => arr.(0);
-
 let forEach (f: 'a => unit) (arr: t 'a): 'acc =>
   arr |> Array.iter f;
 
@@ -156,13 +184,51 @@ let from (iter: Iterator.t 'a): (t 'a) =>
 let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addFirstAll iter;
 
-let get (index: int) (arr: t 'a): 'a => arr.(index);
+let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
+  arr.(index);
 
-let lastIndex (arr: t 'a): int => count arr - 1;
+let get (index: int) (arr: t 'a): (option 'a) =>
+  Preconditions.noneIfIndexOutOfRange (count arr) index (getOrRaiseFlipped arr);
 
-let last (arr: t 'a): 'a => arr.(lastIndex arr);
+let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
 
-let indexOf (f: 'a => bool) (arr: t 'a): int => {
+let first (arr: t 'a): (option 'a) => get 0 arr;
+
+let firstOrRaise (arr: t 'a): 'a => getOrRaise 0 arr;
+
+let lastIndexOrRaise (arr: t 'a): int => {
+  let lastIndex = count arr - 1;
+  if (lastIndex > 0) lastIndex
+  else failwith "empty";
+};
+
+let last (arr: t 'a): (option 'a) => {
+  let lastIndex = count arr - 1;
+  if (lastIndex > 0) (get lastIndex arr)
+  else None;
+};
+
+let lastOrRaise (arr: t 'a): 'a => {
+  let lastIndex = count arr - 1;
+  arr.(lastIndex)
+};
+
+let indexOf (f: 'a => bool) (arr: t 'a): (option int) => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index < arrCount) {
+      let v = arr.(index);
+
+      if (f v) (Some index)
+      else loop (index + 1)
+    }
+    else None;
+
+  loop 0;
+};
+
+let indexOfOrRaise (f: 'a => bool) (arr: t 'a): int => {
   let arrCount = count arr;
 
   let rec loop index =>
@@ -177,7 +243,22 @@ let indexOf (f: 'a => bool) (arr: t 'a): int => {
   loop 0;
 };
 
-let indexOfWithIndex (f: int => 'a => bool) (arr: t 'a): int => {
+let indexOfWithIndex (f: int => 'a => bool) (arr: t 'a): (option int) => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index < arrCount) {
+      let v = arr.(index);
+
+      if (f index v) (Some index)
+      else loop (index + 1)
+    }
+    else None;
+
+  loop 0;
+};
+
+let indexOfWithIndexOrRaise (f: int => 'a => bool) (arr: t 'a): int => {
   let arrCount = count arr;
 
   let rec loop index =>
@@ -215,7 +296,7 @@ let concat (arrays: list (array 'a)): (array 'a) => {
 
   if (newCount == 0) [||]
   else {
-    let retval = Array.make newCount (ImmList.find isNotEmpty arrays).(0);
+    let retval = Array.make newCount (ImmList.findOrRaise isNotEmpty arrays).(0);
 
     ImmList.reduce (fun index next => {
       let countNext = count next;
@@ -281,7 +362,7 @@ let forEachRight (f: 'a => unit) (arr: t 'a): unit =>
   arr |> reduceRight (fun _ next => f next) ();
 
 let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc => {
-  let arrLastIndex = lastIndex arr;
+  let arrLastIndex = lastIndexOrRaise arr;
   let rec loop acc index =>
     if (index >= 0) {
       let acc = f acc index arr.(index);
@@ -452,73 +533,6 @@ let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   loop 0;
 };
 
-let tryGet (index: int) (arr: t 'a): (option 'a) =>
-  Preconditions.noneIfIndexOutOfRange (count arr) index (Functions.flip get arr);
-
-let tryFind (f: 'a => bool) (arr: t 'a): (option 'a) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f v) (Some v)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryFindWithIndex (f: int => 'a => bool) (arr: t 'a): (option 'a) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f index v) (Some v)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryFirst (arr: t 'a): (option 'a) => tryGet 0 arr;
-
-let tryIndexOf (f: 'a => bool) (arr: t 'a): (option int) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f v) (Some index)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryIndexOfWithIndex (f: int => 'a => bool) (arr: t 'a): (option int) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f index v) (Some index)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryLast (arr: t 'a): (option 'a) => tryGet ((count arr) - 1) arr;
-
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
 
@@ -559,17 +573,17 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   containsKey: fun index => index >= 0 && index < count arr,
   count: count arr,
   every: fun f => everyWithIndex f arr,
-  find: fun f => {
-    let index = indexOfWithIndex f arr;
+  find: fun f => indexOfWithIndex f arr >>| fun index => (index, arr.(index)),
+  findOrRaise: fun f => {
+    let index = indexOfWithIndexOrRaise f arr;
     (index, arr.(index))
   },
   forEach: fun f => forEachWithIndex f arr,
-  get: fun index => get index arr,
+  get: fun i => get i arr,
+  getOrRaise: fun index => getOrRaise index arr,
   none: fun f => noneWithIndex f arr,
   reduce: fun f acc => reduceWithIndex f acc arr,
   some: fun f => someWithIndex f arr,
   toSequence: toSequenceWithIndex arr,
-  tryFind: fun f => tryIndexOfWithIndex f arr >>| fun index => (index, arr.(index)),
-  tryGet: fun i => tryGet i arr,
   values: toIterator arr,
 };

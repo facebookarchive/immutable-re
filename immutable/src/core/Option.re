@@ -58,13 +58,21 @@ let filter (f: 'a => bool) (opt: t 'a): (t 'a) => switch opt {
   | _ => None
 };
 
-let find (f: 'a => bool) (opt: t 'a): 'a => switch opt {
+let find (f: 'a => bool) (opt: t 'a): (t 'a) => switch opt {
+  | None => None
+  | Some a when f a => Some a
+  | _ =>  None
+};
+
+let findOrRaise (f: 'a => bool) (opt: t 'a): 'a => switch opt {
   | None => failwith "empty"
   | Some a when f a => a
   | _ => failwith "not found"
 };
 
-let first (opt: t 'a): 'a => switch opt {
+let first = Functions.identity;
+
+let firstOrRaise (opt: t 'a): 'a => switch opt {
   | Some x => x
   | None => failwith "option is none"
 };
@@ -83,8 +91,6 @@ let forEach (f: 'a => unit) (opt: t 'a): unit => switch opt {
   | Some a => f a
   | _ => ()
 };
-
-let last = first;
 
 let hashWith (hash: Hash.t 'a) (opt: t 'a): int => switch opt {
   | None => 0
@@ -140,15 +146,6 @@ let toIterator (opt: t 'a): (Iterator.t 'a) =>
   else {
     reduce: fun f acc => reduce f acc opt
   };
-
-let tryFind (f: 'a => bool) (opt: t 'a): (t 'a) => switch opt {
-  | None => None
-  | Some a when f a => Some a
-  | _ =>  None
-};
-
-let tryFirst = Functions.identity;
-let tryLast = tryFirst;
 
 let module Operators = {
   let (>>=) (opt: t 'a) (f: 'a => option 'b): option 'b => flatMap f opt;

@@ -40,7 +40,16 @@ let every (f: int => bool) ({ count, start }: t): bool => {
   recurse f start count;
 };
 
-let find (f: int => bool) ({ count, start }: t): int => {
+let find (f: int => bool) ({ count, start }: t): (option int) => {
+  let rec recurse f start count =>
+    if (count == 0) None
+    else if (f start) (Some start)
+    else recurse f (start + 1) (count - 1);
+
+  recurse f start count;
+};
+
+let findOrRaise (f: int => bool) ({ count, start }: t): int => {
   let rec recurse f start count =>
     if (count == 0) (failwith "not found")
     else if (f start) start
@@ -49,7 +58,11 @@ let find (f: int => bool) ({ count, start }: t): int => {
   recurse f start count;
 };
 
-let first ({ count, start }: t): int =>
+let first ({ count, start }: t): (option int) =>
+  if (count == 0) None
+  else (Some start);
+
+let firstOrRaise ({ count, start }: t): int =>
   if (count == 0) (failwith "empty")
   else start;
 
@@ -77,7 +90,11 @@ let isEmpty ({ count }: t): bool => count == 0;
 
 let isNotEmpty ({ count }: t): bool => count != 0;
 
-let last ({ count, start }: t): int =>
+let last ({ count, start }: t): (option int) =>
+  if (count == 0) None
+  else (start + count - 1) |> Option.return;
+
+let lastOrRaise ({ count, start }: t): int =>
   if (count == 0) (failwith "empty")
   else start + count - 1;
 
@@ -136,15 +153,6 @@ let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
   recurse (start + count - 1) count
 };
 
-let tryFind (f: int => bool) ({ count, start }: t): (option int) => {
-  let rec recurse f start count =>
-    if (count == 0) None
-    else if (f start) (Some start)
-    else recurse f (start + 1) (count - 1);
-
-  recurse f start count;
-};
-
 let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
   else { reduce: fun f acc => reduce f acc set };
@@ -172,21 +180,13 @@ let toSet (set: t): (ImmSet.t int) => {
   count: count set,
   every: fun f => set |> every f,
   find: fun f => set |> find f,
+  findOrRaise: fun f => set |> findOrRaise f,
   forEach: fun f => set |> forEach f,
   none: fun f => set |> none f,
   reduce: fun f acc => set |> reduce f acc,
   some: fun f => set |> some f,
   toSequence: toSequence set,
-  tryFind: fun f => set |> tryFind f,
 };
 
 let toMap (set: t): (ImmMap.t int int) =>
   set |> toSet |> ImmMap.ofSet;
-
-let tryFirst ({ count, start }: t): (option int) =>
-  if (count == 0) None
-  else (Some start);
-
-let tryLast ({ count, start }: t): (option int) =>
-  if (count == 0) None
-  else (start + count - 1) |> Option.return;

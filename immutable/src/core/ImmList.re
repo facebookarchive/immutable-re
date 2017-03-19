@@ -12,8 +12,6 @@ type t 'a = list 'a;
 let addFirst (value: 'a) (list: t 'a): (t 'a) =>
   [value, ...list];
 
-let add = addFirst;
-
 let rec compareWith
     (valueCompare: Comparator.t 'a)
     (this: t 'a)
@@ -85,14 +83,26 @@ let isNotEmpty (list: t 'a): bool => switch list {
   | _ => true;
 };
 
-let rec find (f: 'a => bool) (list: t 'a): 'a => switch list {
+let rec find (f: 'a => bool) (list: t 'a): (option 'a) => switch list {
+  | [head, ...tail] =>
+      if (f head) (Some head)
+      else find f tail
+  | [] => None
+};
+
+let rec findOrRaise (f: 'a => bool) (list: t 'a): 'a => switch list {
   | [head, ...tail] =>
       if (f head) head
-      else find f tail
+      else findOrRaise f tail
   | [] => failwith "not found"
 };
 
-let first (list: t 'a): 'a => switch list {
+let first (list: t 'a): (option 'a) => switch list {
+  | [head, ..._] => Some head
+  | [] => None
+};
+
+let firstOrRaise (list: t 'a): 'a => switch list {
   | [head, ..._] => head
   | [] => failwith "empty"
 };
@@ -152,15 +162,3 @@ let rec take (count: int) (list: t 'a): (t 'a) =>
     | [head, ...tail] => [head, ...(tail |> take (count - 1))]
     | _ => failwith "list too short"
   };
-
-let rec tryFind (f: 'a => bool) (list: t 'a): (option 'a) => switch list {
-  | [head, ...tail] =>
-      if (f head) (Some head)
-      else tryFind f tail
-  | [] => None
-};
-
-let tryFirst (list: t 'a): (option 'a) => switch list {
-  | [head, ..._] => Some head
-  | [] => None
-};

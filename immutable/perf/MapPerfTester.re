@@ -22,7 +22,7 @@ let generateTests
     (empty: unit => 'map)
     (put: int => int => 'map => 'map)
     (remove: int => 'map => 'map)
-    (tryGet: int => 'map => option int)
+    (get: int => 'map => option int)
     (n: int): (list Test.t) => [
   it (sprintf "put %i elements" n) (fun () => {
     IntRange.create 0 n
@@ -45,10 +45,10 @@ let generateTests
     keysToUpdate |> Sequence.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
   }),
 
-  it (sprintf "tryGet %i values" n) (fun () => {
+  it (sprintf "get %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> IntRange.forEach (fun i => map |> tryGet i |> ignore);
+    keys () |> IntRange.forEach (fun i => map |> get i |> ignore);
   }),
 ];
 
@@ -114,7 +114,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => SortedIntMap.empty)
         SortedIntMap.put
         SortedIntMap.remove
-        SortedIntMap.tryGet
+        SortedIntMap.get
         count
     ),
 
@@ -126,7 +126,7 @@ let test (n: int) (count: int): Test.t => {
           HashMap.empty
           HashMap.put
           HashMap.remove
-          HashMap.tryGet
+          HashMap.get
           count
       ),
       describe "Equality" (
@@ -136,7 +136,7 @@ let test (n: int) (count: int): Test.t => {
           (fun () => HashMap.emptyWith HashStrategy.structuralEquality)
           HashMap.put
           HashMap.remove
-          HashMap.tryGet
+          HashMap.get
           count
       ),
     ],
@@ -149,7 +149,7 @@ let test (n: int) (count: int): Test.t => {
           TransientHashMap.empty
           TransientHashMap.put
           TransientHashMap.remove
-          TransientHashMap.tryGet
+          TransientHashMap.get
           count
       ),
 
@@ -160,7 +160,7 @@ let test (n: int) (count: int): Test.t => {
           (fun () => TransientHashMap.emptyWith HashStrategy.structuralEquality)
           TransientHashMap.put
           TransientHashMap.remove
-          TransientHashMap.tryGet
+          TransientHashMap.get
           count
       ),
     ],
@@ -172,7 +172,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => IntMap.empty)
         IntMap.put
         IntMap.remove
-        IntMap.tryGet
+        IntMap.get
         count
     ),
 
@@ -183,7 +183,7 @@ let test (n: int) (count: int): Test.t => {
         TransientIntMap.empty
         TransientIntMap.put
         TransientIntMap.remove
-        TransientIntMap.tryGet
+        TransientIntMap.get
         count
     ),
   ];

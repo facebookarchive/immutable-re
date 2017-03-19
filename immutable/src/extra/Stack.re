@@ -74,10 +74,15 @@ let equalsWith
 let every (f: 'a => bool) ({ list }: t 'a): bool =>
   list |> ImmList.every f;
 
-let find (f: 'a => bool) ({ list }: t 'a): 'a =>
+let find (f: 'a => bool) ({ list }: t 'a): (option 'a) =>
   list |> ImmList.find f;
 
-let first ({ list }: t 'a): 'a => list |> ImmList.first;
+let findOrRaise (f: 'a => bool) ({ list }: t 'a): 'a =>
+  list |> ImmList.findOrRaise f;
+
+let first ({ list }: t 'a): (option 'a) => list |> ImmList.first;
+
+let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
 
 let forEach (f: 'a => unit) ({ list }: t 'a): unit =>
   list |> ImmList.forEach f;
@@ -140,8 +145,3 @@ let toIterator ({ list }: t 'a): (Iterator.t 'a) =>
 let toList ({ list }: t 'a): (list 'a) => list;
 
 let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
-
-let tryFind (f: 'a => bool) ({ list }: t 'a): (option 'a) =>
-  list |> ImmList.tryFind f;
-
-let tryFirst ({ list }: t 'a): (option 'a) => list |> ImmList.tryFirst;

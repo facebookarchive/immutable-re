@@ -159,8 +159,11 @@ let toSequence ({ root }: t): (Sequence.t int) =>
 let every (f: int => bool) (set: t): bool =>
   set |> toSequence |> Sequence.every f;
 
-let find (f: int => bool) (set: t): int =>
+let find (f: int => bool) (set: t): (option int) =>
   set |> toSequence |> Sequence.find f;
+
+let findOrRaise (f: int => bool) (set: t): int =>
+  set |> toSequence |> Sequence.findOrRaise f;
 
 let forEach (f: int => unit) (set: t): unit =>
   set |> toSequence |> Sequence.forEach f;
@@ -173,9 +176,6 @@ let reduce (f: 'acc => int => 'acc) (acc: 'acc) (set: t): 'acc =>
 
 let some (f: int => bool) (set: t): bool =>
   set |> toSequence |> Sequence.some f;
-
-let tryFind (f: int => bool) (set: t): (option int) =>
-  set |> toSequence |> Sequence.tryFind f;
 
 let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
@@ -195,12 +195,12 @@ let toSet (set: t): (ImmSet.t int) =>
     count: count set,
     every: fun f => set |> every f,
     find: fun f => set |> find f,
+    findOrRaise: fun f => set |> findOrRaise f,
     forEach: fun f => set |> forEach f,
     none: fun f => set |> none f,
     reduce: fun f acc => set |> reduce f acc,
     some: fun f => set |> some f,
     toSequence: toSequence set,
-    tryFind: fun f => set |> tryFind f,
   };
 
 let equals (this: t) (that: t): bool =>

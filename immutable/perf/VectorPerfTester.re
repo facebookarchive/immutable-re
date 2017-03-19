@@ -18,7 +18,7 @@ let generateTests
     (add: int  => 'vector => 'vector)
     (update: int => int => 'vector => 'vector)
     (removeLast: 'vector => 'vector)
-    (tryGet: int => 'vector => option int)
+    (get: int => 'vector => option int)
     (n: int): list Test.t => [
   it (sprintf "add %i elements" n) (fun () => {
     let src = IntRange.create 0 n;
@@ -33,11 +33,11 @@ let generateTests
       |> Sequence.take (n / 2)
       |> Sequence.reduce (fun acc i => acc |> update i (n - i)) (getTestData ()) |> ignore;
   }),
-  it (sprintf "tryGet %i values" n) (fun () => {
+  it (sprintf "get %i values" n) (fun () => {
     let vec = getTestData ();
     IntRange.create 0 n
       |> IntRange.forEach
-        (fun i => vec |> tryGet i |> ignore);
+        (fun i => vec |> get i |> ignore);
   }),
 ];
 
@@ -95,7 +95,7 @@ let test (n: int) (count: int): Test.t => {
         Vector.addLast
         Vector.update
         Vector.removeLast
-        Vector.tryGet
+        Vector.get
         count
     ),
     describe "TransientVector" (
@@ -105,7 +105,7 @@ let test (n: int) (count: int): Test.t => {
         TransientVector.addLast
         TransientVector.update
         TransientVector.removeLast
-        TransientVector.tryGet
+        TransientVector.get
         count
     ),
   ];

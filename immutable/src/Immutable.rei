@@ -234,7 +234,14 @@ let module Iterable: {
      *  Complexity: O(N)
      */
 
-    let find: (a => bool) => t => a;
+
+    let find: (a => bool) => t => (option a);
+    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
+     *
+     *  Complexity: O(N)
+     */
+
+    let findOrRaise: (a => bool) => t => a;
     /** [find f seq] returns the first value for which the predicate [f] returns true.
      *  If no value is found, an exception is thrown.
      *
@@ -268,12 +275,6 @@ let module Iterable: {
      */
 
     let toIterator: t => (Iterator.t a);
-
-    let tryFind: (a => bool) => t => (option a);
-    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
-     *
-     *  Complexity: O(N)
-     */
   };
 
   module type S1 = {
@@ -288,7 +289,13 @@ let module Iterable: {
      *  Complexity: O(N)
      */
 
-    let find: ('a => bool) => (t 'a) => 'a;
+    let find: ('a => bool) => (t 'a) => (option 'a);
+    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
+     *
+     *  Complexity: O(N)
+     */
+
+    let findOrRaise: ('a => bool) => (t 'a) => 'a;
     /** [find f seq] returns the first value for which the predicate [f] returns true.
      *  If no value is found, an exception is thrown.
      *
@@ -322,12 +329,6 @@ let module Iterable: {
      */
 
     let toIterator: t 'a => (Iterator.t 'a);
-
-    let tryFind: ('a => bool) => (t 'a) => (option 'a);
-    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
-     *
-     *  Complexity: O(N)
-     */
   };
 };
 
@@ -338,14 +339,14 @@ let module Sequential: {
 
     include Iterable.S with type a := a and type t := t;
 
-    let first: t => a;
-    /** [first seq] returns the first element in [seq] or throws.
+    let first: t => (option a);
+    /** [tryFirst seq] returns first element in [seq] or None.
      *
      *  Complexity: O(1)
      */
 
-    let tryFirst: t => (option a);
-    /** [tryFirst seq] returns first element in [seq] or None.
+    let firstOrRaise: t => a;
+    /** [first seq] returns the first element in [seq] or throws.
      *
      *  Complexity: O(1)
      */
@@ -356,19 +357,18 @@ let module Sequential: {
 
     include Iterable.S1 with type t 'a := t 'a;
 
-    let first: (t 'a) => 'a;
-    /** [first seq] returns the first element in [seq] or throws.
-     *
-     *  Complexity: O(1)
-     */
-
-    let tryFirst: (t 'a) => (option 'a);
+    let first: (t 'a) => (option 'a);
     /** [tryFirst seq] returns first element in [seq] or None.
      *
      *  Complexity: O(1)
      */
-  };
 
+    let firstOrRaise: (t 'a) => 'a;
+    /** [first seq] returns the first element in [seq] or throws.
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
 let module Sequence: {
@@ -665,10 +665,10 @@ let module NavigableCollection: {
     include SequentialCollection.S with type a := a and type t := t;
     include ReduceableRight.S with type a := a and type t := t;
 
-    let last: t => a;
+    let last: t => (option a);
+    let lastOrRaise: t => a;
     let toIteratorRight: t => (Iterator.t a);
     let toSequenceRight: t => (Sequence.t a);
-    let tryLast: t => (option a);
   };
 
   module type S1 = {
@@ -677,10 +677,10 @@ let module NavigableCollection: {
     include SequentialCollection.S1 with type t 'a := t 'a;
     include ReduceableRight.S1 with type t 'a := t 'a;
 
-    let last: (t 'a) => 'a;
+    let last: (t 'a) => (option 'a);
+    let lastOrRaise: (t 'a) => 'a;
     let toIteratorRight: (t 'a) => (Iterator.t 'a);
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
-    let tryLast: (t 'a) => (option 'a);
   };
 };
 
@@ -798,7 +798,10 @@ let module TransientStack: {
     let empty: unit => (t 'a);
     /** [empty ()] returns a new empty TransientDeque. */
 
-    let first: (t 'a) => 'a;
+    let first: (t 'a) => option 'a;
+    /** [tryFirst transient] returns first element in [transient] or None. */
+
+    let firstOrRaise: (t 'a) => 'a;
     /** [first transient] returns the first element in [transient] or throws. */
 
     let removeFirst: (t 'a) => (t 'a);
@@ -806,9 +809,6 @@ let module TransientStack: {
      *
      *  Complexity: O(1)
      */
-
-    let tryFirst: (t 'a) => option 'a;
-    /** [tryFirst transient] returns first element in [transient] or None. */
   };
 };
 
@@ -880,7 +880,10 @@ and TransientDeque: {
      *  Complexity: O(1)
      */
 
-    let last: (t 'a) => 'a;
+    let last: (t 'a) => option 'a;
+    /** [tryLast transient] returns the last element in [transient] or None. */
+
+    let lastOrRaise: (t 'a) => 'a;
     /** [last transient] returns the last element in [transient] or throws. */
 
     let removeLast: (t 'a) => (t 'a);
@@ -888,9 +891,6 @@ and TransientDeque: {
      *
      *  Complexity: O(1)
      */
-
-    let tryLast: (t 'a) => option 'a;
-    /** [tryLast transient] returns the last element in [transient] or None. */
   };
 
   type t 'a;
@@ -952,7 +952,9 @@ let module KeyedIterable: {
 
     let every: (k => 'v => bool) => (t 'v) => bool;
 
-    let find: (k => 'v => bool) => (t 'v) => (k, 'v);
+    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+
+    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
 
     let isEmpty: (t 'v) => bool;
 
@@ -965,8 +967,6 @@ let module KeyedIterable: {
     let toIterator: t 'v => Iterator.t (k, 'v);
 
     let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
-
-    let tryFind: (k => 'v => bool) => (t 'v) => (option (k, 'v));
   };
 
   module type S2 = {
@@ -976,7 +976,9 @@ let module KeyedIterable: {
 
     let every: ('k => 'v => bool) => (t 'k 'v) => bool;
 
-    let find: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+
+    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
 
     let isEmpty: (t 'k 'v) => bool;
 
@@ -989,8 +991,6 @@ let module KeyedIterable: {
     let toIterator: t 'k 'v => Iterator.t ('k, 'v);
 
     let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
-
-    let tryFind: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   };
 };
 
@@ -1110,9 +1110,9 @@ and Map: {
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
-    let get: k => (t 'v) => 'v;
+    let get: k => (t 'v) => (option 'v);
+    let getOrRaise: k => (t 'v) => 'v;
     let keys: (t 'v) => (Set.t k);
-    let tryGet: k => (t 'v) => (option 'v);
     let values: (t 'v) => (Iterator.t 'v);
     let toMap: (t 'v) => (Map.t k 'v);
   };
@@ -1122,9 +1122,9 @@ and Map: {
 
     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
-    let get: 'k => (t 'k 'v) => 'v;
+    let get: 'k => (t 'k 'v) => (option 'v);
+    let getOrRaise: 'k => (t 'k 'v) => 'v;
     let keys: (t 'k 'v) => (Set.t 'k);
-    let tryGet: 'k => (t 'k 'v) => (option 'v);
     let values: (t 'k 'v) => (Iterator.t 'v);
     let toMap: (t 'k 'v) => (Map.t 'k 'v);
   };
@@ -1246,17 +1246,33 @@ let module IndexedCollection: {
 
     let everyWithIndex: (int => 'a => bool) => (t 'a) => bool;
 
-    let findWithIndex: (int => 'a => bool) => (t 'a) => 'a;
+    let findWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
+    /** [tryFindWithIndex f vec] returns the first value for which the predicate [f] returns true or None. */
+
+    let findWithIndexOrRaise: (int => 'a => bool) => (t 'a) => 'a;
 
     let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
 
     let forEachRightWithIndex: (int => 'a => unit) => (t 'a) => unit;
 
-    let get: int => (t 'a) => 'a;
+    let get: int => (t 'a) => (option 'a);
+    /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
 
-    let indexOf: ('a => bool) => (t 'a) => int;
+    let getOrRaise: int => (t 'a) => 'a;
 
-    let indexOfWithIndex: (int => 'a => bool) => (t 'a) => int;
+    let indexOf: ('a => bool) => (t 'a) => (option int);
+    /** [tryIndexOf f vec] returns the index of the first element for which the predicate [f] returns true.
+     *  If no value is found, returns None.
+     */
+
+    let indexOfOrRaise: ('a => bool) => (t 'a) => int;
+
+    let indexOfWithIndex: (int => 'a => bool) => (t 'a) => (option int);
+    /** [indexOfWithIndex f vec] returns the index of the first index/element pair in [vec] for
+     *  which the predicate [f] returns true. If no value is found, returns None.
+     */
+
+    let indexOfWithIndexOrRaise: (int => 'a => bool) => (t 'a) => int;
 
     let noneWithIndex: (int => 'a => bool) => (t 'a) => bool;
 
@@ -1271,22 +1287,6 @@ let module IndexedCollection: {
     let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
 
     let toMap: (t 'a) => (Map.t int 'a);
-
-    let tryFindWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
-    /** [tryFindWithIndex f vec] returns the first value for which the predicate [f] returns true or None. */
-
-    let tryGet: int => (t 'a) => (option 'a);
-    /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
-
-    let tryIndexOf: ('a => bool) => (t 'a) => (option int);
-    /** [tryIndexOf f vec] returns the index of the first element for which the predicate [f] returns true.
-     *  If no value is found, returns None.
-     */
-
-    let tryIndexOfWithIndex: (int => 'a => bool) => (t 'a) => (option int);
-    /** [indexOfWithIndex f vec] returns the index of the first index/element pair in [vec] for
-     *  which the predicate [f] returns true. If no value is found, returns None.
-     */
   };
 };
 
@@ -1350,8 +1350,9 @@ and TransientVector: {
 
   include TransientDeque.S1 with type t 'a := t 'a;
 
-  let get: int => (t 'a) => 'a;
-  /** [get index transient] returns the element at [index]. Throws if index is out of bounds. */
+  let get: int => (t 'a) => (option 'a);
+
+  let getOrRaise: int => (t 'a) => 'a;
 
   let insertAt: int => 'a => (t 'a) => (t 'a);
   /** [insertAt index value transient] inserts value into [transient] at [index].
@@ -1373,9 +1374,6 @@ and TransientVector: {
    *
    *  Complexity: O(log32 N)
    */
-
-  let tryGet: int => (t 'a) => (option 'a);
-  /** [tryGet index transient] returns the element at [index] or None if [index] is out of bounds. */
 
   let update: int => 'a => (t 'a) => (t 'a);
   /** [update index value transient] replaces the element at [index] with [value].
@@ -1690,10 +1688,16 @@ let module NavigableMap: {
 
     include Map.S1 with type k := k and type t 'v := t 'v;
 
-    let first: (t 'v) => (k, 'v);
+    let first: (t 'v) => (option (k, 'v));
+    /** [tryFirst map] returns the first key/value pair in [set] or None. */
+
+    let firstOrRaise: (t 'v) => (k, 'v);
     /** [first map] returns the first key/value pair in [set] or throws. */
 
-    let last: (t 'v) => (k, 'v);
+    let last: (t 'v) => (option (k, 'v));
+    /** [tryLast map] returns the last key/value pair in [set] or None. */
+
+    let lastOrRaise: (t 'v) => (k, 'v);
     /** [last map] returns the last key/value pair in [set] or throws. */
 
     let reduceRight: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
@@ -1706,12 +1710,6 @@ let module NavigableMap: {
     let toKeyedIteratorRight: (t 'v) => (KeyedIterator.t k 'v);
 
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-
-    let tryFirst: (t 'v) => (option (k, 'v));
-    /** [tryFirst map] returns the first key/value pair in [set] or None. */
-
-    let tryLast: (t 'v) => (option (k, 'v));
-    /** [tryLast map] returns the last key/value pair in [set] or None. */
   };
 };
 
@@ -1796,7 +1794,14 @@ let module TransientMap: {
     let count: (t 'v) => int;
     /** [count map] returns the number of key/value pairs in [map]. */
 
-    let get: k => (t 'v) => 'v;
+
+    let get: 'k => (t 'v) => (option 'v);
+    /** [tryGet key transient] returns the value associated with [key] or None
+     *
+     *  Complexity: O(log32 N), effectively O(1)
+     */
+
+    let getOrRaise: k => (t 'v) => 'v;
 
     let isEmpty: (t 'v) => bool;
     /** [isEmpty map] returns true if [map] contains no key/value pairs. */
@@ -1826,12 +1831,6 @@ let module TransientMap: {
      *
      *  Complexity: O(1)
      */
-
-    let tryGet: 'k => (t 'v) => (option 'v);
-    /** [tryGet key transient] returns the value associated with [key] or None
-     *
-     *  Complexity: O(log32 N), effectively O(1)
-     */
   };
 
   module type S2 = {
@@ -1849,7 +1848,14 @@ let module TransientMap: {
     let count: (t 'k 'v) => int;
     /** [count map] returns the number of key/value pairs in [map]. */
 
-    let get: 'k => (t 'k 'v) => 'v;
+
+    let get: 'k => (t 'k 'v) => (option 'v);
+    /** [tryGet key transient] returns the value associated with [key] or None
+     *
+     *  Complexity: O(log32 N), effectively O(1)
+     */
+
+    let getOrRaise: 'k => (t 'k 'v) => 'v;
 
     let isEmpty: (t 'k 'v) => bool;
     /** [isEmpty map] returns true if [map] contains no key/value pairs. */
@@ -1878,12 +1884,6 @@ let module TransientMap: {
     /** [removeAll transient] removes all mappings from [transient].
      *
      *  Complexity: O(1)
-     */
-
-    let tryGet: 'k => (t 'k 'v) => (option 'v);
-    /** [tryGet key transient] returns the value associated with [key] or None
-     *
-     *  Complexity: O(log32 N), effectively O(1)
      */
   };
 };
@@ -2060,7 +2060,14 @@ and TransientIntMap: {
   let empty: unit => (t 'v);
   /** [empty ()] returns a new empty TransientIntMap. */
 
-  let get: int => (t 'v) => 'v;
+
+  let get: int => (t 'v) => (option 'v);
+  /** [tryGet key transient] returns the value associated with [key] or None
+   *
+   *  Complexity: O(log32 N), effectively O(1)
+   */
+
+  let getOrRaise: int => (t 'v) => 'v;
 
   let isEmpty: (t 'v) => bool;
   /** [isEmpty map] returns true if [map] contains no key/value pairs. */
@@ -2094,12 +2101,6 @@ and TransientIntMap: {
   /** [removeAll transient] removes all mappings from [transient].
    *
    *  Complexity: O(1)
-   */
-
-  let tryGet: int => (t 'v) => (option 'v);
-  /** [tryGet key transient] returns the value associated with [key] or None
-   *
-   *  Complexity: O(log32 N), effectively O(1)
    */
 };
 

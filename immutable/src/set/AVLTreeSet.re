@@ -104,10 +104,17 @@ let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): bool => swi
     }
 };
 
-let rec first (tree: t 'a): 'a => switch tree {
+let rec first (tree: t 'a): (option 'a) => switch tree {
+  | Empty => None
+  | Leaf v => Some v
+  | Node _ Empty v _ => Some v
+  | Node _ left _ _ => first left
+};
+
+let rec firstOrRaise (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ Empty v _ => v
-  | Node _ left _ _ => first left
+  | Node _ left _ _ => firstOrRaise left
   | Empty => failwith "empty"
 };
 
@@ -129,10 +136,17 @@ let rec forEachRight (f: 'a => unit) (tree: t 'a) => switch tree {
      forEachRight f left;
 };
 
-let rec last (tree: t 'a): 'a => switch tree {
+let rec last (tree: t 'a): (option 'a) => switch tree {
+  | Empty => None
+  | Leaf v => Some v
+  | Node _ _ v Empty => Some v
+  | Node _ _ _ right => last right
+};
+
+let rec lastOrRaise (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ _ v Empty => v
-  | Node _ _ _ right => last right
+  | Node _ _ _ right => lastOrRaise right
   | Empty => failwith "empty"
 };
 
@@ -190,7 +204,7 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
   | Node height left v right => if (x === v) (switch (left, right) {
       | (Empty, _) => right
       | (_, Empty) => left
-      | _ => rebalance left (first right) (removeFirst right)
+      | _ => rebalance left (firstOrRaise right) (removeFirst right)
     }) else {
       let cmp = comparator x v;
       if (cmp === Ordering.lessThan) {
@@ -207,7 +221,7 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
               let first = ref x;
               let newRight = removeFirstWithValue first right;
               rebalance left (!first) newRight
-            } else rebalance left (first right) (removeFirst right)
+            } else rebalance left (firstOrRaise right) (removeFirst right)
       }
     }
 };
@@ -230,18 +244,4 @@ let rec toSequenceRight (tree: t 'a): (Sequence.t 'a) => switch tree {
       Sequence.return v,
       Sequence.defer(fun () => toSequenceRight left),
     ]
-};
-
-let rec tryFirst (tree: t 'a): (option 'a) => switch tree {
-  | Empty => None
-  | Leaf v => Some v
-  | Node _ Empty v _ => Some v
-  | Node _ left _ _ => tryFirst left
-};
-
-let rec tryLast (tree: t 'a): (option 'a) => switch tree {
-  | Empty => None
-  | Leaf v => Some v
-  | Node _ _ v Empty => Some v
-  | Node _ _ _ right => tryLast right
 };
