@@ -332,6 +332,21 @@ let module Deque = {
   include Deque;
 };
 
+let module KeyedMappable = {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+  };
+};
+
 let module KeyedReduceable = {
   module type S1 = {
     type k;
@@ -364,6 +379,27 @@ let module KeyedReduceable = {
     let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     let reduceWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+  };
+};
+
+let module KeyedReduceableRight = {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    let forEachRight: (k => 'v => unit) => (t 'v) => unit;
+    let forEachRightWhile: (k => 'v => bool) => (k => 'v => unit) => (t 'v) => unit;
+    let reduceRight: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let reduceRightWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let forEachRight: ('k => 'v => unit) => (t 'k 'v) => unit;
+    let forEachRightWhile: ('k => 'v => bool) => ('k => 'v => unit) => (t 'k 'v) => unit;
+    let reduceRight: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let reduceRightWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   };
 };
 
@@ -413,18 +449,36 @@ let module KeyedCollection = {
   };
 };
 
-let module KeyedMappable = {
+let module NavigableKeyedCollection = {
   module type S1 = {
     type k;
     type t 'v;
 
-    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
+    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
+    include KeyedReduceableRight.S1 with type k := k and type t 'v := t 'v;
+
+    let first: (t 'v) => (option (k, 'v));
+    let firstOrRaise: (t 'v) => (k, 'v);
+    let last: (t 'v) => (option (k, 'v));
+    let lastOrRaise: (t 'v) => (k, 'v);
+    let toIteratorRight: t 'v => Iterator.t (k, 'v);
+    let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
+    let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+    include KeyedCollection.S2 with type t 'k 'v := t  'k 'v;
+    include KeyedReduceableRight.S2 with type t 'k 'v := t 'k 'v;
+
+    let first: (t 'k 'v) => (option ('k, 'v));
+    let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    let last: (t 'k 'v) => (option ('k, 'v));
+    let lastOrRaise: (t 'k 'v) => ('k, 'v);
+    let toIteratorRight: t 'k 'v => Iterator.t ('k, 'v);
+    let toKeyedIteratorRight: t 'k 'v => KeyedIterator.t 'k 'v;
+    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
 };
 
@@ -652,16 +706,8 @@ let module NavigableMap = {
     type k;
     type t 'v;
 
+    include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
-
-    let first: (t 'v) => (option (k, 'v));
-    let firstOrRaise: (t 'v) => (k, 'v);
-    let last: (t 'v) => (option (k, 'v));
-    let lastOrRaise: (t 'v) => (k, 'v);
-    let reduceRight: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let toIteratorRight: (t 'v) => (Iterator.t (k, 'v));
-    let toKeyedIteratorRight: (t 'v) => (KeyedIterator.t k 'v);
-    let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
   };
 };
 

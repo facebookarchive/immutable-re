@@ -284,6 +284,9 @@ let rec reduceRightWhile
   reduceRightWhileWithResult shouldContinue predicate f acc tree;
 };
 
+let forEachRightWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => 'acc) (tree: t 'k 'v) =>
+  tree |> reduceRightWhile (fun _ => predicate) (fun _ => f) ();
+
 let rec some (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
   | Empty => false
   | Leaf k v => f k v

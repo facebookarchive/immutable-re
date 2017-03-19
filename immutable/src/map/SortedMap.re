@@ -11,12 +11,18 @@
 module type S = {
   type k;
   type t +'v;
-  
+
+  let forEachRight: (k => 'v => unit) => t 'v => unit;
+  let forEachRightWhile:
+    (k => 'v => bool) => (k => 'v => unit) => t 'v => unit;
+  let reduceRight: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let reduceRightWhile:
+    ('acc => k => 'v => bool) =>
+    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let first: t 'v => option (k, 'v);
   let firstOrRaise: t 'v => (k, 'v);
   let last: t 'v => option (k, 'v);
   let lastOrRaise: t 'v => (k, 'v);
-  let reduceRight: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIteratorRight: t 'v => Iterator.t (k, 'v);
   let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
@@ -130,8 +136,14 @@ let module Make = fun (Comparable: Comparable.S) => {
   let forEach (f: k => 'v => unit) ({ tree }: t 'v): unit =>
     tree |> AVLTreeMap.forEach f;
 
+  let forEachRight (f: k => 'v => unit) ({ tree }: t 'v): unit =>
+    tree |> AVLTreeMap.forEachRight f;
+
   let forEachWhile (predicate: k => 'v => bool) (f: k => 'v => unit) ({ tree }: t 'v) =>
     tree |> AVLTreeMap.forEachWhile predicate f;
+
+  let forEachRightWhile (predicate: k => 'v => bool) (f: k => 'v => unit) ({ tree }: t 'v) =>
+    tree |> AVLTreeMap.forEachRightWhile predicate f;
 
   let get (key: k) ({ tree }: t 'v): (option 'v) =>
     tree |> AVLTreeMap.get comparator key;
