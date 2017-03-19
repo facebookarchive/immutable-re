@@ -7,14 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Immutable;
-
 let module Test: {
   type t;
 
   let describe: string => (list t) => t;
   let it: string => (unit => unit) => t;
-  let toSequence: t => (Sequence.t (string, unit => unit));
+  let toList: t => (list (string, unit => unit));
 };
 
 let module Expect: {
@@ -33,17 +31,11 @@ let module Expect: {
   let return: 'a => (t 'a);
 
   let toBeEqualTo: ('a => string) => 'a => (t 'a) => unit;
-  let toBeEqualToEmptySequence: ('a => string) => (t (Sequence.t 'a)) => unit;
-  let toBeEqualToEmptySequenceOfString: (t (Sequence.t string)) => unit;
   let toBeEqualToFalse: (t bool) => unit;
   let toBeEqualToInt: int => (t int) => unit;
   let toBeEqualToNone: ('a => string) => (t (option 'a)) => unit;
   let toBeEqualToNoneOfInt: (t (option int)) => unit;
   let toBeEqualToNoneOfString: (t (option string)) => unit;
-  let toBeEqualToSequence: ('a => string) => (Sequence.t 'a) => (t (Sequence.t 'a)) => unit;
-  let toBeEqualToSequenceOfInt: (Sequence.t int) => (t (Sequence.t int)) => unit;
-  let toBeEqualToSequenceOfString: (Sequence.t string) => (t (Sequence.t string)) => unit;
-  let toBeEqualToSequenceWith: (Equality.t 'a) => ('a => string) => (Sequence.t 'a) => (t (Sequence.t 'a)) => unit;
   let toBeEqualToSome: ('a => string) => 'a => (t (option 'a)) => unit;
   let toBeEqualToSomeOfInt: int => (t (option int)) => unit;
   let toBeEqualToSomeOfString: string => (t (option string)) => unit;
