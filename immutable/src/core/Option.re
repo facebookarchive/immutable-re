@@ -92,6 +92,14 @@ let forEach (f: 'a => unit) (opt: t 'a): unit => switch opt {
   | _ => ()
 };
 
+let forEachWhile
+    (predicate: 'a => bool)
+    (f: 'a => unit)
+    (opt: t 'a): unit => switch opt {
+  | Some a when predicate a => f a
+  | _ => ()
+};
+
 let hashWith (hash: Hash.t 'a) (opt: t 'a): int => switch opt {
   | None => 0
   | Some x => hash x
@@ -134,18 +142,21 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (opt: t 'a): 'acc => switch opt {
   | _ => acc
 };
 
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (opt: t 'a): 'acc => switch opt {
+  | Some a when predicate acc a => f acc a
+  | _ => acc
+};
+
 let return (a: 'a): (t 'a) => Some a;
 
 let some (f: 'a => bool) (opt: t 'a): bool => switch opt {
   | Some a => f a
   | _ => false
 };
-
-let toIterator (opt: t 'a): (Iterator.t 'a) =>
-  if (isEmpty opt) Iterator.empty
-  else {
-    reduce: fun f acc => reduce f acc opt
-  };
 
 let module Operators = {
   let (>>=) (opt: t 'a) (f: 'a => option 'b): option 'b => flatMap f opt;

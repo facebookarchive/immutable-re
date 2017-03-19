@@ -122,26 +122,50 @@ let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switch deq
   | Descending vector => vector |> Vector.reduceRight f acc;
 };
 
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (deque: t 'a): 'acc => switch deque {
+  | Ascending vector => vector |> Vector.reduceWhile predicate f acc;
+  | Descending vector => vector |> Vector.reduceRightWhile predicate f acc;
+};
+
 let forEach (f: 'a => unit) (deque: t 'a): unit =>
-  deque |> reduce (fun _ next => f next) ();
+  deque |> reduce (fun _ => f) ();
+
+let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (deque: t 'a): unit =>
+  deque |> reduceWhile (fun _ => predicate) (fun _ => f) ();
 
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switch deque {
   | Ascending vector => vector |> Vector.reduceRight f acc;
   | Descending vector => vector |> Vector.reduce f acc;
 };
 
+let reduceRightWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (deque: t 'a): 'acc => switch deque {
+  | Ascending vector => vector |> Vector.reduceRightWhile predicate f acc;
+  | Descending vector => vector |> Vector.reduceWhile predicate f acc;
+};
+
 let forEachRight (f: 'a => unit) (deque: t 'a): unit =>
   deque |> reduceRight (fun _ next => f next) ();
+
+let forEachRightWhile (predicate: 'a => bool) (f: 'a => unit) (deque: t 'a): unit =>
+  deque |> reduceRightWhile (fun _ => predicate) (fun _ => f) ();
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
 let toIterator (deque: t 'a): (Iterator.t 'a) =>
  if (isEmpty deque) Iterator.empty
- else { reduce: fun f acc => reduce f acc deque };
+ else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc deque };
 
 let toIteratorRight (deque: t 'a): (Iterator.t 'a) =>
   if (isEmpty deque) Iterator.empty
-  else { reduce: fun f acc => reduceRight f acc deque };
+  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc deque };
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequence

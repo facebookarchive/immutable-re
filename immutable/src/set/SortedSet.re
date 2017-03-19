@@ -13,24 +13,30 @@ module type S = {
   type a;
   type t;
 
-  let compare: t => t => Ordering.t;
+  let compare: Comparator.t t;
   let first: t => option a;
   let firstOrRaise: t => a;
   let forEachRight: (a => unit) => t => unit;
+  let forEachRightWhile: (a => bool) => (a => unit) => t => unit;
   let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
+  let reduceRightWhile:
+    ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let last: t => option a;
   let lastOrRaise: t => a;
   let toIteratorRight: t => Iterator.t a;
   let toSequenceRight: t => Sequence.t a;
   let toKeyedIteratorRight: t => KeyedIterator.t a a;
-  let forEach: (a => unit) => t => unit;
-  let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
   let every: (a => bool) => t => bool;
   let find: (a => bool) => t => option a;
   let findOrRaise: (a => bool) => t => a;
+  let forEach: (a => unit) => t => unit;
+  let forEachWhile: (a => bool) => (a => unit) => t => unit;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
   let none: (a => bool) => t => bool;
+  let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
+  let reduceWhile:
+    ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let some: (a => bool) => t => bool;
   let toIterator: t => Iterator.t a;
   let count: t => int;
@@ -50,9 +56,9 @@ module type S = {
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
   let empty: t;
-  let from: (Iterator.t a) => t;
-  let hash: (Hash.t t);
-  let hashWith: (Hash.t a) => (Hash.t t);
+  let from: Iterator.t a => t;
+  let hash: Hash.t t;
+  let hashWith: Hash.t a => Hash.t t;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -90,8 +96,22 @@ let module Make = fun (Comparable: Comparable.S) => {
   let reduce (f: 'acc => a => 'acc) (acc: 'acc) ({ tree }: t): 'acc =>
     tree |> AVLTreeSet.reduce f acc;
 
+  let reduceWhile
+      (predicate: 'acc => a => bool)
+      (f: 'acc => a => 'acc)
+      (acc: 'acc)
+      ({ tree }: t): 'acc =>
+    tree |> AVLTreeSet.reduceWhile predicate f acc;
+
   let reduceRight (f: 'acc => a => 'acc) (acc: 'acc) ({ tree }: t): 'acc =>
     tree |> AVLTreeSet.reduceRight f acc;
+
+  let reduceRightWhile
+      (predicate: 'acc => a => bool)
+      (f: 'acc => a => 'acc)
+      (acc: 'acc)
+      ({ tree }: t): 'acc =>
+    tree |> AVLTreeSet.reduceRightWhile predicate f acc;
 
   let remove (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = AVLTreeSet.remove comparator x tree;
@@ -156,8 +176,14 @@ let module Make = fun (Comparable: Comparable.S) => {
   let forEach (f: a => unit) ({ tree }: t) =>
     tree |> AVLTreeSet.forEach f;
 
+  let forEachWhile (predicate: 'a => bool) (f: a => unit) ({ tree }: t) =>
+    tree |> AVLTreeSet.forEachWhile predicate f;
+
   let forEachRight (f: a => unit) ({ tree }: t) =>
     tree |> AVLTreeSet.forEach f;
+
+  let forEachRightWhile (predicate: 'a => bool) (f: a => unit) ({ tree }: t) =>
+    tree |> AVLTreeSet.forEachRightWhile predicate f;
 
   let hashWith (hash: (Hash.t a)) (set: t): int => set
     |> reduce (Hash.reducer hash) Hash.initialValue;
@@ -179,16 +205,17 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let toIterator (set: t): (Iterator.t a) =>
     if (isEmpty set) Iterator.empty
-    else { reduce: fun f acc => reduce f acc set };
+    else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
 
   let toIteratorRight (set: t): (Iterator.t a) =>
     if (isEmpty set) Iterator.empty
-    else { reduce: fun f acc => reduceRight f acc set };
+    else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc set };
 
   let toKeyedIterator (set: t): (KeyedIterator.t a a)  =>
     if (isEmpty set) KeyedIterator.empty
     else {
-      reduce: fun f acc => set |> reduce
+      reduceWhile: fun predicate f acc => set |> reduceWhile
+        (fun acc next => predicate acc next next)
         (fun acc next => f acc next next)
         acc
     };
@@ -196,7 +223,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toKeyedIteratorRight (set: t): (KeyedIterator.t a a) =>
     if (isEmpty set) KeyedIterator.empty
     else {
-      reduce: fun f acc => set |> reduceRight
+      reduceWhile: fun predicate f acc => set |> reduceRightWhile
+        (fun acc next => predicate acc next next)
         (fun acc next => f acc next next)
         acc
     };
@@ -204,14 +232,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toSet (set: t): (ImmSet.t a) => {
     contains: fun a => contains a set,
     count: count set,
-    every: fun f => every f set,
-    find: fun f => find f set,
-    findOrRaise: fun f => findOrRaise f set,
-    forEach: fun f => forEach f set,
-    none: fun f => none f set,
-    reduce: fun f acc => reduce f acc set,
-    some: fun f => some f set,
-    toSequence: toSequence set,
+    iterator: toIterator set,
+    sequence: toSequence set,
   };
 
   let toMap (set: t): (ImmMap.t a a) => {
@@ -220,24 +242,14 @@ let module Make = fun (Comparable: Comparable.S) => {
       else false,
     containsKey: fun k => set |> contains k,
     count: count set,
-    every: fun f => set |> every (fun k => f k k),
-    find: fun f => set |> find (fun k => f k k) >>| (fun k => (k, k)),
-    findOrRaise: fun f => {
-      let k = set |> findOrRaise (fun k => f k k);
-      (k, k)
-    },
-    forEach: fun f => set |> forEach (fun k => f k k),
     get: fun k =>
       if (set |> contains k) (Some k)
       else None,
     getOrRaise: fun k =>
       if (set |> contains k) k
       else failwith "not found",
-    none: fun f => set |> none (fun k => f k k),
-    reduce: fun f acc => set |> reduce (fun acc k => f acc k k) acc,
-    some: fun f => set |> some (fun k => f k k),
-    toSequence: toSequence set |> Sequence.map (fun k => (k, k)),
-    values: toIterator set,
+    keyedIterator: toKeyedIterator set,
+    sequence: toSequence set |> Sequence.map (fun k => (k, k)),
   };
 
   let intersect (this: t) (that: t): t =>

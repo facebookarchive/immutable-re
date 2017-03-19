@@ -87,6 +87,12 @@ let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
 let forEach (f: 'a => unit) ({ list }: t 'a): unit =>
   list |> ImmList.forEach f;
 
+let forEachWhile
+    (predicate: 'a => bool)
+    (f: 'a => 'acc )
+    ({ list }: t 'a) =>
+  list |> ImmList.forEachWhile predicate f;
+
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
 
@@ -115,6 +121,13 @@ let none (f: 'a => bool) ({ list }: t 'a): bool =>
 
 let reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) ({ list }: t 'a): 'acc =>
   list |> ImmList.reduce f acc;
+
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc )
+    (acc: 'acc)
+    ({ list }: t 'a): 'acc =>
+  list |> ImmList.reduceWhile predicate f acc;
 
 let removeAll (_: t 'a): (t 'a) => empty;
 

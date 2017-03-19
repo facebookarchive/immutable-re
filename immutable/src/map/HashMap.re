@@ -337,6 +337,47 @@ let module BitmapTrieMap = {
     | Empty => acc
   };
 
+  let rec reduceWhileWithResult
+      (shouldContinue: ref bool)
+      (predicate: 'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'k 'v): 'acc => switch map {
+    | Level _ nodes _ =>
+        let reducer acc node => node
+          |> reduceWhileWithResult shouldContinue predicate f acc;
+
+        let predicate acc node => !shouldContinue;
+
+        nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+    | ComparatorCollision _ entryMap =>
+        entryMap |> AVLTreeMap.reduceWhileWithResult shouldContinue predicate f acc
+    | EqualityCollision _ entryMap =>
+        entryMap |> EqualityMap.reduceWhile predicate f acc
+    | Entry _ entryKey entryValue =>
+        if (!shouldContinue && (predicate acc entryKey entryValue)) (f acc entryKey entryValue)
+        else acc
+    | Empty => acc
+  };
+
+  let reduceWhile
+      (predicate: 'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'k 'v): 'acc => {
+    let shouldContinue = ref true;
+    let predicate acc k v => {
+      let result = predicate acc k v;
+      shouldContinue := result;
+      result;
+    };
+
+    reduceWhileWithResult shouldContinue predicate f acc map;
+  };
+
+  let forEachWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => 'acc) (map: t 'k 'v) =>
+    map |> reduceWhile (fun _ => predicate) (fun _ => f) ();
+
   let rec some (f: 'k => 'v => bool) (map: t 'k 'v): bool => switch map {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.some (some f)
     | ComparatorCollision _ entryMap => entryMap |> AVLTreeMap.some f
@@ -442,6 +483,9 @@ let findOrRaise (f: 'k => 'v => bool) (map: t 'k 'v): ('k, 'v) =>
 let forEach (f: 'k => 'v => unit) ({ root }: t 'k 'v) =>
   root |> BitmapTrieMap.forEach f;
 
+let forEachWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => unit) ({ root }: t 'k 'v) =>
+  root |> BitmapTrieMap.forEachWhile predicate f;
+
 let get (key: 'k) ({ strategy, root }: t 'k 'v): (option 'v) => {
   let hash = HashStrategy.hash strategy key;
   root |> BitmapTrieMap.get strategy 0 hash key;
@@ -467,6 +511,13 @@ let put (key: 'k) (value: 'v) (map: t 'k 'v): (t 'k 'v) =>
 let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ root }: t 'k 'v): 'acc =>
   root |> BitmapTrieMap.reduce f acc;
 
+let reduceWhile
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    ({ root }: t 'k 'v): 'acc =>
+  root |> BitmapTrieMap.reduceWhile predicate f acc;
+
 let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;
 
@@ -479,7 +530,8 @@ let some (f: 'k => 'v => bool) ({ root }: t 'k 'v): bool =>
 let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
   if (isEmpty map) Iterator.empty
   else {
-    reduce: fun f acc => map |> reduce
+    reduceWhile: fun predicate f acc => map |> reduceWhile
+      (fun acc k v => predicate acc (k, v))
       (fun acc k v => f acc (k, v))
       acc
   };
@@ -487,7 +539,7 @@ let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
 let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
   if (isEmpty map) KeyedIterator.empty
   else {
-    reduce: fun f acc => map |> reduce f acc
+    reduceWhile: fun predicate f acc => map |> reduceWhile predicate f acc
   };
 
 let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
@@ -500,17 +552,10 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
-  every: fun f => every f map,
-  find: fun f => find f map,
-  findOrRaise: fun f => findOrRaise f map,
-  forEach: fun f => forEach f map,
   get: fun i => get i map,
   getOrRaise: fun i => getOrRaise i map,
-  none: fun f => none f map,
-  reduce: fun f acc => map |> reduce f acc,
-  some: fun f => map |> some f,
-  toSequence: (toSequence map),
-  values: (values map),
+  keyedIterator: toKeyedIterator map,
+  sequence: toSequence map,
 };
 
 let hash (map: t 'k 'v): int =>

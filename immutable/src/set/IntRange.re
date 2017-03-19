@@ -76,6 +76,17 @@ let forEach (f: int => unit) ({ count, start }: t) => {
   recurse f start count;
 };
 
+let forEachWhile (predicate: int => bool) (f: int => unit) ({ count, start }: t) => {
+  let rec recurse f start count =>
+    if (count == 0) ()
+    else if (predicate start) {
+      f start;
+      recurse f (start + 1) (count - 1);
+    }
+    else ();
+  recurse f start count;
+};
+
 let forEachRight (f: int => unit) ({ count, start }: t) => {
   let rec recurse f start count =>
     if (count == 0) ()
@@ -83,6 +94,17 @@ let forEachRight (f: int => unit) ({ count, start }: t) => {
       f start;
       recurse f (start - 1) (count - 1);
     };
+  recurse f (count - 1) count;
+};
+
+let forEachRightWhile (predicate: int => bool) (f: int => unit) ({ count, start }: t) => {
+  let rec recurse f start count =>
+    if (count == 0) ()
+    else if (predicate start) {
+      f start;
+      recurse f (start - 1) (count - 1);
+    }
+    else ();
   recurse f (count - 1) count;
 };
 
@@ -117,6 +139,21 @@ let reduce (f: 'acc => int => 'acc) (acc: 'acc) ({ count, start }: t): 'acc => {
   recurse f start count acc;
 };
 
+let reduceWhile
+    (predicate: 'acc => int => bool)
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    ({ count, start }: t): 'acc => {
+  let rec recurse predicate f start count acc =>
+    if (count == 0) acc
+    else if (predicate acc start |> not) acc
+    else {
+      let acc = f acc start;
+      recurse predicate f (start + 1) (count - 1) acc;
+    };
+  recurse predicate f start count acc;
+};
+
 let reduceRight (f: 'acc => int => 'acc) (acc: 'acc) ({ count, start }: t): 'acc => {
   let rec recurse f start count acc =>
     if (count == 0) acc
@@ -125,6 +162,21 @@ let reduceRight (f: 'acc => int => 'acc) (acc: 'acc) ({ count, start }: t): 'acc
       recurse f (start - 1) (count - 1) acc;
     };
   recurse f (start + count - 1) count acc;
+};
+
+let reduceRightWhile
+    (predicate: 'acc => int => bool)
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    ({ count, start }: t): 'acc => {
+  let rec recurse predicate f start count acc =>
+    if (count == 0) acc
+    else if (predicate acc start |> not) acc
+    else {
+      let acc = f acc start;
+      recurse predicate f (start - 1) (count - 1) acc;
+    };
+  recurse predicate f (start + count - 1) count acc;
 };
 
 let hash (set: t): int =>
@@ -155,22 +207,24 @@ let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
 
 let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
-  else { reduce: fun f acc => reduce f acc set };
+  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
 
 let toIteratorRight (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
-  else { reduce: fun f acc => reduceRight f acc set };
+  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc set };
 
 let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun f acc => set |> reduce
+  else { reduceWhile: fun predicate f acc => set |> reduceWhile
+    (fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };
 
 let toKeyedIteratorRight (set: t): (KeyedIterator.t int int) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun f acc => set |> reduceRight
+  else { reduceWhile: fun predicate f acc => set |> reduceRightWhile
+    (fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };
@@ -178,14 +232,8 @@ let toKeyedIteratorRight (set: t): (KeyedIterator.t int int) =>
 let toSet (set: t): (ImmSet.t int) => {
   contains: fun v => contains v set,
   count: count set,
-  every: fun f => set |> every f,
-  find: fun f => set |> find f,
-  findOrRaise: fun f => set |> findOrRaise f,
-  forEach: fun f => set |> forEach f,
-  none: fun f => set |> none f,
-  reduce: fun f acc => set |> reduce f acc,
-  some: fun f => set |> some f,
-  toSequence: toSequence set,
+  iterator: toIterator set,
+  sequence: toSequence set,
 };
 
 let toMap (set: t): (ImmMap.t int int) =>

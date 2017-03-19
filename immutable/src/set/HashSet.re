@@ -227,6 +227,10 @@ let remove (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
 let removeAll ({ strategy }: t 'a): (t 'a) =>
   emptyWith strategy;
 
+/* FIXME: Shouldn't use sequences to implement all these.
+ * They're way slow.
+ */
+
 let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
   if (isEmpty set) Sequence.empty
   else root |> BitmapTrieSet.toSequence;
@@ -243,22 +247,33 @@ let findOrRaise (f: 'a => bool) (set: t 'a): 'a =>
 let forEach (f: 'a => unit) (set: t 'a): unit =>
   set |> toSequence |> Sequence.forEach f;
 
+let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (set: t 'a): unit =>
+  set |> toSequence |> Sequence.forEachWhile predicate f;
+
 let none (f: 'a => bool) (set: t 'a): bool =>
   set |> toSequence |> Sequence.none f;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (set: t 'a): 'acc =>
   set |> toSequence |> Sequence.reduce f acc;
 
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (set: t 'a): 'acc =>
+  set |> toSequence |> Sequence.reduceWhile predicate f acc;
+
 let some (f: 'a => bool) (set: t 'a): bool =>
   set |> toSequence |> Sequence.some f;
 
 let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) Iterator.empty
-  else { reduce: fun f acc => reduce f acc set };
+  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
 
 let toKeyedIterator (set: t 'a): (KeyedIterator.t 'a 'a) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun f acc => set |> reduce
+  else { reduceWhile: fun predicate f acc => set |> reduceWhile
+    (fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };
@@ -268,14 +283,8 @@ let toSet (set: t 'a): (ImmSet.t 'a) =>
   else {
     contains: fun v => contains v set,
     count: count set,
-    every: fun f => set |> every f,
-    find: fun f => set |> find f,
-    findOrRaise: fun f => set |> findOrRaise f,
-    forEach: fun f => set |> forEach f,
-    none: fun f => set |> none f,
-    reduce: fun f acc => set |> reduce f acc,
-    some: fun f => set |> some f,
-    toSequence: toSequence set,
+    iterator: toIterator set,
+    sequence: toSequence set,
   };
 
 let equals (this: t 'a) (that: t 'a): bool =>

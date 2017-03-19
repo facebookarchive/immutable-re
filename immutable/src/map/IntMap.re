@@ -158,13 +158,49 @@ let module BitmapTrieIntMap = {
     | Empty => true
   };
 
-  let rec reduce (f: 'vcc => int => 'v => 'vcc) (acc: 'vcc) (map: t 'v): 'vcc => switch map {
+  let rec reduce (f: 'acc => int => 'v => 'acc) (acc: 'acc) (map: t 'v): 'acc => switch map {
     | Level _ nodes _ =>
         let reducer acc map => reduce f acc map;
         nodes |> CopyOnWriteArray.reduce reducer acc;
     | Entry key value => f acc key value;
     | Empty => acc;
   };
+
+  let rec reduceWhileWithResult
+      (shouldContinue: ref bool)
+      (predicate: 'acc => int => 'v => bool)
+      (f: 'acc => int => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc => switch map {
+    | Level _ nodes _ =>
+        let reducer acc node => node
+          |> reduceWhileWithResult shouldContinue predicate f acc;
+        let predicate acc node => !shouldContinue;
+
+        nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+    | Entry key value =>
+        if (!shouldContinue && (predicate acc key value)) (f acc key value)
+        else acc
+    | Empty => acc
+  };
+
+  let reduceWhile
+      (predicate: 'acc => int => 'v => bool)
+      (f: 'acc => int => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'k): 'acc => {
+    let shouldContinue = ref true;
+    let predicate acc k v => {
+      let result = predicate acc k v;
+      shouldContinue := result;
+      result;
+    };
+
+    reduceWhileWithResult shouldContinue predicate f acc map;
+  };
+
+  let forEachWhile (predicate: int => 'v => bool) (f: int => 'v => unit) (map: t 'k): unit =>
+    map |> reduceWhile (fun _ => predicate) (fun _ => f) ();
 
   let rec some (f: int => 'v => bool) (map: t 'v): bool => switch map {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.some (fun node => some f node)
@@ -261,6 +297,9 @@ let findOrRaise (f: int => 'v => bool) ({ root }: t 'v): (int, 'v) =>
 let forEach (f: int => 'v => unit) ({ root }: t 'v): unit =>
   root |> BitmapTrieIntMap.forEach f;
 
+let forEachWhile (predicate: int => 'v => bool) (f: int => 'v => unit) ({ root }: t 'v): unit =>
+  root |> BitmapTrieIntMap.forEachWhile predicate f;
+
 let get (key: int) ({ root }: t 'v): (option 'v) =>
   root |> BitmapTrieIntMap.get 0 key;
 
@@ -280,6 +319,13 @@ let put (key: int) (value: 'v) (map: t 'v): (t 'v) =>
 let reduce (f: 'vcc => int => 'v => 'vcc) (acc: 'vcc) ({ root }: t 'v): 'vcc =>
   root |> BitmapTrieIntMap.reduce f acc;
 
+let reduceWhile
+    (predicate: 'acc => int => 'v => bool)
+    (f: 'acc => int => 'v => 'acc)
+    (acc: 'acc)
+    ({ root }: t 'v): 'acc =>
+  root |> BitmapTrieIntMap.reduceWhile predicate f acc;
+
 let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;
 
@@ -291,7 +337,8 @@ let some (f: int => 'v => bool) ({ root }: t 'v): bool =>
 let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
   if (isEmpty map) Iterator.empty
   else {
-    reduce: fun f acc => map |> reduce
+    reduceWhile: fun predicate f acc => map |> reduceWhile
+      (fun acc k v => predicate acc (k, v))
       (fun acc k v => f acc (k, v))
       acc
   };
@@ -299,7 +346,7 @@ let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
 let toKeyedIterator (map: t 'v): (KeyedIterator.t int 'v) =>
   if (isEmpty map) KeyedIterator.empty
   else {
-    reduce: fun f acc => map |> reduce f acc
+    reduceWhile: fun predicate f acc => reduceWhile predicate f acc map
   };
 
 let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
@@ -312,17 +359,10 @@ let toMap (map: t 'v): (ImmMap.t int 'v) => {
   containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
-  every: fun f => every f map,
-  find: fun f => find f map,
-  findOrRaise: fun f => findOrRaise f map,
-  forEach: fun f => forEach f map,
   get: fun i => get i map,
   getOrRaise: fun i => getOrRaise i map,
-  none: fun f => none f map,
-  reduce: fun f acc => map |> reduce f acc,
-  some: fun f => map |> some f,
-  toSequence: (toSequence map),
-  values: (values map),
+  keyedIterator: toKeyedIterator map,
+  sequence: toSequence map,
 };
 
 let equals (this: t 'v) (that: t 'v): bool =>

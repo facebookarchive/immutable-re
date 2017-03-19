@@ -131,6 +131,16 @@ let rec forEach (f: 'a => unit) (seq: t 'a) => switch (seq ()) {
   | Completed => ()
 };
 
+let rec forEachWhile
+    (predicate: 'a => bool)
+    (f: 'a => 'acc)
+    (seq: t 'a): 'acc => switch (seq ()) {
+  | Next value next when predicate value =>
+      let acc = f value;
+      forEachWhile predicate f next
+  | _ => ()
+};
+
 let rec generate (f: 'acc => 'acc) (acc: 'acc): (t 'acc) => fun () =>
   Next acc (generate f (f acc));
 
@@ -202,6 +212,17 @@ let rec reduce
   | Completed => acc
 };
 
+let rec reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (reducer: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (seq: t 'a): 'acc => switch (seq ()) {
+  | Next value next when predicate acc value =>
+      let acc = reducer acc value;
+      reduceWhile predicate reducer acc next
+  | _ => acc
+};
+
 let rec repeat (value: 'a): (t 'a) => {
   let rec repeatForever value () =>
     Next value (repeatForever value);
@@ -222,7 +243,8 @@ let rec scan
 let toIterator (seq: t 'a): (Iterator.t 'a) =>
   if (isEmpty seq) Iterator.empty
   else {
-    reduce: fun f acc => reduce f acc seq
+    reduceWhile: fun predicate f acc =>
+      reduceWhile predicate f acc seq
   };
 
 let buffer

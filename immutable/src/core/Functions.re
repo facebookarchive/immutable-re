@@ -11,6 +11,8 @@ let alwaysFailWith (message: string) _ => failwith message;
 let alwaysFalse _: bool => false;
 let alwaysNone _: option _ => None;
 let alwaysTrue _: bool => true;
+let alwaysTrue2 _ _: bool => true;
+let alwaysTrue3 _ _ _: bool => true;
 let alwaysUnit _ => ();
 let call (f: unit => 'a): 'a => f ();
 let compose (f1: 'a => 'b) (f2: 'b => 'c) (a: 'a): 'c => f2 (f1 a);

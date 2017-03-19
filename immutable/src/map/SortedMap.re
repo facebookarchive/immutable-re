@@ -11,7 +11,7 @@
 module type S = {
   type k;
   type t +'v;
-
+  
   let first: t 'v => option (k, 'v);
   let firstOrRaise: t 'v => (k, 'v);
   let last: t 'v => option (k, 'v);
@@ -20,14 +20,18 @@ module type S = {
   let toIteratorRight: t 'v => Iterator.t (k, 'v);
   let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
-  let forEach: (k => 'v => unit) => t 'v => unit;
-  let reduce: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let every: (k => 'v => bool) => t 'v => bool;
   let find: (k => 'v => bool) => t 'v => option (k, 'v);
   let findOrRaise: (k => 'v => bool) => t 'v => (k, 'v);
+  let forEach: (k => 'v => unit) => t 'v => unit;
+  let forEachWhile: (k => 'v => bool) => (k => 'v => unit) => t 'v => unit;
   let isEmpty: t 'v => bool;
   let isNotEmpty: t 'v => bool;
   let none: (k => 'v => bool) => t 'v => bool;
+  let reduce: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let reduceWhile:
+    ('acc => k => 'v => bool) =>
+    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let some: (k => 'v => bool) => t 'v => bool;
   let toIterator: t 'v => Iterator.t (k, 'v);
   let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
@@ -126,6 +130,9 @@ let module Make = fun (Comparable: Comparable.S) => {
   let forEach (f: k => 'v => unit) ({ tree }: t 'v): unit =>
     tree |> AVLTreeMap.forEach f;
 
+  let forEachWhile (predicate: k => 'v => bool) (f: k => 'v => unit) ({ tree }: t 'v) =>
+    tree |> AVLTreeMap.forEachWhile predicate f;
+
   let get (key: k) ({ tree }: t 'v): (option 'v) =>
     tree |> AVLTreeMap.get comparator key;
 
@@ -167,8 +174,22 @@ let module Make = fun (Comparable: Comparable.S) => {
   let reduce (f: 'acc => k => 'v => 'acc) (acc: 'acc) ({ tree }: t 'v): 'acc =>
     tree |> AVLTreeMap.reduce f acc;
 
+  let reduceWhile
+      (predicate: 'acc => k => 'v => bool)
+      (f: 'acc => k => 'v => 'acc)
+      (acc: 'acc)
+      ({ tree }: t 'v): 'acc =>
+    tree |> AVLTreeMap.reduceWhile predicate f acc;
+
   let reduceRight (f: 'acc => k => 'v => 'acc) (acc: 'acc) ({ tree }: t 'v): 'acc =>
     tree |> AVLTreeMap.reduceRight f acc;
+
+  let reduceRightWhile
+      (predicate: 'acc => k => 'v => bool)
+      (f: 'acc => k => 'v => 'acc)
+      (acc: 'acc)
+      ({ tree }: t 'v): 'acc =>
+    tree |> AVLTreeMap.reduceRightWhile predicate f acc;
 
   let map (f: k => 'a => 'b) (map: t 'a): (t 'b) =>
     map |> reduce (fun acc k v => acc |> put k (f k v)) empty;
@@ -204,7 +225,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toIterator (map: t 'v): (Iterator.t (k, 'v)) =>
     if (isEmpty map) Iterator.empty
     else {
-      reduce: fun f acc => map |> reduce
+      reduceWhile: fun predicate f acc => map |> reduceWhile
+        (fun acc k v => predicate acc (k, v))
         (fun acc k v => f acc (k, v))
         acc
     };
@@ -212,7 +234,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toIteratorRight (map: t 'v): (Iterator.t (k, 'v)) =>
     if (isEmpty map) Iterator.empty
     else {
-      reduce: fun f acc => map |> reduceRight
+      reduceWhile: fun predicate f acc => map |> reduceRightWhile
+        (fun acc k v => predicate acc (k, v))
         (fun acc k v => f acc (k, v))
         acc
     };
@@ -220,31 +243,23 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toKeyedIterator (map: t 'v): (KeyedIterator.t k 'v) =>
     if (isEmpty map) KeyedIterator.empty
     else {
-      reduce: fun f acc => map |> reduce f acc
+      reduceWhile: fun predicate f acc => map |> reduceWhile predicate f acc
     };
 
   let toKeyedIteratorRight (map: t 'v): (KeyedIterator.t k 'v) =>
     if (isEmpty map) KeyedIterator.empty
     else {
-      reduce: fun f acc => map |> reduceRight f acc
+      reduceWhile: fun predicate f acc => map |> reduceRightWhile predicate f acc
     };
 
   let toMap (map: t 'v): (ImmMap.t k 'v) => {
     containsWith: fun eq k v => map |> containsWith eq k v,
     containsKey: fun k => containsKey k map,
     count: (count map),
-    every: fun f => every f map,
-    find: fun f => find f map,
-    findOrRaise: fun f => findOrRaise f map,
-    forEach: fun f => forEach f map,
     get: fun i => get i map,
     getOrRaise: fun i => getOrRaise i map,
-    none: fun f => none f map,
-    reduce: fun f acc => map |> reduce f acc,
-    some: fun f => map |> some f,
-    toSequence: (toSequence map),
-
-    values: (values map),
+    keyedIterator: toKeyedIterator map,
+    sequence: toSequence map,
   };
 
   let compareWith

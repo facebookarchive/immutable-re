@@ -139,11 +139,11 @@ let module Mappable: {
   };
 };
 
-let module ReverseMappable: {
+let module Filterable: {
   module type S1 = {
     type t 'a;
 
-    let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+    let filter: ('a => bool) => (t 'a) => (t 'a);
   };
 };
 
@@ -168,15 +168,117 @@ let module Reduceable: {
     type a;
     type t;
 
+    let every: (a => bool) => t => bool;
+    /** [every f seq] returns true if the predicate [f] returns true for every
+     *  element in [seq], otherwise false. If [seq] is empty, returns true.
+     *
+     *  Complexity: O(N)
+     */
+
+    let find: (a => bool) => t => (option a);
+    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
+     *
+     *  Complexity: O(N)
+     */
+
+    let findOrRaise: (a => bool) => t => a;
+    /** [find f seq] returns the first value for which the predicate [f] returns true.
+     *  If no value is found, an exception is thrown.
+     *
+     *  Complexity: O(N)
+     */
+
     let forEach: (a => unit) => t => unit;
+
+    let forEachWhile: (a => bool) => (a => unit) => t => unit;
+
+    let isEmpty: t => bool;
+    /** [isEmpty seq] returns true if [seq] contains no elements.
+     *
+     *  Complexity: O(1)
+     */
+
+    let isNotEmpty: t => bool;
+    /** [isNotEmpty seq] returns true if [seq] contains at least one element.
+     *
+     *  Complexity: O(1)
+     */
+
+    let none: (a => bool) => t => bool;
+    /** [none f seq] returns true if the predicate [f] returns false for every
+     *  elements in [seq], otherwise true. If [seq] is empty, returns true.
+     *
+     *  Complexity: O(N)
+     */
+
     let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
+
+    let reduceWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+
+    let some: (a => bool) => t => bool;
+    /** [some f seq] returns true if the predicate [f] returns true for any element in [seq], otherwise false.
+     *  If [seq] is empty, returns false.
+     *
+     *  Complexity: O(N)
+     */
   };
 
   module type S1 = {
     type t 'a;
 
+    let every: ('a => bool) => (t 'a) => bool;
+    /** [every f seq] returns true if the predicate [f] returns true for every
+     *  element in [seq], otherwise false. If [seq] is empty, returns true.
+     *
+     *  Complexity: O(N)
+     */
+
+    let find: ('a => bool) => (t 'a) => (option 'a);
+    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
+     *
+     *  Complexity: O(N)
+     */
+
+    let findOrRaise: ('a => bool) => (t 'a) => 'a;
+    /** [find f seq] returns the first value for which the predicate [f] returns true.
+     *  If no value is found, an exception is thrown.
+     *
+     *  Complexity: O(N)
+     */
+
     let forEach: ('a => unit) => (t 'a) => unit;
+
+    let forEachWhile: ('a => bool) => ('a => unit) => (t 'a) => unit;
+
+    let isEmpty: (t 'a) => bool;
+    /** [isEmpty seq] returns true if [seq] contains no elements.
+     *
+     *  Complexity: O(1)
+     */
+
+    let isNotEmpty: (t 'a) => bool;
+    /** [isNotEmpty seq] returns true if [seq] contains at least one element.
+     *
+     *  Complexity: O(1)
+     */
+
+    let none: ('a => bool) => (t 'a) => bool;
+    /** [none f seq] returns true if the predicate [f] returns false for every
+     *  elements in [seq], otherwise true. If [seq] is empty, returns true.
+     *
+     *  Complexity: O(N)
+     */
+
     let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+
+    let reduceWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+
+    let some: ('a => bool) => (t 'a) => bool;
+    /** [some f seq] returns true if the predicate [f] returns true for any element in [seq], otherwise false.
+     *  If [seq] is empty, returns false.
+     *
+     *  Complexity: O(N)
+     */
   };
 };
 
@@ -186,22 +288,26 @@ let module ReduceableRight: {
     type t;
 
     let forEachRight: (a => unit) => t => unit;
+    let forEachRightWhile: (a => bool) => (a => unit) => t => unit;
     let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
+    let reduceRightWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   };
 
   module type S1 = {
     type t 'a;
 
     let forEachRight: ('a => unit) => (t 'a) => unit;
+    let forEachRightWhile: ('a => bool) => ('a => unit) => (t 'a) => unit;
     let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let reduceRightWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   };
 };
 
-let module Filterable: {
+let module ReverseMappable: {
   module type S1 = {
     type t 'a;
 
-    let filter: ('a => bool) => (t 'a) => (t 'a);
+    let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
   };
 };
 
@@ -227,53 +333,6 @@ let module Iterable: {
 
     include Reduceable.S with type a := a and type t := t;
 
-    let every: (a => bool) => t => bool;
-    /** [every f seq] returns true if the predicate [f] returns true for every
-     *  element in [seq], otherwise false. If [seq] is empty, returns true.
-     *
-     *  Complexity: O(N)
-     */
-
-
-    let find: (a => bool) => t => (option a);
-    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
-     *
-     *  Complexity: O(N)
-     */
-
-    let findOrRaise: (a => bool) => t => a;
-    /** [find f seq] returns the first value for which the predicate [f] returns true.
-     *  If no value is found, an exception is thrown.
-     *
-     *  Complexity: O(N)
-     */
-
-    let isEmpty: t => bool;
-    /** [isEmpty seq] returns true if [seq] contains no elements.
-     *
-     *  Complexity: O(1)
-     */
-
-    let isNotEmpty: t => bool;
-    /** [isNotEmpty seq] returns true if [seq] contains at least one element.
-     *
-     *  Complexity: O(1)
-     */
-
-    let none: (a => bool) => t => bool;
-    /** [none f seq] returns true if the predicate [f] returns false for every
-     *  elements in [seq], otherwise true. If [seq] is empty, returns true.
-     *
-     *  Complexity: O(N)
-     */
-
-    let some: (a => bool) => t => bool;
-    /** [some f seq] returns true if the predicate [f] returns true for any element in [seq], otherwise false.
-     *  If [seq] is empty, returns false.
-     *
-     *  Complexity: O(N)
-     */
-
     let toIterator: t => (Iterator.t a);
   };
 
@@ -281,52 +340,6 @@ let module Iterable: {
     type t 'a;
 
     include Reduceable.S1 with type t 'a := t 'a;
-
-    let every: ('a => bool) => (t 'a) => bool;
-    /** [every f seq] returns true if the predicate [f] returns true for every
-     *  element in [seq], otherwise false. If [seq] is empty, returns true.
-     *
-     *  Complexity: O(N)
-     */
-
-    let find: ('a => bool) => (t 'a) => (option 'a);
-    /** [tryFind f seq] returns the first value for which the predicate [f] returns true or None.
-     *
-     *  Complexity: O(N)
-     */
-
-    let findOrRaise: ('a => bool) => (t 'a) => 'a;
-    /** [find f seq] returns the first value for which the predicate [f] returns true.
-     *  If no value is found, an exception is thrown.
-     *
-     *  Complexity: O(N)
-     */
-
-    let isEmpty: (t 'a) => bool;
-    /** [isEmpty seq] returns true if [seq] contains no elements.
-     *
-     *  Complexity: O(1)
-     */
-
-    let isNotEmpty: (t 'a) => bool;
-    /** [isNotEmpty seq] returns true if [seq] contains at least one element.
-     *
-     *  Complexity: O(1)
-     */
-
-    let none: ('a => bool) => (t 'a) => bool;
-    /** [none f seq] returns true if the predicate [f] returns false for every
-     *  elements in [seq], otherwise true. If [seq] is empty, returns true.
-     *
-     *  Complexity: O(N)
-     */
-
-    let some: ('a => bool) => (t 'a) => bool;
-    /** [some f seq] returns true if the predicate [f] returns true for any element in [seq], otherwise false.
-     *  If [seq] is empty, returns false.
-     *
-     *  Complexity: O(N)
-     */
 
     let toIterator: t 'a => (Iterator.t 'a);
   };
@@ -910,20 +923,73 @@ and TransientDeque: {
    */
 };
 
-let module KeyedReduceable: {
+let module KeyedMappable: {
   module type S1 = {
     type k;
     type t 'v;
 
-    let forEach: (k => 'v => unit) => t 'v => unit;
-    let reduce: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let forEach: ('k => 'v => unit) => t 'k 'v => unit;
-    let reduce: ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+  };
+};
+
+let module KeyedReduceable: {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    let every: (k => 'v => bool) => (t 'v) => bool;
+
+    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+
+    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+
+    let forEach: (k => 'v => unit) => (t 'v) => unit;
+
+    let forEachWhile: (k => 'v => bool) => (k => 'v => unit) => (t 'v) => unit;
+
+    let isEmpty: (t 'v) => bool;
+
+    let isNotEmpty: (t 'v) => bool;
+
+    let none: (k => 'v => bool) => (t 'v) => bool;
+
+    let reduce: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+
+    let reduceWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+
+    let some: (k => 'v => bool) => (t 'v) => bool;
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+
+    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+
+    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+
+    let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
+
+    let forEachWhile: ('k => 'v => bool) => ('k => 'v => unit) => (t 'k 'v) => unit;
+
+    let isEmpty: (t 'k 'v) => bool;
+
+    let isNotEmpty: (t 'k 'v) => bool;
+
+    let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+
+    let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+
+    let reduceWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+
+    let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   };
 };
 
@@ -931,6 +997,7 @@ let module KeyedIterator: {
   type t 'k 'v;
 
   include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
+  include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
   let concat: (list (t 'k 'v)) => (t 'k 'v);
   let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
@@ -938,7 +1005,6 @@ let module KeyedIterator: {
   let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
   let keys: (t 'k 'v) => (Iterator.t 'k);
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k ' b);
   let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
   let values: (t 'k 'v) => Iterator.t 'v;
 };
@@ -950,20 +1016,6 @@ let module KeyedIterable: {
 
     include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
 
-    let every: (k => 'v => bool) => (t 'v) => bool;
-
-    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
-
-    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
-
-    let isEmpty: (t 'v) => bool;
-
-    let isNotEmpty: (t 'v) => bool;
-
-    let none: (k => 'v => bool) => (t 'v) => bool;
-
-    let some: (k => 'v => bool) => (t 'v) => bool;
-
     let toIterator: t 'v => Iterator.t (k, 'v);
 
     let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
@@ -973,20 +1025,6 @@ let module KeyedIterable: {
     type t 'k 'v;
 
     include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
-
-    let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-
-    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-
-    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-
-    let isEmpty: (t 'k 'v) => bool;
-
-    let isNotEmpty: (t 'k 'v) => bool;
-
-    let none: ('k => 'v => bool) => (t 'k 'v) => bool;
-
-    let some: ('k => 'v => bool) => (t 'k 'v) => bool;
 
     let toIterator: t 'k 'v => Iterator.t ('k, 'v);
 
@@ -1018,21 +1056,6 @@ let module KeyedCollection: {
     let count: t 'k 'v => int;
 
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
-  };
-};
-
-let module KeyedMappable: {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
   };
 };
 

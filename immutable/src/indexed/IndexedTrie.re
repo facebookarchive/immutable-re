@@ -53,12 +53,78 @@ let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch 
       nodes |> CopyOnWriteArray.reduce reducer acc
 };
 
+let rec reduceWhileWithResult
+    (shouldContinue: ref bool)
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (trie: t 'a): 'acc => switch trie {
+  | Empty => acc
+  | Leaf _ values =>
+      values |> CopyOnWriteArray.reduceWhile predicate f acc
+  | Level _ _ _ nodes =>
+      let reducer acc node =>
+        node |> reduceWhileWithResult shouldContinue predicate f acc;
+
+      let predicate acc node => !shouldContinue;
+
+      nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+};
+
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (trie: t 'a): 'acc => {
+  let shouldContinue = ref true;
+  let predicate acc next => {
+    let result = predicate acc next;
+    shouldContinue := result;
+    result;
+  };
+
+  reduceWhileWithResult shouldContinue predicate f acc trie;
+};
+
 let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
   | Empty => acc
   | Leaf _ values => values |> CopyOnWriteArray.reduceRight f acc
   | Level _ _ _ nodes =>
       let reducer acc node => node |> reduceRight f acc;
       nodes |> CopyOnWriteArray.reduceRight reducer acc
+};
+
+let rec reduceRightWhileWithResult
+    (shouldContinue: ref bool)
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (trie: t 'a): 'acc => switch trie {
+  | Empty => acc
+  | Leaf _ values =>
+      values |> CopyOnWriteArray.reduceRightWhile predicate f acc
+  | Level _ _ _ nodes =>
+      let reducer acc node =>
+        node |> reduceRightWhileWithResult shouldContinue predicate f acc;
+
+      let predicate acc node => !shouldContinue;
+
+      nodes |> CopyOnWriteArray.reduceRightWhile predicate reducer acc
+};
+
+let reduceRightWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (trie: t 'a): 'acc => {
+  let shouldContinue = ref true;
+  let predicate acc next => {
+    let result = predicate acc next;
+    shouldContinue := result;
+    result;
+  };
+
+  reduceWhileWithResult shouldContinue predicate f acc trie;
 };
 
 let rec toSequence (trie: t 'a): (Sequence.t 'a) => switch trie {

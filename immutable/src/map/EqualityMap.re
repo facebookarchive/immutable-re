@@ -73,6 +73,17 @@ let put (equals: Equality.t 'k) (key: 'k) (value: 'v) (map: t 'k 'v): (t 'k 'v) 
 let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc =>
   map |> CopyOnWriteArray.reduce (fun acc (k, v) => f acc k v) acc;
 
+let reduceWhile
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc =>
+  map |> CopyOnWriteArray.reduceWhile
+    (fun acc (k, v) => predicate acc k v)
+    (fun acc (k, v) => f acc k v)
+    acc;
+
+
 let some (f: 'k => 'v => bool) (map: t 'k 'v): bool =>
   map |> CopyOnWriteArray.some (fun (k, v) => f k v);
 

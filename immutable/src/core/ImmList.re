@@ -73,6 +73,16 @@ let rec every (f: 'a => bool) (list: t 'a): bool => switch list {
 let forEach (f: 'a => unit) (list: t 'a): unit =>
   list |> List.iter f;
 
+let rec forEachWhile
+    (predicate: 'a => bool)
+    (f: 'a => unit)
+    (list: t 'a) => switch list {
+  | [head, ...tail] when (predicate head) =>
+      f head;
+      forEachWhile predicate f  tail
+  | _ => ()
+};
+
 let isEmpty (list: t 'a): bool => switch list {
   | [] => true
   | _ => false;
@@ -126,6 +136,19 @@ let rec reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) (list: t 'a): 'acc => switch
   | [head, ...tail] =>
       let acc = f acc head;
       reduce f acc tail
+  | [] => acc
+};
+
+let rec reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc )
+    (acc: 'acc)
+    (list: t 'a): 'acc => switch list {
+  | [head, ...tail] =>
+      if (predicate acc head) {
+        let acc = f acc head;
+        reduceWhile predicate f acc tail
+      } else acc
   | [] => acc
 };
 
