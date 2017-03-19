@@ -2004,6 +2004,8 @@ let module rec IntMap: {
    *  Complexity: O(log32 N), effectively O(1)
    */
 
+  let empty: (t 'v);
+
   let equals: (t 'v) => (t 'v) => bool;
   /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
 

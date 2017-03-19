@@ -125,7 +125,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetComparison)
           (fun () => keys)
-          (fun () => HashSet.empty)
+          HashSet.empty
           HashSet.add
           HashSet.remove
           HashSet.contains
@@ -148,7 +148,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetComparison |> HashSet.mutate)
           (fun () => keys)
-          (fun () => HashSet.empty |> HashSet.mutate)
+          TransientHashSet.empty
           TransientHashSet.add
           TransientHashSet.remove
           TransientHashSet.contains
@@ -194,6 +194,6 @@ let test (n: int) (count: int): Test.t => {
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
     |> Sequence.toIterator
-    |> List.fromReversed;
+    |> List.fromReverse;
   describe (sprintf "SetPerf") tests
 };

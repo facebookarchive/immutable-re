@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
- 
+
 open Immutable;
 open Printf;
 open ReUnit;
@@ -46,16 +46,16 @@ let test (n: int) (count: int): Test.t => {
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toIterator |> List.fromReversed;
-  let stack = indexes |> IntRange.toIterator |> Stack.fromReversed;
+  let list = indexes |> IntRange.toIterator |> List.fromReverse;
+  let stack = indexes |> IntRange.toIterator |> Stack.fromReverse;
   let vector = indexes
     |> IntRange.reduce (fun acc i => acc |> TransientVector.addLast i) (TransientVector.empty ())
     |> TransientVector.persist;
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toIterator |> List.fromReversed;
-  let stack = indexes |> IntRange.toIterator |> Stack.fromReversed;
+  let list = indexes |> IntRange.toIterator |> List.fromReverse;
+  let stack = indexes |> IntRange.toIterator |> Stack.fromReverse;
 
   let testGroup = [
     describe "CamlMutableArray" (
@@ -114,6 +114,6 @@ let test (n: int) (count: int): Test.t => {
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
     |> Sequence.toIterator
-    |> List.fromReversed;
+    |> List.fromReverse;
   describe "VectorPerf" tests;
 };
