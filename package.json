@@ -18,7 +18,7 @@
     "rebuild": "eval $(dependencyEnv) && nopam && rebuild",
     "buildHelp": "eval $(dependencyEnv) && nopam && rebuild --help",
 
-    "build-docs": "eval $(dependencyEnv) && nopam && mkdir -p docs && refmt -p ml immutable/src/Immutable.rei > ./docs/Immutable.mli && ocamldoc -html -d docs ./docs/Immutable.mli",
+    "build-docs": "eval $(dependencyEnv) && nopam && rm -rf ./docs && mkdir -p ./docs && refmt -p ml immutable/src/Immutable.rei > ./docs/Immutable.mli && ocamldoc -html -d docs ./docs/Immutable.mli",
 
     "build-test": "eval $(dependencyEnv) && nopam && rebuild -cflag -g -Is immutable/src,immutable/src/set,immutable/src/core,immutable/src/extra,immutable/src/indexed,immutable/src/map,immutable/src/utils,reUnit/src,immutable/test/Testers,immutable/test ./immutable/test/ImmutableTest.byte",
     "run-test": "eval $(dependencyEnv) && ./_build/immutable/test/ImmutableTest.byte",
@@ -32,7 +32,7 @@
     "run-perf": "eval $(dependencyEnv) && ./_build/immutable/perf/PerfTest.native",
     "perf": "npm run clean && npm run build-perf && npm run run-perf",
 
-    "clean": "rm -rf ./_build && rm -rf ./lib",
+    "clean": "rm -rf ./_build && rm -rf ./lib && rm -rf ./docs",
     "top": "eval $(dependencyEnv) && rtop",
     "env": "eval $(dependencyEnv) && env",
     "editor": "eval $(dependencyEnv) && eval $EDITOR",
