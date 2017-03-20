@@ -10,18 +10,5 @@
 open ReUnit.Test;
 
 ReUnit.run (describe "Immutable.re" [
-  CopyOnWriteArrayTest.test,
-  DequeTest.test,
-  FunctionsTest.test,
-  HashSetTest.test,/*
-  IntMapTest.test,*/
-  MapTest.test,
-  OptionTest.test,
-  SequenceTest.test,
-  SetTest.test,/*
-  SortedMapTest.test,*/
-  SortedSetTest.test,
-  StackTest.test,
-  TransientTest.test,
-  VectorTest.test,
+  IteratorTest.test,
 ]);

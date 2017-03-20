@@ -21,11 +21,11 @@ let generateTests
     (get: int => 'vector => option int)
     (n: int): list Test.t => [
   it (sprintf "add %i elements" n) (fun () => {
-    let src = IntRange.create 0 n;
+    let src = IntRange.create start::0 count::n;
     src |> IntRange.reduce (fun acc i => acc |> add i) (empty ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, removeLast %i elements" n (n / 2)) (fun () => {
-    IntRange.create 0 (n / 2)
+    IntRange.create start::0 count::(n / 2)
       |> IntRange.reduce (fun acc _ => acc |> removeLast) (getTestData ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, update %i elements alternating" n (n / 2)) (fun () => {
@@ -35,7 +35,7 @@ let generateTests
   }),
   it (sprintf "get %i values" n) (fun () => {
     let vec = getTestData ();
-    IntRange.create 0 n
+    IntRange.create start::0 count::n
       |> IntRange.toIterator
       |> Iterator.forEach
         (fun i => vec |> get i |> ignore);
@@ -43,7 +43,7 @@ let generateTests
 ];
 
 let test (n: int) (count: int): Test.t => {
-  let indexes = IntRange.create 0 count;
+  let indexes = IntRange.create start::0 count::count;
 
   let mutableArray = Array.init count (fun i => i);
 

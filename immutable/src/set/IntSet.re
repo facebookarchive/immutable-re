@@ -77,7 +77,7 @@ let module BitmapTrieIntSet = {
     | Level _ nodes _ =>
         let reducer acc node => node
           |> reduceWhileWithResult shouldContinue predicate f acc;
-        let predicate acc node => !shouldContinue;
+        let predicate _ _ => !shouldContinue;
 
         nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
     | Entry value =>

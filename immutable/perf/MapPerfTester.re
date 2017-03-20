@@ -25,7 +25,7 @@ let generateTests
     (get: int => 'map => option int)
     (n: int): (list Test.t) => [
   it (sprintf "put %i elements" n) (fun () => {
-    IntRange.create 0 n
+    IntRange.create start::0 count::n
       |> IntRange.reduce (fun acc i => acc |> put (hash i) i) (empty ())
       |> ignore;
   }),
@@ -69,7 +69,7 @@ let module SortedIntMap = SortedMap.Make {
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = IntRange.create 0 count;
+  let keys = IntRange.create start::0 count::count;
 
   let camlIntMap = keys |> IntRange.reduce
     (fun acc i => acc |> CamlIntMap.add (hash i) i)
