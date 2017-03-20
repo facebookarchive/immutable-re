@@ -72,16 +72,24 @@ let test (n: int) (count: int): Test.t => {
       (fun acc i => acc |> CamlIntSet.add (hash i))
       CamlIntSet.empty;
 
+  let hashStrategyComparator = HashStrategy.createWithComparator
+    (fun i => i)
+    Comparator.structural;
+
+  let hashStrategyEquality = HashStrategy.createWithEquality
+    (fun i => i)
+    Equality.structural;
+
   let hashSetComparison = keys
     |> IntRange.reduce
       (fun acc i => acc |> TransientHashSet.add i)
-      (TransientHashSet.empty ())
+      (TransientHashSet.emptyWith hashStrategyComparator)
     |> TransientHashSet.persist;
 
   let hashSetEquality = keys
     |> IntRange.reduce
       (fun acc i => acc |> TransientHashSet.add i)
-      (TransientHashSet.emptyWith HashStrategy.structuralEquality)
+      (TransientHashSet.emptyWith hashStrategyEquality)
     |> TransientHashSet.persist;
 
   let intSet = keys
@@ -125,7 +133,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetComparison)
           (fun () => keys)
-          HashSet.empty
+          (fun () => HashSet.emptyWith hashStrategyComparator)
           HashSet.add
           HashSet.remove
           HashSet.contains
@@ -148,7 +156,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetComparison |> HashSet.mutate)
           (fun () => keys)
-          TransientHashSet.empty
+          (fun () => TransientHashSet.emptyWith hashStrategyComparator)
           TransientHashSet.add
           TransientHashSet.remove
           TransientHashSet.contains
@@ -159,7 +167,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetEquality |> HashSet.mutate)
           (fun () => keys)
-          (fun () => HashSet.emptyWith HashStrategy.structuralEquality |> HashSet.mutate)
+          (fun () => TransientHashSet.emptyWith hashStrategyEquality)
           TransientHashSet.add
           TransientHashSet.remove
           TransientHashSet.contains
