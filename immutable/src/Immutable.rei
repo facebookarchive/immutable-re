@@ -98,7 +98,7 @@ let module Comparator: {
   let structural: (t 'a);
   /** The structural comparison function. */
 
-  let toEquality: Comparator.t 'a => Equality.t 'a;
+  let toEquality: (t 'a) => (Equality.t 'a);
 };
 
 let module Comparable: {
