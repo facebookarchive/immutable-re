@@ -10,7 +10,6 @@
 open Option.Operators;
 
 type t 'k 'v = {
-  containsWith: (Equality.t 'v) => 'k => 'v => bool,
   containsKey: 'k => bool,
   count: int,
   get: 'k => (option 'v),
@@ -19,26 +18,12 @@ type t 'k 'v = {
   sequence: (Sequence.t ('k, 'v)),
 };
 
-let containsWith
-    (valueEquality: Equality.t 'v)
-    (key: 'k)
-    (value: 'v)
-    ({ containsWith }: t 'k 'v): bool =>
-  containsWith valueEquality key value;
-
-let contains
-    (key: 'k)
-    (value: 'v)
-    ({ containsWith }: t 'k 'v): bool =>
-  containsWith Equality.structural key value;
-
 let containsKey (key: 'k) ({ containsKey }: t 'k 'v): bool =>
   containsKey key;
 
 let count ({ count }: t 'k 'v) => count;
 
 let empty: (t 'k 'v) = {
-  containsWith: fun _ _ _ => false,
   containsKey: fun _ => false,
   count: 0,
   get: fun _ => None,
@@ -47,29 +32,11 @@ let empty: (t 'k 'v) = {
   sequence: Sequence.empty,
 };
 
-let equalsWith (valueEquality: Equality.t 'v) (that: t 'k 'v) (this: t 'k 'v): bool =>
-  if (this === that) true
-  else if (this.count != that.count) false
-  else this.keyedIterator |> KeyedIterator.every (
-    fun key thisValue => that |> containsWith valueEquality key thisValue
-  );
-
-let equals (that: t 'k 'v) (this: t 'k 'v): bool =>
-  equalsWith Equality.structural that this;
-
 let get (key: 'k) ({ get }: t 'k 'v): (option 'v) =>
   get key;
 
 let getOrRaise (key: 'k) ({ getOrRaise }: t 'k 'v): 'v =>
   getOrRaise key;
-
-let hashWith (keyHash: Hash.t 'k) (valueHash: Hash.t 'v) ({ keyedIterator }: t 'k 'v): int =>
-  keyedIterator |> KeyedIterator.reduce
-    (MapEntry.hashReducer keyHash valueHash)
-    Hash.initialValue;
-
-let hash (map: t 'k 'v): int =>
-  hashWith Hash.structural Hash.structural map;
 
 let isEmpty ({ count }: t 'k 'v): bool =>
   count == 0;
@@ -85,9 +52,6 @@ let keys (map: t 'k 'v): (ImmSet.t 'k) => {
 };
 
 let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
-  containsWith: fun equals k v =>
-    if (set |> ImmSet.contains k) (equals k v)
-    else false,
   containsKey: fun k => set |> ImmSet.contains k,
   count: ImmSet.count set,
   get: fun k =>
@@ -123,7 +87,6 @@ let toKeyedIterator ({ keyedIterator }: t 'k 'v): (KeyedIterator.t 'k 'v) =>
   keyedIterator;
 
 let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
-  containsWith: fun equals k b => map.get k >>| (fun a => m k a |> equals b) |? false,
   containsKey: map.containsKey,
   count: map.count,
   get: fun k => map.get k >>| m k,
@@ -136,18 +99,6 @@ let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
 };
 
 let toMap (map: t 'k 'v): (t 'k 'v) => map;
-
-let toSetWith
-    (equals: Equality.t 'v)
-    (map: t 'k 'v): (ImmSet.t ('k, 'v)) => {
-  contains: fun (k, v) => map.get k >>| equals v |? false,
-  count: map.count,
-  iterator: map |> toIterator,
-  sequence: map.sequence,
-};
-
-let toSet (map: t 'k 'v): (ImmSet.t ('k, 'v)) =>
-  toSetWith Equality.structural map;
 
 let toSequence ({ sequence }: t 'k 'v): (Sequence.t ('k, 'v)) => sequence;
 

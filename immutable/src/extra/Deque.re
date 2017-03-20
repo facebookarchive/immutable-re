@@ -32,23 +32,6 @@ let count (deque: t 'a): int => switch deque {
   | Descending vector => Vector.count vector
 };
 
-let equalsWith (valueEquals: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
-  if (this === that) true
-  else if ((count this) != (count that)) false
-  else switch (this, that) {
-    | (Ascending this, Ascending that)
-    | (Descending this, Descending that) =>
-        Vector.equalsWith valueEquals this that
-    | (Ascending this, Descending that)
-    | (Descending this, Ascending that) =>
-      let countThis = Vector.count this;
-      this |> Vector.toKeyedIterator |> KeyedIterator.every
-        (fun i => that |> Vector.getOrRaise (countThis - i - 1) |> valueEquals);
-  };
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  equalsWith Equality.structural this that;
-
 let first (deque: t 'a): (option 'a) => switch deque {
   | Ascending vector => vector |> Vector.first
   | Descending vector => vector |> Vector.last
@@ -57,16 +40,6 @@ let first (deque: t 'a): (option 'a) => switch deque {
 let firstOrRaise (deque: t 'a): 'a => switch deque {
   | Ascending vector => Vector.firstOrRaise vector
   | Descending vector => Vector.lastOrRaise vector
-};
-
-let hashWith (hash: Hash.t 'a) (deque: t 'a): int => switch deque {
-  | Ascending vector
-  | Descending vector => Vector.hashWith hash vector
-};
-
-let hash (deque: t 'a): int => switch deque {
-  | Ascending vector
-  | Descending vector => Vector.hash vector
 };
 
 let isEmpty (deque: t 'a): bool =>
@@ -154,22 +127,6 @@ let toSequenceRight (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequenceRight
   | Descending vector => vector |> Vector.toSequence;
 };
-
-let compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-  else Sequence.compareWith valueCompare (toSequence this) (toSequence that);
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
-
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      vector |> Vector.containsWith valueEquals value;
-};
-
-let contains (value: 'a) (deque: t 'a): bool =>
-  containsWith Equality.structural value deque;
 
 let module TransientDeque = {
   let module TransientVector = Vector.TransientVector;

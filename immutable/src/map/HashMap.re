@@ -198,33 +198,6 @@ let module BitmapTrieMap = {
     | Empty => false;
   };
 
-  let rec containsWith
-      (hashStrategy: HashStrategy.t 'k)
-      (valueEquals: Equality.t 'v)
-      (depth: int)
-      (hash: int)
-      (key: 'k)
-      (value: 'v)
-      (set: t 'k 'v): bool => switch set {
-    | Level bitmap nodes _ =>
-        let bit = BitmapTrie.bitPos hash depth;
-        let index = BitmapTrie.index bitmap bit;
-
-        (BitmapTrie.containsNode bitmap bit) &&
-        (containsWith hashStrategy valueEquals (depth + 1) hash key value nodes.(index));
-    | EqualityCollision entryHash entryMap =>
-        (hash == entryHash) &&
-        (EqualityMap.contains (HashStrategy.equals hashStrategy) valueEquals key value entryMap);
-    | ComparatorCollision entryHash entryMap =>
-        (hash == entryHash) &&
-        (AVLTreeMap.contains (HashStrategy.comparator hashStrategy) valueEquals key value entryMap);
-    | Entry entryHash entryKey entryValue =>
-        (hash == entryHash) &&
-        (HashStrategy.equals hashStrategy entryKey key) &&
-        (valueEquals entryValue value)
-    | Empty => false;
-  };
-
   let rec get
       (hashStrategy: HashStrategy.t 'k)
       (depth: int)
@@ -394,14 +367,6 @@ let containsKey (key: 'k) ({ root, strategy }: t 'k 'v): bool => {
   root |> BitmapTrieMap.containsKey strategy 0 hash key;
 };
 
-let containsWith (valueEquals: Equality.t 'v) (key: 'k) (value: 'v) ({ root, strategy }: t 'k 'v): bool => {
-  let hash = HashStrategy.hash strategy key;
-  root |> BitmapTrieMap.containsWith strategy valueEquals 0 hash key value;
-};
-
-let contains (key: 'k) (value: 'v) (map: t 'k 'v): bool =>
-  map |> containsWith Equality.structural key value;
-
 let count ({ count }: t 'k 'v): int => count;
 
 let get (key: 'k) ({ strategy, root }: t 'k 'v): (option 'v) => {
@@ -457,20 +422,10 @@ let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
 let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   root |> BitmapTrieMap.toSequence;
 
-let equalsWith
-    (valueEquals: Equality.t 'v)
-    (this: t 'k 'v)
-    (that: t 'k 'v): bool =>
-  this |> toKeyedIterator |> KeyedIterator.every (fun k v => that |> containsWith valueEquals k v);
-
-let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
-  equalsWith Equality.structural this that;
-
 let values ({ root }: t 'k 'v): (Iterator.t 'v) =>
   root |> BitmapTrieMap.values;
 
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
-  containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
   get: fun i => get i map,
@@ -479,20 +434,8 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   sequence: toSequence map,
 };
 
-let hash (map: t 'k 'v): int =>
-  map |> toMap |> ImmMap.hash;
-
-let hashWith (valueHash: Hash.t 'v) ({ strategy } as map: t 'k 'v): int =>
-  map |> toMap |> ImmMap.hashWith (HashStrategy.hash strategy) valueHash;
-
 let keys (map: t 'k 'v): (ImmSet.t 'k) =>
   map |> toMap |> ImmMap.keys;
-
-let toSet (map: t 'k 'v): (ImmSet.t ('k, 'v)) =>
-  map |> toMap |> ImmMap.toSet;
-
-let toSetWith (equality: Equality.t 'v) (map: t 'k 'v): (ImmSet.t ('k, 'v)) =>
-  map |> toMap |> ImmMap.toSetWith equality;
 
 let module TransientHashMap = {
   type hashMap 'k 'v = t 'k 'v;

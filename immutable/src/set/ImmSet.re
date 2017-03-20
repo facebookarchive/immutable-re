@@ -33,27 +33,11 @@ let equals (this: t 'a) (that: t 'a): bool =>
   else if (this.count != that.count) false
   else this.iterator |> Iterator.every that.contains;
 
-let hashWith (hash: Hash.t 'a) ({ iterator }: t 'a): int =>
-  iterator |> Iterator.reduce (fun acc next => acc + hash next) 0;
-
-let hash (set: t 'a): int =>
-  hashWith Hash.structural set;
-
 let isEmpty ({ count }: t 'a): bool =>
   count == 0;
 
 let isNotEmpty ({ count }: t 'a): bool =>
   count != 0;
-
-let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (t 'a) => {
-  contains: fun v => Option.containsWith equals v opt,
-  count: Option.count opt,
-  iterator: Iterator.ofOption opt,
-  sequence: Sequence.ofOption opt,
-};
-
-let ofOption (opt: option 'a): (t 'a) =>
-  ofOptionWith Equality.structural opt;
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ iterator }: t 'a): 'acc =>
   iterator |> Iterator.reduce f acc;

@@ -12,37 +12,6 @@ type t 'a = list 'a;
 let addFirst (value: 'a) (list: t 'a): (t 'a) =>
   [value, ...list];
 
-let rec compareWith
-    (valueCompare: Comparator.t 'a)
-    (this: t 'a)
-    (that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-  else switch (this, that) {
-    | ([thisHead, ...thisTail], [thatHead, ...thatTail]) => switch (valueCompare thisHead thatHead) {
-        | Ordering.Equal => compareWith valueCompare thisTail thatTail
-        | x => x
-      }
-    | ([], []) => Ordering.equal
-    | (_, []) => Ordering.greaterThan
-    | ([], _) => Ordering.lessThan
-  };
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
-
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) (list: t 'a): bool => {
-  let rec loop list => switch list {
-    | [head, ..._] when valueEquals head value => true
-    | [_, ...tail] => loop tail
-    | [] => false
-  };
-
-  loop list;
-};
-
-let contains (value: 'a) (list: t 'a): bool =>
-  containsWith Equality.structural value list;
-
 let rec countImpl (list: t 'a) (count: int): int => switch list {
   | [_, ...tail] => countImpl tail (count + 1)
   | [] => count
@@ -51,17 +20,6 @@ let rec countImpl (list: t 'a) (count: int): int => switch list {
 let count (list: t 'a): int => countImpl list 0;
 
 let empty: (t 'a) = [];
-
-let rec equalsWith (valueEquals: Equality.t 'a) (this: t 'a) (that: t 'a) => switch (this, that) {
-  | ([thisHead, ...thisTail], [thatHead, ...thatTail]) =>
-      if (valueEquals thisHead thatHead) (equalsWith valueEquals thisTail thatTail)
-      else false
-  | ([], []) => true
-  | _ => false
-};
-
-let equals (this: t 'a) (that: t 'a) =>
-  equalsWith Equality.structural this that;
 
 let isEmpty (list: t 'a): bool => switch list {
   | [] => true
@@ -117,11 +75,6 @@ let rec reduceWhile
       } else acc
   | [] => acc
 };
-
-let hashWith (hash: Hash.t 'a) (list: t 'a): int =>
-  list |> reduce (Hash.reducer hash) Hash.initialValue;
-
-let hash (list: t 'a): int => hashWith Hash.structural list;
 
 let removeAll (_: t 'a): (t 'a) => [];
 

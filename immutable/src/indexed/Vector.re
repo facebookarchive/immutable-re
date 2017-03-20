@@ -918,12 +918,6 @@ let reduceRightWithIndexWhile
   reduceRightWhile predicate reducer acc vec;
 };
 
-let hashWith (hash: Hash.t 'a) (vec: t 'a): int =>
-  vec |> reduce (Hash.reducer hash) Hash.initialValue;
-
-let hash (vec: t 'a): int =>
-  hashWith Hash.structural vec;
-
 let map (f: 'a => 'b) (vector: t 'a): (t 'b) => vector
   |> reduce
     (fun acc next => acc |> TransientVector.addLast @@ f @@ next)
@@ -1048,9 +1042,6 @@ let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence
 ];
 
 let toMap (vec: t 'a): (ImmMap.t int 'a) => {
-  containsWith: fun equals index value =>
-    if (index >= 0 && index < count vec) (equals (getOrRaise index vec) value)
-    else false,
   containsKey: fun index => index >= 0 && index < count vec,
   count: count vec,
   get: fun i => get i vec,
@@ -1060,35 +1051,6 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
     (IntRange.create 0 (count vec) |> IntRange.toSequence)
     (toSequence vec),
 };
-
-let compareWith
-    (compareValue: Comparator.t 'a)
-    (this: t 'a)
-    (that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-  else Sequence.compareWith compareValue (toSequence this) (toSequence that);
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
-
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) (vec: t 'a): bool =>
-  vec |> toIterator |> Iterator.some (valueEquals value);
-
-let contains (value: 'a) (vec: t 'a): bool =>
-  containsWith Equality.structural value vec;
-
-let equalsWith
-    (valueEquals: Equality.t 'a)
-    (this: t 'a)
-    (that: t 'a): bool =>
-  if (this === that) true
-  else if ((count this) != (count that)) false
-  else this|> toKeyedIterator |> KeyedIterator.every (
-    fun i => this |> getOrRaise i |> valueEquals
-  );
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  equalsWith Equality.structural this that;
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> mutate

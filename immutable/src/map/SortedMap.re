@@ -83,16 +83,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     };
   };
 
-  let containsWith
-      (valueEquals: Equality.t 'v )
-      (key: k)
-      (value: 'v)
-      ({ tree }: t 'v): bool =>
-    tree |> AVLTreeMap.contains comparator valueEquals key value;
-
-  let contains (key: k) (value: 'v) (map: t 'v): bool =>
-    map |> containsWith Equality.structural key value;
-
   let containsKey (key: k) ({ tree }: t 'v): bool =>
     tree |> AVLTreeMap.containsKey comparator key;
 
@@ -218,7 +208,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     };
 
   let toMap (map: t 'v): (ImmMap.t k 'v) => {
-    containsWith: fun eq k v => map |> containsWith eq k v,
     containsKey: fun k => containsKey k map,
     count: (count map),
     get: fun i => get i map,
@@ -226,38 +215,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     keyedIterator: toKeyedIterator map,
     sequence: toSequence map,
   };
-
-  let compareWith
-      (compareValue: Comparator.t 'v)
-      (this: t 'v)
-      (that: t 'v): Ordering.t =>
-    Sequence.compareWith (fun (k1, v1) (k2, v2) => {
-      let cmp = comparator k1 k2;
-      if (cmp === Ordering.equal) (compareValue v1 v2)
-      else cmp
-    }) (toSequence this) (toSequence that);
-
-  let compare (this: t 'v) (that: t 'v): Ordering.t =>
-    compareWith Comparator.structural this that;
-
-  let equalsWith
-      (valueEquals: Equality.t 'v)
-      (this: t 'v)
-      (that: t 'v): bool =>
-    Sequence.equalsWith (fun (k1, v1) (k2, v2) =>
-      if (k1 === k2) true
-      else if (comparator k1 k2 === Ordering.equal) (valueEquals v1 v2)
-      else false
-    ) (toSequence this) (toSequence that);
-
-  let equals (this: t 'v) (that: t 'v): bool =>
-    equalsWith Equality.structural this that;
-
-  let hash (map: t 'v): int =>
-    map |> toMap |> ImmMap.hash;
-
-  let hashWith (keyHash: Hash.t k) (valueHash: Hash.t 'v) (map: t 'v): int =>
-    map |> toMap |> ImmMap.hashWith keyHash valueHash;
 
   let keys (map: t 'v): (ImmSet.t k) =>
     map |> toMap |> ImmMap.keys;
@@ -276,10 +233,4 @@ let module Make = fun (Comparable: Comparable.S) => {
       }
     )
     map;
-
-  let toSetWith (equality: Equality.t 'v) (map: t 'v): (ImmSet.t (k, 'v)) =>
-    map |> toMap |> ImmMap.toSetWith equality;
-
-  let toSet (map: t 'v): (ImmSet.t (k, 'v)) =>
-    map |> toMap |> ImmMap.toSet;
 };

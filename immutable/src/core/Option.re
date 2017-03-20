@@ -9,42 +9,12 @@
 
 type t 'a = option 'a;
 
-let compareWith
-    (compare: Comparator.t 'a)
-    (this: t 'a)
-    (that: t 'a): Ordering.t => switch (this, that) {
-  | (Some x, Some y) => compare x y
-  | (Some _, _) => Ordering.greaterThan
-  | (_, Some _) => Ordering.lessThan
-  | (None, None) => Ordering.equal
-};
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
-
-let containsWith (equals: Equality.t 'a) (value: 'a) (opt: t 'a): bool => switch opt {
-  | Some x => equals x value
-  | None => false
-};
-
-let contains (value: 'a) (opt: t 'a): bool =>
-  containsWith Equality.structural value opt;
-
 let count (opt: t 'a): int => switch opt {
   | Some _ => 1
   | None => 0
 };
 
 let empty: (t 'a) = None;
-
-let equalsWith (equals: Equality.t 'a) (this: t 'a) (that: t 'a): bool => switch (this, that) {
-  | (Some x, Some y) => equals x y
-  | (None, None) => true
-  | _ => false
-};
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  equalsWith Equality.structural this that;
 
 let first = Functions.identity;
 
@@ -62,13 +32,6 @@ let flatten (opt: option (t 'a)): (t 'a) => switch opt {
   | Some (Some a) => Some a
   | _ => None
 };
-
-let hashWith (hash: Hash.t 'a) (opt: t 'a): int => switch opt {
-  | None => 0
-  | Some x => hash x
-};
-
-let hash (opt: t 'a): int => hashWith Hash.structural opt;
 
 let isEmpty (opt: option _): bool => switch opt {
   | Some _ => false

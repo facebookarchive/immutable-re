@@ -27,6 +27,7 @@ let rec ofList (list: list 'a): (t 'a) => fun () => switch list {
   | [] => Completed
 };
 
+/* FIXME: this should be removed */
 let rec compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): Ordering.t =>
   if (this === that) Ordering.equal
   else switch (this (), that ()) {
@@ -39,9 +40,6 @@ let rec compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): O
     | (Next _ _, Completed) => Ordering.greaterThan
     | (Completed, Next _ _) => Ordering.lessThan
   };
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
 
 let flatten (seq: t (t 'a)): (t 'a) => {
   let rec continuedWith (continuation: t (t 'a)) (iter: (iterator 'a)): (iterator 'a) => switch (iter) {
@@ -61,17 +59,9 @@ let flatten (seq: t (t 'a)): (t 'a) => {
 let concat (seqs: list (t 'a)): (t 'a) =>
   seqs |> ofList |> flatten;
 
-let rec containsWith (valueEquals: Equality.t 'a) (value: 'a) (seq: t 'a): bool => switch (seq ()) {
-  | Next next _ when valueEquals next value => true
-  | Next _ nextSequence => containsWith valueEquals value nextSequence
-  | Completed => false
-};
-
-let contains (value: 'a) (seq: t 'a): bool =>
-  containsWith Equality.structural value seq;
-
 let defer (f: unit => (t 'a)): (t 'a) => fun () => f () ();
 
+/* FIXME: This should be removed */
 let rec equalsWith (equality: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
   (that === this) ||
   switch (that (), this ()) {

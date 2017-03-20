@@ -41,56 +41,7 @@ let addLastAll (iter: Iterator.t 'a) (arr: t 'a): (t 'a) =>
    */
   iter |> Iterator.reduce (fun acc next => acc |> addLast next) arr;
 
-let compareWith
-    (valueCompare: Comparator.t 'a)
-    (this: t 'a)
-    (that: t 'a): Ordering.t => {
-  let thisCount = count this;
-  let thatCount = count that;
-
-  let loopCount = min thisCount thatCount;
-
-  let rec loop index =>
-    if (index < loopCount) {
-      let cmp = valueCompare this.(index) that.(index);
-
-      if (cmp === Ordering.equal) (loop (index + 1))
-      else cmp
-    }
-    else if (index < thisCount) Ordering.greaterThan
-    else if (index < thatCount) Ordering.lessThan
-    else Ordering.equal;
-  loop 0;
-};
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
-
 let empty: (t 'a) = [||];
-
-let equalsWith
-    (valueEquals: Equality.t 'a)
-    (this: t 'a)
-    (that: t 'a): bool => {
-  let thisCount = count this;
-  let thatCount = count that;
-
-  let loopCount = min thisCount thatCount;
-
-  let rec loop index =>
-    if (index < loopCount) (
-      if (valueEquals this.(index) that.(index)) (loop (index + 1))
-      else false
-    )
-    else  true;
-
-  if (this === that) true
-  else if (thisCount != thatCount) false
-  else loop 0;
-};
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  equalsWith Equality.structural this that;
 
 let from (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addLastAll iter;
@@ -231,7 +182,6 @@ let reduceWithIndexWhile
   loop acc 0;
 };
 
-
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc =>
   Array.fold_right (Functions.flip f) arr acc;
 
@@ -288,12 +238,6 @@ let reduceRightWithIndexWhile
 
   loop acc arrLastIndex;
 };
-
-let hashWith (hash: Hash.t 'a) (arr: t 'a): int =>
-  arr |> reduce (Hash.reducer hash) Hash.initialValue;
-
-let hash (arr: t 'a): int =>
-  hashWith Hash.structural arr;
 
 let map (f: 'a => 'b) (arr: t 'a): (t 'b) =>
   if (isNotEmpty arr) {
@@ -362,11 +306,6 @@ let removeFirstOrRaise (arr: t 'a): (t 'a) =>
 
 let return (value: 'a): (t 'a) => [| value |];
 
-let reverse (arr: t 'a): (t 'a) => {
-  let count = count arr;
-  Array.init count (fun i => arr.(count - i - 1))
-};
-
 let skip (startIndex: int) (arr: t 'a): (t 'a) => {
   let newCount = (count arr) - startIndex;
   Array.sub arr startIndex newCount;
@@ -418,12 +357,6 @@ let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   loop 0;
 };
 
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) (arr: t 'a): bool =>
-  arr |> toIterator |> Iterator.some (valueEquals value);
-
-let contains (value: 'a) (list: t 'a): bool =>
-  containsWith Equality.structural value list;
-
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
 
@@ -458,9 +391,6 @@ let updateWith (index: int) (f: 'a => 'a) (arr: t 'a): (t 'a) => {
 };
 
 let toMap (arr: t 'a): (ImmMap.t int 'a) => {
-  containsWith: fun equals index value =>
-    if (index >= 0 && index < count arr) (equals arr.(index) value)
-    else false,
   containsKey: fun index => index >= 0 && index < count arr,
   count: count arr,
   get: fun i => get i arr,

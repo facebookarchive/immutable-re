@@ -291,7 +291,6 @@ let values ({ root }: t 'v): (Iterator.t 'v) =>
   root |> BitmapTrieIntMap.values;
 
 let toMap (map: t 'v): (ImmMap.t int 'v) => {
-  containsWith: fun eq k v => map |> containsWith eq k v,
   containsKey: fun k => containsKey k map,
   count: (count map),
   get: fun i => get i map,
@@ -300,26 +299,8 @@ let toMap (map: t 'v): (ImmMap.t int 'v) => {
   sequence: toSequence map,
 };
 
-let equals (this: t 'v) (that: t 'v): bool =>
-  ImmMap.equals (toMap this) (toMap that);
-
-let equalsWith (equality: Equality.t 'v) (this: t 'v) (that: t 'v): bool =>
-  ImmMap.equalsWith equality (toMap this) (toMap that);
-
-let hash (map: t 'v): int =>
-  map |> toMap |> ImmMap.hash;
-
-let hashWith (hash: Hash.t 'v) (map: t 'v): int =>
-  map |> toMap |> ImmMap.hashWith Hash.structural hash;
-
 let keys (map: t 'v): (ImmSet.t int) =>
   map |> toMap |> ImmMap.keys;
-
-let toSet (map: t 'v): (ImmSet.t (int, 'v)) =>
-  map |> toMap |> ImmMap.toSet;
-
-let toSetWith (equality: Equality.t 'v) (map: t 'v): (ImmSet.t (int, 'v)) =>
-  map |> toMap |> ImmMap.toSetWith equality;
 
 let module TransientIntMap = {
   type k = int;

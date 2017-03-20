@@ -30,46 +30,12 @@ let addFirstAll (values: Iterator.t 'a) ({ count, list }: t 'a): (t 'a) => {
   { count: !newCount, list: newList }
 };
 
-let compare
-    ({ list: thisList } as this: t 'a)
-    ({ list: thatList } as that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-  else ImmList.compare thisList thatList;
-
-let compareWith
-    (valueCompare: Comparator.t 'a)
-    ({ list: thisList } as this: t 'a)
-    ({ list: thatList } as that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-  else ImmList.compareWith valueCompare thisList thatList;
-
-let contains (value: 'a) ({ list }: t 'a): bool =>
-  list |> ImmList.contains value;
-
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) ({ list }: t 'a): bool =>
-  list |> ImmList.containsWith valueEquals value;
-
 let count ({ count }: t 'a): int => count;
 
 let empty: t 'a = {
   count: 0,
   list: [],
 };
-
-let equals
-    ({ count: thisCount, list: thisList } as this: t 'a)
-    ({ count: thatCount, list: thatList } as that: t 'a): bool =>
-  if (this === that) true
-  else if (thisCount != thatCount) false
-  else ImmList.equals thisList thatList;
-
-let equalsWith
-    (valueEquals: Equality.t 'a)
-    ({ count: thisCount, list: thisList } as this: t 'a)
-    ({ count: thatCount, list: thatList } as that: t 'a): bool =>
-  if (this === that) true
-  else if (thisCount != thatCount) false
-  else ImmList.equalsWith valueEquals thisList thatList;
 
 let first ({ list }: t 'a): (option 'a) => list |> ImmList.first;
 
@@ -80,12 +46,6 @@ let fromList (list: list 'a): (t 'a) =>
 
 let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   empty |> addFirstAll iter;
-
-let hash ({ list }: t 'a): int =>
-  ImmList.hash list;
-
-let hashWith (valueHash: Hash.t 'a) ({ list }: t 'a): int =>
-  ImmList.hashWith valueHash list;
 
 let isEmpty ({ list }: t 'a): bool =>
   list |> ImmList.isEmpty;

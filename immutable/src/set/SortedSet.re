@@ -153,12 +153,6 @@ let module Make = fun (Comparable: Comparable.S) => {
   let firstOrRaise ({ tree }: t): a =>
     AVLTreeSet.firstOrRaise tree;
 
-  let hashWith (hash: (Hash.t a)) (set: t): int => set
-    |> reduce (Hash.reducer hash) Hash.initialValue;
-
-  let hash (set: t): int =>
-    hashWith Hash.structural set;
-
   let last ({ tree }: t): (option a) =>
     AVLTreeSet.last tree;
 
@@ -199,9 +193,6 @@ let module Make = fun (Comparable: Comparable.S) => {
   };
 
   let toMap (set: t): (ImmMap.t a a) => {
-    containsWith: fun equals k v =>
-      if (set |> contains k) (equals k v)
-      else false,
     containsKey: fun k => set |> contains k,
     count: count set,
     get: fun k =>

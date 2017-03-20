@@ -269,8 +269,10 @@ let toSet (set: t 'a): (ImmSet.t 'a) =>
 let equals (this: t 'a) (that: t 'a): bool =>
   ImmSet.equals (toSet this) (toSet that);
 
-let hash ({ strategy } as set: t 'a): int =>
-  set |> toSet |> ImmSet.hashWith (HashStrategy.hash strategy);
+let hash ({ strategy } as set: t 'a): int => {
+  let hash = HashStrategy.hash strategy;
+  set |> reduce (fun acc next => acc + hash next) 0;
+};
 
 let toMap (set: t 'a): (ImmMap.t 'a 'a) =>
   set |> toSet |> ImmMap.ofSet;

@@ -61,25 +61,6 @@ let rec containsKey
     }
 };
 
-let contains
-    (comparator: Comparator.t 'k)
-    (equality: Equality.t 'v)
-    (xK: 'k)
-    (xV: 'v)
-    (tree: t 'k 'v): bool => switch tree {
-  | Empty => false
-  | Leaf k v => if (xK === k) true else {
-      let cmp = comparator xK k;
-      (cmp === Ordering.equal) && (equality v xV)
-    }
-  | Node _ left k v right => if (xK === k) true else {
-      let cmp = comparator xK k;
-      if (cmp === Ordering.lessThan) (containsKey comparator xK left)
-      else if (cmp === Ordering.greaterThan) (containsKey comparator xK right)
-      else (equality v xV)
-    }
-};
-
 let rec first (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
   | Empty => None
   | Leaf k v => Some (k, v)
