@@ -29,11 +29,11 @@ module type S = {
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterator: t 'v => Iterator.t (k, 'v);
   let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
+  let containsKey: k => t 'v => bool;
   let count: t 'v => int;
   let isEmpty: t 'v => bool;
   let isNotEmpty: t 'v => bool;
   let toSequence: t 'v => Sequence.t (k, 'v);
-  let containsKey: k => t 'v => bool;
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
   let keys: t 'v => ImmSet.t k;

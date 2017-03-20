@@ -551,7 +551,6 @@ let module Map = {
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
-    let containsKey: k => (t 'v) => bool;
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let keys: (t 'v) => (ImmSet.t k);
@@ -564,7 +563,6 @@ let module Map = {
 
     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
-    let containsKey: 'k => (t 'k 'v) => bool;
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let keys: (t 'k 'v) => (ImmSet.t 'k);
