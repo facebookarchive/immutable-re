@@ -8,12 +8,12 @@
  */
 
 let module BitmapTrieIntMap = {
-  type t 'a =
-    | Level int32 (array (t 'a)) Transient.Owner.t
-    | Entry int 'a
+  type t 'v =
+    | Level int32 (array (t 'v)) Transient.Owner.t
+    | Entry int 'v
     | Empty;
 
-  type updateLevelNode 'a = Transient.Owner.t => int => (t 'a) => (t 'a) => (t 'a);
+  type updateLevelNode 'v = Transient.Owner.t => int => (t 'v) => (t 'v) => (t 'v);
 
   type alterResult =
     | Added
@@ -22,13 +22,13 @@ let module BitmapTrieIntMap = {
     | Replace;
 
   let rec alter
-      (updateLevelNode: updateLevelNode 'a)
+      (updateLevelNode: updateLevelNode 'v)
       (owner: Transient.Owner.t)
       (alterResult: ref alterResult)
       (depth: int)
       (key: int)
-      (f: option 'a => option 'a)
-      (map: t 'a): (t 'a) => switch map {
+      (f: option 'v => option 'v)
+      (map: t 'v): (t 'v) => switch map {
     | Entry entryKey entryValue when key == entryKey => switch (f @@ Option.return @@ entryValue) {
         | Some newEntryValue when newEntryValue === entryValue =>
             alterResult := NoChange;
@@ -92,14 +92,14 @@ let module BitmapTrieIntMap = {
   let updateLevelNodePersistent
       (_: Transient.Owner.t)
       (index: int)
-      (childNode: t 'a)
-      (Level bitmap nodes _: (t 'a)): (t 'a) =>
+      (childNode: t 'v)
+      (Level bitmap nodes _: (t 'v)): (t 'v) =>
     Level bitmap (CopyOnWriteArray.update index childNode nodes) Transient.Owner.none;
 
   let rec containsKey
       (depth: int)
       (key: int)
-      (map: t 'a): bool => switch map {
+      (map: t 'v): bool => switch map {
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos key depth;
         let index = BitmapTrie.index bitmap bit;
@@ -113,8 +113,8 @@ let module BitmapTrieIntMap = {
   let updateLevelNodeTransient
       (owner: Transient.Owner.t)
       (index: int)
-      (childNode: t 'a)
-      (Level bitmap nodes nodeOwner as node: (t 'a)): (t 'a) =>
+      (childNode: t 'v)
+      (Level bitmap nodes nodeOwner as node: (t 'v)): (t 'v) =>
     if (nodeOwner === owner) {
         nodes.(index) = childNode;
         node
@@ -122,11 +122,11 @@ let module BitmapTrieIntMap = {
     else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner;
 
   let rec containsWith
-      (equality: Equality.t 'a)
+      (equality: Equality.t 'v)
       (depth: int)
       (key: int)
-      (value: 'a)
-      (map: t 'a): bool => switch map {
+      (value: 'v)
+      (map: t 'v): bool => switch map {
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos key depth;
         let index = BitmapTrie.index bitmap bit;
@@ -138,27 +138,7 @@ let module BitmapTrieIntMap = {
     | Empty => false;
   };
 
-  let rec every (f: int => 'a => bool) (map: t 'a): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (fun node => every f node)
-    | Entry key value => f key value
-    | Empty => true
-  };
-
-  let rec forEach (f: int => 'a => unit) (map: t 'a): unit => switch map {
-    | Level _ nodes _ =>
-        let f map => forEach f map;
-        nodes |> CopyOnWriteArray.forEach f;
-    | Entry key value => f key value;
-    | Empty => ();
-  };
-
-  let rec none (f: int => 'a => bool) (map: t 'a): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (fun node => none f node)
-    | Entry key value => f key value |> not
-    | Empty => true
-  };
-
-  let rec reduce (f: 'acc => int => 'a => 'acc) (acc: 'acc) (map: t 'a): 'acc => switch map {
+  let rec reduce (f: 'acc => int => 'v => 'acc) (acc: 'acc) (map: t 'v): 'acc => switch map {
     | Level _ nodes _ =>
         let reducer acc map => reduce f acc map;
         nodes |> CopyOnWriteArray.reduce reducer acc;
@@ -166,59 +146,73 @@ let module BitmapTrieIntMap = {
     | Empty => acc;
   };
 
-  let rec some (f: int => 'a => bool) (map: t 'a): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.some (fun node => some f node)
-    | Entry key value => f key value
-    | Empty => false
+  let rec reduceWhileWithResult
+      (shouldContinue: ref bool)
+      (predicate: 'acc => int => 'v => bool)
+      (f: 'acc => int => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc => switch map {
+    | Level _ nodes _ =>
+        let reducer acc node => node
+          |> reduceWhileWithResult shouldContinue predicate f acc;
+        let predicate acc node => !shouldContinue;
+
+        nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+    | Entry key value =>
+        if (!shouldContinue && (predicate acc key value)) (f acc key value)
+        else acc
+    | Empty => acc
   };
 
-  let rec toSequence (map: t 'a): (Sequence.t (int, 'a)) => switch map {
+  let reduceWhile
+      (predicate: 'acc => int => 'v => bool)
+      (f: 'acc => int => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'k): 'acc => {
+    let shouldContinue = ref true;
+    let predicate acc k v => {
+      let result = predicate acc k v;
+      shouldContinue := result;
+      result;
+    };
+
+    reduceWhileWithResult shouldContinue predicate f acc map;
+  };
+
+  let rec toSequence (map: t 'v): (Sequence.t (int, 'v)) => switch map {
     | Entry key value => Sequence.return (key, value)
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
     | Empty => Sequence.empty;
   };
 
-  let rec tryFind (f: int => 'a => bool) (map: t 'a): (option (int, 'a)) => switch map {
-    | Level _ nodes _ =>
-        let nodesCount = CopyOnWriteArray.count nodes;
-        let rec loop index =>
-          if (index < nodesCount) {
-            switch (tryFind f nodes.(index)) {
-              | Some _ as result => result
-              | _ => loop (index + 1)
-            }
-          } else None;
-        loop 0
-    | Entry key value => if (f key value) (Some (key, value)) else None;
-    | Empty => None
-  };
-
-  let rec tryGet (depth: int) (key: int) (map: t 'a): (option 'a) => switch map {
+  let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
     | Level bitmap nodes _ =>
         let bit = BitmapTrie.bitPos key depth;
         let index = BitmapTrie.index bitmap bit;
 
-        if (BitmapTrie.containsNode bitmap bit) (tryGet (depth + 1) key nodes.(index))
+        if (BitmapTrie.containsNode bitmap bit) (get (depth + 1) key nodes.(index))
         else None;
     | Entry entryKey entryValue when key == entryKey => Some entryValue
     | _ => None
   };
 
-  let rec values (map: t 'a): (Iterator.t 'a) => switch map {
+  let rec values (map: t 'v): (Iterator.t 'v) => switch map {
     | Entry _ value => Iterator.return value
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
     | Empty => Iterator.empty;
   };
 };
 
-type t 'a = {
+type k = int;
+
+type t 'v = {
   count: int,
-  root: (BitmapTrieIntMap.t 'a),
+  root: (BitmapTrieIntMap.t 'v),
 };
 
-let empty: t 'a = { count: 0, root: BitmapTrieIntMap.Empty };
+let empty: t 'v = { count: 0, root: BitmapTrieIntMap.Empty };
 
-let alter (key: int) (f: option 'a => option 'a) ({ count, root } as map: t 'a): (t 'a) => {
+let alter (key: int) (f: option 'v => option 'v) ({ count, root } as map: t 'v): (t 'v) => {
   let alterResult = ref BitmapTrieIntMap.NoChange;
   let newRoot = root |> BitmapTrieIntMap.alter
     BitmapTrieIntMap.updateLevelNodePersistent
@@ -236,125 +230,90 @@ let alter (key: int) (f: option 'a => option 'a) ({ count, root } as map: t 'a):
   }
 };
 
-let containsKey (key: int) ({ root }: t 'a): bool =>
+let containsKey (key: int) ({ root }: t 'v): bool =>
   root |> BitmapTrieIntMap.containsKey 0 key;
 
-let containsWith (equality: Equality.t 'a) (key: int) (value: 'a) ({ root }: t 'a): bool =>
+let containsWith (equality: Equality.t 'v) (key: int) (value: 'v) ({ root }: t 'v): bool =>
   root |> BitmapTrieIntMap.containsWith equality 0 key value;
 
-let contains (key: int) (value: 'a) (map: t 'a): bool =>
+let contains (key: int) (value: 'v) (map: t 'v): bool =>
   map |> containsWith Equality.structural key value;
 
-let count ({ count }: t 'a): int => count;
+let count ({ count }: t 'v): int => count;
 
-let every (f: int => 'a => bool) ({ root }: t 'a): bool =>
-  root |> BitmapTrieIntMap.every f;
+let get (key: int) ({ root }: t 'v): (option 'v) =>
+  root |> BitmapTrieIntMap.get 0 key;
 
-let find (f: int => 'a => bool) ({ root }: t 'a): (int, 'a) =>
-  root |> BitmapTrieIntMap.tryFind f |> Option.first;
+let getOrRaise (key: int) ({ root }: t 'v): 'v =>
+  root |> BitmapTrieIntMap.get 0 key |> Option.firstOrRaise;
 
-let forEach (f: int => 'a => unit) ({ root }: t 'a): unit =>
-  root |> BitmapTrieIntMap.forEach f;
+let isEmpty ({ count }: t 'v): bool => count == 0;
 
-let get (key: int) ({ root }: t 'a): 'a =>
-  root |> BitmapTrieIntMap.tryGet 0 key |> Option.first;
+let isNotEmpty ({ count }: t 'v): bool => count != 0;
 
-let isEmpty ({ count }: t 'a): bool => count == 0;
-
-let isNotEmpty ({ count }: t 'a): bool => count != 0;
-
-let none (f: int => 'a => bool) ({ root }: t 'a): bool =>
-  root |> BitmapTrieIntMap.none f;
-
-let put (key: int) (value: 'a) (map: t 'a): (t 'a) =>
+let put (key: int) (value: 'v) (map: t 'v): (t 'v) =>
   map |> alter key (Functions.return @@ Option.return @@ value);
 
-let reduce (f: 'acc => int => 'a => 'acc) (acc: 'acc) ({ root }: t 'a): 'acc =>
+let reduce (f: 'vcc => int => 'v => 'vcc) (acc: 'vcc) ({ root }: t 'v): 'vcc =>
   root |> BitmapTrieIntMap.reduce f acc;
 
-let remove (key: int) (map: t 'a): (t 'a) =>
+let reduceWhile
+    (predicate: 'acc => int => 'v => bool)
+    (f: 'acc => int => 'v => 'acc)
+    (acc: 'acc)
+    ({ root }: t 'v): 'acc =>
+  root |> BitmapTrieIntMap.reduceWhile predicate f acc;
+
+let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;
 
-let removeAll (_: t 'a): (t 'a) => empty;
+let removeAll (_: t 'v): (t 'v) => empty;
 
-let some (f: int => 'a => bool) ({ root }: t 'a): bool =>
-  root |> BitmapTrieIntMap.some f;
-
-let toIterator (map: t 'a): (Iterator.t (int, 'a)) =>
+let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
   if (isEmpty map) Iterator.empty
   else {
-    reduce: fun f acc => map |> reduce
+    reduceWhile: fun predicate f acc => map |> reduceWhile
+      (fun acc k v => predicate acc (k, v))
       (fun acc k v => f acc (k, v))
       acc
   };
 
-let toKeyedIterator (map: t 'a): (KeyedIterator.t int 'a) =>
+let toKeyedIterator (map: t 'v): (KeyedIterator.t int 'v) =>
   if (isEmpty map) KeyedIterator.empty
   else {
-    reduce: fun f acc => map |> reduce f acc
+    reduceWhile: fun predicate f acc => reduceWhile predicate f acc map
   };
 
-let toSequence ({ root }: t 'a): (Sequence.t ((int, 'a))) =>
+let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
   root |> BitmapTrieIntMap.toSequence;
 
-let tryFind (f: int => 'a => bool) ({ root }: t 'a): (option (int, 'a)) =>
-  root |> BitmapTrieIntMap.tryFind f;
-
-let tryGet (key: int) ({ root }: t 'a): (option 'a) =>
-  root |> BitmapTrieIntMap.tryGet 0 key;
-
-let values ({ root }: t 'a): (Iterator.t 'a) =>
+let values ({ root }: t 'v): (Iterator.t 'v) =>
   root |> BitmapTrieIntMap.values;
 
-let toMap (map: t 'a): (ImmMap.t int 'a) => {
-  containsWith: fun eq k v => map |> containsWith eq k v,
+let toMap (map: t 'v): (ImmMap.t int 'v) => {
   containsKey: fun k => containsKey k map,
   count: (count map),
-  every: fun f => every f map,
-  find: fun f => find f map,
-  forEach: fun f => forEach f map,
   get: fun i => get i map,
-  none: fun f => none f map,
-  reduce: fun f acc => map |> reduce f acc,
-  some: fun f => map |> some f,
-  toSequence: (toSequence map),
-  tryFind: fun f => tryFind f map,
-  tryGet: fun i => tryGet i map,
-  values: (values map),
+  getOrRaise: fun i => getOrRaise i map,
+  keyedIterator: toKeyedIterator map,
+  sequence: toSequence map,
 };
 
-let equals (this: t 'a) (that: t 'a): bool =>
-  ImmMap.equals (toMap this) (toMap that);
-
-let equalsWith (equality: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
-  ImmMap.equalsWith equality (toMap this) (toMap that);
-
-let hash (map: t 'a): int =>
-  map |> toMap |> ImmMap.hash;
-
-let hashWith (hash: Hash.t 'a) (map: t 'a): int =>
-  map |> toMap |> ImmMap.hashWith Hash.structural hash;
-
-let keys (map: t 'a): (ImmSet.t int) =>
+let keys (map: t 'v): (ImmSet.t int) =>
   map |> toMap |> ImmMap.keys;
 
-let toSet (map: t 'a): (ImmSet.t (int, 'a)) =>
-  map |> toMap |> ImmMap.toSet;
-
-let toSetWith (equality: Equality.t 'a) (map: t 'a): (ImmSet.t (int, 'a)) =>
-  map |> toMap |> ImmMap.toSetWith equality;
-
 let module TransientIntMap = {
-  type intMap 'a = t 'a;
-  type t 'a = Transient.t (intMap 'a);
+  type k = int;
+  type intMap 'v = t 'v;
+  type t 'v = Transient.t (intMap 'v);
 
-  let mutate (map: intMap 'a): (t 'a) => Transient.create map;
+  let mutate (map: intMap 'v): (t 'v) => Transient.create map;
 
   let alterImpl
       (owner: Transient.Owner.t)
       (key: int)
-      (f: option 'a => option 'a)
-      ({ count, root } as map: intMap 'a): (intMap 'a) => {
+      (f: option 'v => option 'v)
+      ({ count, root } as map: intMap 'v): (intMap 'v) => {
     let alterResult = ref BitmapTrieIntMap.NoChange;
     let newRoot = root |> BitmapTrieIntMap.alter
       BitmapTrieIntMap.updateLevelNodeTransient
@@ -374,62 +333,68 @@ let module TransientIntMap = {
 
   let alter
       (key: int)
-      (f: option 'a => option 'a)
-      (transient: t 'a): (t 'a) =>
+      (f: option 'v => option 'v)
+      (transient: t 'v): (t 'v) =>
     transient |> Transient.update2 alterImpl key f;
 
-  let count (transient: t 'a): int =>
+  let containsKey (key: int) (transient: t 'v): bool =>
+    transient |> Transient.get |> containsKey key;
+
+  let count (transient: t 'v): int =>
     transient |> Transient.get |> count;
 
   let persistentEmpty = empty;
-  let empty (): t 'a =>
+  let empty (): t 'v =>
     empty |> mutate;
 
-  let isEmpty (transient: t 'a): bool =>
+  let get (key: int) (transient: t 'v): (option 'v) =>
+    transient |> Transient.get |> get key;
+
+  let getOrRaise (key: int) (transient: t 'v): 'v =>
+    transient |> Transient.get |> getOrRaise key;
+
+  let isEmpty (transient: t 'v): bool =>
     transient |> Transient.get |> isEmpty;
 
-  let isNotEmpty (transient: t 'a): bool =>
+  let isNotEmpty (transient: t 'v): bool =>
     transient |> Transient.get |> isNotEmpty;
 
-  let persist (transient: t 'a): (intMap 'a) =>
+  let persist (transient: t 'v): (intMap 'v) =>
     transient |> Transient.persist;
 
-  let put (key: int) (value: 'a) (transient: t 'a): (t 'a) =>
+  let put (key: int) (value: 'v) (transient: t 'v): (t 'v) =>
     transient |> alter key (Functions.return @@ Option.return @@ value);
 
   let putAll
-      (iter: KeyedIterator.t int 'a)
-      (transient: t 'a): (t 'a) => iter
+      (iter: KeyedIterator.t int 'v)
+      (transient: t 'v): (t 'v) => iter
     |> KeyedIterator.reduce (fun acc k v => acc |> put k v) transient;
 
-  let remove (key: int) (transient: t 'a): (t 'a) =>
+  let remove (key: int) (transient: t 'v): (t 'v) =>
     transient |> alter key Functions.alwaysNone;
 
   let removeAllImpl
       (_: Transient.Owner.t)
-      (_: intMap 'a): (intMap 'a) => persistentEmpty;
+      (_: intMap 'v): (intMap 'v) => persistentEmpty;
 
-  let removeAll (transient: t 'a): (t 'a) =>
+  let removeAll (transient: t 'v): (t 'v) =>
       transient |> Transient.update removeAllImpl;
-
-  let tryGet (key: int) (transient: t 'a): (option 'a) =>
-    transient |> Transient.get |> (tryGet key);
 };
 
 let mutate = TransientIntMap.mutate;
 
-let putAll (iter: KeyedIterator.t int 'a) (map: t 'a): (t 'a) => map
+let putAll (iter: KeyedIterator.t int 'v) (map: t 'v): (t 'v) => map
   |> mutate
   |> TransientIntMap.putAll iter
   |> TransientIntMap.persist;
 
-let map (f: int => 'a => 'b) (map: t 'a): (t 'b) => map
+let map (f: int => 'v => 'b) (map: t 'v): (t 'b) => map
   |> reduce
     (fun acc key value => acc |> TransientIntMap.put key (f key value))
     (mutate empty)
   |> TransientIntMap.persist;
 
-let from (iter: KeyedIterator.t int 'a): (t 'a) => putAll iter empty;
+let from (iter: KeyedIterator.t int 'v): (t 'v) => putAll iter empty;
 
 let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))
@@ -438,7 +403,7 @@ let merge
   ImmSet.union (keys map) (keys next)
     |> Iterator.reduce (
         fun acc key => {
-          let result = f key (map |> tryGet key) (next |> tryGet key);
+          let result = f key (map |> get key) (next |> get key);
           switch result {
             | None => acc |> TransientIntMap.remove key
             | Some value => acc |> TransientIntMap.put key value

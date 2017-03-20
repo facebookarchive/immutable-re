@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Immutable;
-
 let identity a => a;
 
 let module Test = {
@@ -22,16 +20,16 @@ let module Test = {
   let it (label: string) (f: unit => unit): t =>
     It label f;
 
-  let toSequence (test: t): (Sequence.t (string, unit => unit)) => {
-    let rec toSequenceImpl (context: string) (test: t): (Sequence.t (string, unit => unit)) => switch test {
+  let toList (test: t): (list (string, unit => unit)) => {
+    let rec recurse (context: string) (test: t): (list (string, unit => unit)) => switch test {
       | Describe label tests =>
           let label = context ^ "[" ^ label ^ "]";
-          tests |> List.toSequence |> Sequence.flatMap (toSequenceImpl label)
+          tests |> List.rev_map (recurse label) |> List.flatten;
       | It label f =>
           let label = context ^ ", (" ^ label ^ ")";
-          Sequence.return (label, f)
+          [(label, f)]
     };
-    toSequenceImpl "" test
+    recurse "" test
   };
 };
 
@@ -68,13 +66,6 @@ let module Expect = {
 
   let return = expect;
 
-  /* FIXME: this is so broken */
-  let stringOfSequence (toString: 'a => string) (seq: Sequence.t 'a): string =>
-    "["  ^ (seq |> Sequence.reduce
-      (fun acc next => acc ^ ", " ^ (toString next))
-      ""
-    ) ^ "]";
-
   let stringOfOption (toString: 'a => string) (opt: option 'a): string =>
     opt |> Option.reduce (fun _ => toString) "";
 
@@ -91,25 +82,6 @@ let module Expect = {
 
   let toBeEqualTo (toString: 'a => string) =>
    toBeEqualToWith Equality.structural toString;
-
-  let toBeEqualToSequenceWith
-      (equals: Equality.t 'a)
-      (toString: 'a => string) =>
-    toBeEqualToWith (Sequence.equalsWith equals) (stringOfSequence toString);
-
-  let toBeEqualToSequence (toString: 'a => string) =>
-    toBeEqualToWith Sequence.equals (stringOfSequence toString);
-
-  let toBeEqualToSequenceOfInt (seq: Sequence.t int) (expect: t (Sequence.t int)) =>
-    toBeEqualToSequence string_of_int seq expect;
-
-  let toBeEqualToSequenceOfString (seq: Sequence.t string) (expect: t (Sequence.t string)) =>
-    toBeEqualToSequence identity seq expect;
-
-  let toBeEqualToEmptySequence (toString: 'a => string) =>
-    toBeEqualToSequence toString Sequence.empty;
-
-  let toBeEqualToEmptySequenceOfString = toBeEqualToEmptySequence identity;
 
   let toBeEqualToFalse = toBeEqualTo string_of_bool false;
 
@@ -162,9 +134,9 @@ let run (tests: Test.t): unit => {
   };
 
   let (total, success) = tests
-    |> Test.toSequence
-    |> Sequence.map execute
-    |> Sequence.reduce
+    |> Test.toList
+    |> List.rev_map execute
+    |> List.fold_left
       (fun (total, success) result => (total + 1, success + result))
       (0, 0);
 

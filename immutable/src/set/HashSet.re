@@ -122,7 +122,7 @@ let module BitmapTrieSet = {
 
         if (newEntrySet === entrySet) set
         else if ((EqualitySet.count newEntrySet) == 1) {
-          let entryValue = entrySet |> EqualitySet.toSequence |> Sequence.first;
+          let entryValue = entrySet |> EqualitySet.toSequence |> Sequence.firstOrRaise;
           (Entry entryHash entryValue)
         } else (EqualitySetCollision entryHash newEntrySet);
     | ComparatorCollision entryHash entrySet when hash == entryHash =>
@@ -191,11 +191,14 @@ let contains (value: 'a) ({ root, strategy }: t 'a): bool => {
 
 let count ({ count }: t 'a): int => count;
 
-let empty: (t 'a) = {
+let emptyInstance = {
   count: 0,
   root: BitmapTrieSet.Empty,
   strategy: HashStrategy.structuralCompare,
 };
+
+let empty (): (t 'a) =>
+  emptyInstance;
 
 let emptyWith (strategy: HashStrategy.t 'a): (t 'a) => {
   count: 0,
@@ -224,38 +227,32 @@ let remove (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
 let removeAll ({ strategy }: t 'a): (t 'a) =>
   emptyWith strategy;
 
+/* FIXME: Shouldn't use sequences to implement all these.
+ * They're way slow.
+ */
+
 let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
   if (isEmpty set) Sequence.empty
   else root |> BitmapTrieSet.toSequence;
 
-let every (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSequence |> Sequence.every f;
-
-let find (f: 'a => bool) (set: t 'a): 'a =>
-  set |> toSequence |> Sequence.find f;
-
-let forEach (f: 'a => unit) (set: t 'a): unit =>
-  set |> toSequence |> Sequence.forEach f;
-
-let none (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSequence |> Sequence.none f;
-
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (set: t 'a): 'acc =>
   set |> toSequence |> Sequence.reduce f acc;
 
-let some (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSequence |> Sequence.some f;
-
-let tryFind (f: 'a => bool) (set: t 'a): (option 'a) =>
-  set |> toSequence |> Sequence.tryFind f;
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (set: t 'a): 'acc =>
+  set |> toSequence |> Sequence.reduceWhile predicate f acc;
 
 let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) Iterator.empty
-  else { reduce: fun f acc => reduce f acc set };
+  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
 
 let toKeyedIterator (set: t 'a): (KeyedIterator.t 'a 'a) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun f acc => set |> reduce
+  else { reduceWhile: fun predicate f acc => set |> reduceWhile
+    (fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };
@@ -265,21 +262,17 @@ let toSet (set: t 'a): (ImmSet.t 'a) =>
   else {
     contains: fun v => contains v set,
     count: count set,
-    every: fun f => set |> every f,
-    find: fun f => set |> find f,
-    forEach: fun f => set |> forEach f,
-    none: fun f => set |> none f,
-    reduce: fun f acc => set |> reduce f acc,
-    some: fun f => set |> some f,
-    toSequence: toSequence set,
-    tryFind: fun f => set |> tryFind f,
+    iterator: toIterator set,
+    sequence: toSequence set,
   };
 
 let equals (this: t 'a) (that: t 'a): bool =>
   ImmSet.equals (toSet this) (toSet that);
 
-let hash ({ strategy } as set: t 'a): int =>
-  set |> toSet |> ImmSet.hashWith (HashStrategy.hash strategy);
+let hash ({ strategy } as set: t 'a): int => {
+  let hash = HashStrategy.hash strategy;
+  set |> reduce (fun acc next => acc + hash next) 0;
+};
 
 let toMap (set: t 'a): (ImmMap.t 'a 'a) =>
   set |> toSet |> ImmMap.ofSet;
@@ -352,7 +345,7 @@ let module TransientHashSet = {
     transient |> Transient.get |> count;
 
   let empty (): (t 'a) =>
-    empty |> mutate;
+    empty () |> mutate;
 
   let persistentEmptyWith = emptyWith;
 
@@ -403,7 +396,7 @@ let addAll (iter: Iterator.t 'a) (set: t 'a): (t 'a) =>
   set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
 
 let from (iter: Iterator.t 'a): (t 'a) =>
-  empty |> addAll iter;
+  empty () |> addAll iter;
 
 let fromWith (strategy: HashStrategy.t 'a) (iter: Iterator.t 'a): (t 'a) =>
   emptyWith strategy |> addAll iter;

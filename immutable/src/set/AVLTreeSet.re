@@ -104,26 +104,31 @@ let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): bool => swi
     }
 };
 
-let rec first (tree: t 'a): 'a => switch tree {
+let rec first (tree: t 'a): (option 'a) => switch tree {
+  | Empty => None
+  | Leaf v => Some v
+  | Node _ Empty v _ => Some v
+  | Node _ left _ _ => first left
+};
+
+let rec firstOrRaise (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ Empty v _ => v
-  | Node _ left _ _ => first left
+  | Node _ left _ _ => firstOrRaise left
   | Empty => failwith "empty"
 };
 
-let rec forEach (f: 'a => unit) (tree: t 'a) => switch tree {
-  | Empty  => ()
-  | Leaf v => f v
-  | Node _ left v right =>
-     forEach f left;
-     f v;
-     forEach f right;
+let rec last (tree: t 'a): (option 'a) => switch tree {
+  | Empty => None
+  | Leaf v => Some v
+  | Node _ _ v Empty => Some v
+  | Node _ _ _ right => last right
 };
 
-let rec last (tree: t 'a): 'a => switch tree {
+let rec lastOrRaise (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ _ v Empty => v
-  | Node _ _ _ right => last right
+  | Node _ _ _ right => lastOrRaise right
   | Empty => failwith "empty"
 };
 
@@ -137,6 +142,44 @@ let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch 
      acc
 };
 
+let rec reduceWhileWithResult
+    (shouldContinue: ref bool)
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (tree: t 'a): 'acc => switch tree {
+  | Empty => acc
+  | Leaf v =>
+      if (!shouldContinue && (predicate acc v)) (f acc v)
+      else acc
+  | Node _ left v right =>
+     let acc =
+       if (!shouldContinue) (reduceWhileWithResult shouldContinue predicate f acc left)
+       else acc;
+     let acc =
+       if (!shouldContinue && (predicate acc v)) (f acc v)
+       else acc;
+     let acc =
+       if (!shouldContinue) (reduceWhileWithResult shouldContinue predicate f acc right)
+       else acc;
+     acc
+};
+
+let reduceWhile
+    (predicate: 'acc => 'v => bool)
+    (f: 'acc => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc v => {
+    let result = predicate acc v;
+    shouldContinue := result;
+    result;
+  };
+  reduceWhileWithResult shouldContinue predicate f acc tree;
+};
+
 let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch tree {
   | Empty => acc
   | Leaf v => f acc v
@@ -147,29 +190,67 @@ let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => sw
      acc
 };
 
-let rec removeFirst (tree: t 'a): (t 'a) => switch tree {
-  | Empty => Empty
-  | Leaf _ => Empty
-  | Node _ Empty _ right => right
-  | Node _ left v right => rebalance (removeFirst left) v right;
+let rec reduceRightWhileWithResult
+    (shouldContinue: ref bool)
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (tree: t 'a): 'acc => switch tree {
+  | Empty => acc
+  | Leaf v =>
+      if (!shouldContinue && (predicate acc v)) (f acc v)
+      else acc
+  | Node _ left v right =>
+    let acc =
+      if (!shouldContinue) (reduceRightWhileWithResult shouldContinue predicate f acc right)
+      else acc;
+     let acc =
+       if (!shouldContinue && (predicate acc v)) (f acc v)
+       else acc;
+     let acc =
+       if (!shouldContinue) (reduceRightWhileWithResult shouldContinue predicate f acc left)
+       else acc;
+     acc
 };
 
-let rec removeFirstWithValue (first: ref 'a) (tree: t 'a): (t 'a) => switch tree {
-  | Empty => Empty
+let reduceRightWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'ka => 'acc)
+    (acc: 'acc)
+    (tree: t 'a): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc v => {
+    let result = predicate acc v;
+    shouldContinue := result;
+    result;
+  };
+  reduceRightWhileWithResult shouldContinue predicate f acc tree;
+};
+
+let rec removeFirstOrRaise (tree: t 'a): (t 'a) => switch tree {
+  | Empty => failwith "empty"
+  | Leaf _ => Empty
+  | Node _ Empty _ right => right
+  | Node _ left v right => rebalance (removeFirstOrRaise left) v right;
+};
+
+let rec removeFirstOrRaiseWithValue (first: ref 'a) (tree: t 'a): (t 'a) => switch tree {
+  | Empty => failwith "empty"
   | Leaf v =>
       first := v;
       Empty
   | Node _ Empty v right =>
       first := v;
       right
-  | Node _ left v right => rebalance (removeFirstWithValue first left) v right;
+  | Node _ left v right => rebalance (removeFirstOrRaiseWithValue first left) v right;
 };
 
-let rec removeLast (tree: t 'a): (t 'a) => switch tree {
-  | Empty => Empty
+let rec removeLastOrRaise (tree: t 'a): (t 'a) => switch tree {
+  | Empty => failwith "empty"
   | Leaf _ => Empty
   | Node _ left _ Empty => left
-  | Node _ left v right => rebalance left v (removeLast right);
+  | Node _ left v right => rebalance left v (removeLastOrRaise right);
 };
 
 let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => switch tree {
@@ -181,7 +262,7 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
   | Node height left v right => if (x === v) (switch (left, right) {
       | (Empty, _) => right
       | (_, Empty) => left
-      | _ => rebalance left (first right) (removeFirst right)
+      | _ => rebalance left (firstOrRaise right) (removeFirstOrRaise right)
     }) else {
       let cmp = comparator x v;
       if (cmp === Ordering.lessThan) {
@@ -196,9 +277,9 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
         | _ =>
             if (height > 4) {
               let first = ref x;
-              let newRight = removeFirstWithValue first right;
+              let newRight = removeFirstOrRaiseWithValue first right;
               rebalance left (!first) newRight
-            } else rebalance left (first right) (removeFirst right)
+            } else rebalance left (firstOrRaise right) (removeFirstOrRaise right)
       }
     }
 };
@@ -213,26 +294,12 @@ let rec toSequence (tree: t 'a): (Sequence.t 'a) => switch tree {
     ]
 };
 
-let rec toSequenceReversed (tree: t 'a): (Sequence.t 'a) => switch tree {
+let rec toSequenceRight (tree: t 'a): (Sequence.t 'a) => switch tree {
   | Empty => Sequence.empty
   | Leaf v => Sequence.return v
   | Node _ left v right => Sequence.concat [
-      Sequence.defer(fun () => toSequenceReversed right),
+      Sequence.defer(fun () => toSequenceRight right),
       Sequence.return v,
-      Sequence.defer(fun () => toSequenceReversed left),
+      Sequence.defer(fun () => toSequenceRight left),
     ]
-};
-
-let rec tryFirst (tree: t 'a): (option 'a) => switch tree {
-  | Empty => None
-  | Leaf v => Some v
-  | Node _ Empty v _ => Some v
-  | Node _ left _ _ => tryFirst left
-};
-
-let rec tryLast (tree: t 'a): (option 'a) => switch tree {
-  | Empty => None
-  | Leaf v => Some v
-  | Node _ _ v Empty => Some v
-  | Node _ _ _ right => tryLast right
 };

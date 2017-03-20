@@ -32,39 +32,14 @@ let count (deque: t 'a): int => switch deque {
   | Descending vector => Vector.count vector
 };
 
-let equalsWith (valueEquals: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
-  if (this === that) true
-  else if ((count this) != (count that)) false
-  else switch (this, that) {
-    | (Ascending this, Ascending that)
-    | (Descending this, Descending that) =>
-        Vector.equalsWith valueEquals this that
-    | (Ascending this, Descending that)
-    | (Descending this, Ascending that) =>
-        Sequence.equalsWith valueEquals (Vector.toSequence this) (Vector.toSequenceReversed that)
-  };
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  equalsWith Equality.structural this that;
-
-let find (f: 'a => bool) (deque: t 'a): 'a => switch deque {
-  | Ascending vector
-  | Descending vector => Vector.find f vector
+let first (deque: t 'a): (option 'a) => switch deque {
+  | Ascending vector => vector |> Vector.first
+  | Descending vector => vector |> Vector.last
 };
 
-let first (deque: t 'a): 'a => switch deque {
-  | Ascending vector => Vector.first vector
-  | Descending vector => Vector.last vector
-};
-
-let hashWith (hash: Hash.t 'a) (deque: t 'a): int => switch deque {
-  | Ascending vector
-  | Descending vector => Vector.hashWith hash vector
-};
-
-let hash (deque: t 'a): int => switch deque {
-  | Ascending vector
-  | Descending vector => Vector.hash vector
+let firstOrRaise (deque: t 'a): 'a => switch deque {
+  | Ascending vector => Vector.firstOrRaise vector
+  | Descending vector => Vector.lastOrRaise vector
 };
 
 let isEmpty (deque: t 'a): bool =>
@@ -73,23 +48,28 @@ let isEmpty (deque: t 'a): bool =>
 let isNotEmpty (deque: t 'a): bool =>
   deque |> count != 0;
 
-let last (deque: t 'a): 'a => switch deque {
-  | Ascending vector => Vector.last vector
-  | Descending vector => Vector.first vector
+let last (deque: t 'a): (option 'a) => switch deque {
+  | Ascending vector => vector |> Vector.last
+  | Descending vector => vector |> Vector.first
 };
 
-let removeFirst (deque: t 'a): (t 'a) => switch deque {
-  | Ascending vector =>
-      Ascending (Vector.removeFirst vector)
-  | Descending vector =>
-      Descending (Vector.removeLast vector)
+let lastOrRaise (deque: t 'a): 'a => switch deque {
+  | Ascending vector => Vector.lastOrRaise vector
+  | Descending vector => Vector.firstOrRaise vector
 };
 
-let removeLast (deque: t 'a): (t 'a) => switch deque {
+let removeFirstOrRaise (deque: t 'a): (t 'a) => switch deque {
   | Ascending vector =>
-      Ascending (Vector.removeLast vector)
+      Ascending (Vector.removeFirstOrRaise vector)
   | Descending vector =>
-      Descending (Vector.removeFirst vector)
+      Descending (Vector.removeLastOrRaise vector)
+};
+
+let removeLastOrRaise (deque: t 'a): (t 'a) => switch deque {
+  | Ascending vector =>
+      Ascending (Vector.removeLastOrRaise vector)
+  | Descending vector =>
+      Descending (Vector.removeFirstOrRaise vector)
 };
 
 let return (value: 'a): (t 'a) =>
@@ -100,72 +80,53 @@ let reverse (deque: t 'a): (t 'a) => switch deque {
   | Descending vector => Ascending vector
 };
 
-let tryFind (f: 'a => bool) (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector
-  | Descending vector => Vector.tryFind f vector
-};
-
-let tryFirst (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector => vector |> Vector.tryFirst
-  | Descending vector => vector |> Vector.tryLast
-};
-
-let tryLast (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector => vector |> Vector.tryLast
-  | Descending vector => vector |> Vector.tryFirst
-};
-
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switch deque {
   | Ascending vector => vector |> Vector.reduce f acc;
   | Descending vector => vector |> Vector.reduceRight f acc;
 };
 
-let forEach (f: 'a => unit) (deque: t 'a): unit =>
-  deque |> reduce (fun _ next => f next) ();
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (deque: t 'a): 'acc => switch deque {
+  | Ascending vector => vector |> Vector.reduceWhile predicate f acc;
+  | Descending vector => vector |> Vector.reduceRightWhile predicate f acc;
+};
 
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switch deque {
   | Ascending vector => vector |> Vector.reduceRight f acc;
   | Descending vector => vector |> Vector.reduce f acc;
 };
 
-let forEachReverse (f: 'a => unit) (deque: t 'a): unit =>
-  deque |> reduceRight (fun _ next => f next) ();
+let reduceRightWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (deque: t 'a): 'acc => switch deque {
+  | Ascending vector => vector |> Vector.reduceRightWhile predicate f acc;
+  | Descending vector => vector |> Vector.reduceWhile predicate f acc;
+};
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
 let toIterator (deque: t 'a): (Iterator.t 'a) =>
  if (isEmpty deque) Iterator.empty
- else { reduce: fun f acc => reduce f acc deque };
+ else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc deque };
 
-let toIteratorReversed (deque: t 'a): (Iterator.t 'a) =>
+let toIteratorRight (deque: t 'a): (Iterator.t 'a) =>
   if (isEmpty deque) Iterator.empty
-  else { reduce: fun f acc => reduceRight f acc deque };
+  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc deque };
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequence
-  | Descending vector => vector |> Vector.toSequenceReversed;
+  | Descending vector => vector |> Vector.toSequenceRight;
 };
 
-let toSequenceReversed (deque: t 'a): (Sequence.t 'a) => switch deque {
-  | Ascending vector => vector |> Vector.toSequenceReversed
+let toSequenceRight (deque: t 'a): (Sequence.t 'a) => switch deque {
+  | Ascending vector => vector |> Vector.toSequenceRight
   | Descending vector => vector |> Vector.toSequence;
 };
-
-let compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-  else Sequence.compareWith valueCompare (toSequence this) (toSequence that);
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
-
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      vector |> Vector.containsWith valueEquals value;
-};
-
-let contains (value: 'a) (deque: t 'a): bool =>
-  containsWith Equality.structural value deque;
 
 let module TransientDeque = {
   let module TransientVector = Vector.TransientVector;
@@ -237,9 +198,14 @@ let module TransientDeque = {
   let empty (): (t 'a) =>
     empty |> mutate;
 
-  let first (transient: t 'a) => switch (Transient.get transient) {
-    | Ascending vector => TransientVector.first vector
-    | Descending vector => TransientVector.last vector
+  let first (transient: t 'a): (option 'a) => switch (Transient.get transient) {
+    | Ascending vector => vector |> TransientVector.first
+    | Descending vector => vector |> TransientVector.last
+  };
+
+  let firstOrRaise (transient: t 'a): 'a => switch (Transient.get transient) {
+    | Ascending vector => TransientVector.firstOrRaise vector
+    | Descending vector => TransientVector.lastOrRaise vector
   };
 
   let isEmpty (transient: t 'a): bool =>
@@ -248,9 +214,14 @@ let module TransientDeque = {
   let isNotEmpty (transient: t 'a): bool =>
     transient |> count != 0;
 
-  let last (transient: t 'a): 'a => switch (Transient.get transient)  {
-    | Ascending vector => TransientVector.last vector
-    | Descending vector => TransientVector.first vector
+  let last (transient: t 'a): (option 'a) => switch (Transient.get transient) {
+    | Ascending vector => vector |> TransientVector.last
+    | Descending vector => vector |> TransientVector.first
+  };
+
+  let lastOrRaise (transient: t 'a): 'a => switch (Transient.get transient)  {
+    | Ascending vector => TransientVector.lastOrRaise vector
+    | Descending vector => TransientVector.firstOrRaise vector
   };
 
   let persist (transient: t 'a): (deque 'a) => switch (Transient.persist transient) {
@@ -266,21 +237,21 @@ let module TransientDeque = {
   let removeAll (transient: t 'a): (t 'a) =>
     transient |> Transient.update removeAllImpl;
 
-  let removeFirst (transient: t 'a): (t 'a) => switch (Transient.get transient) {
+  let removeFirstOrRaise (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.removeFirst vector |> ignore;
+        TransientVector.removeFirstOrRaise vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.removeLast vector |> ignore;
+        TransientVector.removeLastOrRaise vector |> ignore;
         transient;
   };
 
-  let removeLast (transient: t 'a): (t 'a) => switch (Transient.get transient) {
+  let removeLastOrRaise (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.removeLast vector |> ignore;
+        TransientVector.removeLastOrRaise vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.removeFirst vector |> ignore;
+        TransientVector.removeFirstOrRaise vector |> ignore;
         transient;
   };
 
@@ -293,16 +264,6 @@ let module TransientDeque = {
 
   let reverse (transient: t 'a): (t 'a) =>
     transient |> Transient.update reverseImpl;
-
-  let tryFirst (transient: t 'a): (option 'a) => switch (Transient.get transient) {
-    | Ascending vector => vector |> TransientVector.tryFirst
-    | Descending vector => vector |> TransientVector.tryLast
-  };
-
-  let tryLast (transient: t 'a): (option 'a) => switch (Transient.get transient) {
-    | Ascending vector => vector |> TransientVector.tryLast
-    | Descending vector => vector |> TransientVector.tryFirst
-  };
 };
 
 let mutate = TransientDeque.mutate;
@@ -317,16 +278,10 @@ let addLastAll (iter: Iterator.t 'a) (deque: t 'a): (t 'a) => deque
   |> TransientDeque.addLastAll iter
   |> TransientDeque.persist;
 
-let every (f: 'a => bool) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      Vector.every f vector
-};
-
 let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addLastAll iter;
 
-let fromReversed (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   empty|> addFirstAll iter;
 
 let map (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
@@ -337,16 +292,4 @@ let map (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
 let mapReverse (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
   | Ascending vector => Ascending (Vector.mapReverse f vector)
   | Descending vector => Descending (Vector.mapReverse f vector)
-};
-
-let none (f: 'a => bool) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      Vector.none f vector
-};
-
-let some (f: 'a => bool) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      Vector.some f vector
 };

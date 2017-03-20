@@ -61,49 +61,39 @@ let rec containsKey
     }
 };
 
-let contains
-    (comparator: Comparator.t 'k)
-    (equality: Equality.t 'v)
-    (xK: 'k)
-    (xV: 'v)
-    (tree: t 'k 'v): bool => switch tree {
-  | Empty => false
-  | Leaf k v => if (xK === k) true else {
-      let cmp = comparator xK k;
-      (cmp === Ordering.equal) && (equality v xV)
-    }
-  | Node _ left k v right => if (xK === k) true else {
-      let cmp = comparator xK k;
-      if (cmp === Ordering.lessThan) (containsKey comparator xK left)
-      else if (cmp === Ordering.greaterThan) (containsKey comparator xK right)
-      else (equality v xV)
-    }
+let rec first (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
+  | Empty => None
+  | Leaf k v => Some (k, v)
+  | Node _ Empty k v _ => Some (k, v)
+  | Node _ left _ _ _ => first left
 };
 
-let rec every (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
-  | Empty => true
-  | Leaf k v => f k v
-  | Node _ left k v right =>
-      (every f left) && (f k v) && (every f right)
-};
-
-let rec forEach (f: 'k => 'v => unit) (tree: t 'k 'v) => switch tree {
-  | Empty  => ()
-  | Leaf k v => f k v
-  | Node _ left k v right =>
-     forEach f left;
-     f k v;
-     forEach f right;
-};
-
-let rec first (tree: t 'k 'v): ('k, 'v) => switch tree {
+let rec firstOrRaise (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Leaf k v => (k, v)
   | Node _ Empty k v _ => (k, v)
-  | Node _ left _ _ _ => first left
+  | Node _ left _ _ _ => firstOrRaise left
   | Empty => failwith "empty"
 };
 
 let rec get
+    (comparator: Comparator.t 'k)
+    (xK: 'k)
+    (tree: t 'k 'v): (option 'v) => switch tree {
+  | Empty => None
+  | Leaf k v => if (xK === k) (Some v) else {
+      let cmp = comparator xK k;
+      if (cmp === Ordering.equal) (Some v)
+      else None
+    }
+  | Node _ left k v right => if (xK === k) (Some v) else {
+      let cmp = comparator xK k;
+      if (cmp === Ordering.lessThan) (get comparator xK left)
+      else if (cmp === Ordering.greaterThan) (get comparator xK right)
+      else (Some v)
+    }
+};
+
+let rec getOrRaise
     (comparator: Comparator.t 'k)
     (xK: 'k)
     (tree: t 'k 'v): 'v => switch tree {
@@ -115,24 +105,24 @@ let rec get
     }
   | Node _ left k v right => if (xK === k) v else {
       let cmp = comparator xK k;
-      if (cmp === Ordering.lessThan) (get comparator xK left)
-      else if (cmp === Ordering.greaterThan) (get comparator xK right)
+      if (cmp === Ordering.lessThan) (getOrRaise comparator xK left)
+      else if (cmp === Ordering.greaterThan) (getOrRaise comparator xK right)
       else v
     }
 };
 
-let rec last (tree: t 'k 'v): ('k, 'v) => switch tree {
-  | Leaf k v => (k, v)
-  | Node _ _ k v Empty => (k, v)
+let rec last (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
+  | Empty => None
+  | Leaf k v  => Some (k, v)
+  | Node _ _ k v Empty => Some (k, v)
   | Node _ _ _ _ right => last right
-  | Empty => failwith "empty"
 };
 
-let rec none (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
-  | Empty => true
-  | Leaf k v => f k v |> not
-  | Node _ left k v right =>
-      (none f left) && (f k v |> not) && (none f right)
+let rec lastOrRaise (tree: t 'k 'v): ('k, 'v) => switch tree {
+  | Leaf k v => (k, v)
+  | Node _ _ k v Empty => (k, v)
+  | Node _ _ _ _ right => lastOrRaise right
+  | Empty => failwith "empty"
 };
 
 let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
@@ -145,6 +135,44 @@ let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc =
      acc
 };
 
+let rec reduceWhileWithResult
+    (shouldContinue: ref bool)
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => switch tree {
+  | Empty => acc
+  | Leaf k v =>
+      if (!shouldContinue && (predicate acc k v)) (f acc k v)
+      else acc
+  | Node _ left k v right =>
+     let acc =
+       if (!shouldContinue) (reduceWhileWithResult shouldContinue predicate f acc left)
+       else acc;
+     let acc =
+       if (!shouldContinue && (predicate acc k v)) (f acc k v)
+       else acc;
+     let acc =
+       if (!shouldContinue) (reduceWhileWithResult shouldContinue predicate f acc right)
+       else acc;
+     acc
+};
+
+let reduceWhile
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc k v => {
+    let result = predicate acc k v;
+    shouldContinue := result;
+    result;
+  };
+  reduceWhileWithResult shouldContinue predicate f acc tree;
+};
+
 let rec reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
   | Empty => acc
   | Leaf k v => f acc k v
@@ -155,24 +183,42 @@ let rec reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): '
      acc
 };
 
-let rec search (predicate: 'k => Ordering.t) (tree: t 'k 'v): ('k, 'v) => switch tree {
-  | Empty => failwith "not found"
+let rec reduceRightWhileWithResult
+    (shouldContinue: ref bool)
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => switch tree {
+  | Empty => acc
   | Leaf k v =>
-      let result = predicate k;
-      if (result === Ordering.equal) (k, v)
-      else (failwith "not found")
+      if (!shouldContinue && (predicate acc k v)) (f acc k v)
+      else acc
   | Node _ left k v right =>
-      let result = predicate v;
-      if (result === Ordering.lessThan) (search predicate left)
-      else if (result === Ordering.greaterThan) (search predicate right)
-      else (k, v)
+    let acc =
+      if (!shouldContinue) (reduceRightWhileWithResult shouldContinue predicate f acc right)
+      else acc;
+     let acc =
+       if (!shouldContinue && (predicate acc k v)) (f acc k v)
+       else acc;
+     let acc =
+       if (!shouldContinue) (reduceRightWhileWithResult shouldContinue predicate f acc left)
+       else acc;
+     acc
 };
 
-let rec some (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
-  | Empty => false
-  | Leaf k v => f k v
-  | Node _ left k v right =>
-      (some f left) || (f k v) || (none f right)
+let reduceRightWhile
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc k v => {
+    let result = predicate acc k v;
+    shouldContinue := result;
+    result;
+  };
+  reduceRightWhileWithResult shouldContinue predicate f acc tree;
 };
 
 let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
@@ -185,67 +231,14 @@ let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
     ]
 };
 
-let rec toSequenceReversed (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
+let rec toSequenceRight (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
   | Empty => Sequence.empty
   | Leaf k v => Sequence.return (k, v)
   | Node _ left k v right => Sequence.concat [
-      Sequence.defer(fun () => toSequenceReversed right),
+      Sequence.defer(fun () => toSequenceRight right),
       Sequence.return (k, v),
-      Sequence.defer(fun () => toSequenceReversed left),
+      Sequence.defer(fun () => toSequenceRight left),
     ]
-};
-
-let rec tryFind (f: 'k => 'v => bool) (tree: t 'k 'v): (option ('k, 'v)) =>  switch tree {
-  | Empty => None
-  | Leaf k v => if (f k v) (Some (k, v)) else None;
-  | Node _ left k v right => switch (tryFind f left) {
-      | Some _ as result => result
-      | None => if (f k v) (Some (k, v)) else tryFind f right
-    }
-};
-
-let rec tryFirst (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
-  | Empty => None
-  | Leaf k v => Some (k, v)
-  | Node _ Empty k v _ => Some (k, v)
-  | Node _ left _ _ _ => tryFirst left
-};
-
-let rec tryGet
-    (comparator: Comparator.t 'k)
-    (xK: 'k)
-    (tree: t 'k 'v): (option 'v) => switch tree {
-  | Empty => None
-  | Leaf k v => if (xK === k) (Some v) else {
-      let cmp = comparator xK k;
-      if (cmp === Ordering.equal) (Some v)
-      else None
-    }
-  | Node _ left k v right => if (xK === k) (Some v) else {
-      let cmp = comparator xK k;
-      if (cmp === Ordering.lessThan) (tryGet comparator xK left)
-      else if (cmp === Ordering.greaterThan) (tryGet comparator xK right)
-      else (Some v)
-    }
-};
-
-let rec tryLast (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
-  | Empty => None
-  | Leaf k v  => Some (k, v)
-  | Node _ _ k v Empty => Some (k, v)
-  | Node _ _ _ _ right => tryLast right
-};
-
-let rec trySearch (predicate: 'k => Ordering.t) (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
-  | Empty => None
-  | Leaf k v =>
-      let result = predicate v;
-      if (result === Ordering.equal) (Some (k, v)) else None
-  | Node _ left k v right =>
-      let result = predicate k;
-      if (result === Ordering.lessThan) (trySearch predicate left)
-      else if (result === Ordering.greaterThan) (trySearch predicate right)
-      else Some (k, v)
 };
 
 let rec values (tree: t 'k 'v): (Iterator.t 'v) => switch tree {
@@ -284,18 +277,18 @@ let rebalance (left: t 'k 'v) (k: 'k) (v: 'v) (right: t 'k 'v): (t 'k 'v) => {
   };
 };
 
-let rec removeFirst (tree: t 'k 'v): (t 'k 'v) => switch tree {
-  | Empty => Empty
+let rec removeFirstOrRaise (tree: t 'k 'v): (t 'k 'v) => switch tree {
+  | Empty => failwith "empty"
   | Leaf _ _ => Empty
   | Node _ Empty _ _ right => right
-  | Node _ left k v right => rebalance (removeFirst left) k v right;
+  | Node _ left k v right => rebalance (removeFirstOrRaise left) k v right;
 };
 
-let rec removeLast (tree: t 'k 'v): (t 'k 'v) => switch tree {
-  | Empty => Empty
+let rec removeLastOrRaise (tree: t 'k 'v): (t 'k 'v) => switch tree {
+  | Empty => failwith "empty"
   | Leaf _ _ => Empty
   | Node _ left _ _ Empty => left
-  | Node _ left k v right => rebalance left k v (removeLast right);
+  | Node _ left k v right => rebalance left k v (removeLastOrRaise right);
 };
 
 type alterResult =
@@ -373,8 +366,8 @@ let rec alter
                 left
             | _ =>
               result := Removed;
-              let (k, v) = first right;
-              rebalance left k v (removeFirst right);
+              let (k, v) = firstOrRaise right;
+              rebalance left k v (removeFirstOrRaise right);
           }
         | Some xV =>
             result := Replace;

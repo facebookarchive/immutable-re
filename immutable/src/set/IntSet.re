@@ -60,6 +60,47 @@ let module BitmapTrieIntSet = {
     | Empty => false;
   };
 
+  let rec reduce (f: 'acc => int => 'acc) (acc: 'acc) (map: t): 'acc => switch map {
+    | Level _ nodes _ =>
+        let reducer acc map => reduce f acc map;
+        nodes |> CopyOnWriteArray.reduce reducer acc;
+    | Entry value => f acc value;
+    | Empty => acc;
+  };
+
+  let rec reduceWhileWithResult
+      (shouldContinue: ref bool)
+      (predicate: 'acc => int => bool)
+      (f: 'acc => int => 'acc)
+      (acc: 'acc)
+      (map: t): 'acc => switch map {
+    | Level _ nodes _ =>
+        let reducer acc node => node
+          |> reduceWhileWithResult shouldContinue predicate f acc;
+        let predicate _ _ => !shouldContinue;
+
+        nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+    | Entry value =>
+        if (!shouldContinue && (predicate acc value)) (f acc value)
+        else acc
+    | Empty => acc
+  };
+
+  let reduceWhile
+      (predicate: 'acc => int => bool)
+      (f: 'acc => int => 'acc)
+      (acc: 'acc)
+      (map: t): 'acc => {
+    let shouldContinue = ref true;
+    let predicate acc v => {
+      let result = predicate acc v;
+      shouldContinue := result;
+      result;
+    };
+
+    reduceWhileWithResult shouldContinue predicate f acc map;
+  };
+
   let rec remove
       (updateLevelNode: updateLevelNode)
       (owner: Transient.Owner.t)
@@ -156,34 +197,24 @@ let removeAll (_: t): t =>
 let toSequence ({ root }: t): (Sequence.t int) =>
   root |> BitmapTrieIntSet.toSequence;
 
-let every (f: int => bool) (set: t): bool =>
-  set |> toSequence |> Sequence.every f;
+let reduce (f: 'acc => int => 'acc) (acc: 'acc) ({ root }: t): 'acc =>
+  root |> BitmapTrieIntSet.reduce f acc;
 
-let find (f: int => bool) (set: t): int =>
-  set |> toSequence |> Sequence.find f;
-
-let forEach (f: int => unit) (set: t): unit =>
-  set |> toSequence |> Sequence.forEach f;
-
-let none (f: int => bool) (set: t): bool =>
-  set |> toSequence |> Sequence.none f;
-
-let reduce (f: 'acc => int => 'acc) (acc: 'acc) (set: t): 'acc =>
-  set |> toSequence |> Sequence.reduce f acc;
-
-let some (f: int => bool) (set: t): bool =>
-  set |> toSequence |> Sequence.some f;
-
-let tryFind (f: int => bool) (set: t): (option int) =>
-  set |> toSequence |> Sequence.tryFind f;
+let reduceWhile
+    (predicate: 'acc => int => bool)
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    ({ root }: t): 'acc =>
+  root |> BitmapTrieIntSet.reduceWhile predicate f acc;
 
 let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
-  else { reduce: fun f acc => reduce f acc set };
+  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
 
 let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun f acc => set |> reduce
+  else { reduceWhile: fun predicate f acc => set |> reduceWhile
+    (fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };
@@ -193,26 +224,22 @@ let toSet (set: t): (ImmSet.t int) =>
   else {
     contains: fun v => contains v set,
     count: count set,
-    every: fun f => set |> every f,
-    find: fun f => set |> find f,
-    forEach: fun f => set |> forEach f,
-    none: fun f => set |> none f,
-    reduce: fun f acc => set |> reduce f acc,
-    some: fun f => set |> some f,
-    toSequence: toSequence set,
-    tryFind: fun f => set |> tryFind f,
+    iterator: toIterator set,
+    sequence: toSequence set,
   };
 
 let equals (this: t) (that: t): bool =>
   ImmSet.equals (toSet this) (toSet that);
 
-let hash (set: t): int =>
-  set |> toSet |> ImmSet.hash;
+let hash (set: t): int => set
+  |> reduce (fun acc next => acc + Hash.structural next) 0;
 
 let toMap (set: t): (ImmMap.t int int) =>
   set |> toSet |> ImmMap.ofSet;
 
 let module TransientIntSet = {
+  type a = int;
+
   type intSet = t;
 
   type t = Transient.t intSet;

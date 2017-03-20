@@ -22,33 +22,39 @@ let generateTests
     (empty: unit => 'map)
     (put: int => int => 'map => 'map)
     (remove: int => 'map => 'map)
-    (tryGet: int => 'map => option int)
+    (get: int => 'map => option int)
     (n: int): (list Test.t) => [
   it (sprintf "put %i elements" n) (fun () => {
-    IntRange.create 0 n
+    IntRange.create start::0 count::n
       |> IntRange.reduce (fun acc i => acc |> put (hash i) i) (empty ())
       |> ignore;
   }),
 
   it (sprintf "map with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToRemove = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3
+      |> Sequence.map (fun [i] => i);
 
     keysToRemove |> Sequence.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "map with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToUpdate = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3
+      |> Sequence.map (fun [i] => i);
 
     /* Multiply the updated value to avoid optimizations */
     keysToUpdate |> Sequence.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
   }),
 
-  it (sprintf "tryGet %i values" n) (fun () => {
+  it (sprintf "get %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> IntRange.forEach (fun i => map |> tryGet i |> ignore);
+    keys () |> IntRange.toIterator |> Iterator.forEach (fun i => map |> get i |> ignore);
   }),
 ];
 
@@ -59,11 +65,13 @@ let module CamlIntMap = CamlMap.Make {
 
 let module SortedIntMap = SortedMap.Make {
   type t = int;
+  
   let compare = Comparator.structural;
+  let equals = Equality.structural;
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = IntRange.create 0 count;
+  let keys = IntRange.create start::0 count::count;
 
   let camlIntMap = keys |> IntRange.reduce
     (fun acc i => acc |> CamlIntMap.add (hash i) i)
@@ -114,7 +122,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => SortedIntMap.empty)
         SortedIntMap.put
         SortedIntMap.remove
-        SortedIntMap.tryGet
+        SortedIntMap.get
         count
     ),
 
@@ -123,10 +131,10 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapComparison)
           (fun () => keys)
-          (fun () => HashMap.empty)
+          HashMap.empty
           HashMap.put
           HashMap.remove
-          HashMap.tryGet
+          HashMap.get
           count
       ),
       describe "Equality" (
@@ -136,7 +144,7 @@ let test (n: int) (count: int): Test.t => {
           (fun () => HashMap.emptyWith HashStrategy.structuralEquality)
           HashMap.put
           HashMap.remove
-          HashMap.tryGet
+          HashMap.get
           count
       ),
     ],
@@ -149,7 +157,7 @@ let test (n: int) (count: int): Test.t => {
           TransientHashMap.empty
           TransientHashMap.put
           TransientHashMap.remove
-          TransientHashMap.tryGet
+          TransientHashMap.get
           count
       ),
 
@@ -160,7 +168,7 @@ let test (n: int) (count: int): Test.t => {
           (fun () => TransientHashMap.emptyWith HashStrategy.structuralEquality)
           TransientHashMap.put
           TransientHashMap.remove
-          TransientHashMap.tryGet
+          TransientHashMap.get
           count
       ),
     ],
@@ -172,7 +180,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => IntMap.empty)
         IntMap.put
         IntMap.remove
-        IntMap.tryGet
+        IntMap.get
         count
     ),
 
@@ -183,7 +191,7 @@ let test (n: int) (count: int): Test.t => {
         TransientIntMap.empty
         TransientIntMap.put
         TransientIntMap.remove
-        TransientIntMap.tryGet
+        TransientIntMap.get
         count
     ),
   ];
@@ -192,6 +200,6 @@ let test (n: int) (count: int): Test.t => {
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
     |> Sequence.toIterator
-    |> List.fromReversed;
+    |> List.fromReverse;
   describe (sprintf "MapPerf") tests
 };

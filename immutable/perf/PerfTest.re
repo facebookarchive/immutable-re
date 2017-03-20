@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
- 
-ReUnit.run (SetPerfTester.test 5 1000000);
+
+ReUnit.run (SetPerfTester.test 5 500000);
 print_newline ();
 
 ReUnit.run (MapPerfTester.test 5 500000);

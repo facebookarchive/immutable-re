@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
- 
+
 open Immutable;
 open Printf;
 open ReUnit;
@@ -18,14 +18,14 @@ let generateTests
     (add: int  => 'vector => 'vector)
     (update: int => int => 'vector => 'vector)
     (removeLast: 'vector => 'vector)
-    (tryGet: int => 'vector => option int)
+    (get: int => 'vector => option int)
     (n: int): list Test.t => [
   it (sprintf "add %i elements" n) (fun () => {
-    let src = IntRange.create 0 n;
+    let src = IntRange.create start::0 count::n;
     src |> IntRange.reduce (fun acc i => acc |> add i) (empty ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, removeLast %i elements" n (n / 2)) (fun () => {
-    IntRange.create 0 (n / 2)
+    IntRange.create start::0 count::(n / 2)
       |> IntRange.reduce (fun acc _ => acc |> removeLast) (getTestData ()) |> ignore;
   }),
   it (sprintf "vector with %i elements, update %i elements alternating" n (n / 2)) (fun () => {
@@ -33,29 +33,30 @@ let generateTests
       |> Sequence.take (n / 2)
       |> Sequence.reduce (fun acc i => acc |> update i (n - i)) (getTestData ()) |> ignore;
   }),
-  it (sprintf "tryGet %i values" n) (fun () => {
+  it (sprintf "get %i values" n) (fun () => {
     let vec = getTestData ();
-    IntRange.create 0 n
-      |> IntRange.forEach
-        (fun i => vec |> tryGet i |> ignore);
+    IntRange.create start::0 count::n
+      |> IntRange.toIterator
+      |> Iterator.forEach
+        (fun i => vec |> get i |> ignore);
   }),
 ];
 
 let test (n: int) (count: int): Test.t => {
-  let indexes = IntRange.create 0 count;
+  let indexes = IntRange.create start::0 count::count;
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toIterator |> List.fromReversed;
-  let stack = indexes |> IntRange.toIterator |> Stack.fromReversed;
+  let list = indexes |> IntRange.toIterator |> List.fromReverse;
+  let stack = indexes |> IntRange.toIterator |> Stack.fromReverse;
   let vector = indexes
     |> IntRange.reduce (fun acc i => acc |> TransientVector.addLast i) (TransientVector.empty ())
     |> TransientVector.persist;
 
   let mutableArray = Array.init count (fun i => i);
 
-  let list = indexes |> IntRange.toIterator |> List.fromReversed;
-  let stack = indexes |> IntRange.toIterator |> Stack.fromReversed;
+  let list = indexes |> IntRange.toIterator |> List.fromReverse;
+  let stack = indexes |> IntRange.toIterator |> Stack.fromReverse;
 
   let testGroup = [
     describe "CamlMutableArray" (
@@ -74,7 +75,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => [])
         List.addFirst
         (fun _ _ v => v)
-        List.removeFirst
+        List.removeFirstOrRaise
         (fun _ _ => None)
         count
     ),
@@ -84,7 +85,7 @@ let test (n: int) (count: int): Test.t => {
         (fun () => Stack.empty)
         Stack.addFirst
         (fun _ _ v => v)
-        Stack.removeFirst
+        Stack.removeFirstOrRaise
         (fun _ _ => None)
         count
     ),
@@ -94,8 +95,8 @@ let test (n: int) (count: int): Test.t => {
         (fun () => Vector.empty)
         Vector.addLast
         Vector.update
-        Vector.removeLast
-        Vector.tryGet
+        Vector.removeLastOrRaise
+        Vector.get
         count
     ),
     describe "TransientVector" (
@@ -104,8 +105,8 @@ let test (n: int) (count: int): Test.t => {
         (fun () => Vector.empty |> Vector.mutate)
         TransientVector.addLast
         TransientVector.update
-        TransientVector.removeLast
-        TransientVector.tryGet
+        TransientVector.removeLastOrRaise
+        TransientVector.get
         count
     ),
   ];
@@ -114,6 +115,6 @@ let test (n: int) (count: int): Test.t => {
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
     |> Sequence.toIterator
-    |> List.fromReversed;
+    |> List.fromReverse;
   describe "VectorPerf" tests;
 };

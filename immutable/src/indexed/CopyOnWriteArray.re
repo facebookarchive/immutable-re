@@ -41,155 +41,41 @@ let addLastAll (iter: Iterator.t 'a) (arr: t 'a): (t 'a) =>
    */
   iter |> Iterator.reduce (fun acc next => acc |> addLast next) arr;
 
-let compareWith
-    (valueCompare: Comparator.t 'a)
-    (this: t 'a)
-    (that: t 'a): Ordering.t => {
-  let thisCount = count this;
-  let thatCount = count that;
-
-  let loopCount = min thisCount thatCount;
-
-  let rec loop index =>
-    if (index < loopCount) {
-      let cmp = valueCompare this.(index) that.(index);
-
-      if (cmp === Ordering.equal) (loop (index + 1))
-      else cmp
-    }
-    else if (index < thisCount) Ordering.greaterThan
-    else if (index < thatCount) Ordering.lessThan
-    else Ordering.equal;
-  loop 0;
-};
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
-
 let empty: (t 'a) = [||];
-
-let equalsWith
-    (valueEquals: Equality.t 'a)
-    (this: t 'a)
-    (that: t 'a): bool => {
-  let thisCount = count this;
-  let thatCount = count that;
-
-  let loopCount = min thisCount thatCount;
-
-  let rec loop index =>
-    if (index < loopCount) (
-      if (valueEquals this.(index) that.(index)) (loop (index + 1))
-      else false
-    )
-    else  true;
-
-  if (this === that) true
-  else if (thisCount != thatCount) false
-  else loop 0;
-};
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  equalsWith Equality.structural this that;
-
-let every (f: 'a => bool) (arr: t 'a): bool => {
-  let arrCount = count arr;
-  let rec loop index =>
-    if (index >= arrCount) true
-    else if (f arr.(index)) (loop (index + 1))
-    else false;
-
-  loop 0;
-};
-
-let everyWithIndex (f: int => 'a => bool) (arr: t 'a): bool => {
-  let arrCount = count arr;
-  let rec loop index =>
-    if (index >= arrCount) true
-    else if (f index arr.(index)) (loop (index + 1))
-    else false;
-
-  loop 0;
-};
-
-let find (f: 'a => bool) (arr: t 'a): 'a => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f v) v
-      else loop (index + 1)
-    }
-    else failwith "not found";
-
-  loop 0;
-};
-
-let findWithIndex (f: int => 'a => bool) (arr: t 'a): 'a => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f index v) v
-      else loop (index + 1)
-    }
-    else failwith "not found";
-
-  loop 0;
-};
-
-let first (arr: t 'a): 'a => arr.(0);
-
-let forEach (f: 'a => unit) (arr: t 'a): 'acc =>
-  arr |> Array.iter f;
-
-let forEachWithIndex (f: int => 'a => unit) (arr: t 'a): 'acc =>
-  arr |> Array.iteri f;
 
 let from (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addLastAll iter;
 
-let fromReversed (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addFirstAll iter;
 
-let get (index: int) (arr: t 'a): 'a => arr.(index);
+let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
+  arr.(index);
 
-let lastIndex (arr: t 'a): int => count arr - 1;
+let get (index: int) (arr: t 'a): (option 'a) =>
+  Preconditions.noneIfIndexOutOfRange (count arr) index (getOrRaiseFlipped arr);
 
-let last (arr: t 'a): 'a => arr.(lastIndex arr);
+let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
 
-let indexOf (f: 'a => bool) (arr: t 'a): int => {
-  let arrCount = count arr;
+let first (arr: t 'a): (option 'a) => get 0 arr;
 
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
+let firstOrRaise (arr: t 'a): 'a => getOrRaise 0 arr;
 
-      if (f v) index
-      else loop (index + 1)
-    }
-    else failwith "not found";
-
-  loop 0;
+let lastIndexOrRaise (arr: t 'a): int => {
+  let lastIndex = count arr - 1;
+  if (lastIndex > 0) lastIndex
+  else failwith "empty";
 };
 
-let indexOfWithIndex (f: int => 'a => bool) (arr: t 'a): int => {
-  let arrCount = count arr;
+let last (arr: t 'a): (option 'a) => {
+  let lastIndex = count arr - 1;
+  if (lastIndex > 0) (get lastIndex arr)
+  else None;
+};
 
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f index v) index
-      else loop (index + 1)
-    }
-    else failwith "not found";
-
-  loop 0;
+let lastOrRaise (arr: t 'a): 'a => {
+  let lastIndex = count arr - 1;
+  arr.(lastIndex)
 };
 
 let init = Array.init;
@@ -215,7 +101,7 @@ let concat (arrays: list (array 'a)): (array 'a) => {
 
   if (newCount == 0) [||]
   else {
-    let retval = Array.make newCount (ImmList.find isNotEmpty arrays).(0);
+    let retval = Array.make newCount (ImmList.findOrRaise isNotEmpty arrays).(0);
 
     ImmList.reduce (fun index next => {
       let countNext = count next;
@@ -225,26 +111,6 @@ let concat (arrays: list (array 'a)): (array 'a) => {
 
     retval;
   };
-};
-
-let none (f: 'a => bool) (arr: t 'a): bool => {
-  let arrCount = count arr;
-  let rec loop index =>
-    if (index >= arrCount) true
-    else if (f arr.(index)) false
-    else loop (index + 1);
-
-  loop 0;
-};
-
-let noneWithIndex (f: int => 'a => bool) (arr: t 'a): bool => {
-  let arrCount = count arr;
-  let rec loop index =>
-    if (index >= arrCount) true
-    else if (f index arr.(index)) false
-    else loop (index + 1);
-
-  loop 0;
 };
 
 let ofUnsafe (arr: array 'a): (t 'a) => arr;
@@ -262,6 +128,27 @@ let range
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc =>
   Array.fold_left f acc arr;
 
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc => {
+  let arrCount = count arr;
+  let rec loop acc index =>
+    if (index < arrCount) {
+      let next = arr.(index);
+
+      if (predicate acc next) {
+        let acc = f acc arr.(index);
+        loop acc (index + 1);
+      }
+      else acc
+    }
+    else acc;
+
+  loop acc 0;
+};
+
 let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc => {
   let arrCount = count arr;
   let rec loop acc index =>
@@ -274,14 +161,53 @@ let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc
   loop acc 0;
 };
 
+let reduceWithIndexWhile
+    (predicate: 'acc => int => 'a => bool)
+    (f: 'acc => int => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc => {
+  let arrCount = count arr;
+  let rec loop acc index =>
+    if (index < arrCount) {
+      let next = arr.(index);
+
+      if (predicate acc index next) {
+        let acc = f acc index next;
+        loop acc (index + 1);
+      }
+      else acc;
+    }
+    else acc;
+
+  loop acc 0;
+};
+
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc =>
   Array.fold_right (Functions.flip f) arr acc;
 
-let forEachReverse (f: 'a => unit) (arr: t 'a): unit =>
-  arr |> reduceRight (fun _ next => f next) ();
+let reduceRightWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc => {
+  let arrCount = count arr;
+  let rec loop acc index =>
+    if (index >= 0) {
+      let next = arr.(index);
+
+      if (predicate acc next) {
+        let acc = f acc arr.(index);
+        loop acc (index - 1);
+      }
+      else acc
+    }
+    else acc;
+
+  loop acc (arrCount - 1);
+};
 
 let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc => {
-  let arrLastIndex = lastIndex arr;
+  let arrLastIndex = lastIndexOrRaise arr;
   let rec loop acc index =>
     if (index >= 0) {
       let acc = f acc index arr.(index);
@@ -292,14 +218,26 @@ let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (arr: t 'a):
   loop acc arrLastIndex;
 };
 
-let forEachReverseWithIndex (f: int => 'a => unit) (arr: t 'a): unit =>
-  arr |> reduceRightWithIndex (fun _ index next => f index next) ();
+let reduceRightWithIndexWhile
+    (predicate: 'acc => int => 'a => bool)
+    (f: 'acc => int => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc => {
+  let arrLastIndex = lastIndexOrRaise arr;
+  let rec loop acc index =>
+    if (index >= 0) {
+      let next = arr.(index);
 
-let hashWith (hash: Hash.t 'a) (arr: t 'a): int =>
-  arr |> reduce (Hash.reducer hash) Hash.initialValue;
+      if (predicate acc index next) {
+        let acc = f acc index next;
+        loop acc (index - 1);
+      }
+      else acc
+    }
+    else acc;
 
-let hash (arr: t 'a): int =>
-  hashWith Hash.structural arr;
+  loop acc arrLastIndex;
+};
 
 let map (f: 'a => 'b) (arr: t 'a): (t 'b) =>
   if (isNotEmpty arr) {
@@ -340,7 +278,7 @@ let mapReverseWithIndex (f: int => 'a => 'b) (arr: t 'a): (t 'b) =>
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
-let removeLast (arr: t 'a): (t 'a) => {
+let removeLastOrRaise (arr: t 'a): (t 'a) => {
   let count = count arr;
 
   if (count == 0) (failwith "Array is empty")
@@ -363,47 +301,14 @@ let removeAt (index: int) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let removeFirst (arr: t 'a): (t 'a) =>
+let removeFirstOrRaise (arr: t 'a): (t 'a) =>
   removeAt 0 arr;
 
 let return (value: 'a): (t 'a) => [| value |];
 
-let reverse (arr: t 'a): (t 'a) => {
-  let count = count arr;
-  Array.init count (fun i => arr.(count - i - 1))
-};
-
 let skip (startIndex: int) (arr: t 'a): (t 'a) => {
   let newCount = (count arr) - startIndex;
   Array.sub arr startIndex newCount;
-};
-
-let some (f: 'a => bool) (arr: t 'a): bool => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index >= arrCount) false
-    else if (f arr.(index)) true
-    else loop (index + 1);
-
-  loop 0;
-};
-
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) (arr: t 'a): bool =>
-  some (valueEquals value) arr;
-
-let contains (value: 'a) (list: t 'a): bool =>
-  containsWith Equality.structural value list;
-
-let someWithIndex (f: int => 'a => bool) (arr: t 'a): bool => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index >= arrCount) false
-    else if (f index arr.(index)) true
-    else loop (index + 1);
-
-  loop 0;
 };
 
 let take (newCount: int) (arr: t 'a): (t 'a) =>
@@ -411,21 +316,21 @@ let take (newCount: int) (arr: t 'a): (t 'a) =>
 
 let toIterator (arr: t 'a): (Iterator.t 'a) =>
   if (isEmpty arr) Iterator.empty
-  else { reduce: fun f acc => reduce f acc arr };
+  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc arr };
 
-let toIteratorReversed (arr: t 'a): (Iterator.t 'a) =>
+let toIteratorRight (arr: t 'a): (Iterator.t 'a) =>
   if (isEmpty arr) Iterator.empty
-  else { reduce: fun f acc => reduceRight f acc arr };
+  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc arr };
 
 let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
   if (isEmpty arr) KeyedIterator.empty
-  else { reduce: fun f acc => reduceWithIndex f acc arr };
+  else { reduceWhile: fun predicate f acc => reduceWithIndexWhile predicate f acc arr };
 
-let toKeyedIteratorReversed (arr: t 'a): (KeyedIterator.t int 'a) =>
+let toKeyedIteratorRight (arr: t 'a): (KeyedIterator.t int 'a) =>
   if (isEmpty arr) KeyedIterator.empty
-  else { reduce: fun f acc => reduceRightWithIndex f acc arr };
+  else { reduceWhile: fun predicate f acc => reduceRightWithIndexWhile predicate f acc arr };
 
-let toSequenceReversed (arr: t 'a): (Sequence.t 'a) =>
+let toSequenceRight (arr: t 'a): (Sequence.t 'a) =>
   if (isEmpty arr) Sequence.empty
   else {
     let rec loop index => fun () =>
@@ -451,73 +356,6 @@ let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
     else Sequence.Completed;
   loop 0;
 };
-
-let tryGet (index: int) (arr: t 'a): (option 'a) =>
-  Preconditions.noneIfIndexOutOfRange (count arr) index (Functions.flip get arr);
-
-let tryFind (f: 'a => bool) (arr: t 'a): (option 'a) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f v) (Some v)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryFindWithIndex (f: int => 'a => bool) (arr: t 'a): (option 'a) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f index v) (Some v)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryFirst (arr: t 'a): (option 'a) => tryGet 0 arr;
-
-let tryIndexOf (f: 'a => bool) (arr: t 'a): (option int) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f v) (Some index)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryIndexOfWithIndex (f: int => 'a => bool) (arr: t 'a): (option int) => {
-  let arrCount = count arr;
-
-  let rec loop index =>
-    if (index < arrCount) {
-      let v = arr.(index);
-
-      if (f index v) (Some index)
-      else loop (index + 1)
-    }
-    else None;
-
-  loop 0;
-};
-
-let tryLast (arr: t 'a): (option 'a) => tryGet ((count arr) - 1) arr;
 
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
@@ -553,23 +391,10 @@ let updateWith (index: int) (f: 'a => 'a) (arr: t 'a): (t 'a) => {
 };
 
 let toMap (arr: t 'a): (ImmMap.t int 'a) => {
-  containsWith: fun equals index value =>
-    if (index >= 0 && index < count arr) (equals arr.(index) value)
-    else false,
   containsKey: fun index => index >= 0 && index < count arr,
   count: count arr,
-  every: fun f => everyWithIndex f arr,
-  find: fun f => {
-    let index = indexOfWithIndex f arr;
-    (index, arr.(index))
-  },
-  forEach: fun f => forEachWithIndex f arr,
-  get: fun index => get index arr,
-  none: fun f => noneWithIndex f arr,
-  reduce: fun f acc => reduceWithIndex f acc arr,
-  some: fun f => someWithIndex f arr,
-  toSequence: toSequenceWithIndex arr,
-  tryFind: fun f => tryIndexOfWithIndex f arr >>| fun index => (index, arr.(index)),
-  tryGet: fun i => tryGet i arr,
-  values: toIterator arr,
+  get: fun i => get i arr,
+  getOrRaise: fun index => getOrRaise index arr,
+  keyedIterator: toKeyedIterator arr,
+  sequence: toSequenceWithIndex arr,
 };

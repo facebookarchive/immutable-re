@@ -34,14 +34,20 @@ let generateTests
 
   it (sprintf "set with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToRemove = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3
+      |> Sequence.map (fun [i] => i);
 
     keysToRemove |> Sequence.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "set with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToUpdate = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3
+      |> Sequence.map (fun [i] => i);
 
     keysToUpdate |> Sequence.reduce (fun acc i => acc |> add i) map |> ignore;
   }),
@@ -49,7 +55,7 @@ let generateTests
   it (sprintf "contains %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> IntRange.forEach (fun i => map |> contains i |> ignore);
+    keys () |> IntRange.toIterator |> Iterator.forEach (fun i => map |> contains i |> ignore);
   }),
 ];
 
@@ -60,7 +66,9 @@ let module CamlIntSet = CamlSet.Make {
 
 let module SortedIntSet = SortedSet.Make {
   type t = int;
+
   let compare = Comparator.structural;
+  let equals = Equality.structural;
 };
 
 
@@ -72,16 +80,24 @@ let test (n: int) (count: int): Test.t => {
       (fun acc i => acc |> CamlIntSet.add (hash i))
       CamlIntSet.empty;
 
+  let hashStrategyComparator = HashStrategy.createWithComparator
+    hash::(fun i => i)
+    comparator::Comparator.structural;
+
+  let hashStrategyEquality = HashStrategy.createWithEquality
+    hash::(fun i => i)
+    equality::Equality.structural;
+
   let hashSetComparison = keys
     |> IntRange.reduce
       (fun acc i => acc |> TransientHashSet.add i)
-      (TransientHashSet.empty ())
+      (TransientHashSet.emptyWith hashStrategyComparator)
     |> TransientHashSet.persist;
 
   let hashSetEquality = keys
     |> IntRange.reduce
       (fun acc i => acc |> TransientHashSet.add i)
-      (TransientHashSet.emptyWith HashStrategy.structuralEquality)
+      (TransientHashSet.emptyWith hashStrategyEquality)
     |> TransientHashSet.persist;
 
   let intSet = keys
@@ -125,7 +141,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetComparison)
           (fun () => keys)
-          (fun () => HashSet.empty)
+          (fun () => HashSet.emptyWith hashStrategyComparator)
           HashSet.add
           HashSet.remove
           HashSet.contains
@@ -148,7 +164,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetComparison |> HashSet.mutate)
           (fun () => keys)
-          (fun () => HashSet.empty |> HashSet.mutate)
+          (fun () => TransientHashSet.emptyWith hashStrategyComparator)
           TransientHashSet.add
           TransientHashSet.remove
           TransientHashSet.contains
@@ -159,7 +175,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashSetEquality |> HashSet.mutate)
           (fun () => keys)
-          (fun () => HashSet.emptyWith HashStrategy.structuralEquality |> HashSet.mutate)
+          (fun () => TransientHashSet.emptyWith hashStrategyEquality)
           TransientHashSet.add
           TransientHashSet.remove
           TransientHashSet.contains
@@ -194,6 +210,6 @@ let test (n: int) (count: int): Test.t => {
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
     |> Sequence.toIterator
-    |> List.fromReversed;
+    |> List.fromReverse;
   describe (sprintf "SetPerf") tests
 };
