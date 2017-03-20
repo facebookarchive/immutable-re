@@ -1426,7 +1426,6 @@ let module rec IntSet: {
   type t;
   /** The IntSet type. */
 
-  include Equatable.S with type t := t;
   include PersistentSet.S with type a := int and type t := t;
 
   let empty: t;
