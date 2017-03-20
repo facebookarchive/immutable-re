@@ -27,20 +27,6 @@ let rec ofList (list: list 'a): (t 'a) => fun () => switch list {
   | [] => Completed
 };
 
-/* FIXME: this should be removed */
-let rec compareWith (valueCompare: Comparator.t 'a) (this: t 'a) (that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-  else switch (this (), that ()) {
-    | (Next thisValue thisNext, Next thatValue thatNext) =>
-        let cmp = valueCompare thisValue thatValue;
-
-        if (cmp === Ordering.equal) (compareWith valueCompare thisNext thatNext)
-        else cmp
-    | (Completed, Completed) => Ordering.equal
-    | (Next _ _, Completed) => Ordering.greaterThan
-    | (Completed, Next _ _) => Ordering.lessThan
-  };
-
 let flatten (seq: t (t 'a)): (t 'a) => {
   let rec continuedWith (continuation: t (t 'a)) (iter: (iterator 'a)): (iterator 'a) => switch (iter) {
     | Next value next =>
@@ -60,17 +46,6 @@ let concat (seqs: list (t 'a)): (t 'a) =>
   seqs |> ofList |> flatten;
 
 let defer (f: unit => (t 'a)): (t 'a) => fun () => f () ();
-
-/* FIXME: This should be removed */
-let rec equalsWith (equality: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
-  (that === this) ||
-  switch (that (), this ()) {
-    | (Next thisValue thisNext, Next thatValue thatNext) =>
-        if (equality thisValue thatValue) (equalsWith equality thisNext thatNext)
-        else false
-    | (Completed, Completed) => true
-    | _ => false
-  };
 
 let rec filter (f: 'a => bool) (seq: t 'a): (t 'a) => {
   let rec filterIter (f: 'a => bool) (iter: iterator 'a): iterator 'b => switch iter {
