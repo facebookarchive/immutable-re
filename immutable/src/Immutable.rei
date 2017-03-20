@@ -1712,7 +1712,7 @@ let module TransientMap: {
     /** [count map] returns the number of key/value pairs in [map]. */
 
 
-    let get: 'k => (t 'v) => (option 'v);
+    let get: k => (t 'v) => (option 'v);
     /** [tryGet key transient] returns the value associated with [key] or None
      *
      *  Complexity: O(log32 N), effectively O(1)
@@ -1962,62 +1962,12 @@ and TransientIntMap: {
 
   include TransientMap.S1 with type k = int and type t 'v := t 'v;
 
-  let alter: int => ((option 'v) => (option 'v)) => (t 'v) => (t 'v);
-  /** [alter key f transient] enables efficient deep updates to an existing
-   *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
-   *  [f] will be called with Some, otherwise it will be called with None.
-   *  If [f] returns None, alter removes any mapping from [key] in [transient].
-   *  If [f] returns Some, alter returns add or updates the mapping
-   *  from [key] in [transient].
-   */
-
-  let count: (t 'v) => int;
-  /** [count map] returns the number of key/value pairs in [map]. */
-
   let empty: unit => (t 'v);
   /** [empty ()] returns a new empty TransientIntMap. */
-
-
-  let get: int => (t 'v) => (option 'v);
-  /** [tryGet key transient] returns the value associated with [key] or None
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let getOrRaise: int => (t 'v) => 'v;
-
-  let isEmpty: (t 'v) => bool;
-  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
-
-  let isNotEmpty: (t 'v) => bool;
-  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
   let persist: (t 'v) => (IntMap.t 'v);
   /** [persist transient] returns a persisted HashBiMap. Further attempts to access or mutate [transient]
    *  will throw.
-   */
-
-  let put: int => 'v => (t 'v) => (t 'v);
-  /** [put key value transient] adds the mapping of [key] to [value] to [transient].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let putAll: (KeyedIterator.t int 'v) => (t 'v) => (t 'v);
-  /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
-   *  Key value pairs in [iter] replace existing mappings in [transient].
-   */
-
-  let remove: int => (t 'v) => (t 'v);
-  /** [remove key transient] removes from [transient] any mappings from [key].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let removeAll: (t 'v) => (t 'v);
-  /** [removeAll transient] removes all mappings from [transient].
-   *
-   *  Complexity: O(1)
    */
 };
 

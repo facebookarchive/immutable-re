@@ -762,7 +762,7 @@ let module TransientMap = {
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
     let count: (t 'v) => int;
-    let get: 'k => (t 'v) => (option 'v);
+    let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let isEmpty: (t 'v) => bool;
     let isNotEmpty: (t 'v) => bool;
