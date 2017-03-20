@@ -35,7 +35,7 @@ let comparator (strategy: t 'a): (Comparator.t 'a) => switch strategy {
 };
 
 let equals (strategy: t 'a): (Equality.t 'a) => switch strategy {
-  | Comparator _ comparator => fun x y => (comparator x y) === Ordering.equal
+  | Comparator _ comparator => Comparator.toEquality comparator;
   | Equality _ equals => equals
 };
 

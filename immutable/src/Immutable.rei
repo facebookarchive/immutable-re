@@ -20,6 +20,20 @@ let module Hash: {
   /** The default ocaml hash function. */
 };
 
+let module Hashable: {
+  module type S = {
+    type t;
+
+    let hash: Hash.t t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    let hash: Hash.t (t 'a);
+  };
+};
+
 let module Equality: {
   /** Equality functions for common types. */
 
@@ -31,6 +45,20 @@ let module Equality: {
 
   let structural: (t 'a);
   /** The structural equality function, analogous to == */
+};
+
+let module Equatable: {
+  module type S = {
+    type t;
+
+    let equals: Equality.t t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    let equals: (Equality.t (t 'a));
+  };
 };
 
 let module Ordering: {
@@ -69,6 +97,8 @@ let module Comparator: {
 
   let structural: (t 'a);
   /** The structural comparison function. */
+
+  let toEquality: Comparator.t 'a => Equality.t 'a;
 };
 
 let module Comparable: {
@@ -77,6 +107,8 @@ let module Comparable: {
   module type S = {
     type t;
     /** The type that is compared by the Comparable module. */
+
+    include Equatable.S with type t := t;
 
     let compare: Comparator.t t;
   };
@@ -349,20 +381,6 @@ let module Sequence: {
    *  and elements are dropped if [seq] completes before filling the last buffer.
    */
 
-  let contains: 'a => (t 'a) => bool;
-  /** [contains value seq] returns true if any element in [seq] is equal to [value]
-   *  using structural equality, otherwise false.
-   *
-   *  Complexity: O(N)
-   */
-
-  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
-  /** [containsWith equals seq] returns true if any element in [seq] is equal to [a]
-   *  using the equality function [equals], otherwise false.
-   *
-   *  Complexity: O(N)
-   */
-
   let defer: (unit => t 'a) => (t 'a);
   /** [defer f] returns a Sequence that invokes the function [f] whenever the Sequence is iterated. */
 
@@ -443,44 +461,8 @@ let module List: {
   let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter list] returns a new List with the values in [iter] prepended. */
 
-  let compare: (Comparator.t (t 'a));
-  /** A comparator that compares two Lists
-   *  using structural comparison to compare elements.
-   */
-
-  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
-  /** [compareWith comparator] returns a Comparator that compares two Lists
-   *  using [comparator] to compare elements.
-   */
-
-  let contains: 'a => (t 'a) => bool;
-  /** [contains value list] returns true if any element in [list] is equal to [value]
-   *  using structural equality, otherwise false.
-   *
-   *  Complexity: O(N)
-   */
-
-  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
-  /** [containsWith equals list] returns true if any element in [list] is equal to [a]
-   *  using the equality function [equals], otherwise false.
-   *
-   *  Complexity: O(N)
-   */
-
   let empty: (t 'a);
   /** The empty List. */
-
-  let equals: (Equality.t (t 'a));
-  /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
-   *
-   *  Complexity: O(N)
-   */
-
-  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
-  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
-   *
-   *  Complexity: O(N)
-   */
 
   let fromReverse: (Iterator.t 'a) => (t 'a);
   /** [fromReverse iter] returns a new List containing the values in [iter]
@@ -488,12 +470,6 @@ let module List: {
    *
    * Complexity: O(N) the number of elements in [iter].
    */
-
-  let hash: (Hash.t (t 'a));
-  /** [hash list] hashes [list], hashing elements using structural hashing. */
-
-  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-  /** [hashWith hash list] hashes [list], hashing elements using [hash]. */
 
   let removeAll: (t 'a) => (t 'a);
   /** [removeAll list] returns the empty List.
@@ -536,6 +512,25 @@ let module Collection: {
     let isEmpty: (t 'a) => bool;
     let isNotEmpty: (t 'a) => bool;
     let toSequence: (t 'a) => (Sequence.t 'a);
+  };
+};
+
+let module PersistentCollection: {
+  module type S = {
+    type a;
+    type t;
+
+    include Collection.S with type a := a and type t := t;
+
+    let removeAll: t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include Collection.S1 with type t 'a := t 'a;
+
+    let removeAll: t 'a => t 'a;
   };
 };
 
@@ -632,6 +627,7 @@ let module Stack: {
 
     include ReverseMappable.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
+    include PersistentCollection.S1 with type t 'a := t 'a;
 
     let addFirst: 'a => (t 'a) => (t 'a);
     /** [addFirst value stack] returns a new Stack with [value] prepended.
@@ -642,64 +638,16 @@ let module Stack: {
     let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
     /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
 
-    let compare: (Comparator.t (t 'a));
-    /** A comparator that compares two Vectors
-     *  using structural comparison to compare elements.
-     */
-
-    let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
-    /** [compareWith comparator] returns a Comparator that compares two Vectors
-     *  using [comparator] to compare elements.
-     */
-
-    let contains: 'a => (t 'a) => bool;
-    /** [contains value vec] returns true if any element in [vec] is equal to [value]
-     *  using structural equality, otherwise false.
-     *
-     *  Complexity: O(N)
-     */
-
-    let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
-    /** [containsWith equals vec] returns true if any element in [vec] is equal to [a]
-     *  using the equality function [equals], otherwise false.
-     *
-     *  Complexity: O(N)
-     */
-
     let empty: (t 'a);
     /** The empty Vector. */
-
-    let equals: (Equality.t (t 'a));
-    /** [equals this that] compares [this] and [that] for equality using structural equality to equate elements.
-     *
-     *  Complexity: O(N)
-     */
-
-    let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
-    /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
-     *
-     *  Complexity: O(N)
-     */
 
     let fromReverse: (Iterator.t 'a) => (t 'a);
     /** [fromReverse iter] returns a new Stack containing the values in [iter]
      *  in reverse order.
      */
 
-    let hash: (Hash.t (t 'a));
-    /** [hash stack] hashes [stack], hashing elements using structural hashing. */
-
-    let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-    /** [hashWith hash stack] hashes [stack], hashing elements using [hash]. */
-
     let return: 'a => (t 'a);
     /** [return value] returns a new Stack containing a single element, [value]. */
-
-    let removeAll: (t 'a) => (t 'a);
-    /** [removeAll stack] returns the empty Stack.
-     *
-     *  Complexity: O(1)
-     */
 
     let removeFirstOrRaise: (t 'a) => (t 'a);
     /** [removeFirstOrRaise stack] returns a new Stack without the first element.
@@ -1031,9 +979,9 @@ let module rec Set: {
     type t;
 
     include Collection.S with type a := a and type t := t;
+    include Equatable.S with type t := t;
 
     let contains: a => t => bool;
-    let equals: Equality.t t;
     let toKeyedIterator: t => KeyedIterator.t a a;
     let toMap: t => (Map.t a a);
     let toSet: t => (Set.t a);
@@ -1043,9 +991,9 @@ let module rec Set: {
     type t 'a;
 
     include Collection.S1 with type t 'a := t 'a;
+    include Equatable.S1 with type t 'a := t 'a;
 
     let contains: 'a => (t 'a) => bool;
-    let equals: Equality.t (t 'a);
     let toKeyedIterator: (t 'a) => (KeyedIterator.t 'a 'a);
     let toMap: (t 'a) => (Map.t 'a 'a);
     let toSet: (t 'a) => (Set.t 'a);
@@ -1055,12 +1003,6 @@ let module rec Set: {
 
   let empty: (t 'a);
   /** The empty Set. */
-
-  let hash: (Hash.t (t 'a));
-  /** [hash set] hashes [set], hashing elements using structural hashing. */
-
-  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-  /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
 
   let intersect: (t 'a) => (t 'a) => (Iterator.t 'a);
   /** [intersect this that] returns an Iterator of unique elements
@@ -1091,6 +1033,7 @@ and Map: {
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
+    let containsKey: k => (t 'v) => bool;
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let keys: (t 'v) => (Set.t k);
@@ -1103,6 +1046,7 @@ and Map: {
 
     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
+    let containsKey: 'k => (t 'k 'v) => bool;
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let keys: (t 'k 'v) => (Set.t 'k);
@@ -1113,46 +1057,8 @@ and Map: {
   include S2 with type t 'k 'v := t 'k 'v;
   include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
-  let contains: 'k => 'v => (t 'k 'v) => bool;
-  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
-   *  using structural equality to equate [value].
-   */
-
-  let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
-  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
-   *  using [equals] to equate [value].
-   */
-
   let empty: (t 'k 'v);
   /** The empty Map. */
-
-  let equals: (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equals this that] equates [this] and [that] ensuring that the Maps have the same count
-   *  and contains the same key/value pairs. Structural equality is used to equate values.
-   */
-
-  let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equalsWith equals this that] equates [this] and [that] ensuring that the Maps
-   *  have the same count, and contains the same key/value pairs. [equals] is used to equate values.
-   */
-
-  let hash: (Hash.t (t 'k 'v));
-  /** [hash map] hashes [map], hashing keys and values using structural hashing. */
-
-  let hashWith: (Hash.t 'k) => (Hash.t 'v) => (Hash.t (t 'k 'v));
-  /** [hashWith keyHash valueHash map] hashes [map], hashing keys using [keyHash]
-   *  and values using [valueHash].
-   */
-
-  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
-   *  to equate values.
-   */
-
-  let toSetWith: (Equality.t 'v) => (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
-   *  using [equals] to equate values.
-   */
 };
 
 let module Option: {
@@ -1168,54 +1074,11 @@ let module Option: {
   include Mappable.S1 with type t 'a := t 'a;
   include SequentialCollection.S1 with type t 'a := t 'a;
 
-  let compare: (Comparator.t (t 'a));
-  /** A comparator that compares two Options using structural comparison to compare elements. */
-
-  let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
-  /** [compareWith comparator] returns a Comparator that compares two Deques
-   *  using [comparator] to compare elements.
-   */
-
-  let contains: 'a => (t 'a) => bool;
-  /** [contains value option] returns true if any element in [option] is equal to [value]
-   *  using structural equality, otherwise false.
-   */
-
-  let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
-  /** [containsWith equals option] returns true if any element in [option] is equal to [a]
-   *  using the equality function [equals], otherwise false.
-   *
-   *  Complexity: O(N)
-   */
-
   let empty: (t 'a);
   /** The empty Option, None. */
 
-  let equals: (Equality.t (t 'a));
-  /** [equals this that] compares [this] and [that] for equality using
-   *  structural equality to equate elements.
-   */
-
-  let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
-  /** [equalsWith equals this that] compares [this] and [that] for equality using [equals] to equate elements.
-   *
-   *  Complexity: O(N)
-   */
-
-  let hash: (Hash.t (t 'a));
-  /** [hash option] hashes [option], hashing elements using structural hashing. */
-
-  let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
-  /** [hashWith hash option] hashes [option], hashing elements using [hash]. */
-
   let return: 'a => (t 'a);
   /** [return value] returns [Some value]. */
-
-  let toSet: (option 'a) => (Set.t 'a);
-  /* [toSet option] returns a Set view of the option using structural equality equate values. */
-
-  let toSetWith: (Equality.t 'a) => (option 'a) => (Set.t 'a);
-  /* [toSetWith equals option] returns a Set view of the option using [equals] equate values. */
 };
 
 let module IndexedCollection: {
@@ -1292,55 +1155,61 @@ and TransientVector: {
   /** A temporarily mutable Vector. Once persisted, any further operations on a
    *  TransientVector instance will throw. Intended for implementing bulk mutation operations efficiently.
    */
+  module type S1 = {
+    type t 'a;
+    /** The TransientVector type. */
+
+    include TransientDeque.S1 with type t 'a := t 'a;
+
+    let get: int => (t 'a) => (option 'a);
+
+    let getOrRaise: int => (t 'a) => 'a;
+
+    let insertAt: int => 'a => (t 'a) => (t 'a);
+    /** [insertAt index value transient] inserts value into [transient] at [index].
+     *
+     *  WARNING: Not implemented
+     *
+     *  Complexity: O(log32 N)
+     */
+
+    let removeAt: int => (t 'a) => (t 'a);
+    /** [removeAt index transient] removes the element at [index].
+     *
+     *  WARNING: Not implemented
+     *
+     *  Complexity: O(log32 N)
+     */
+
+    let update: int => 'a => (t 'a) => (t 'a);
+    /** [update index value transient] replaces the element at [index] with [value].
+     *
+     *  Complexity: O(log32 N)
+     */
+
+    let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+    /** [updateAll f transient] updates each element in [transient] with result of applying
+     *  the function [f] to each index/element pair.
+     *
+     *  Complexity: O(N)
+     */
+
+    let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+    /** [updateWith index f transient] updates the element at [index] with the result
+     *  of applying the function [f] to the element.
+     *
+     *  Complexity: O(log32 N)
+     */
+  };
+
   type t 'a;
-  /** The TransientVector type. */
 
-  include TransientDeque.S1 with type t 'a := t 'a;
-
-  let get: int => (t 'a) => (option 'a);
-
-  let getOrRaise: int => (t 'a) => 'a;
-
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  /** [insertAt index value transient] inserts value into [transient] at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
+  include S1 with type t 'a := t 'a;
 
   let persist: (t 'a) => (Vector.t 'a);
   /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
-   *  will throw.
-   */
-
-  let removeAt: int => (t 'a) => (t 'a);
-  /** [removeAt index transient] removes the element at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let update: int => 'a => (t 'a) => (t 'a);
-  /** [update index value transient] replaces the element at [index] with [value].
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  /** [updateAll f transient] updates each element in [transient] with result of applying
-   *  the function [f] to each index/element pair.
-   *
-   *  Complexity: O(N)
-   */
-
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-  /** [updateWith index f transient] updates the element at [index] with the result
-   *  of applying the function [f] to the element.
-   *
-   *  Complexity: O(log32 N)
-   */
+  *  will throw.
+  */
 };
 
 let module CopyOnWriteArray: {
@@ -1387,12 +1256,12 @@ let module IntRange: {
   /** The IntRange type.*/
 
   include NavigableSet.S with type a := int and type t := t;
+  include Comparable.S with type t := t;
+  include Hashable.S with type t := t;
 
   let create: start::int => count::int => t;
 
   let empty: t;
-
-  let hash: t => int;
 };
 
 let module PersistentSet: {
@@ -1401,12 +1270,12 @@ let module PersistentSet: {
     type t;
 
     include Set.S with type a := a and type t := t;
+    include PersistentCollection.S with type a := a and type t := t;
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
     let intersect: t => t => t;
     let remove: a => t => t;
-    let removeAll: t => t;
     let subtract: t => t => t;
     let union: t => t => t;
   };
@@ -1415,14 +1284,39 @@ let module PersistentSet: {
     type t 'a;
 
     include Set.S1 with type t 'a := t 'a;
+    include PersistentCollection.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
     let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
     let intersect: (t 'a) => (t 'a) => (t 'a);
     let remove: 'a => (t 'a) => (t 'a);
-    let removeAll: (t 'a) => (t 'a);
     let subtract: (t 'a) => (t 'a) => (t 'a);
     let union: (t 'a) => (t 'a) => (t 'a);
+  };
+};
+
+let module TransientSet: {
+  module type S = {
+    type a;
+    type t;
+
+    include TransientCollection.S with type a := a and type t := t;
+
+    let add: a => t => t;
+    let addAll: (Iterator.t a) => t => t;
+    let contains: a => t => bool;
+    let remove: a => t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include TransientCollection.S1 with type t 'a := t 'a;
+
+    let add: 'a => (t 'a) => (t 'a);
+    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let contains: 'a => (t 'a) => bool;
+    let remove: 'a => (t 'a) => (t 'a);
   };
 };
 
@@ -1460,6 +1354,7 @@ let module rec HashSet: {
   /** The HashSet type. */
 
   include PersistentSet.S1 with type t 'a := t 'a;
+  include Hashable.S1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
   /** The empty HashSet with HashStrategy.structuralCompare hash strategy. */
@@ -1469,16 +1364,11 @@ let module rec HashSet: {
    *  for hashing and collision resolution.
    */
 
-  let equals: (t 'a) => (t 'a) => bool;
-
   let from: (Iterator.t 'a) => (t 'a);
   /** [from iter] returns an HashSet including the values in [iter]. */
 
   let fromWith: (HashStrategy.t 'a)  => (Iterator.t 'a) => (t 'a);
   /** [from iter] returns an HashSet including the values in [iter]. */
-
-  let hash: (Hash.t (t 'a));
-  /** [hash set] hashes [set]. */
 
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same elements as [set].
@@ -1496,25 +1386,7 @@ and TransientHashSet: {
   type t 'a;
   /** The TransientHashSet type. */
 
-  include TransientCollection.S1 with type t 'a := t 'a;
-
-  let add: 'a => (t 'a) => (t 'a);
-  /** [add value transient] adds [value] to [transient].
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  /** [addAll iter transient] adds all elements in [iter] to [transient].
-   *
-   *  Complexity: O(N log32 N)
-   */
-
-  let contains: 'a => (t 'a) => bool;
-  /** [contains value transient] returns true if any element in [transient] is equal to [value].
-   *
-   *  Complexity: O(log32 N)
-   */
+  include TransientSet.S1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
   /** [empty ()] return a new empty TransientHashSet with the HashStrategy.structuralCompare hash strategy. */
@@ -1525,12 +1397,6 @@ and TransientHashSet: {
   let persist: (t 'a) => (HashSet.t 'a);
   /** [persist transient] returns a persisted HashSet. Further attempts to access or mutate [transient]
    *  will throw.
-   */
-
-  let remove: 'a => (t 'a) => (t 'a);
-  /** [remove value transient] removes [value] from [transient].
-   *
-   *  Complexity: O(log32 N)
    */
 };
 
@@ -1549,12 +1415,6 @@ let module SortedSet: {
 
     let from: (Iterator.t a) => t;
     /** [from iter] returns a SortedSet including the values in [iter] using structural comparison. */
-
-    let hash: (Hash.t t);
-    /** [hash set] hashes [set], hashing elements using structural hashing. */
-
-    let hashWith: (Hash.t a) => (Hash.t t);
-    /** [hashWith hash set] hashes [set], hashing elements using [hash]. */
   };
 
   let module Make: (Comparable: Comparable.S) => S with type a = Comparable.t;
@@ -1566,6 +1426,7 @@ let module rec IntSet: {
   type t;
   /** The IntSet type. */
 
+  include Equatable.S with type t := t;
   include PersistentSet.S with type a := int and type t := t;
 
   let empty: t;
@@ -1573,9 +1434,6 @@ let module rec IntSet: {
 
   let from: (Iterator.t int) => t;
   /** [from iter] returns an IntSet including the values in [iter]. */
-
-  let hash: (Hash.t t);
-  /** [hash set] hashes [set], hashing elements using structural hashing. */
 
   let mutate: t => TransientIntSet.t;
   /** [mutate set] returns a TransientIntSet containing the same elements as [set].
@@ -1593,25 +1451,7 @@ and TransientIntSet: {
   type t;
   /** The TransientIntSet type. */
 
-  include TransientCollection.S with type a = int and type t := t;
-
-  let add: int => t => t;
-  /** [add value transient] adds [value] to [transient].
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let addAll: (Iterator.t int) => t => t;
-  /** [addAll iter transient] adds all elements in [iter] to [transient].
-   *
-   *  Complexity: O(N log32 N)
-   */
-
-  let contains: int => t => bool;
-  /** [contains value transient] returns true if any element in [transient] is equal to [value].
-   *
-   *  Complexity: O(log32 N)
-   */
+  include TransientSet.S with type a = int and type t := t;
 
   let empty: unit => t;
   /** [empty ()] return a new empty TransientIntSet. */
@@ -1619,12 +1459,6 @@ and TransientIntSet: {
   let persist: t => IntSet.t;
   /** [persist transient] returns a persisted IntSet. Further attempts to access or mutate [transient]
    *  will throw.
-   */
-
-  let remove: int => t => t;
-  /** [remove value transient] removes [value] from [transient].
-   *
-   *  Complexity: O(log32 N)
    */
 };
 
@@ -1716,9 +1550,10 @@ let module TransientMap: {
      *  from [key] in [transient].
      */
 
+    let containsKey: k => (t 'v) => bool;
+
     let count: (t 'v) => int;
     /** [count map] returns the number of key/value pairs in [map]. */
-
 
     let get: k => (t 'v) => (option 'v);
     /** [tryGet key transient] returns the value associated with [key] or None
@@ -1769,6 +1604,8 @@ let module TransientMap: {
      *  If [f] returns Some, alter returns add or updates the mapping
      *  from [key] in [transient].
      */
+
+    let containsKey: 'k => (t 'k 'v) => bool;
 
     let count: (t 'k 'v) => int;
     /** [count map] returns the number of key/value pairs in [map]. */
@@ -1821,33 +1658,11 @@ let module rec HashMap: {
 
   include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let contains: 'k => 'v => (t 'k 'v) => bool;
-  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
-   *  using structural equality to equate [value].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let containsWith: (Equality.t 'v) => 'k => 'v => (t 'k 'v) => bool;
-  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
-   *  using [equals] to equate [value].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
   let empty: unit => (t 'k 'v);
   /** The empty HashMap using the structuralCompare HashStrategy. */
 
   let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
   /** [emptyWith strategy] returns an empty HashMap using the HashStrategy [strategy]. */
-
-  let equals: (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
-
-  let equalsWith: (Equality.t 'v) => (t 'k 'v) => (t 'k 'v) => bool;
-  /** [equalsWith equals this that] equates [this] and [that].
-   *  [equals] is used to equate values.
-   */
 
   let from: (KeyedIterator.t 'k 'v) => (t 'k 'v);
   /** [from iter] returns a HashMap including the key/value pairs in [seq]
@@ -1859,26 +1674,10 @@ let module rec HashMap: {
    *  using the provided HashStrategy [strategy].
    */
 
-  let hash: (Hash.t (t 'k 'v));
-  /** [hash map] hashes [map], hashing values using structural hashing. */
-
-  let hashWith: (Hash.t 'v) => (Hash.t (t 'k 'v));
-  /** [hashWith hash map] hashes [map], hashing values using [hash]. */
-
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
   /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map].
    *
    *  Complexity: O(1)
-   */
-
-  let toSet: (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
-   *  to equate values.
-   */
-
-  let toSetWith: (Equality.t 'v) => (t 'k 'v) => (Set.t ('k, 'v));
-  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
-   *  using [equals] to equate values.
    */
 }
 
@@ -1915,53 +1714,15 @@ let module rec IntMap: {
 
   include PersistentMap.S1 with type k = int and type t 'v := t 'v;
 
-  let contains: int => 'v => (t 'v) => bool;
-  /** [contains key value map] returns true if [map] contains the [key] [value] pair,
-   *  using structural equality to equate [value].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
-  let containsWith: (Equality.t 'v) => int => 'v => (t 'v) => bool;
-  /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
-   *  using [equals] to equate [value].
-   *
-   *  Complexity: O(log32 N), effectively O(1)
-   */
-
   let empty: (t 'v);
-
-  let equals: (t 'v) => (t 'v) => bool;
-  /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
-
-  let equalsWith: (Equality.t 'v) => (t 'v) => (t 'v) => bool;
-  /** [equalsWith equals this that] equates [this] and [that].
-   *  [equals] is used to equate values.
-   */
 
   let from: (KeyedIterator.t int 'v) => (t 'v);
   /** [from iter] returns an IntMap including the key/value pairs in [iter]. */
-
-  let hash: (Hash.t (t 'v));
-  /** [hash map] hashes [map], hashing values using structural hashing. */
-
-  let hashWith: (Hash.t 'v) => (Hash.t (t 'v));
-  /** [hashWith hash map] hashes [map], hashing values using [hash]. */
 
   let mutate: (t 'v) => (TransientIntMap.t 'v);
   /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map].
    *
    *  Complexity: O(1)
-   */
-
-  let toSet: (t 'v) => (Set.t (int, 'v));
-  /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
-   *  to equate values.
-   */
-
-  let toSetWith: (Equality.t 'v) => (t 'v) => (Set.t (int, 'v));
-  /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
-   *  using [equals] to equate values.
    */
 }
 
@@ -1989,62 +1750,12 @@ let module SortedMap: {
 
     include PersistentNavigableMap.S1 with type k := k and type t 'v := t 'v;
 
-    let compare: (Comparator.t (t 'v));
-    /** A comparator that compares two SortedMap instances, comparing values using structural
-     *  comparison.
-     */
-
-    let compareWith: (Comparator.t 'v) => (Comparator.t (t 'v));
-    /** [compareWith comparator this that] returns a comparator that compares two SortedMap instances,
-     *  comparing values with [comparator].
-     */
-
-    let contains: k => 'v => (t 'v) => bool;
-    /** [contains key value map] returns true if [map] contains the [key] [value] pair,
-     *  using structural equality to equate [value].
-     *
-     *  Complexity: O(log N)
-     */
-
-    let containsWith: (Equality.t 'v) => k => 'v => (t 'v) => bool;
-    /** [containsWith equals key value map] returns true if [map] contains the [key] [value] pair,
-     *  using [equals] to equate [value].
-     *
-     *  Complexity: O(log N)
-     */
-
     let empty: (t 'v);
     /** The empty SortedMap using the structural comparator. */
-
-    let equals: (t 'v) => (t 'v) => bool;
-    /** [equals this that] equates [this] and [that]. Structural equality is used to equate values. */
-
-    let equalsWith: (Equality.t 'v) => (t 'v) => (t 'v) => bool;
-    /** [equalsWith equals this that] equates [this] and [that].
-     *  [equals] is used to equate values.
-     */
 
     let from: (KeyedIterator.t k 'v) => (t 'v);
     /** [from iter] returns a SortedMap including the key/value pairs in [iter]
      *  using the structural comparison.
-     */
-
-    let hash: (Hash.t (t 'v));
-    /** [hash map] hashes [map], hashing keys and values using structural hashing. */
-
-    let hashWith: (Hash.t k) => (Hash.t 'v) => (Hash.t (t 'v));
-    /** [hashWith keyHash valueHash map] hashes [map], hashing keys and
-     *  values using [keyHash] and [valueHash] respectively.
-     */
-
-    let toSet: (t 'v) => (Set.t (k, 'v));
-    /** [toSet map] returns a Set view of key/value pairs in [map], using structural equality
-     *  to equate values.
-     */
-
-    let toSetWith: (Equality.t 'v) => (t 'v) => (Set.t (k, 'v));
-    /** [toSetWith equals map] returns a Set view of key/value pairs in [map],
-     *  using [equals] to equate values.
      */
   };
 

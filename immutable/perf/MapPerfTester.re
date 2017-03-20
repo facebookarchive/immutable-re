@@ -65,7 +65,9 @@ let module CamlIntMap = CamlMap.Make {
 
 let module SortedIntMap = SortedMap.Make {
   type t = int;
+  
   let compare = Comparator.structural;
+  let equals = Equality.structural;
 };
 
 let test (n: int) (count: int): Test.t => {

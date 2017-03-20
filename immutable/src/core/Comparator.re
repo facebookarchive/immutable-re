@@ -24,3 +24,7 @@ let int64 = make Int64.compare;
 let nativeInt = make Nativeint.compare;
 let string = make String.compare;
 let structural (that: 'a) (this: 'a): Ordering.t => make compare that this;
+
+let toEquality (comparator: t 'a): (Equality.t 'a) => fun x y =>
+  if ((comparator x y) === Ordering.equal) true
+  else false;

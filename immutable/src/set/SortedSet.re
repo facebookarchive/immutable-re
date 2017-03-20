@@ -10,6 +10,7 @@
 module type S = {
   type a;
   type t;
+
   let compare: Comparator.t t;
   let first: t => option a;
   let firstOrRaise: t => a;
@@ -21,6 +22,11 @@ module type S = {
   let toIteratorRight: t => Iterator.t a;
   let toSequenceRight: t => Sequence.t a;
   let toKeyedIteratorRight: t => KeyedIterator.t a a;
+  let equals: Equality.t t;
+  let contains: a => t => bool;
+  let toKeyedIterator: t => KeyedIterator.t a a;
+  let toMap: t => ImmMap.t a a;
+  let toSet: t => ImmSet.t a;
   let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
   let reduceWhile:
     ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -29,24 +35,17 @@ module type S = {
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
   let toSequence: t => Sequence.t a;
-  let contains: a => t => bool;
-  let equals: Equality.t t;
-  let toKeyedIterator: t => KeyedIterator.t a a;
-  let toMap: t => ImmMap.t a a;
-  let toSet: t => ImmSet.t a;
+  let removeAll: t => t;
   let add: a => t => t;
   let addAll: Iterator.t a => t => t;
   let intersect: t => t => t;
   let remove: a => t => t;
-  let removeAll: t => t;
   let subtract: t => t => t;
   let union: t => t => t;
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
   let empty: t;
   let from: Iterator.t a => t;
-  let hash: Hash.t t;
-  let hashWith: Hash.t a => Hash.t t;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {

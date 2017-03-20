@@ -535,6 +535,9 @@ let module TransientHashMap = {
       (transient: t 'k 'v): (t 'k 'v) =>
     transient |> Transient.update2 alterImpl key f;
 
+  let containsKey (key: 'k) (transient: t 'k 'v): bool =>
+    transient |> Transient.get |> containsKey key;
+
   let count (transient: t 'k 'v): int =>
     transient |> Transient.get |> count;
 

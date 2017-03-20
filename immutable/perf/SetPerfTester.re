@@ -46,7 +46,7 @@ let generateTests
     let map = getTestData ();
     let keysToUpdate = keys ()
       |> IntRange.toSequence
-      |> Sequence.buffer count::1 skip::3 
+      |> Sequence.buffer count::1 skip::3
       |> Sequence.map (fun [i] => i);
 
     keysToUpdate |> Sequence.reduce (fun acc i => acc |> add i) map |> ignore;
@@ -66,7 +66,9 @@ let module CamlIntSet = CamlSet.Make {
 
 let module SortedIntSet = SortedSet.Make {
   type t = int;
+
   let compare = Comparator.structural;
+  let equals = Equality.structural;
 };
 
 

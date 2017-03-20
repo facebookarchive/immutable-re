@@ -11,6 +11,7 @@
 module type S = {
   type k;
   type t +'v;
+
   let reduceRight: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceRightWhile:
     ('acc => k => 'v => bool) =>
@@ -28,11 +29,11 @@ module type S = {
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterator: t 'v => Iterator.t (k, 'v);
   let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
-  let containsKey: k => t 'v => bool;
   let count: t 'v => int;
   let isEmpty: t 'v => bool;
   let isNotEmpty: t 'v => bool;
   let toSequence: t 'v => Sequence.t (k, 'v);
+  let containsKey: k => t 'v => bool;
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
   let keys: t 'v => ImmSet.t k;
@@ -49,18 +50,8 @@ module type S = {
   let removeAll: t 'v => t 'v;
   let removeFirstOrRaise: t 'v => t 'v;
   let removeLastOrRaise: t 'v => t 'v;
-  let compare: Comparator.t (t 'v);
-  let compareWith: Comparator.t 'v => Comparator.t (t 'v);
-  let contains: k => 'v => t 'v => bool;
-  let containsWith: Equality.t 'v => k => 'v => t 'v => bool;
   let empty: t 'v;
-  let equals: t 'v => t 'v => bool;
-  let equalsWith: Equality.t 'v => t 'v => t 'v => bool;
   let from: KeyedIterator.t k 'v => t 'v;
-  let hash: Hash.t (t 'v);
-  let hashWith: Hash.t k => Hash.t 'v => Hash.t (t 'v);
-  let toSet: t 'v => ImmSet.t (k, 'v);
-  let toSetWith: Equality.t 'v => t 'v => ImmSet.t (k, 'v);
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -106,7 +97,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     tree |> AVLTreeMap.containsKey comparator key;
 
   let count ({ count }: t 'v): int => count;
-  
+
   let first ({ tree }: t 'v): (option (k, 'v)) =>
     tree |> AVLTreeMap.first;
 

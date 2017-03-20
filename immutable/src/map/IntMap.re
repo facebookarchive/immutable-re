@@ -356,6 +356,9 @@ let module TransientIntMap = {
       (transient: t 'v): (t 'v) =>
     transient |> Transient.update2 alterImpl key f;
 
+  let containsKey (key: int) (transient: t 'v): bool =>
+    transient |> Transient.get |> containsKey key;
+
   let count (transient: t 'v): int =>
     transient |> Transient.get |> count;
 

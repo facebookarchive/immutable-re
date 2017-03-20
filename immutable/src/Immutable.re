@@ -11,7 +11,23 @@ let module IteratorInternal = Iterator;
 let module SequenceInternal = Sequence;
 
 let module Hash = Hash;
+
+let module Hashable = {
+  module type S = {
+    type t;
+
+    let hash: Hash.t t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    let hash: Hash.t (t 'a);
+  };
+};
+
 let module Equality = Equality;
+let module Equatable = Equatable;
 let module Ordering = Ordering;
 let module Comparator = Comparator;
 let module Comparable = Comparable;
@@ -65,7 +81,6 @@ let module Flattenable = {
   };
 };
 
-
 let module Reduceable = {
   module type S = {
     type a;
@@ -99,7 +114,6 @@ let module ReduceableRight = {
     let reduceRightWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   };
 };
-
 
 let module Filterable = {
   module type S1 = {
@@ -140,7 +154,6 @@ let module TakeWhileable = {
     let takeWhile: ('a => bool) => (t 'a) => (t 'a);
   };
 };
-
 
 let module Iterator = Iterator;
 
@@ -220,6 +233,25 @@ let module Collection = {
   };
 };
 
+let module PersistentCollection = {
+  module type S = {
+    type a;
+    type t;
+
+    include Collection.S with type a := a and type t := t;
+
+    let removeAll: t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include Collection.S1 with type t 'a := t 'a;
+
+    let removeAll: t 'a => t 'a;
+  };
+};
+
 let module TransientCollection = {
   module type S = {
     type a;
@@ -290,21 +322,13 @@ let module Stack = {
 
     include ReverseMappable.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
+    include PersistentCollection.S1 with type t 'a := t 'a;
 
     let addFirst: 'a => (t 'a) => (t 'a);
     let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-    let compare: (Comparator.t (t 'a));
-    let compareWith: (Comparator.t 'a) => (Comparator.t (t 'a));
-    let contains: 'a => (t 'a) => bool;
-    let containsWith: (Equality.t 'a) => 'a => (t 'a) => bool;
     let empty: (t 'a);
-    let equals: (Equality.t (t 'a));
-    let equalsWith: (Equality.t 'a) => (Equality.t (t 'a));
     let fromReverse: (Iterator.t 'a) => (t 'a);
-    let hash: (Hash.t (t 'a));
-    let hashWith: (Hash.t 'a) => (Hash.t (t 'a));
     let return: 'a => (t 'a);
-    let removeAll: (t 'a) => (t 'a);
     let removeFirstOrRaise: (t 'a) => (t 'a);
   };
 
@@ -325,20 +349,6 @@ let module TransientStack = {
   };
 };
 
-let module TransientDeque = {
-  module type S1 = {
-    type t 'a;
-
-    include TransientStack.S1 with type t 'a := t 'a;
-
-    let addLast: 'a => (t 'a) => (t 'a);
-    let last: (t 'a) => option 'a;
-    let lastOrRaise: (t 'a) => 'a;
-    let removeLastOrRaise: (t 'a) => (t 'a);
-  };
-
-  include Deque.TransientDeque;
-};
 let module Deque = {
   module type S1 = {
     type t 'a;
@@ -354,6 +364,21 @@ let module Deque = {
   };
 
   include Deque;
+};
+
+let module TransientDeque = {
+  module type S1 = {
+    type t 'a;
+
+    include TransientStack.S1 with type t 'a := t 'a;
+
+    let addLast: 'a => (t 'a) => (t 'a);
+    let last: (t 'a) => option 'a;
+    let lastOrRaise: (t 'a) => 'a;
+    let removeLastOrRaise: (t 'a) => (t 'a);
+  };
+
+  include Deque.TransientDeque;
 };
 
 let module KeyedMappable = {
@@ -404,7 +429,6 @@ let module KeyedReduceableRight = {
     let reduceRightWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   };
 };
-
 
 let module KeyedIterator = KeyedIterator;
 
@@ -495,9 +519,9 @@ let module Set = {
     type t;
 
     include Collection.S with type a := a and type t := t;
+    include Equatable.S with type t := t;
 
     let contains: a => t => bool;
-    let equals: Equality.t t;
     let toKeyedIterator: t => KeyedIterator.t a a;
     let toMap: t => (ImmMap.t a a);
     let toSet: t => (ImmSet.t a);
@@ -507,9 +531,9 @@ let module Set = {
     type t 'a;
 
     include Collection.S1 with type t 'a := t 'a;
+    include Equatable.S1 with type t 'a := t 'a;
 
     let contains: 'a => (t 'a) => bool;
-    let equals: Equality.t (t 'a);
     let toKeyedIterator: (t 'a) => (KeyedIterator.t 'a 'a);
     let toMap: (t 'a) => (ImmMap.t 'a 'a);
     let toSet: (t 'a) => (ImmSet.t 'a);
@@ -527,6 +551,7 @@ let module Map = {
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
+    let containsKey: k => (t 'v) => bool;
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let keys: (t 'v) => (ImmSet.t k);
@@ -539,6 +564,7 @@ let module Map = {
 
     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
+    let containsKey: 'k => (t 'k 'v) => bool;
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let keys: (t 'k 'v) => (ImmSet.t 'k);
@@ -553,8 +579,6 @@ let module Option = {
   include Option;
 
   let toIterator = Iterator.ofOption;
-  let toSet = ImmSet.ofOption;
-  let toSetWith = ImmSet.ofOptionWith;
   let toSequence = SequenceInternal.ofOption;
 };
 
@@ -589,7 +613,6 @@ let module IndexedMappable = {
   };
 };
 
-let module TransientVector = Vector.TransientVector;
 let module Vector = {
   module type S1 = {
     type t 'a;
@@ -611,6 +634,25 @@ let module Vector = {
   };
 
   include Vector;
+};
+
+let module TransientVector = {
+  module type S1 = {
+    type t 'a;
+    /** The TransientVector type. */
+
+    include TransientDeque.S1 with type t 'a := t 'a;
+
+    let get: int => (t 'a) => (option 'a);
+    let getOrRaise: int => (t 'a) => 'a;
+    let insertAt: int => 'a => (t 'a) => (t 'a);
+    let removeAt: int => (t 'a) => (t 'a);
+    let update: int => 'a => (t 'a) => (t 'a);
+    let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+    let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+  };
+
+  include Vector.TransientVector;
 };
 
 let module CopyOnWriteArray = CopyOnWriteArray;
@@ -644,12 +686,12 @@ let module PersistentSet = {
     type t;
 
     include Set.S with type a := a and type t := t;
+    include PersistentCollection.S with type a := a and type t := t;
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
     let intersect: t => t => t;
     let remove: a => t => t;
-    let removeAll: t => t;
     let subtract: t => t => t;
     let union: t => t => t;
   };
@@ -658,14 +700,39 @@ let module PersistentSet = {
     type t 'a;
 
     include Set.S1 with type t 'a := t 'a;
+    include PersistentCollection.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
     let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
     let intersect: (t 'a) => (t 'a) => (t 'a);
     let remove: 'a => (t 'a) => (t 'a);
-    let removeAll: (t 'a) => (t 'a);
     let subtract: (t 'a) => (t 'a) => (t 'a);
     let union: (t 'a) => (t 'a) => (t 'a);
+  };
+};
+
+let module TransientSet = {
+  module type S = {
+    type a;
+    type t;
+
+    include TransientCollection.S with type a := a and type t := t;
+
+    let add: a => t => t;
+    let addAll: (Iterator.t a) => t => t;
+    let contains: a => t => bool;
+    let remove: a => t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include TransientCollection.S1 with type t 'a := t 'a;
+
+    let add: 'a => (t 'a) => (t 'a);
+    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let contains: 'a => (t 'a) => bool;
+    let remove: 'a => (t 'a) => (t 'a);
   };
 };
 
@@ -761,6 +828,7 @@ let module TransientMap = {
     type t 'v;
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+    let containsKey: k => (t 'v) => bool;
     let count: (t 'v) => int;
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
@@ -776,6 +844,7 @@ let module TransientMap = {
     type t 'k 'v;
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+    let containsKey: 'k => (t 'k 'v) => bool;
     let count: (t 'k 'v) => int;
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;

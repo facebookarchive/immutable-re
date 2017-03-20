@@ -23,6 +23,12 @@ let create start::(start: int) count::(count: int): t => {
   else { start, count };
 };
 
+
+let compare
+    (this: t)
+    (that: t): Ordering.t =>
+  failwith "unimplemented";
+
 let contains (value: int) ({ count, start }: t): bool =>
   value >= start && value < (start + count);
 
