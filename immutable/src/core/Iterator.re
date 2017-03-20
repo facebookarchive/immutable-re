@@ -167,9 +167,81 @@ let return (value: 'a): (t 'a) => {
     else acc
 };
 
+let skip (count: int) (iter: t 'a): (t 'a) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let count = ref count;
+
+      let predicate acc next => {
+        if (!count > 0) true
+        else (predicate acc next);
+      };
+
+      let f acc next => {
+        count := !count - 1;
+
+        if (!count >= 0) acc
+        else f acc next;
+      };
+
+      iter |> reduceWhile predicate f acc;
+    }
+  };
+
+let skipWhile (keepSkipping: 'a => bool) (iter: t 'a): (t 'a) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let doneSkipping = ref false;
+
+      let f acc next =>
+        if (!doneSkipping) (f acc next)
+        else if (keepSkipping next) acc
+        else {
+          doneSkipping := true;
+          f acc next;
+        };
+
+      iter |> reduceWhile predicate f acc
+    }
+  };
+
 let some (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) false
   else iter |> reduceWhile
     (fun acc _ => not acc)
     (fun _ => f)
     false;
+
+let take (count: int) (iter: t 'a): (t 'a) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let count = ref count;
+
+      let predicate acc next => {
+        if (!count > 0) (predicate acc next)
+        else false;
+      };
+
+      let f acc next => {
+        count := !count - 1;
+        f acc next;
+      };
+
+      iter |> reduceWhile predicate f acc;
+    }
+  };
+
+let takeWhile (keepTaking: 'a => bool) (iter: t 'a): (t 'a) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let predicate acc next =>
+        if (keepTaking next) (predicate acc next)
+        else false;
+
+      iter |> reduceWhile predicate f acc
+    }
+  };

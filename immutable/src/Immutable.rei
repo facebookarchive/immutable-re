@@ -250,6 +250,10 @@ let module Iterator: {
   include FlatMappable.S1 with type t 'a := t 'a;
   include Flattenable.S1 with type t 'a := t 'a;
   include Reduceable.S1 with type t 'a := t 'a;
+  include Skippable.S1 with type t 'a := t 'a;
+  include SkipWhileable.S1 with type t 'a := t 'a;
+  include Takeable.S1 with type t 'a := t 'a;
+  include TakeWhileable.S1 with type t 'a := t 'a;
 
   let every: ('a => bool) => (t 'a) => bool;
   let empty: (t 'a);
@@ -921,7 +925,11 @@ let module KeyedIterator: {
   let forEachWhile: ('k => 'v => bool) => ('k => 'v => unit) => (t 'k 'v) => unit;
   let keys: (t 'k 'v) => (Iterator.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+  let skip: int => (t 'k 'v) => (t 'k 'v);
+  let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+  let take: int => (t 'k 'v) => (t 'k 'v);
+  let takeWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
   let values: (t 'k 'v) => Iterator.t 'v;
 };

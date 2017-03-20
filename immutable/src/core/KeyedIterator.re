@@ -153,6 +153,78 @@ let none (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
     (fun _ => f)
     true;
 
+let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let count = ref count;
+
+      let predicate acc key value => {
+        if (!count > 0) true
+        else (predicate acc key value);
+      };
+
+      let f acc key value => {
+        count := !count - 1;
+
+        if (!count >= 0) acc
+        else f acc key value;
+      };
+
+      iter |> reduceWhile predicate f acc;
+    }
+  };
+
+let skipWhile (keepSkipping: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let doneSkipping = ref false;
+
+      let f acc key value =>
+        if (!doneSkipping) (f acc key value)
+        else if (keepSkipping key value) acc
+        else {
+          doneSkipping := true;
+          f acc key value;
+        };
+
+      iter |> reduceWhile predicate f acc
+    }
+  };
+
+let take (count: int) (iter: t 'k 'v): (t 'k 'v) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let count = ref count;
+
+      let predicate acc key value => {
+        if (!count > 0) (predicate acc key value)
+        else false;
+      };
+
+      let f acc key value => {
+        count := !count - 1;
+        f acc key value;
+      };
+
+      iter |> reduceWhile predicate f acc;
+    }
+  };
+
+let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
+  if (iter === empty) empty
+  else {
+    reduceWhile: fun predicate f acc => {
+      let predicate acc key value =>
+        if (keepTaking key value) (predicate acc key value)
+        else false;
+
+      iter |> reduceWhile predicate f acc
+    }
+  };
+
 let some (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
   if (iter === empty) false
   else iter |> reduceWhile
