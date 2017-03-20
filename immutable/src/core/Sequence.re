@@ -169,8 +169,8 @@ let toIterator (seq: t 'a): (Iterator.t 'a) =>
   };
 
 let buffer
-    (count: int)
-    (skip: int)
+    count::(count: int)
+    skip::(skip: int)
     (seq: t 'a): (t (list 'a)) => {
   if (count <= 0 || skip <= 0) (failwith "out of range");
 

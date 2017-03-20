@@ -11,10 +11,10 @@ type t 'a =
   | Comparator (Hash.t 'a) (Comparator.t 'a)
   | Equality (Hash.t 'a) (Equality.t 'a);
 
-let createWithComparator (hash: Hash.t 'a) (comparator: Comparator.t 'a): (t 'a) =>
+let createWithComparator hash::(hash: Hash.t 'a) comparator::(comparator: Comparator.t 'a): (t 'a) =>
   Comparator hash comparator;
 
-let createWithEquality (hash: Hash.t 'a) (equality: Equality.t 'a): (t 'a) =>
+let createWithEquality hash::(hash: Hash.t 'a) equality::(equality: Equality.t 'a): (t 'a) =>
   Equality hash equality;
 
 let identity: (t 'a) =

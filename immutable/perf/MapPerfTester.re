@@ -32,14 +32,20 @@ let generateTests
 
   it (sprintf "map with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToRemove = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3
+      |> Sequence.map (fun [i] => i);
 
     keysToRemove |> Sequence.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "map with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToUpdate = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3
+      |> Sequence.map (fun [i] => i);
 
     /* Multiply the updated value to avoid optimizations */
     keysToUpdate |> Sequence.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;

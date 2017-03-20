@@ -34,14 +34,20 @@ let generateTests
 
   it (sprintf "set with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToRemove = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3
+      |> Sequence.map (fun [i] => i);
 
     keysToRemove |> Sequence.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "set with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys () |> IntRange.toSequence |> Sequence.buffer 1 3 |> Sequence.map (fun [i] => i);
+    let keysToUpdate = keys ()
+      |> IntRange.toSequence
+      |> Sequence.buffer count::1 skip::3 
+      |> Sequence.map (fun [i] => i);
 
     keysToUpdate |> Sequence.reduce (fun acc i => acc |> add i) map |> ignore;
   }),
@@ -73,12 +79,12 @@ let test (n: int) (count: int): Test.t => {
       CamlIntSet.empty;
 
   let hashStrategyComparator = HashStrategy.createWithComparator
-    (fun i => i)
-    Comparator.structural;
+    hash::(fun i => i)
+    comparator::Comparator.structural;
 
   let hashStrategyEquality = HashStrategy.createWithEquality
-    (fun i => i)
-    Equality.structural;
+    hash::(fun i => i)
+    equality::Equality.structural;
 
   let hashSetComparison = keys
     |> IntRange.reduce

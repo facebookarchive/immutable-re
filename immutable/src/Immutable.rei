@@ -88,12 +88,12 @@ let module HashStrategy: {
   type t 'a;
   /** The HashStrategy type. */
 
-  let createWithComparator: (Hash.t 'a) => (Comparator.t 'a) => (t 'a);
+  let createWithComparator: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (t 'a);
   /** [createWithComparator hash comparator] returns a HashStrategy using the
    *  provided hash and comparator functions.
    */
 
-  let createWithEquality: (Hash.t 'a) => (Equality.t 'a) => (t 'a);
+  let createWithEquality: hash::(Hash.t 'a) => equality::(Equality.t 'a) => (t 'a);
   /** [createWithEquality hash equality] returns a HashStrategy using the
    *  provided hash and equality functions.
    */
@@ -338,7 +338,7 @@ let module Sequence: {
   include Takeable.S1 with type t 'a := t 'a;
   include TakeWhileable.S1 with type t 'a := t 'a;
 
-  let buffer: int => int => (t 'a) => (t (list 'a));
+  let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
   /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
    *  into buffer lists of size [count], skipping [skip] number of elements in between
    *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
@@ -1380,7 +1380,7 @@ let module IntRange: {
 
   include NavigableSet.S with type a := int and type t := t;
 
-  let create: int => int => t;
+  let create: start::int => count::int => t;
 
   let empty: t;
 

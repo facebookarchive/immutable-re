@@ -15,7 +15,6 @@ let module Equality = Equality;
 let module Ordering = Ordering;
 let module Comparator = Comparator;
 let module Comparable = Comparable;
-
 let module HashStrategy = HashStrategy;
 
 let module Concatable = {
