@@ -187,6 +187,21 @@ let findWithIndex (f: int => 'a => bool) (arr: t 'a): (option 'a) => {
   loop 0;
 };
 
+let findRightWithIndex (f: int => 'a => bool) (arr: t 'a): (option 'a) => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index >= 0) {
+      let v = arr.(index);
+
+      if (f index v) (Some v)
+      else loop (index - 1)
+    }
+    else None;
+
+  loop (arrCount - 1);
+};
+
 let findWithIndexOrRaise (f: int => 'a => bool) (arr: t 'a): 'a => {
   let arrCount = count arr;
 
@@ -200,6 +215,21 @@ let findWithIndexOrRaise (f: int => 'a => bool) (arr: t 'a): 'a => {
     else failwith "not found";
 
   loop 0;
+};
+
+let findRightWithIndexOrRaise (f: int => 'a => bool) (arr: t 'a): 'a => {
+  let arrCount = count arr;
+
+  let rec loop index =>
+    if (index >= 0) {
+      let v = arr.(index);
+
+      if (f index v) v
+      else loop (index - 1)
+    }
+    else failwith "not found";
+
+  loop (arrCount - 1);
 };
 
 let forEach (f: 'a => unit) (arr: t 'a): 'acc =>
@@ -433,6 +463,12 @@ let reduceWithIndexWhile
   loop acc 0;
 };
 
+let forEachWithIndexWhile
+    (predicate: int => 'a => bool)
+    (f: int => 'a => unit)
+    (arr: t 'a): unit => arr
+  |> reduceWithIndexWhile (fun _ => predicate) (fun _ => f) ();
+
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (arr: t 'a): 'acc =>
   Array.fold_right (Functions.flip f) arr acc;
 
@@ -498,6 +534,12 @@ let reduceRightWithIndexWhile
 
 let forEachRightWithIndex (f: int => 'a => unit) (arr: t 'a): unit =>
   arr |> reduceRightWithIndex (fun _ index next => f index next) ();
+
+let forEachRightWithIndexWhile
+    (predicate: int => 'a => bool)
+    (f: int => 'a => unit)
+    (arr: t 'a): unit => arr
+  |> reduceRightWithIndexWhile (fun _ => predicate) (fun _ => f) ();
 
 let hashWith (hash: Hash.t 'a) (arr: t 'a): int =>
   arr |> reduce (Hash.reducer hash) Hash.initialValue;

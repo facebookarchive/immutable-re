@@ -878,6 +878,30 @@ let findWithIndexOrRaise (f: int => 'a => bool) (vec: t 'a): 'a => {
   findOrRaise f vec;
 };
 
+let findRightWithIndex (f: int => 'a => bool) (vec: t 'a): (option 'a) => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref (count vec - 1);
+  let f next => {
+    let result = f !index next;
+    index := !index - 1;
+    result
+  };
+
+  findRight f vec;
+};
+
+let findRightWithIndexOrRaise (f: int => 'a => bool) (vec: t 'a): 'a => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref (count vec - 1);
+  let f next => {
+    let result = f !index next;
+    index := !index - 1;
+    result
+  };
+
+  findRightOrRaise f vec;
+};
+
 let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addLastAll iter;
 
@@ -1043,6 +1067,12 @@ let reduceWithIndexWhile
 let forEachWithIndex (f: int => 'a => unit) (vec: t 'a): unit =>
   vec |> reduceWithIndex (fun _ index next => f index next) ();
 
+let forEachWithIndexWhile
+    (predicate: int => 'a => bool)
+    (f: int => 'a => unit)
+    (vec: t 'a): unit =>
+  vec |> reduceWithIndexWhile (fun _ => predicate) (fun _ => f) ();
+
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
   let acc = middle |> IndexedTrie.reduceRight f acc;
@@ -1114,6 +1144,12 @@ let reduceRightWithIndexWhile
 
 let forEachRightWithIndex (f: int => 'a => unit) (vec: t 'a): unit =>
   vec |> reduceRightWithIndex (fun _ index next => f index next) ();
+
+let forEachRightWithIndexWhile
+    (predicate: int => 'a => bool)
+    (f: int => 'a => unit)
+    (vec: t 'a): unit =>
+  vec |> reduceRightWithIndexWhile (fun _ => predicate) (fun _ => f) ();
 
 let hashWith (hash: Hash.t 'a) (vec: t 'a): int =>
   vec |> reduce (Hash.reducer hash) Hash.initialValue;

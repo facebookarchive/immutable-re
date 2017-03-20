@@ -1002,6 +1002,10 @@ let module KeyedReduceableRight: {
     type k;
     type t 'v;
 
+    let findRight: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+
+    let findRightOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+
     let forEachRight: (k => 'v => unit) => (t 'v) => unit;
 
     let forEachRightWhile: (k => 'v => bool) => (k => 'v => unit) => (t 'v) => unit;
@@ -1013,6 +1017,10 @@ let module KeyedReduceableRight: {
 
   module type S2 = {
     type t 'k 'v;
+
+    let findRight: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+
+    let findRightOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
 
     let forEachRight: ('k => 'v => unit) => (t 'k 'v) => unit;
 
@@ -1336,11 +1344,20 @@ let module IndexedCollection: {
     let findWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
     /** [tryFindWithIndex f vec] returns the first value for which the predicate [f] returns true or None. */
 
+    let findRightWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
+    /** [tryFindWithIndex f vec] returns the first value for which the predicate [f] returns true or None. */
+
     let findWithIndexOrRaise: (int => 'a => bool) => (t 'a) => 'a;
+
+    let findRightWithIndexOrRaise: (int => 'a => bool) => (t 'a) => 'a;
 
     let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
 
+    let forEachWithIndexWhile: (int => 'a => bool) => (int => 'a => unit) => (t 'a) => unit;
+
     let forEachRightWithIndex: (int => 'a => unit) => (t 'a) => unit;
+
+    let forEachRightWithIndexWhile: (int => 'a => bool) => (int => 'a => unit) => (t 'a) => unit;
 
     let get: int => (t 'a) => (option 'a);
     /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
@@ -1365,7 +1382,11 @@ let module IndexedCollection: {
 
     let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
 
+    let reduceWithIndexWhile: ('acc => int => 'a => bool) => ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+
     let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+
+    let reduceRightWithIndexWhile: ('acc => int => 'a => bool) => ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
 
     let someWithIndex: (int => 'a => bool) => (t 'a) => bool;
 

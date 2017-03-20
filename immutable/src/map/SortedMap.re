@@ -12,6 +12,8 @@ module type S = {
   type k;
   type t +'v;
 
+  let findRight: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+  let findRightOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
   let forEachRight: (k => 'v => unit) => t 'v => unit;
   let forEachRightWhile:
     (k => 'v => bool) => (k => 'v => unit) => t 'v => unit;
@@ -124,8 +126,14 @@ let module Make = fun (Comparable: Comparable.S) => {
   let find (f: k => 'v => bool) ({ tree }: t 'v): (option (k, 'v)) =>
     tree |> AVLTreeMap.find f;
 
+  let findRight (f: k => 'v => bool) ({ tree }: t 'v): (option (k, 'v)) =>
+    tree |> AVLTreeMap.findRight f;
+
   let findOrRaise (f: k => 'v => bool) ({ tree }: t 'v): (k, 'v) =>
     tree |> AVLTreeMap.find f |> Option.firstOrRaise;
+
+  let findRightOrRaise (f: k => 'v => bool) ({ tree }: t 'v): (k, 'v) =>
+    tree |> AVLTreeMap.findRight f |> Option.firstOrRaise;
 
   let first ({ tree }: t 'v): (option (k, 'v)) =>
     tree |> AVLTreeMap.first;

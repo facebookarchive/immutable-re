@@ -96,6 +96,15 @@ let rec find (f: 'k => 'v => bool) (tree: t 'k 'v): (option ('k, 'v)) =>  switch
     }
 };
 
+let rec findRight (f: 'k => 'v => bool) (tree: t 'k 'v): (option ('k, 'v)) =>  switch tree {
+  | Empty => None
+  | Leaf k v => if (f k v) (Some (k, v)) else None;
+  | Node _ left k v right => switch (findRight f right) {
+      | Some _ as result => result
+      | None => if (f k v) (Some (k, v)) else findRight f left
+    }
+};
+
 let rec first (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
   | Empty => None
   | Leaf k v => Some (k, v)
