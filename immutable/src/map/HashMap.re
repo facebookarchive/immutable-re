@@ -300,7 +300,7 @@ let module BitmapTrieMap = {
         let reducer acc node => node
           |> reduceWhileWithResult shouldContinue predicate f acc;
 
-        let predicate acc node => !shouldContinue;
+        let predicate _ _ => !shouldContinue;
 
         nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
     | ComparatorCollision _ entryMap =>
@@ -461,7 +461,7 @@ let equalsWith
     (valueEquals: Equality.t 'v)
     (this: t 'k 'v)
     (that: t 'k 'v): bool =>
-  this |> toKeyedIterator |> KeyedIterator.every (fun k v => that |> contains k v);
+  this |> toKeyedIterator |> KeyedIterator.every (fun k v => that |> containsWith valueEquals k v);
 
 let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
   equalsWith Equality.structural this that;

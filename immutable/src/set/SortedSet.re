@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Option.Operators;
-
 module type S = {
   type a;
   type t;

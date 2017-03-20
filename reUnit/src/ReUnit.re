@@ -66,13 +66,6 @@ let module Expect = {
 
   let return = expect;
 
-  /* FIXME: this is so broken */
-  let stringOfSequence (toString: 'a => string) (seq: Sequence.t 'a): string =>
-    "["  ^ (seq |> Sequence.reduce
-      (fun acc next => acc ^ ", " ^ (toString next))
-      ""
-    ) ^ "]";
-
   let stringOfOption (toString: 'a => string) (opt: option 'a): string =>
     opt |> Option.reduce (fun _ => toString) "";
 

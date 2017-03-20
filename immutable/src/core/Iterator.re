@@ -112,7 +112,7 @@ let flatten (iters: t (t 'a)): (t 'a) =>
       };
 
       iters |> reduceWhile
-        (fun acc next => !shouldContinue)
+        (fun _ _ => !shouldContinue)
         (fun acc next => next |> reduceWhile predicate f acc)
         acc
     }
@@ -145,8 +145,8 @@ let map (mapper: 'a => 'b) (iter: t 'a): (t 'b) =>
 let none (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) true
   else iter |> reduceWhile
-    (fun acc a => acc)
-    (fun acc => f)
+    (fun acc _ => acc)
+    (fun _ => f)
     true;
 
 let ofList (list: list 'a): (t 'a) =>
@@ -171,5 +171,5 @@ let some (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) false
   else iter |> reduceWhile
     (fun acc _ => not acc)
-    (fun acc => f)
+    (fun _ => f)
     false;

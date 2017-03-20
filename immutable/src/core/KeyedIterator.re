@@ -129,8 +129,8 @@ let keys (iter: t 'k 'v): (Iterator.t 'k) =>
   if (iter === empty) Iterator.empty
   else {
     reduceWhile: fun predicate f acc => iter |> reduceWhile
-      (fun acc k v => predicate acc k)
-      (fun acc k v => f acc k)
+      (fun acc k _ => predicate acc k)
+      (fun acc k _ => f acc k)
       acc
   };
 
@@ -150,22 +150,22 @@ let none (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
   if (iter === empty) true
   else iter |> reduceWhile
     (fun acc _ _ => acc)
-    (fun acc => f)
+    (fun _ => f)
     true;
 
 let some (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
   if (iter === empty) false
   else iter |> reduceWhile
     (fun acc _ _ => not acc)
-    (fun acc => f)
+    (fun _ => f)
     false;
 
 let values (iter: t 'k 'v): (Iterator.t 'v) =>
   if (iter === empty ) Iterator.empty
   else {
     reduceWhile: fun predicate f acc => iter |> reduceWhile
-      (fun acc k v => predicate acc v)
-      (fun acc k v => f acc v)
+      (fun acc _ v => predicate acc v)
+      (fun acc _ v => f acc v)
       acc
   };
 

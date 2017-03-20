@@ -491,10 +491,8 @@ let module TransientVectorImpl = VectorImpl.Make {
   let removeLastOrRaise
       (owner: Transient.Owner.t)
       ({
-        left,
         leftCount,
         middle,
-        right,
         rightCount,
       } as transientVec: t 'a): (t 'a) => {
     if (rightCount > 1) {
@@ -553,7 +551,6 @@ let module TransientVectorImpl = VectorImpl.Make {
         leftCount,
         middle,
         right,
-        rightCount,
       } as transientVec: t 'a): (t 'a) => {
     let middleCount = IndexedTrie.count middle;
     let rightIndex = index - middleCount - leftCount;
@@ -588,7 +585,6 @@ let module TransientVectorImpl = VectorImpl.Make {
         leftCount,
         middle,
         right,
-        rightCount,
       } as transientVec: t 'a): (t 'a) => {
     let middleCount = IndexedTrie.count middle;
     let rightIndex = index - middleCount - leftCount;

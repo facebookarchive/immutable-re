@@ -144,7 +144,7 @@ let rec reduceWhile
   | _ => acc
 };
 
-let rec repeat (value: 'a): (t 'a) => {
+let repeat (value: 'a): (t 'a) => {
   let rec repeatForever value () =>
     Next value (repeatForever value);
   repeatForever value;

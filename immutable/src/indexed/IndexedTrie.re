@@ -42,7 +42,7 @@ let rec reduceWhileWithResult
       let reducer acc node =>
         node |> reduceWhileWithResult shouldContinue predicate f acc;
 
-      let predicate acc node => !shouldContinue;
+      let predicate _ _ => !shouldContinue;
 
       nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
 };
@@ -83,7 +83,7 @@ let rec reduceRightWhileWithResult
       let reducer acc node =>
         node |> reduceRightWhileWithResult shouldContinue predicate f acc;
 
-      let predicate acc node => !shouldContinue;
+      let predicate _ _ => !shouldContinue;
 
       nodes |> CopyOnWriteArray.reduceRightWhile predicate reducer acc
 };

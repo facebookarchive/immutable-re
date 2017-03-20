@@ -26,15 +26,6 @@ let module Equality: {
   type t 'a = 'a => 'a => bool;
   /** The Equality function type. */
 
-  /* Will be available in Ocaml 4.03
-  let bytes: t bytes;
-  let char: t char;
-  let int32: t int32;
-  let int64: t int64;
-  let nativeInt: t nativeint;
-  let string: t string;
-  */
-
   let reference: (t 'a);
   /** The reference equality function, analogous to === */
 
@@ -43,7 +34,7 @@ let module Equality: {
 };
 
 let module Ordering: {
-  /** Represents the absolute ordering of a type */
+  /** Represents the absolute ordering of a type when comparing values. */
 
   type t;
 
@@ -77,12 +68,15 @@ let module Comparator: {
   /** Compares strings. */
 
   let structural: (t 'a);
-  /** The default structural comparison function. */
+  /** The structural comparison function. */
 };
 
 let module Comparable: {
+  /** Module type signature for types that support ordering or sorting. */
+
   module type S = {
     type t;
+    /** The type that is compared by the Comparable module. */
 
     let compare: Comparator.t t;
   };
@@ -115,11 +109,13 @@ let module HashStrategy: {
 };
 
 let module Concatable: {
+  /** Module type signature for types that support concatenation.*/
   module type S1 = {
     type t 'a;
 
     let concat: (list (t 'a)) => (t 'a);
-  };
+    /* [concat concatables] concantenates */
+   };
 };
 
 let module DoOnNextable: {

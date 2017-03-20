@@ -165,7 +165,7 @@ let rec reduceWhileWithResult
      acc
 };
 
-let rec reduceWhile
+let reduceWhile
     (predicate: 'acc => 'v => bool)
     (f: 'acc => 'v => 'acc)
     (acc: 'acc)
@@ -213,7 +213,7 @@ let rec reduceRightWhileWithResult
      acc
 };
 
-let rec reduceRightWhile
+let reduceRightWhile
     (predicate: 'acc => 'a => bool)
     (f: 'acc => 'ka => 'acc)
     (acc: 'acc)
