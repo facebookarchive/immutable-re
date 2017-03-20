@@ -288,7 +288,7 @@ let module Stack = {
     let removeFirstOrRaise: (t 'a) => (t 'a);
   };
 
-  include Stack;
+  include ImmStack;
 };
 
 let module TransientStack = {
