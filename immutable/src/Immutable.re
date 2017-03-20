@@ -110,6 +110,39 @@ let module Filterable = {
   };
 };
 
+let module Skippable = {
+  module type S1 = {
+    type t 'a;
+
+    let skip: int => (t 'a) => (t 'a);
+  };
+};
+
+let module SkipWhileable = {
+  module type S1 = {
+    type t 'a;
+
+    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
+  };
+};
+
+let module Takeable = {
+  module type S1 = {
+    type t 'a;
+
+    let take: int => (t 'a) => (t 'a);
+  };
+};
+
+let module TakeWhileable = {
+  module type S1 = {
+    type t 'a;
+
+    let takeWhile: ('a => bool) => (t 'a) => (t 'a);
+  };
+};
+
+
 let module Iterator = Iterator;
 
 let module Iterable = {
@@ -566,13 +599,13 @@ let module Vector = {
     include Deque.S1 with type t 'a := t 'a;
     include IndexedCollection.S1 with type t 'a := t 'a;
     include IndexedMappable.S1 with type t 'a := t 'a;
+    include Skippable.S1 with type t 'a := t 'a;
+    include Takeable.S1 with type t 'a := t 'a;
 
     let init: int => (int => 'a) => (t 'a);
     let insertAt: int => 'a => (t 'a) => (t 'a);
     let range: int => (option int) => (t 'a) => (t 'a);
     let removeAt: int => (t 'a) => (t 'a);
-    let skip: int => (t 'a) => (t 'a);
-    let take: int => (t 'a) => (t 'a);
     let update: int => 'a => (t 'a) => (t 'a);
     let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
     let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);

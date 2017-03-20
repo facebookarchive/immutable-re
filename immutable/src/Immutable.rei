@@ -13,15 +13,6 @@ let module Hash: {
   type t 'a = 'a => int;
   /** The Hash function type */
 
-  /*
-  let bytes: t bytes;
-  let char: t char;
-  let int32: t int32;
-  let int64: t int64;
-  let nativeInt: t nativeint;
-  let string: t string;
-  */
-
   let random: unit => (t 'a);
   /** Creates a random structural hash function. */
 
@@ -213,6 +204,46 @@ let module ReverseMappable: {
   };
 };
 
+let module Skippable: {
+  module type S1 = {
+    type t 'a;
+
+    let skip: int => (t 'a) => (t 'a);
+    /** [skip count seq] returns a Sequence that skips the first [count] elements in [seq]. */
+  };
+};
+
+let module SkipWhileable: {
+  module type S1 = {
+    type t 'a;
+
+    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
+    /** [skipWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
+     *  skipping elements until [f] first returns false.
+     */
+  };
+};
+
+let module Takeable: {
+  module type S1 = {
+    type t 'a;
+
+    let take: int => (t 'a) => (t 'a);
+    /** [take count seq] returns a Sequence that includes the first [count] elements in [seq]. */
+  };
+};
+
+let module TakeWhileable: {
+  module type S1 = {
+    type t 'a;
+
+    let takeWhile: ('a => bool) => (t 'a) => (t 'a);
+    /** [takeWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
+     *  taking elements until [f] first returns false.
+     */
+  };
+};
+
 let module Iterator: {
   type t 'a;
 
@@ -306,6 +337,10 @@ let module Sequence: {
   include Flattenable.S1 with type t 'a := t 'a;
   include Mappable.S1 with type t 'a := t 'a;
   include Sequential.S1 with type t 'a := t 'a;
+  include Skippable.S1 with type t 'a := t 'a;
+  include SkipWhileable.S1 with type t 'a := t 'a;
+  include Takeable.S1 with type t 'a := t 'a;
+  include TakeWhileable.S1 with type t 'a := t 'a;
 
   let buffer: int => int => (t 'a) => (t (list 'a));
   /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
@@ -359,24 +394,8 @@ let module Sequence: {
    *  specified seed value [acc].
    */
 
-  let skip: int => (t 'a) => (t 'a);
-  /** [skip count seq] returns a Sequence that skips the first [count] elements in [seq]. */
-
-  let skipWhile: ('a => bool) => (t 'a) => (t 'a);
-  /** [skipWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
-   *  skipping elements until [f] first returns false.
-   */
-
   let startWith: 'a => (t 'a) => (t 'a);
   /** [startWith value seq] returns a seq whose first elements is [value]. */
-
-  let take: int => (t 'a) => (t 'a);
-  /** [take count seq] returns a Sequence that includes the first [count] elements in [seq]. */
-
-  let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-  /** [takeWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
-   *  taking elements until [f] first returns false.
-   */
 
   let zip: (list (t 'a)) => (t (list 'a));
   /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
@@ -1245,13 +1264,13 @@ let module rec Vector: {
     include Deque.S1 with type t 'a := t 'a;
     include IndexedCollection.S1 with type t 'a := t 'a;
     include IndexedMappable.S1 with type t 'a := t 'a;
+    include Skippable.S1 with type t 'a := t 'a;
+    include Takeable.S1 with type t 'a := t 'a;
 
     let init: int => (int => 'a) => (t 'a);
     let insertAt: int => 'a => (t 'a) => (t 'a);
     let range: int => (option int) => (t 'a) => (t 'a);
     let removeAt: int => (t 'a) => (t 'a);
-    let skip: int => (t 'a) => (t 'a);
-    let take: int => (t 'a) => (t 'a);
     let update: int => 'a => (t 'a) => (t 'a);
     let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
     let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
