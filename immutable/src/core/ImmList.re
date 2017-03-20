@@ -63,26 +63,6 @@ let rec equalsWith (valueEquals: Equality.t 'a) (this: t 'a) (that: t 'a) => swi
 let equals (this: t 'a) (that: t 'a) =>
   equalsWith Equality.structural this that;
 
-let rec every (f: 'a => bool) (list: t 'a): bool => switch list {
-  | [head, ...tail] =>
-      if (f head) (every f tail)
-      else false
-  | [] => true
-};
-
-let forEach (f: 'a => unit) (list: t 'a): unit =>
-  list |> List.iter f;
-
-let rec forEachWhile
-    (predicate: 'a => bool)
-    (f: 'a => unit)
-    (list: t 'a) => switch list {
-  | [head, ...tail] when (predicate head) =>
-      f head;
-      forEachWhile predicate f  tail
-  | _ => ()
-};
-
 let isEmpty (list: t 'a): bool => switch list {
   | [] => true
   | _ => false;
@@ -91,13 +71,6 @@ let isEmpty (list: t 'a): bool => switch list {
 let isNotEmpty (list: t 'a): bool => switch list {
   | [] => false
   | _ => true;
-};
-
-let rec find (f: 'a => bool) (list: t 'a): (option 'a) => switch list {
-  | [head, ...tail] =>
-      if (f head) (Some head)
-      else find f tail
-  | [] => None
 };
 
 let rec findOrRaise (f: 'a => bool) (list: t 'a): 'a => switch list {
@@ -124,13 +97,6 @@ let rec mapReverseImpl (f: 'a => 'b) (src: t 'a) (dst: list 'b): (list 'b) => sw
 
 let mapReverse (f: 'a => 'b) (list: t 'a): (list 'b) =>
   mapReverseImpl f list [];
-
-let rec none (f: 'a => bool) (list: t 'a): bool => switch list {
-  | [head, ...tail] =>
-      if (f head) false
-      else none f tail
-  | [] => true
-};
 
 let rec reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) (list: t 'a): 'acc => switch list {
   | [head, ...tail] =>

@@ -26,6 +26,14 @@ let module Concatable = {
   };
 };
 
+let module DoOnNextable = {
+  module type S1 = {
+    type t 'a;
+
+    let doOnNext: ('a => unit) => (t 'a) => (t 'a);
+  };
+};
+
 let module Mappable = {
   module type S1 = {
     type t 'a;
@@ -58,38 +66,21 @@ let module Flattenable = {
   };
 };
 
+
 let module Reduceable = {
   module type S = {
     type a;
     type t;
 
-    let every: (a => bool) => t => bool;
-    let find: (a => bool) => t => (option a);
-    let findOrRaise: (a => bool) => t => a;
-    let forEach: (a => unit) => t => unit;
-    let forEachWhile: (a => bool) => (a => unit) => t => unit;
-    let isEmpty: t => bool;
-    let isNotEmpty: t => bool;
-    let none: (a => bool) => t => bool;
     let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
     let reduceWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-    let some: (a => bool) => t => bool;
   };
 
   module type S1 = {
     type t 'a;
 
-    let every: ('a => bool) => (t 'a) => bool;
-    let find: ('a => bool) => (t 'a) => (option 'a);
-    let findOrRaise: ('a => bool) => (t 'a) => 'a;
-    let forEach: ('a => unit) => (t 'a) => unit;
-    let forEachWhile: ('a => bool) => ('a => unit) => (t 'a) => unit;
-    let isEmpty: (t 'a) => bool;
-    let isNotEmpty: (t 'a) => bool;
-    let none: ('a => bool) => (t 'a) => bool;
     let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
     let reduceWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let some: ('a => bool) => (t 'a) => bool;
   };
 };
 
@@ -98,10 +89,6 @@ let module ReduceableRight = {
     type a;
     type t;
 
-    let findRight: (a => bool) => t => (option a);
-    let findRightOrRaise: (a => bool) => t => a;
-    let forEachRight: (a => unit) => t => unit;
-    let forEachRightWhile: (a => bool) => (a => unit) => t => unit;
     let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
     let reduceRightWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   };
@@ -109,14 +96,11 @@ let module ReduceableRight = {
   module type S1 = {
     type t 'a;
 
-    let findRight: ('a => bool) => (t 'a) => (option 'a);
-    let findRightOrRaise: ('a => bool) => (t 'a) => 'a;
-    let forEachRight: ('a => unit) => (t 'a) => unit;
-    let forEachRightWhile: ('a => bool) => ('a => unit) => (t 'a) => unit;
     let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
     let reduceRightWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   };
 };
+
 
 let module Filterable = {
   module type S1 = {
@@ -187,6 +171,8 @@ let module Collection = {
     include Iterable.S with type a := a and type t := t;
 
     let count: t => int;
+    let isEmpty: t => bool;
+    let isNotEmpty: t => bool;
     let toSequence: t => (Sequence.t a);
   };
 
@@ -196,6 +182,8 @@ let module Collection = {
     include Iterable.S1 with type t 'a := t 'a;
 
     let count: (t 'a) => int;
+    let isEmpty: (t 'a) => bool;
+    let isNotEmpty: (t 'a) => bool;
     let toSequence: (t 'a) => (Sequence.t 'a);
   };
 };
@@ -356,33 +344,15 @@ let module KeyedReduceable = {
     type k;
     type t 'v;
 
-    let every: (k => 'v => bool) => (t 'v) => bool;
-    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
-    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
-    let forEach: (k => 'v => unit) => (t 'v) => unit;
-    let forEachWhile: (k => 'v => bool) => (k => 'v => unit) => (t 'v) => unit;
-    let isEmpty: (t 'v) => bool;
-    let isNotEmpty: (t 'v) => bool;
-    let none: (k => 'v => bool) => (t 'v) => bool;
     let reduce: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     let reduceWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let some: (k => 'v => bool) => (t 'v) => bool;
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-    let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-    let forEachWhile: ('k => 'v => bool) => ('k => 'v => unit) => (t 'k 'v) => unit;
-    let isEmpty: (t 'k 'v) => bool;
-    let isNotEmpty: (t 'k 'v) => bool;
-    let none: ('k => 'v => bool) => (t 'k 'v) => bool;
     let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     let reduceWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   };
 };
 
@@ -391,35 +361,18 @@ let module KeyedReduceableRight = {
     type k;
     type t 'v;
 
-    let findRight: (k => 'v => bool) => (t 'v) => (option (k, 'v));
-
-    let findRightOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
-
-    let forEachRight: (k => 'v => unit) => (t 'v) => unit;
-
-    let forEachRightWhile: (k => 'v => bool) => (k => 'v => unit) => (t 'v) => unit;
-
     let reduceRight: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-
     let reduceRightWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let findRight: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-
-    let findRightOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-
-    let forEachRight: ('k => 'v => unit) => (t 'k 'v) => unit;
-
-    let forEachRightWhile: ('k => 'v => bool) => ('k => 'v => unit) => (t 'k 'v) => unit;
-
     let reduceRight: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-
     let reduceRightWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   };
 };
+
 
 let module KeyedIterator = KeyedIterator;
 
@@ -453,6 +406,8 @@ let module KeyedCollection = {
 
     let containsKey: k => t 'v => bool;
     let count: t 'v => int;
+    let isEmpty: (t 'v) => bool;
+    let isNotEmpty: (t 'v) => bool;
     let toSequence: (t 'v) => (Sequence.t (k, 'v));
   };
 
@@ -463,6 +418,8 @@ let module KeyedCollection = {
 
     let containsKey: 'k => t 'k 'v => bool;
     let count: t 'k 'v => int;
+    let isEmpty: (t 'k 'v) => bool;
+    let isNotEmpty: (t 'k 'v) => bool;
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
 };
@@ -575,56 +532,10 @@ let module IndexedCollection = {
 
     include NavigableCollection.S1 with type t 'a := t 'a;
 
-    let everyWithIndex: (int => 'a => bool) => (t 'a) => bool;
-
-    let findWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
-    /** [tryFindWithIndex f vec] returns the first value for which the predicate [f] returns true or None. */
-
-    let findRightWithIndex: (int => 'a => bool) => (t 'a) => (option 'a);
-    /** [tryFindWithIndex f vec] returns the first value for which the predicate [f] returns true or None. */
-
-    let findWithIndexOrRaise: (int => 'a => bool) => (t 'a) => 'a;
-
-    let findRightWithIndexOrRaise: (int => 'a => bool) => (t 'a) => 'a;
-
-    let forEachWithIndex: (int => 'a => unit) => (t 'a) => unit;
-
-    let forEachWithIndexWhile: (int => 'a => bool) => (int => 'a => unit) => (t 'a) => unit;
-
-    let forEachRightWithIndex: (int => 'a => unit) => (t 'a) => unit;
-
-    let forEachRightWithIndexWhile: (int => 'a => bool) => (int => 'a => unit) => (t 'a) => unit;
-
     let get: int => (t 'a) => (option 'a);
     /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
 
     let getOrRaise: int => (t 'a) => 'a;
-
-    let indexOf: ('a => bool) => (t 'a) => (option int);
-    /** [tryIndexOf f vec] returns the index of the first element for which the predicate [f] returns true.
-     *  If no value is found, returns None.
-     */
-
-    let indexOfOrRaise: ('a => bool) => (t 'a) => int;
-
-    let indexOfWithIndex: (int => 'a => bool) => (t 'a) => (option int);
-    /** [indexOfWithIndex f vec] returns the index of the first index/element pair in [vec] for
-     *  which the predicate [f] returns true. If no value is found, returns None.
-     */
-
-    let indexOfWithIndexOrRaise: (int => 'a => bool) => (t 'a) => int;
-
-    let noneWithIndex: (int => 'a => bool) => (t 'a) => bool;
-
-    let reduceWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-
-    let reduceWithIndexWhile: ('acc => int => 'a => bool) => ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-
-    let reduceRightWithIndex: ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-
-    let reduceRightWithIndexWhile: ('acc => int => 'a => bool) => ('acc => int => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-
-    let someWithIndex: (int => 'a => bool) => (t 'a) => bool;
 
     let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
 

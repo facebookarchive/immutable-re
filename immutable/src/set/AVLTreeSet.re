@@ -118,25 +118,6 @@ let rec firstOrRaise (tree: t 'a): 'a => switch tree {
   | Empty => failwith "empty"
 };
 
-let rec forEach (f: 'a => unit) (tree: t 'a) => switch tree {
-  | Empty  => ()
-  | Leaf v => f v
-  | Node _ left v right =>
-     forEach f left;
-     f v;
-     forEach f right;
-};
-
-let rec forEachRight (f: 'a => unit) (tree: t 'a) => switch tree {
-  | Empty  => ()
-  | Leaf v => f v
-  | Node _ left v right =>
-     forEachRight f right;
-     f v;
-     forEachRight f left;
-};
-
-
 let rec last (tree: t 'a): (option 'a) => switch tree {
   | Empty => None
   | Leaf v => Some v
@@ -199,9 +180,6 @@ let rec reduceWhile
   reduceWhileWithResult shouldContinue predicate f acc tree;
 };
 
-let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (tree: t 'a) =>
-  tree |> reduceWhile (fun _ => predicate) (fun _ => f) ();
-
 let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch tree {
   | Empty => acc
   | Leaf v => f acc v
@@ -249,9 +227,6 @@ let rec reduceRightWhile
   };
   reduceRightWhileWithResult shouldContinue predicate f acc tree;
 };
-
-let forEachRightWhile (predicate: 'a => bool) (f: 'a => unit) (tree: t 'a) =>
-  tree |> reduceRightWhile (fun _ => predicate) (fun _ => f) ();
 
 let rec removeFirstOrRaise (tree: t 'a): (t 'a) => switch tree {
   | Empty => failwith "empty"

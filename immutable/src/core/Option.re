@@ -46,30 +46,6 @@ let equalsWith (equals: Equality.t 'a) (this: t 'a) (that: t 'a): bool => switch
 let equals (this: t 'a) (that: t 'a): bool =>
   equalsWith Equality.structural this that;
 
-let every (f: 'a => bool) (opt: t 'a): bool => switch opt {
-  | None => false
-  | Some x => f x
-};
-
-let filter (f: 'a => bool) (opt: t 'a): (t 'a) => switch opt {
-  | Some x =>
-      if (f x) opt
-      else None
-  | _ => None
-};
-
-let find (f: 'a => bool) (opt: t 'a): (t 'a) => switch opt {
-  | None => None
-  | Some a when f a => Some a
-  | _ =>  None
-};
-
-let findOrRaise (f: 'a => bool) (opt: t 'a): 'a => switch opt {
-  | None => failwith "empty"
-  | Some a when f a => a
-  | _ => failwith "not found"
-};
-
 let first = Functions.identity;
 
 let firstOrRaise (opt: t 'a): 'a => switch opt {
@@ -85,19 +61,6 @@ let flatMap (f: 'a => option 'b) (opt: t 'a): option 'b => switch opt {
 let flatten (opt: option (t 'a)): (t 'a) => switch opt {
   | Some (Some a) => Some a
   | _ => None
-};
-
-let forEach (f: 'a => unit) (opt: t 'a): unit => switch opt {
-  | Some a => f a
-  | _ => ()
-};
-
-let forEachWhile
-    (predicate: 'a => bool)
-    (f: 'a => unit)
-    (opt: t 'a): unit => switch opt {
-  | Some a when predicate a => f a
-  | _ => ()
 };
 
 let hashWith (hash: Hash.t 'a) (opt: t 'a): int => switch opt {
@@ -120,11 +83,6 @@ let isNotEmpty (opt: option _): bool => switch opt {
 let map (f: 'a => 'b) (opt: t 'a): option 'b => switch opt {
   | Some a => Some (f a)
   | _ => None
-};
-
-let none (f: 'a => bool) (opt: t 'a): bool => switch opt {
-  | Some a => not @@ f @@ a
-  | _ => true
 };
 
 let orCompute (compute: unit => 'a) (opt: t 'a): 'a => switch (opt) {
@@ -152,11 +110,6 @@ let reduceWhile
 };
 
 let return (a: 'a): (t 'a) => Some a;
-
-let some (f: 'a => bool) (opt: t 'a): bool => switch opt {
-  | Some a => f a
-  | _ => false
-};
 
 let module Operators = {
   let (>>=) (opt: t 'a) (f: 'a => option 'b): option 'b => flatMap f opt;

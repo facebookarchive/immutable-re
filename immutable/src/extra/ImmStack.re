@@ -71,27 +71,9 @@ let equalsWith
   else if (thisCount != thatCount) false
   else ImmList.equalsWith valueEquals thisList thatList;
 
-let every (f: 'a => bool) ({ list }: t 'a): bool =>
-  list |> ImmList.every f;
-
-let find (f: 'a => bool) ({ list }: t 'a): (option 'a) =>
-  list |> ImmList.find f;
-
-let findOrRaise (f: 'a => bool) ({ list }: t 'a): 'a =>
-  list |> ImmList.findOrRaise f;
-
 let first ({ list }: t 'a): (option 'a) => list |> ImmList.first;
 
 let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
-
-let forEach (f: 'a => unit) ({ list }: t 'a): unit =>
-  list |> ImmList.forEach f;
-
-let forEachWhile
-    (predicate: 'a => bool)
-    (f: 'a => 'acc )
-    ({ list }: t 'a) =>
-  list |> ImmList.forEachWhile predicate f;
 
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
@@ -115,9 +97,6 @@ let mapReverse (f: 'a => 'b) ({ count, list }: t 'a): (t 'b) => {
   count,
   list: list |> ImmList.mapReverse f,
 };
-
-let none (f: 'a => bool) ({ list }: t 'a): bool =>
-  list |> ImmList.none f;
 
 let reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) ({ list }: t 'a): 'acc =>
   list |> ImmList.reduce f acc;
@@ -148,9 +127,6 @@ let reverse ({ count, list }: t 'a): (t 'a) => {
   count,
   list: list |> ImmList.reverse,
 };
-
-let some (f: 'a => bool) ({ list }: t 'a): bool =>
-  list |> ImmList.some f;
 
 let toIterator ({ list }: t 'a): (Iterator.t 'a) =>
   Iterator.ofList list;

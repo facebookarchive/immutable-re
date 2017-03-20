@@ -12,14 +12,9 @@ open Option.Operators;
 module type S = {
   type a;
   type t;
-
   let compare: Comparator.t t;
   let first: t => option a;
   let firstOrRaise: t => a;
-  let findRight: (a => bool) => t => option a;
-  let findRightOrRaise: (a => bool) => t => a;
-  let forEachRight: (a => unit) => t => unit;
-  let forEachRightWhile: (a => bool) => (a => unit) => t => unit;
   let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
   let reduceRightWhile:
     ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -28,20 +23,13 @@ module type S = {
   let toIteratorRight: t => Iterator.t a;
   let toSequenceRight: t => Sequence.t a;
   let toKeyedIteratorRight: t => KeyedIterator.t a a;
-  let every: (a => bool) => t => bool;
-  let find: (a => bool) => t => option a;
-  let findOrRaise: (a => bool) => t => a;
-  let forEach: (a => unit) => t => unit;
-  let forEachWhile: (a => bool) => (a => unit) => t => unit;
-  let isEmpty: t => bool;
-  let isNotEmpty: t => bool;
-  let none: (a => bool) => t => bool;
   let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
   let reduceWhile:
     ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let some: (a => bool) => t => bool;
   let toIterator: t => Iterator.t a;
   let count: t => int;
+  let isEmpty: t => bool;
+  let isNotEmpty: t => bool;
   let toSequence: t => Sequence.t a;
   let contains: a => t => bool;
   let equals: Equality.t t;
@@ -162,32 +150,11 @@ let module Make = fun (Comparable: Comparable.S) => {
         (toSequence that)
     );
 
-  let every (f: a => bool) (set: t): bool =>
-    set |> toSequence |> Sequence.every f;
-
-  let find (f: a => bool) (set: t): (option a) =>
-    set |> toSequence |> Sequence.find f;
-
-  let findOrRaise (f: a => bool) (set: t): a =>
-    set |> toSequence |> Sequence.findOrRaise f;
-
   let first ({ tree }: t): (option a) =>
     AVLTreeSet.first tree;
 
   let firstOrRaise ({ tree }: t): a =>
     AVLTreeSet.firstOrRaise tree;
-
-  let forEach (f: a => unit) ({ tree }: t) =>
-    tree |> AVLTreeSet.forEach f;
-
-  let forEachWhile (predicate: 'a => bool) (f: a => unit) ({ tree }: t) =>
-    tree |> AVLTreeSet.forEachWhile predicate f;
-
-  let forEachRight (f: a => unit) ({ tree }: t) =>
-    tree |> AVLTreeSet.forEach f;
-
-  let forEachRightWhile (predicate: 'a => bool) (f: a => unit) ({ tree }: t) =>
-    tree |> AVLTreeSet.forEachRightWhile predicate f;
 
   let hashWith (hash: (Hash.t a)) (set: t): int => set
     |> reduce (Hash.reducer hash) Hash.initialValue;
@@ -200,12 +167,6 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let lastOrRaise ({ tree }: t): a =>
     AVLTreeSet.lastOrRaise tree;
-
-  let none (f: a => bool) (set: t): bool =>
-    set |> toSequence |> Sequence.none f;
-
-  let some (f: a => bool) (set: t): bool =>
-    set |> toSequence |> Sequence.some f;
 
   let toIterator (set: t): (Iterator.t a) =>
     if (isEmpty set) Iterator.empty

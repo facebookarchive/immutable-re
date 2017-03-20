@@ -22,9 +22,10 @@ let count = CopyOnWriteArray.count;
 
 let empty = [||];
 
-let remove (equality: Equality.t 'a) (value: 'a) (set: t 'a): (t 'a) =>
-  set |> CopyOnWriteArray.indexOf (equality value) >>| (fun index =>
-    set |> CopyOnWriteArray.removeAt index
-  ) |? set;
+let remove (equality: Equality.t 'a) (value: 'a) (set: t 'a): (t 'a) => set
+  |> CopyOnWriteArray.toKeyedIterator
+  |> KeyedIterator.findKey (fun _ => equality value)
+  >>| (fun index => set |> CopyOnWriteArray.removeAt index)
+  |? set;
 
 let toSequence = CopyOnWriteArray.toSequence;

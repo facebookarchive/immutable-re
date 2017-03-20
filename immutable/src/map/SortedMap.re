@@ -11,12 +11,6 @@
 module type S = {
   type k;
   type t +'v;
-
-  let findRight: (k => 'v => bool) => (t 'v) => (option (k, 'v));
-  let findRightOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
-  let forEachRight: (k => 'v => unit) => t 'v => unit;
-  let forEachRightWhile:
-    (k => 'v => bool) => (k => 'v => unit) => t 'v => unit;
   let reduceRight: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceRightWhile:
     ('acc => k => 'v => bool) =>
@@ -28,23 +22,16 @@ module type S = {
   let toIteratorRight: t 'v => Iterator.t (k, 'v);
   let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
-  let every: (k => 'v => bool) => t 'v => bool;
-  let find: (k => 'v => bool) => t 'v => option (k, 'v);
-  let findOrRaise: (k => 'v => bool) => t 'v => (k, 'v);
-  let forEach: (k => 'v => unit) => t 'v => unit;
-  let forEachWhile: (k => 'v => bool) => (k => 'v => unit) => t 'v => unit;
-  let isEmpty: t 'v => bool;
-  let isNotEmpty: t 'v => bool;
-  let none: (k => 'v => bool) => t 'v => bool;
   let reduce: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceWhile:
     ('acc => k => 'v => bool) =>
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let some: (k => 'v => bool) => t 'v => bool;
   let toIterator: t 'v => Iterator.t (k, 'v);
   let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
+  let isEmpty: t 'v => bool;
+  let isNotEmpty: t 'v => bool;
   let toSequence: t 'v => Sequence.t (k, 'v);
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
@@ -119,39 +106,12 @@ let module Make = fun (Comparable: Comparable.S) => {
     tree |> AVLTreeMap.containsKey comparator key;
 
   let count ({ count }: t 'v): int => count;
-
-  let every (f: k => 'v => bool) ({ tree }: t 'v): bool =>
-    tree |> AVLTreeMap.every f;
-
-  let find (f: k => 'v => bool) ({ tree }: t 'v): (option (k, 'v)) =>
-    tree |> AVLTreeMap.find f;
-
-  let findRight (f: k => 'v => bool) ({ tree }: t 'v): (option (k, 'v)) =>
-    tree |> AVLTreeMap.findRight f;
-
-  let findOrRaise (f: k => 'v => bool) ({ tree }: t 'v): (k, 'v) =>
-    tree |> AVLTreeMap.find f |> Option.firstOrRaise;
-
-  let findRightOrRaise (f: k => 'v => bool) ({ tree }: t 'v): (k, 'v) =>
-    tree |> AVLTreeMap.findRight f |> Option.firstOrRaise;
-
+  
   let first ({ tree }: t 'v): (option (k, 'v)) =>
     tree |> AVLTreeMap.first;
 
   let firstOrRaise ({ tree }: t 'v): (k, 'v) =>
     tree |> AVLTreeMap.firstOrRaise;
-
-  let forEach (f: k => 'v => unit) ({ tree }: t 'v): unit =>
-    tree |> AVLTreeMap.forEach f;
-
-  let forEachRight (f: k => 'v => unit) ({ tree }: t 'v): unit =>
-    tree |> AVLTreeMap.forEachRight f;
-
-  let forEachWhile (predicate: k => 'v => bool) (f: k => 'v => unit) ({ tree }: t 'v) =>
-    tree |> AVLTreeMap.forEachWhile predicate f;
-
-  let forEachRightWhile (predicate: k => 'v => bool) (f: k => 'v => unit) ({ tree }: t 'v) =>
-    tree |> AVLTreeMap.forEachRightWhile predicate f;
 
   let get (key: k) ({ tree }: t 'v): (option 'v) =>
     tree |> AVLTreeMap.get comparator key;
@@ -170,9 +130,6 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let lastOrRaise ({ tree }: t 'v): (k, 'v) =>
     tree |> AVLTreeMap.lastOrRaise;
-
-  let none (f: k => 'v => bool) ({ tree }: t 'v): bool =>
-    tree |> AVLTreeMap.none f;
 
   let put (key: k) (value: 'v) ({ count, tree } as map: t 'v): (t 'v) => {
     let alterResult = ref AVLTreeMap.NoChange;
@@ -229,9 +186,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     let newTree = tree |> AVLTreeMap.removeLastOrRaise;
     { count: count - 1, tree: newTree }
   };
-
-  let some (f: k => 'v => bool) ({ tree }: t 'v): bool =>
-    tree |> AVLTreeMap.none f;
 
   let toSequence ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
     tree |> AVLTreeMap.toSequence;

@@ -28,25 +28,10 @@ let empty: (t 'a) = {
   sequence: Sequence.empty,
 };
 
-let every (f: 'a => bool) ({ iterator }: t 'a): bool =>
-  iterator |> Iterator.every f;
-
-let equals (that: t 'a) (this: t 'a): bool =>
+let equals (this: t 'a) (that: t 'a): bool =>
   if (this === that) true
   else if (this.count != that.count) false
-  else this |> every that.contains;
-
-let find (f: 'a => bool) ({ iterator }: t 'a): (option 'a) =>
-  iterator |> Iterator.find f;
-
-let findOrRaise (f: 'a => bool) ({ iterator }: t 'a): 'a =>
-  iterator |> Iterator.findOrRaise f;
-
-let forEach (f: 'a => unit) ({ iterator }: t 'a): unit =>
-  iterator |> Iterator.forEach f;
-
-let forEachWhile (predicate: 'a => bool) (f: 'a => unit) ({ iterator }: t 'a): unit =>
-  iterator |> Iterator.forEachWhile predicate f;
+  else this.iterator |> Iterator.every that.contains;
 
 let hashWith (hash: Hash.t 'a) ({ iterator }: t 'a): int =>
   iterator |> Iterator.reduce (fun acc next => acc + hash next) 0;
@@ -59,9 +44,6 @@ let isEmpty ({ count }: t 'a): bool =>
 
 let isNotEmpty ({ count }: t 'a): bool =>
   count != 0;
-
-let none (f: 'a => bool) ({ iterator }: t 'a): bool =>
-  iterator |> Iterator.none f;
 
 let ofOptionWith (equals: Equality.t 'a) (opt: option 'a): (t 'a) => {
   contains: fun v => Option.containsWith equals v opt,
@@ -82,9 +64,6 @@ let reduceWhile
     (acc: 'acc)
     ({ iterator }: t 'a): 'acc =>
   iterator |> Iterator.reduceWhile predicate f acc;
-
-let some (f: 'a => bool) ({ iterator }: t 'a): bool =>
-  iterator |> Iterator.some f;
 
 let toIterator ({ iterator } as set: t 'a): (Iterator.t 'a) =>
   if (set === empty) Iterator.empty

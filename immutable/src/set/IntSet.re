@@ -197,25 +197,6 @@ let removeAll (_: t): t =>
 let toSequence ({ root }: t): (Sequence.t int) =>
   root |> BitmapTrieIntSet.toSequence;
 
-/* FIXME: Should not implement these on Sequence. It over allocate and is way slow. */
-let every (f: int => bool) (set: t): bool =>
-  set |> toSequence |> Sequence.every f;
-
-let find (f: int => bool) (set: t): (option int) =>
-  set |> toSequence |> Sequence.find f;
-
-let findOrRaise (f: int => bool) (set: t): int =>
-  set |> toSequence |> Sequence.findOrRaise f;
-
-let forEach (f: int => unit) (set: t): unit =>
-  set |> toSequence |> Sequence.forEach f;
-
-let forEachWhile (predicate: int => bool) (f: int => unit) (set: t): unit =>
-  set |> toSequence |> Sequence.forEachWhile predicate f;
-
-let none (f: int => bool) (set: t): bool =>
-  set |> toSequence |> Sequence.none f;
-
 let reduce (f: 'acc => int => 'acc) (acc: 'acc) ({ root }: t): 'acc =>
   root |> BitmapTrieIntSet.reduce f acc;
 
@@ -225,9 +206,6 @@ let reduceWhile
     (acc: 'acc)
     ({ root }: t): 'acc =>
   root |> BitmapTrieIntSet.reduceWhile predicate f acc;
-
-let some (f: int => bool) (set: t): bool =>
-  set |> toSequence |> Sequence.some f;
 
 let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty

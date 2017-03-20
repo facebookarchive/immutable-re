@@ -80,31 +80,6 @@ let contains
     }
 };
 
-let rec every (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
-  | Empty => true
-  | Leaf k v => f k v
-  | Node _ left k v right =>
-      (every f left) && (f k v) && (every f right)
-};
-
-let rec find (f: 'k => 'v => bool) (tree: t 'k 'v): (option ('k, 'v)) =>  switch tree {
-  | Empty => None
-  | Leaf k v => if (f k v) (Some (k, v)) else None;
-  | Node _ left k v right => switch (find f left) {
-      | Some _ as result => result
-      | None => if (f k v) (Some (k, v)) else find f right
-    }
-};
-
-let rec findRight (f: 'k => 'v => bool) (tree: t 'k 'v): (option ('k, 'v)) =>  switch tree {
-  | Empty => None
-  | Leaf k v => if (f k v) (Some (k, v)) else None;
-  | Node _ left k v right => switch (findRight f right) {
-      | Some _ as result => result
-      | None => if (f k v) (Some (k, v)) else findRight f left
-    }
-};
-
 let rec first (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
   | Empty => None
   | Leaf k v => Some (k, v)
@@ -117,24 +92,6 @@ let rec firstOrRaise (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Node _ Empty k v _ => (k, v)
   | Node _ left _ _ _ => firstOrRaise left
   | Empty => failwith "empty"
-};
-
-let rec forEach (f: 'k => 'v => unit) (tree: t 'k 'v) => switch tree {
-  | Empty  => ()
-  | Leaf k v => f k v
-  | Node _ left k v right =>
-     forEach f left;
-     f k v;
-     forEach f right;
-};
-
-let rec forEachRight (f: 'k => 'v => unit) (tree: t 'k 'v) => switch tree {
-  | Empty  => ()
-  | Leaf k v => f k v
-  | Node _ left k v right =>
-     forEachRight f right;
-     f k v;
-     forEachRight f left;
 };
 
 let rec get
@@ -187,13 +144,6 @@ let rec lastOrRaise (tree: t 'k 'v): ('k, 'v) => switch tree {
   | Empty => failwith "empty"
 };
 
-let rec none (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
-  | Empty => true
-  | Leaf k v => f k v |> not
-  | Node _ left k v right =>
-      (none f left) && (f k v |> not) && (none f right)
-};
-
 let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
   | Empty  => acc
   | Leaf k v => f acc k v
@@ -242,9 +192,6 @@ let rec reduceWhile
   reduceWhileWithResult shouldContinue predicate f acc tree;
 };
 
-let forEachWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => 'acc) (tree: t 'k 'v) =>
-  tree |> reduceWhile (fun _ => predicate) (fun _ => f) ();
-
 let rec reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
   | Empty => acc
   | Leaf k v => f acc k v
@@ -291,16 +238,6 @@ let rec reduceRightWhile
     result;
   };
   reduceRightWhileWithResult shouldContinue predicate f acc tree;
-};
-
-let forEachRightWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => 'acc) (tree: t 'k 'v) =>
-  tree |> reduceRightWhile (fun _ => predicate) (fun _ => f) ();
-
-let rec some (f: 'k => 'v => bool) (tree: t 'k 'v) => switch tree {
-  | Empty => false
-  | Leaf k v => f k v
-  | Node _ left k v right =>
-      (some f left) || (f k v) || (none f right)
 };
 
 let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {

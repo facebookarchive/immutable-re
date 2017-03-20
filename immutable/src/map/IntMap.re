@@ -138,26 +138,6 @@ let module BitmapTrieIntMap = {
     | Empty => false;
   };
 
-  let rec every (f: int => 'v => bool) (map: t 'v): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (fun node => every f node)
-    | Entry key value => f key value
-    | Empty => true
-  };
-
-  let rec forEach (f: int => 'v => unit) (map: t 'v): unit => switch map {
-    | Level _ nodes _ =>
-        let f map => forEach f map;
-        nodes |> CopyOnWriteArray.forEach f;
-    | Entry key value => f key value;
-    | Empty => ();
-  };
-
-  let rec none (f: int => 'v => bool) (map: t 'v): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (fun node => none f node)
-    | Entry key value => f key value |> not
-    | Empty => true
-  };
-
   let rec reduce (f: 'acc => int => 'v => 'acc) (acc: 'acc) (map: t 'v): 'acc => switch map {
     | Level _ nodes _ =>
         let reducer acc map => reduce f acc map;
@@ -199,34 +179,10 @@ let module BitmapTrieIntMap = {
     reduceWhileWithResult shouldContinue predicate f acc map;
   };
 
-  let forEachWhile (predicate: int => 'v => bool) (f: int => 'v => unit) (map: t 'k): unit =>
-    map |> reduceWhile (fun _ => predicate) (fun _ => f) ();
-
-  let rec some (f: int => 'v => bool) (map: t 'v): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.some (fun node => some f node)
-    | Entry key value => f key value
-    | Empty => false
-  };
-
   let rec toSequence (map: t 'v): (Sequence.t (int, 'v)) => switch map {
     | Entry key value => Sequence.return (key, value)
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
     | Empty => Sequence.empty;
-  };
-
-  let rec find (f: int => 'v => bool) (map: t 'v): (option (int, 'v)) => switch map {
-    | Level _ nodes _ =>
-        let nodesCount = CopyOnWriteArray.count nodes;
-        let rec loop index =>
-          if (index < nodesCount) {
-            switch (find f nodes.(index)) {
-              | Some _ as result => result
-              | _ => loop (index + 1)
-            }
-          } else None;
-        loop 0
-    | Entry key value => if (f key value) (Some (key, value)) else None;
-    | Empty => None
   };
 
   let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
@@ -285,21 +241,6 @@ let contains (key: int) (value: 'v) (map: t 'v): bool =>
 
 let count ({ count }: t 'v): int => count;
 
-let every (f: int => 'v => bool) ({ root }: t 'v): bool =>
-  root |> BitmapTrieIntMap.every f;
-
-let find (f: int => 'v => bool) ({ root }: t 'v): (option (int, 'v)) =>
-  root |> BitmapTrieIntMap.find f;
-
-let findOrRaise (f: int => 'v => bool) ({ root }: t 'v): (int, 'v) =>
-  root |> BitmapTrieIntMap.find f |> Option.firstOrRaise;
-
-let forEach (f: int => 'v => unit) ({ root }: t 'v): unit =>
-  root |> BitmapTrieIntMap.forEach f;
-
-let forEachWhile (predicate: int => 'v => bool) (f: int => 'v => unit) ({ root }: t 'v): unit =>
-  root |> BitmapTrieIntMap.forEachWhile predicate f;
-
 let get (key: int) ({ root }: t 'v): (option 'v) =>
   root |> BitmapTrieIntMap.get 0 key;
 
@@ -309,9 +250,6 @@ let getOrRaise (key: int) ({ root }: t 'v): 'v =>
 let isEmpty ({ count }: t 'v): bool => count == 0;
 
 let isNotEmpty ({ count }: t 'v): bool => count != 0;
-
-let none (f: int => 'v => bool) ({ root }: t 'v): bool =>
-  root |> BitmapTrieIntMap.none f;
 
 let put (key: int) (value: 'v) (map: t 'v): (t 'v) =>
   map |> alter key (Functions.return @@ Option.return @@ value);
@@ -330,9 +268,6 @@ let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;
 
 let removeAll (_: t 'v): (t 'v) => empty;
-
-let some (f: int => 'v => bool) ({ root }: t 'v): bool =>
-  root |> BitmapTrieIntMap.some f;
 
 let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
   if (isEmpty map) Iterator.empty

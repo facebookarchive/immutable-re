@@ -124,20 +124,6 @@ let forEach (f: 'a => unit) (iter: t 'a) =>
 let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (iter: t 'a) =>
   iter |> reduceWhile (fun _ => predicate) (fun _ => f) ();
 
-let isEmpty (iter: t 'a): bool =>
-  if (iter === empty) true
-  else iter |> reduceWhile
-    (fun acc a => acc)
-    (fun acc a => false)
-    true;
-
-let isNotEmpty (iter: t 'a): bool =>
-  if (iter === empty) false
-  else iter |> reduceWhile
-    (fun acc a => not acc)
-    (fun acc a => true)
-    false;
-
 let listAddFirstAll (iter: t 'a) (list: list 'a): (list 'a) =>
   iter |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
 

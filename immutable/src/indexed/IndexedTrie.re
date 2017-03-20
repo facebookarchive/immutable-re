@@ -21,30 +21,6 @@ let count (trie: t 'a): int => switch trie {
   | Level _ count _ _ => !count;
 };
 
-let rec every (f: 'a => bool) (trie: t 'a): bool => switch trie {
-  | Empty => true
-  | Leaf _ values =>
-      values |> CopyOnWriteArray.every f
-  | Level _ _ _ nodes =>
-      nodes |> CopyOnWriteArray.every (every f);
-};
-
-let rec none (f: 'a => bool) (trie: t 'a): bool => switch trie {
-  | Empty => true
-  | Leaf _ values =>
-      values |> CopyOnWriteArray.none f
-  | Level _ _ _ nodes =>
-      nodes |> CopyOnWriteArray.every (none f);
-};
-
-let rec some (f: 'a => bool) (trie: t 'a): bool => switch trie {
-  | Empty => false
-  | Leaf _ values =>
-      values |> CopyOnWriteArray.some f
-  | Level _ _ _ nodes =>
-      nodes |> CopyOnWriteArray.some (some f);
-};
-
 let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
   | Empty => acc
   | Leaf _ values => values |> CopyOnWriteArray.reduce f acc
@@ -137,36 +113,6 @@ let rec toSequenceRight (trie: t 'a): (Sequence.t 'a) => switch trie {
   | Empty => Sequence.empty
   | Leaf _ values => values |> CopyOnWriteArray.toSequenceRight
   | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceRight |> Sequence.flatMap toSequenceRight
-};
-
-let rec find (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
-  | Empty => None
-  | Leaf _ values =>
-      values |> CopyOnWriteArray.find f
-  | Level _ _ _ nodes =>
-      let nodesCount = CopyOnWriteArray.count nodes;
-      let rec loop index =>
-        if (index < nodesCount) (switch (find f nodes.(index)) {
-          | Some _ as result => result
-          | _ => loop (index + 1)
-        })
-        else None;
-      loop 0
-};
-
-let rec findRight (f: 'a => bool) (trie: t 'a): (option 'a) => switch trie {
-  | Empty => None
-  | Leaf _ values =>
-      values |> CopyOnWriteArray.findRight f
-  | Level _ _ _ nodes =>
-      let nodesCount = CopyOnWriteArray.count nodes;
-      let rec loop index =>
-        if (index >= 0) (switch (findRight f nodes.(index)) {
-          | Some _ as result => result
-          | _ => loop (index - 1)
-        })
-        else None;
-      loop (nodesCount - 1)
 };
 
 let depth (trie: t 'a): int => switch trie {
@@ -817,5 +763,5 @@ let rec validate (trie: t 'a) => switch trie {
         print_string "firstTrie capacity: "; print_int (capacity firstTrie); print_newline ();
         failwith " first Trie isn't full";
       };
-      tries |> CopyOnWriteArray.forEach validate;
+      tries |> CopyOnWriteArray.toIterator |> Iterator.forEach validate;
 };

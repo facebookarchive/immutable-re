@@ -787,214 +787,15 @@ let addLastAll (iter: Iterator.t 'a) (vec: t 'a): (t 'a) => vec
   |> TransientVector.addLastAll iter
   |> TransientVector.persist;
 
-let every (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
-  (CopyOnWriteArray.every f left) && (IndexedTrie.every f middle) && (CopyOnWriteArray.every f right);
-
-let everyWithIndex (f: int => 'a => bool) (vec: t 'a): bool => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref 0;
-  let f next => {
-    let result = f !index next;
-    index := !index + 1;
-    result
-  };
-
-  every f vec;
-};
-
-let equalsWith
-    (valueEquals: Equality.t 'a)
-    (this: t 'a)
-    (that: t 'a): bool =>
-  if (this === that) true
-  else if ((count this) != (count that)) false
-  else
-    this |> everyWithIndex (fun i => this |> getOrRaise i |> valueEquals);
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  equalsWith Equality.structural this that;
-
-let find (f: 'a => bool) ({ left, middle, right }: t 'a): (option 'a) =>
-  /* FIXME: Add an operator to Option for this use case */
-  switch (left |> CopyOnWriteArray.find f) {
-    | Some _ as v => v
-    | _ => switch (middle |> IndexedTrie.find f) {
-      | Some _ as v => v
-      | _ => right |> CopyOnWriteArray.find f
-    }
-  };
-
-let findOrRaise (f: 'a => bool) ({ left, middle, right }: t 'a): 'a =>
-  /* FIXME: Add an operator to Option for this use case */
-  switch (left |> CopyOnWriteArray.find f) {
-    | Some v => v
-    | _ => switch (middle |> IndexedTrie.find f) {
-      | Some v => v
-      | _ => right |> CopyOnWriteArray.findOrRaise f
-    }
-  };
-
-let findRight (f: 'a => bool) ({ left, middle, right }: t 'a): (option 'a) =>
-  /* FIXME: Add an operator to Option for this use case */
-  switch (left |> CopyOnWriteArray.findRight f) {
-    | Some _ as v => v
-    | _ => switch (middle |> IndexedTrie.findRight f) {
-      | Some _ as v => v
-      | _ => right |> CopyOnWriteArray.findRight f
-    }
-  };
-
-let findRightOrRaise (f: 'a => bool) ({ left, middle, right }: t 'a): 'a =>
-  /* FIXME: Add an operator to Option for this use case */
-  switch (left |> CopyOnWriteArray.findRight f) {
-    | Some v => v
-    | _ => switch (middle |> IndexedTrie.findRight f) {
-      | Some v => v
-      | _ => right |> CopyOnWriteArray.findRightOrRaise f
-    }
-  };
-
-let findWithIndex (f: int => 'a => bool) (vec: t 'a): (option 'a) => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref 0;
-  let f next => {
-    let result = f !index next;
-    index := !index + 1;
-    result
-  };
-
-  find f vec;
-};
-
-let findWithIndexOrRaise (f: int => 'a => bool) (vec: t 'a): 'a => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref 0;
-  let f next => {
-    let result = f !index next;
-    index := !index + 1;
-    result
-  };
-
-  findOrRaise f vec;
-};
-
-let findRightWithIndex (f: int => 'a => bool) (vec: t 'a): (option 'a) => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref (count vec - 1);
-  let f next => {
-    let result = f !index next;
-    index := !index - 1;
-    result
-  };
-
-  findRight f vec;
-};
-
-let findRightWithIndexOrRaise (f: int => 'a => bool) (vec: t 'a): 'a => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref (count vec - 1);
-  let f next => {
-    let result = f !index next;
-    index := !index - 1;
-    result
-  };
-
-  findRightOrRaise f vec;
-};
-
 let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addLastAll iter;
 
 let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   empty|> addFirstAll iter;
 
-let indexOf (f: 'a => bool) (vec: t 'a): (option int) => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref (-1);
-  findWithIndex (fun i v => {
-    let result = f v;
-    if result { index := i };
-    result;
-  }) vec |> ignore;
-
-  if (!index >= 0) (Some !index) else None;
-};
-
-let indexOfOrRaise (f: 'a => bool) (vec: t 'a): int => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref (-1);
-  findWithIndexOrRaise (fun i v => {
-    let result = f v;
-    if result { index := i };
-    result;
-  }) vec;
-
-  if (!index >= 0) !index else failwith "not found";
-};
-
-let indexOfWithIndex (f: int => 'a => bool) (vec: t 'a): (option int) => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref (-1);
-  findWithIndex (fun i v => {
-    let result = f i v;
-    if result { index := i };
-    result;
-  }) vec |> ignore;
-
-  if (!index >= 0) (Some !index) else None;
-};
-
-let indexOfWithIndexOrRaise (f: int => 'a => bool) (vec: t 'a): int => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref (-1);
-  findWithIndexOrRaise (fun i v => {
-    let result = f i v;
-    if result { index := i };
-    result;
-  }) vec;
-
-  if (!index >= 0) !index else failwith "not found";
-};
-
 let init (count: int) (f: int => 'a): (t 'a) => IntRange.create 0 count
   |> IntRange.reduce (fun acc next => acc |> TransientVector.addLast (f next)) (mutate empty)
   |> TransientVector.persist;
-
-let none (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
-  (CopyOnWriteArray.none f left) && (IndexedTrie.none f middle) && (CopyOnWriteArray.none f right);
-
-let noneWithIndex (f: int => 'a => bool) (vec: t 'a): bool => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref 0;
-  let f next => {
-    let result = f !index next;
-    index := !index + 1;
-    result
-  };
-
-  none f vec;
-};
-
-let some (f: 'a => bool) ({ left, middle, right }: t 'a): bool =>
-  (CopyOnWriteArray.some f left) || (IndexedTrie.some f middle) || (CopyOnWriteArray.some f right);
-
-let containsWith (valueEquals: Equality.t 'a) (value: 'a) (vec: t 'a): bool =>
-  some (valueEquals value) vec;
-
-let contains (value: 'a) (vec: t 'a): bool =>
-  containsWith Equality.structural value vec;
-
-let someWithIndex (f: int => 'a => bool) (vec: t 'a): bool => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref 0;
-  let f next => {
-    let result = f !index next;
-    index := !index + 1;
-    result
-  };
-
-  some f vec;
-};
 
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = left |> CopyOnWriteArray.reduce f acc;
@@ -1028,12 +829,6 @@ let reduceWhile
   acc;
 };
 
-let forEach (f: 'a => unit) (vec: t 'a): unit =>
-  vec |> reduce (fun _ next => f next) ();
-
-let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (vec: t 'a): unit =>
-  vec |> reduceWhile (fun _ => predicate) (fun _ => f) ();
-
 let reduceWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
   let index = ref 0;
@@ -1063,15 +858,6 @@ let reduceWithIndexWhile
 
   reduceWhile predicate reducer acc vec;
 };
-
-let forEachWithIndex (f: int => 'a => unit) (vec: t 'a): unit =>
-  vec |> reduceWithIndex (fun _ index next => f index next) ();
-
-let forEachWithIndexWhile
-    (predicate: int => 'a => bool)
-    (f: int => 'a => unit)
-    (vec: t 'a): unit =>
-  vec |> reduceWithIndexWhile (fun _ => predicate) (fun _ => f) ();
 
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
@@ -1105,12 +891,6 @@ let reduceRightWhile
   acc;
 };
 
-let forEachRight (f: 'a => unit) (vec: t 'a): unit =>
-  vec |> reduceRight (fun _ => f) ();
-
-let forEachRightWhile (predicate: 'a => bool) (f: 'a => unit) (vec: t 'a): unit =>
-  vec |> reduceRightWhile (fun _ => predicate) (fun _ => f) ();
-
 let reduceRightWithIndex (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
   let index = ref (count vec - 1);
@@ -1141,15 +921,6 @@ let reduceRightWithIndexWhile
 
   reduceRightWhile predicate reducer acc vec;
 };
-
-let forEachRightWithIndex (f: int => 'a => unit) (vec: t 'a): unit =>
-  vec |> reduceRightWithIndex (fun _ index next => f index next) ();
-
-let forEachRightWithIndexWhile
-    (predicate: int => 'a => bool)
-    (f: int => 'a => unit)
-    (vec: t 'a): unit =>
-  vec |> reduceRightWithIndexWhile (fun _ => predicate) (fun _ => f) ();
 
 let hashWith (hash: Hash.t 'a) (vec: t 'a): int =>
   vec |> reduce (Hash.reducer hash) Hash.initialValue;
@@ -1252,38 +1023,27 @@ let take (takeCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
 let range (startIndex: int) (takeCount: option int) (vec: t 'a): (t 'a) =>
    vec |> skip startIndex |> take (takeCount |? (count vec));
 
-let toIterator (set: t 'a): (Iterator.t 'a) =>
-  if (isEmpty set) Iterator.empty
-  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
+let toIterator (vec: t 'a): (Iterator.t 'a) =>
+  if (isEmpty vec) Iterator.empty
+  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc vec };
 
-let toIteratorRight (set: t 'a): (Iterator.t 'a) =>
-  if (isEmpty set) Iterator.empty
-  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc set };
+let toIteratorRight (vec: t 'a): (Iterator.t 'a) =>
+  if (isEmpty vec) Iterator.empty
+  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc vec };
 
-let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty arr) KeyedIterator.empty
-  else { reduceWhile: fun predicate f acc => reduceWithIndexWhile predicate f acc arr };
+let toKeyedIterator (vec: t 'a): (KeyedIterator.t int 'a) =>
+  if (isEmpty vec) KeyedIterator.empty
+  else { reduceWhile: fun predicate f acc => reduceWithIndexWhile predicate f acc vec };
 
-let toKeyedIteratorRight (arr: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty arr) KeyedIterator.empty
-  else { reduceWhile: fun predicate f acc => reduceRightWithIndexWhile predicate f acc arr };
+let toKeyedIteratorRight (vec: t 'a): (KeyedIterator.t int 'a) =>
+  if (isEmpty vec) KeyedIterator.empty
+  else { reduceWhile: fun predicate f acc => reduceRightWithIndexWhile predicate f acc vec };
 
 let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
   CopyOnWriteArray.toSequence left,
   IndexedTrie.toSequence middle,
   CopyOnWriteArray.toSequence right,
 ];
-
-let compareWith
-    (compareValue: Comparator.t 'a)
-    (this: t 'a)
-    (that: t 'a): Ordering.t =>
-  if (this === that) Ordering.equal
-
-  else Sequence.compareWith compareValue (toSequence this) (toSequence that);
-
-let compare (this: t 'a) (that: t 'a): Ordering.t =>
-  compareWith Comparator.structural this that;
 
 let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
   CopyOnWriteArray.toSequenceRight right,
@@ -1304,6 +1064,35 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
     (IntRange.create 0 (count vec) |> IntRange.toSequence)
     (toSequence vec),
 };
+
+let compareWith
+    (compareValue: Comparator.t 'a)
+    (this: t 'a)
+    (that: t 'a): Ordering.t =>
+  if (this === that) Ordering.equal
+  else Sequence.compareWith compareValue (toSequence this) (toSequence that);
+
+let compare (this: t 'a) (that: t 'a): Ordering.t =>
+  compareWith Comparator.structural this that;
+
+let containsWith (valueEquals: Equality.t 'a) (value: 'a) (vec: t 'a): bool =>
+  vec |> toIterator |> Iterator.some (valueEquals value);
+
+let contains (value: 'a) (vec: t 'a): bool =>
+  containsWith Equality.structural value vec;
+
+let equalsWith
+    (valueEquals: Equality.t 'a)
+    (this: t 'a)
+    (that: t 'a): bool =>
+  if (this === that) true
+  else if ((count this) != (count that)) false
+  else this|> toKeyedIterator |> KeyedIterator.every (
+    fun i => this |> getOrRaise i |> valueEquals
+  );
+
+let equals (this: t 'a) (that: t 'a): bool =>
+  equalsWith Equality.structural this that;
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> mutate

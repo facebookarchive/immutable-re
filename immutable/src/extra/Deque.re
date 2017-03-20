@@ -42,32 +42,12 @@ let equalsWith (valueEquals: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
     | (Ascending this, Descending that)
     | (Descending this, Ascending that) =>
       let countThis = Vector.count this;
-      this |> Vector.everyWithIndex
+      this |> Vector.toKeyedIterator |> KeyedIterator.every
         (fun i => that |> Vector.getOrRaise (countThis - i - 1) |> valueEquals);
   };
 
 let equals (this: t 'a) (that: t 'a): bool =>
   equalsWith Equality.structural this that;
-
-let find (f: 'a => bool) (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector => Vector.find f vector
-  | Descending vector => Vector.findRight f vector
-};
-
-let findOrRaise (f: 'a => bool) (deque: t 'a): 'a => switch deque {
-  | Ascending vector => Vector.findOrRaise f vector
-  | Descending vector => Vector.findRightOrRaise f vector
-};
-
-let findRight (f: 'a => bool) (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector => Vector.findRight f vector
-  | Descending vector => Vector.find f vector
-};
-
-let findRightOrRaise (f: 'a => bool) (deque: t 'a): 'a => switch deque {
-  | Ascending vector => Vector.findRightOrRaise f vector
-  | Descending vector => Vector.findOrRaise f vector
-};
 
 let first (deque: t 'a): (option 'a) => switch deque {
   | Ascending vector => vector |> Vector.first
@@ -141,12 +121,6 @@ let reduceWhile
   | Descending vector => vector |> Vector.reduceRightWhile predicate f acc;
 };
 
-let forEach (f: 'a => unit) (deque: t 'a): unit =>
-  deque |> reduce (fun _ => f) ();
-
-let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (deque: t 'a): unit =>
-  deque |> reduceWhile (fun _ => predicate) (fun _ => f) ();
-
 let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switch deque {
   | Ascending vector => vector |> Vector.reduceRight f acc;
   | Descending vector => vector |> Vector.reduce f acc;
@@ -160,12 +134,6 @@ let reduceRightWhile
   | Ascending vector => vector |> Vector.reduceRightWhile predicate f acc;
   | Descending vector => vector |> Vector.reduceWhile predicate f acc;
 };
-
-let forEachRight (f: 'a => unit) (deque: t 'a): unit =>
-  deque |> reduceRight (fun _ next => f next) ();
-
-let forEachRightWhile (predicate: 'a => bool) (f: 'a => unit) (deque: t 'a): unit =>
-  deque |> reduceRightWhile (fun _ => predicate) (fun _ => f) ();
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
@@ -353,12 +321,6 @@ let addLastAll (iter: Iterator.t 'a) (deque: t 'a): (t 'a) => deque
   |> TransientDeque.addLastAll iter
   |> TransientDeque.persist;
 
-let every (f: 'a => bool) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      Vector.every f vector
-};
-
 let from (iter: Iterator.t 'a): (t 'a) =>
   empty |> addLastAll iter;
 
@@ -373,16 +335,4 @@ let map (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
 let mapReverse (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
   | Ascending vector => Ascending (Vector.mapReverse f vector)
   | Descending vector => Descending (Vector.mapReverse f vector)
-};
-
-let none (f: 'a => bool) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      Vector.none f vector
-};
-
-let some (f: 'a => bool) (deque: t 'a): bool => switch deque {
-  | Ascending vector
-  | Descending vector =>
-      Vector.some f vector
 };

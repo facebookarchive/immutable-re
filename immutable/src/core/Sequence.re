@@ -82,13 +82,6 @@ let rec equalsWith (equality: Equality.t 'a) (this: t 'a) (that: t 'a): bool =>
     | _ => false
   };
 
-let rec every (f: 'a => bool) (seq: t 'a): bool => switch ( seq () ) {
-  | Next value next =>
-      if (f value) (every f next)
-      else false
-  | Completed => true
-};
-
 let rec filter (f: 'a => bool) (seq: t 'a): (t 'a) => {
   let rec filterIter (f: 'a => bool) (iter: iterator 'a): iterator 'b => switch iter {
     | Next value next =>
@@ -98,20 +91,6 @@ let rec filter (f: 'a => bool) (seq: t 'a): (t 'a) => {
   };
 
   fun () => seq () |> filterIter f
-};
-
-let rec find (predicate: 'a => bool) (seq: t 'a): (option 'a) => switch (seq ()) {
-  | Next value next =>
-      if (predicate value) (Some value)
-      else (find predicate next)
-  | Completed => None
-};
-
-let rec findOrRaise (predicate: 'a => bool) (seq: t 'a): 'a => switch (seq ()) {
-  | Next value next =>
-      if (predicate value) value
-      else (findOrRaise predicate next)
-  | Completed => failwith "not found"
 };
 
 let first (seq: t 'a): (option 'a) => switch (seq ()) {
@@ -124,59 +103,8 @@ let firstOrRaise (seq: t 'a): 'a => switch (seq ()) {
   | Completed => failwith "empty"
 };
 
-let rec forEach (f: 'a => unit) (seq: t 'a) => switch (seq ()) {
-  | Next value next =>
-      f value;
-      forEach f next;
-  | Completed => ()
-};
-
-let rec forEachWhile
-    (predicate: 'a => bool)
-    (f: 'a => 'acc)
-    (seq: t 'a): 'acc => switch (seq ()) {
-  | Next value next when predicate value =>
-      let acc = f value;
-      forEachWhile predicate f next
-  | _ => ()
-};
-
 let rec generate (f: 'acc => 'acc) (acc: 'acc): (t 'acc) => fun () =>
   Next acc (generate f (f acc));
-
-let isEmpty (seq: t 'a): bool => switch (seq ()) {
-  | Next _ => false
-  | Completed => true
-};
-
-let isNotEmpty (seq: t 'a): bool => switch (seq ()) {
-  | Next _ => true
-  | Completed => false
-};
-
-let last (seq: t 'a): (option 'a) => {
-  let rec loop acc seq => switch (seq ()) {
-    | Next v next => loop v next
-    | Completed => Some acc
-  };
-
-  switch (seq ()) {
-    | Next v next => loop v next
-    | Completed => None
-  }
-};
-
-let lastOrRaise (seq: t 'a): 'a => {
-  let rec loop acc seq => switch (seq ()) {
-    | Next v next => loop v next
-    | Completed => acc
-  };
-
-  switch (seq ()) {
-    | Next v next => loop v next
-    | Completed => failwith "not found"
-  }
-};
 
 let rec map (f: 'a => 'b) (seq: t 'a): (t 'b) => fun () => switch (seq ()) {
   | Next value next =>
@@ -189,13 +117,6 @@ let doOnNext (f: 'a => unit) (seq: t 'a): (t 'a) =>
 
 let flatMap (f: 'a => (t 'b)) (seq: t 'a): (t 'b) =>
   seq |> map f |> flatten;
-
-let rec none (f: 'a => bool) (seq: t 'a): bool => switch (seq ()) {
-  | Next value next =>
-      if (f value) false
-      else none f next
-  | Completed => true
-};
 
 let ofOption (opt: option 'a): (t 'a) => switch opt {
   | Some value => return value
@@ -241,7 +162,7 @@ let rec scan
 };
 
 let toIterator (seq: t 'a): (Iterator.t 'a) =>
-  if (isEmpty seq) Iterator.empty
+  if (seq === empty) Iterator.empty
   else {
     reduceWhile: fun predicate f acc =>
       reduceWhile predicate f acc seq
@@ -314,11 +235,6 @@ let skipWhile (f: 'a => bool) (seq: t 'a): (t 'a) => fun () => {
   };
 
   skipIter f (seq ())
-};
-
-let rec some (f: 'a => bool) (seq: t 'a): bool => switch (seq ()) {
-  | Next value next => (f value) || (some f next)
-  | Completed => false
 };
 
 let startWith (value: 'a) (seq: t 'a): (t 'a) =>

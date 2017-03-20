@@ -47,33 +47,15 @@ let empty: (t 'k 'v) = {
   sequence: Sequence.empty,
 };
 
-let every (f: 'k => 'v => bool) ({ keyedIterator }: t 'k 'v): bool =>
-  keyedIterator |> KeyedIterator.every f;
-
 let equalsWith (valueEquality: Equality.t 'v) (that: t 'k 'v) (this: t 'k 'v): bool =>
   if (this === that) true
   else if (this.count != that.count) false
-  else this |> every (
+  else this.keyedIterator |> KeyedIterator.every (
     fun key thisValue => that |> containsWith valueEquality key thisValue
   );
 
 let equals (that: t 'k 'v) (this: t 'k 'v): bool =>
   equalsWith Equality.structural that this;
-
-let find (f: 'k => 'v => bool) ({ keyedIterator }: t 'k 'v): (option ('k, 'v)) =>
-  keyedIterator |> KeyedIterator.find f;
-
-let findOrRaise (f: 'k => 'v => bool) ({ keyedIterator }: t 'k 'v): ('k, 'v) =>
-  keyedIterator |> KeyedIterator.findOrRaise f;
-
-let forEach (f: 'k => 'v => unit) ({ keyedIterator }: t 'k 'v): unit =>
-  keyedIterator |> KeyedIterator.forEach f;
-
-let forEachWhile
-    (predicate: 'k => 'v => bool)
-    (f: 'k => 'v => unit)
-    ({ keyedIterator }: t 'k 'v): unit =>
-  keyedIterator |> KeyedIterator.forEachWhile predicate f;
 
 let get (key: 'k) ({ get }: t 'k 'v): (option 'v) =>
   get key;
@@ -124,9 +106,6 @@ let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
   sequence: ImmSet.toSequence set |> Sequence.map (fun k => (k, k)),
 };
 
-let none (f: 'k => 'v => bool) ({ keyedIterator }: t 'k 'v): bool =>
-  keyedIterator |> KeyedIterator.none f;
-
 let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ keyedIterator }: t 'k 'v): 'acc =>
   keyedIterator |> KeyedIterator.reduce f acc;
 
@@ -136,9 +115,6 @@ let reduceWhile
     (acc: 'acc)
     ({ keyedIterator }: t 'k 'v): 'acc =>
   keyedIterator |> KeyedIterator.reduceWhile predicate f acc;
-
-let some (f: 'k => 'v => bool) ({ keyedIterator }: t 'k 'v): bool =>
-  keyedIterator |> KeyedIterator.some f;
 
 let toIterator ({ keyedIterator }: t 'k 'v): (Iterator.t ('k, 'v)) =>
   keyedIterator |> KeyedIterator.toIterator;

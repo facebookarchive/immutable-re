@@ -235,24 +235,6 @@ let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
   if (isEmpty set) Sequence.empty
   else root |> BitmapTrieSet.toSequence;
 
-let every (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSequence |> Sequence.every f;
-
-let find (f: 'a => bool) (set: t 'a): (option 'a) =>
-  set |> toSequence |> Sequence.find f;
-
-let findOrRaise (f: 'a => bool) (set: t 'a): 'a =>
-  set |> toSequence |> Sequence.findOrRaise f;
-
-let forEach (f: 'a => unit) (set: t 'a): unit =>
-  set |> toSequence |> Sequence.forEach f;
-
-let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (set: t 'a): unit =>
-  set |> toSequence |> Sequence.forEachWhile predicate f;
-
-let none (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSequence |> Sequence.none f;
-
 let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (set: t 'a): 'acc =>
   set |> toSequence |> Sequence.reduce f acc;
 
@@ -262,9 +244,6 @@ let reduceWhile
     (acc: 'acc)
     (set: t 'a): 'acc =>
   set |> toSequence |> Sequence.reduceWhile predicate f acc;
-
-let some (f: 'a => bool) (set: t 'a): bool =>
-  set |> toSequence |> Sequence.some f;
 
 let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) Iterator.empty

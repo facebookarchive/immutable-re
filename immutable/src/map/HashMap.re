@@ -225,45 +225,6 @@ let module BitmapTrieMap = {
     | Empty => false;
   };
 
-  let rec every (f: 'k => 'v => bool) (map: t 'k 'v): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (every f)
-    | ComparatorCollision _ entryMap => entryMap |> AVLTreeMap.every f
-    | EqualityCollision _ entryMap => entryMap |> EqualityMap.every f;
-    | Entry _ entryKey entryValue => f entryKey entryValue
-    | Empty => true
-  };
-
-  let rec find (f: 'k => 'v => bool) (map: t 'k 'v): (option ('k, 'v)) => switch map {
-    | Level _ nodes _ =>
-        let nodesCount = CopyOnWriteArray.count nodes;
-        let rec loop index =>
-          if (index < nodesCount) (switch (find f nodes.(index)) {
-            | Some _ as result => result
-            | _ => loop (index + 1)
-          })
-          else None;
-        loop 0
-    | ComparatorCollision _ entryMap => AVLTreeMap.find f entryMap
-    | EqualityCollision _ entryMap => EqualityMap.find f entryMap;
-    | Entry _ entryKey entryValue =>
-        if (f entryKey entryValue) (Some (entryKey, entryValue))
-        else None
-    | Empty => None;
-  };
-
-  let rec forEach (f: 'k => 'v => unit) (map: t 'k 'v): unit => switch map {
-    | Level _ nodes _ =>
-        let iter node => node |> forEach f;
-        nodes |> CopyOnWriteArray.forEach iter;
-    | ComparatorCollision _ entryMap =>
-        entryMap |> AVLTreeMap.forEach f
-    | EqualityCollision _ entryMap =>
-        entryMap |> EqualityMap.forEach f
-    | Entry _ entryKey entryValue =>
-        f entryKey entryValue
-    | Empty => ()
-  };
-
   let rec get
       (hashStrategy: HashStrategy.t 'k)
       (depth: int)
@@ -316,14 +277,6 @@ let module BitmapTrieMap = {
     | Empty => failwith "NotFound";
   };
 
-  let rec none (f: 'k => 'v => bool) (map: t 'k 'v): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.every (none f)
-    | ComparatorCollision _ entryMap => entryMap |> AVLTreeMap.none f
-    | EqualityCollision _ entryMap => entryMap |> EqualityMap.none f;
-    | Entry _ entryKey entryValue => f entryKey entryValue |> not
-    | Empty => true
-  };
-
   let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc => switch map {
     | Level _ nodes _ =>
         let reducer acc node => node |> reduce f acc;
@@ -373,17 +326,6 @@ let module BitmapTrieMap = {
     };
 
     reduceWhileWithResult shouldContinue predicate f acc map;
-  };
-
-  let forEachWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => 'acc) (map: t 'k 'v) =>
-    map |> reduceWhile (fun _ => predicate) (fun _ => f) ();
-
-  let rec some (f: 'k => 'v => bool) (map: t 'k 'v): bool => switch map {
-    | Level _ nodes _ => nodes |> CopyOnWriteArray.some (some f)
-    | ComparatorCollision _ entryMap => entryMap |> AVLTreeMap.some f
-    | EqualityCollision _ entryMap => entryMap |> EqualityMap.some f;
-    | Entry _ entryKey entryValue => f entryKey entryValue
-    | Empty => false
   };
 
   let rec toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
@@ -462,30 +404,6 @@ let contains (key: 'k) (value: 'v) (map: t 'k 'v): bool =>
 
 let count ({ count }: t 'k 'v): int => count;
 
-let every (f: 'k => 'v => bool) ({ root }: t 'k 'v): bool =>
-  root |> BitmapTrieMap.every f;
-
-let equalsWith
-    (valueEquals: Equality.t 'v)
-    (this: t 'k 'v)
-    (that: t 'k 'v): bool =>
-  this |> every (fun k v => that |> contains k v);
-
-let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
-  equalsWith Equality.structural this that;
-
-let find (f: 'k => 'v => bool) ({ root }: t 'k 'v): (option ('k, 'v)) =>
-  root |> BitmapTrieMap.find f;
-
-let findOrRaise (f: 'k => 'v => bool) (map: t 'k 'v): ('k, 'v) =>
-  map |> find f |> Option.firstOrRaise;
-
-let forEach (f: 'k => 'v => unit) ({ root }: t 'k 'v) =>
-  root |> BitmapTrieMap.forEach f;
-
-let forEachWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => unit) ({ root }: t 'k 'v) =>
-  root |> BitmapTrieMap.forEachWhile predicate f;
-
 let get (key: 'k) ({ strategy, root }: t 'k 'v): (option 'v) => {
   let hash = HashStrategy.hash strategy key;
   root |> BitmapTrieMap.get strategy 0 hash key;
@@ -501,9 +419,6 @@ let isEmpty ({ count }: t 'k 'v): bool =>
 
 let isNotEmpty ({ count }: t 'k 'v): bool =>
   count != 0;
-
-let none (f: 'k => 'v => bool) ({ root }: t 'k 'v): bool =>
-  root |> BitmapTrieMap.none f;
 
 let put (key: 'k) (value: 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key (Functions.return @@ Option.return @@ value);
@@ -524,9 +439,6 @@ let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
 let removeAll ({ strategy }: t 'k 'v): (t 'k 'v) =>
   emptyWith strategy;
 
-let some (f: 'k => 'v => bool) ({ root }: t 'k 'v): bool =>
-  root |> BitmapTrieMap.some f;
-
 let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
   if (isEmpty map) Iterator.empty
   else {
@@ -544,6 +456,15 @@ let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
 
 let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   root |> BitmapTrieMap.toSequence;
+
+let equalsWith
+    (valueEquals: Equality.t 'v)
+    (this: t 'k 'v)
+    (that: t 'k 'v): bool =>
+  this |> toKeyedIterator |> KeyedIterator.every (fun k v => that |> contains k v);
+
+let equals (this: t 'k 'v) (that: t 'k 'v): bool =>
+  equalsWith Equality.structural this that;
 
 let values ({ root }: t 'k 'v): (Iterator.t 'v) =>
   root |> BitmapTrieMap.values;

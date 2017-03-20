@@ -71,6 +71,26 @@ let find (f: 'k => 'v => bool) (iter: t 'k 'v): (option ('k, 'v)) =>
 let findOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'a =>
   find f iter |> Option.firstOrRaise;
 
+let findKey (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'k) =>
+  if (iter === empty) None
+  else iter |> reduceWhile
+    (fun acc _ _ => Option.isEmpty acc)
+    (fun _ k v => if (f k v) (Some k) else None)
+    None;
+
+let findKeyOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'k =>
+  findKey f iter |> Option.firstOrRaise;
+
+let findValue (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'v) =>
+  if (iter === empty) None
+  else iter |> reduceWhile
+    (fun acc _ _ => Option.isEmpty acc)
+    (fun _ k v => if (f k v) (Some v) else None)
+    None;
+
+let findValueOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'v =>
+  findValue f iter |> Option.firstOrRaise;
+
 let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty
   else {
@@ -104,20 +124,6 @@ let forEach (f: 'k => 'v => unit) (iter: t 'k 'v) =>
 
 let forEachWhile (predicate: 'k => 'v => bool) (f: 'k => 'v => unit) (iter: t 'k 'v) =>
   iter |> reduceWhile (fun _ => predicate) (fun _ => f) ();
-
-let isEmpty (iter: t 'k 'v): bool =>
-  if (iter === empty) true
-  else iter |> reduceWhile
-    (fun acc  _ _ => acc)
-    (fun _ _ _ => false)
-    true;
-
-let isNotEmpty (iter: t 'k 'v): bool =>
-  if (iter === empty) false
-  else iter |> reduceWhile
-    (fun acc _ _ => not acc)
-    (fun _ _ _ => true)
-    false;
 
 let keys (iter: t 'k 'v): (Iterator.t 'k) =>
   if (iter === empty) Iterator.empty

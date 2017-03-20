@@ -31,51 +31,6 @@ let count ({ count }: t): int => count;
 let equals (this: t) (that: t): bool =>
   this.start == that.start && this.count == that.count;
 
-let every (f: int => bool) ({ count, start }: t): bool => {
-  let rec recurse f start count =>
-     if (count == 0) true
-     else if (f start) (recurse f (start + 1) (count - 1))
-     else false;
-
-  recurse f start count;
-};
-
-let find (f: int => bool) ({ count, start }: t): (option int) => {
-  let rec recurse f start count =>
-    if (count == 0) None
-    else if (f start) (Some start)
-    else recurse f (start + 1) (count - 1);
-
-  recurse f start count;
-};
-
-let findOrRaise (f: int => bool) ({ count, start }: t): int => {
-  let rec recurse f start count =>
-    if (count == 0) (failwith "not found")
-    else if (f start) start
-    else recurse f (start + 1) (count - 1);
-
-  recurse f start count;
-};
-
-let findRight (f: int => bool) ({ count, start }: t): (option int) => {
-  let rec recurse f start count =>
-    if (count == 0) None
-    else if (f start) (Some start)
-    else recurse f (start - 1) (count - 1);
-
-  recurse f (count - 1) count;
-};
-
-let findRightOrRaise (f: int => bool) ({ count, start }: t): int => {
-  let rec recurse f start count =>
-    if (count == 0) (failwith "not found")
-    else if (f start) start
-    else recurse f (start - 1) (count - 1);
-
-  recurse f (count - 1) count;
-};
-
 let first ({ count, start }: t): (option int) =>
   if (count == 0) None
   else (Some start);
@@ -83,48 +38,6 @@ let first ({ count, start }: t): (option int) =>
 let firstOrRaise ({ count, start }: t): int =>
   if (count == 0) (failwith "empty")
   else start;
-
-let forEach (f: int => unit) ({ count, start }: t) => {
-  let rec recurse f start count =>
-    if (count == 0) ()
-    else {
-      f start;
-      recurse f (start + 1) (count - 1);
-    };
-  recurse f start count;
-};
-
-let forEachWhile (predicate: int => bool) (f: int => unit) ({ count, start }: t) => {
-  let rec recurse f start count =>
-    if (count == 0) ()
-    else if (predicate start) {
-      f start;
-      recurse f (start + 1) (count - 1);
-    }
-    else ();
-  recurse f start count;
-};
-
-let forEachRight (f: int => unit) ({ count, start }: t) => {
-  let rec recurse f start count =>
-    if (count == 0) ()
-    else {
-      f start;
-      recurse f (start - 1) (count - 1);
-    };
-  recurse f (count - 1) count;
-};
-
-let forEachRightWhile (predicate: int => bool) (f: int => unit) ({ count, start }: t) => {
-  let rec recurse f start count =>
-    if (count == 0) ()
-    else if (predicate start) {
-      f start;
-      recurse f (start - 1) (count - 1);
-    }
-    else ();
-  recurse f (count - 1) count;
-};
 
 let isEmpty ({ count }: t): bool => count == 0;
 
@@ -137,15 +50,6 @@ let last ({ count, start }: t): (option int) =>
 let lastOrRaise ({ count, start }: t): int =>
   if (count == 0) (failwith "empty")
   else start + count - 1;
-
-let none (f: int => bool) ({ count, start }: t): bool => {
-  let rec recurse f start count =>
-     if (count == 0) true
-     else if (f start) false
-     else (recurse f (start + 1) (count - 1));
-
-  recurse f start count;
-};
 
 let reduce (f: 'acc => int => 'acc) (acc: 'acc) ({ count, start }: t): 'acc => {
   let rec recurse f start count acc =>
@@ -199,15 +103,6 @@ let reduceRightWhile
 
 let hash (set: t): int =>
   set |> reduce (Hash.reducer Hash.structural) Hash.initialValue;
-
-let some (f: int => bool) ({ count, start }: t): bool => {
-  let rec recurse f start count =>
-     if (count == 0) false
-     else if (f start) true
-     else (recurse f (start + 1) (count - 1));
-
-  recurse f start count;
-};
 
 let toSequence ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
