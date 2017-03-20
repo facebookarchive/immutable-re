@@ -932,6 +932,78 @@ let module KeyedCollection: {
   };
 };
 
+let module PersistentKeyedCollection: {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
+
+    let remove: k => (t 'v) => (t 'v);
+
+    let removeAll: (t 'v) => (t 'v);
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    include KeyedCollection.S2 with  type t 'k 'v := t 'k 'v;
+
+    let remove: 'k => (t 'k 'v) => (t 'k 'v);
+
+    let removeAll: (t 'k 'v) => (t 'k 'v);
+  };
+};
+
+let module TransientKeyedCollection: {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    let containsKey: k => (t 'v) => bool;
+
+    let count: (t 'v) => int;
+    /** [count map] returns the number of key/value pairs in [map]. */
+
+    let isEmpty: (t 'v) => bool;
+    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
+    let isNotEmpty: (t 'v) => bool;
+    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
+    let remove: k => (t 'v) => (t 'v);
+
+    let removeAll: (t 'v) => (t 'v);
+    /** [removeAll transient] removes all mappings from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let containsKey: 'k => (t 'k 'v) => bool;
+
+    let count: (t 'k 'v) => int;
+    /** [count map] returns the number of key/value pairs in [map]. */
+
+    let isEmpty: (t 'k 'v) => bool;
+    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
+    let isNotEmpty: (t 'k 'v) => bool;
+    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
+    let remove: 'k => (t 'k 'v) => (t 'k 'v);
+
+    let removeAll: (t 'k 'v) => (t 'k 'v);
+    /** [removeAll transient] removes all mappings from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
+};
+
 let module NavigableKeyedCollection: {
   module type S1 = {
     type k;
@@ -1474,6 +1546,7 @@ let module PersistentMap: {
     type k;
     type t 'v;
 
+    include PersistentKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
     include KeyedMappable.S1 with type k := k and type t 'v := t 'v;
 
@@ -1484,15 +1557,12 @@ let module PersistentMap: {
     let put: k => 'v => (t 'v) => (t 'v);
 
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
-
-    let remove: k => (t 'v) => (t 'v);
-
-    let removeAll: (t 'v) => (t 'v);
   };
 
   module type S2 = {
     type t 'k 'v;
 
+    include PersistentKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
     include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
@@ -1503,10 +1573,6 @@ let module PersistentMap: {
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
 
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-
-    let remove: 'k => (t 'k 'v) => (t 'k 'v);
-
-    let removeAll: (t 'k 'v) => (t 'k 'v);
   };
 };
 
@@ -1538,6 +1604,8 @@ let module TransientMap: {
 
     type t 'v;
 
+    include TransientKeyedCollection.S1 with type k := k and type t 'v := t 'v;
+
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
     /** [alter key f transient] enables efficient deep updates to an existing
      *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
@@ -1547,11 +1615,6 @@ let module TransientMap: {
      *  from [key] in [transient].
      */
 
-    let containsKey: k => (t 'v) => bool;
-
-    let count: (t 'v) => int;
-    /** [count map] returns the number of key/value pairs in [map]. */
-
     let get: k => (t 'v) => (option 'v);
     /** [tryGet key transient] returns the value associated with [key] or None
      *
@@ -1559,12 +1622,6 @@ let module TransientMap: {
      */
 
     let getOrRaise: k => (t 'v) => 'v;
-
-    let isEmpty: (t 'v) => bool;
-    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
-
-    let isNotEmpty: (t 'v) => bool;
-    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
     let put: k => 'v => (t 'v) => (t 'v);
     /** [put key value transient] adds the mapping of [key] to [value] to [transient].
@@ -1576,22 +1633,12 @@ let module TransientMap: {
     /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
      *  Key value pairs in [iter] replace existing mappings in [transient].
      */
-
-    let remove: k => (t 'v) => (t 'v);
-    /** [remove key transient] removes from [transient] any mappings from [key].
-     *
-     *  Complexity: O(log32 N), effectively O(1)
-     */
-
-    let removeAll: (t 'v) => (t 'v);
-    /** [removeAll transient] removes all mappings from [transient].
-     *
-     *  Complexity: O(1)
-     */
   };
 
   module type S2 = {
     type t 'k 'v;
+
+    include TransientKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
     /** [alter key f transient] enables efficient deep updates to an existing
@@ -1602,12 +1649,6 @@ let module TransientMap: {
      *  from [key] in [transient].
      */
 
-    let containsKey: 'k => (t 'k 'v) => bool;
-
-    let count: (t 'k 'v) => int;
-    /** [count map] returns the number of key/value pairs in [map]. */
-
-
     let get: 'k => (t 'k 'v) => (option 'v);
     /** [tryGet key transient] returns the value associated with [key] or None
      *
@@ -1615,12 +1656,6 @@ let module TransientMap: {
      */
 
     let getOrRaise: 'k => (t 'k 'v) => 'v;
-
-    let isEmpty: (t 'k 'v) => bool;
-    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
-
-    let isNotEmpty: (t 'k 'v) => bool;
-    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
 
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
     /** [put key value transient] adds the mapping of [key] to [value] to [transient].
@@ -1631,18 +1666,6 @@ let module TransientMap: {
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
     /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
      *  Key value pairs in [iter] replace existing mappings in [transient].
-     */
-
-    let remove: 'k => (t 'k 'v) => (t 'k 'v);
-    /** [remove key transient] removes from [transient] any mappings from [key].
-     *
-     *  Complexity: O(log32 N), effectively O(1)
-     */
-
-    let removeAll: (t 'k 'v) => (t 'k 'v);
-    /** [removeAll transient] removes all mappings from [transient].
-     *
-     *  Complexity: O(1)
      */
   };
 };

@@ -11,7 +11,7 @@
 module type S = {
   type k;
   type t +'v;
-
+  
   let reduceRight: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceRightWhile:
     ('acc => k => 'v => bool) =>
@@ -23,6 +23,8 @@ module type S = {
   let toIteratorRight: t 'v => Iterator.t (k, 'v);
   let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
+  let remove: k => t 'v => t 'v;
+  let removeAll: t 'v => t 'v;
   let reduce: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceWhile:
     ('acc => k => 'v => bool) =>
@@ -46,8 +48,6 @@ module type S = {
     t 'v => t 'vAcc => t 'vAcc;
   let put: k => 'v => t 'v => t 'v;
   let putAll: KeyedIterator.t k 'v => t 'v => t 'v;
-  let remove: k => t 'v => t 'v;
-  let removeAll: t 'v => t 'v;
   let removeFirstOrRaise: t 'v => t 'v;
   let removeLastOrRaise: t 'v => t 'v;
   let empty: t 'v;

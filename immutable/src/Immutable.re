@@ -480,6 +480,52 @@ let module KeyedCollection = {
   };
 };
 
+let module PersistentKeyedCollection = {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
+
+    let remove: k => (t 'v) => (t 'v);
+    let removeAll: (t 'v) => (t 'v);
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+
+    let remove: 'k => (t 'k 'v) => (t 'k 'v);
+    let removeAll: (t 'k 'v) => (t 'k 'v);
+  };
+};
+
+let module TransientKeyedCollection = {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    let containsKey: k => (t 'v) => bool;
+    let count: (t 'v) => int;
+    let isEmpty: (t 'v) => bool;
+    let isNotEmpty: (t 'v) => bool;
+    let remove: k => (t 'v) => (t 'v);
+    let removeAll: (t 'v) => (t 'v);
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let containsKey: 'k => (t 'k 'v) => bool;
+    let count: (t 'k 'v) => int;
+    let isEmpty: (t 'k 'v) => bool;
+    let isNotEmpty: (t 'k 'v) => bool;
+    let remove: 'k => (t 'k 'v) => (t 'k 'v);
+    let removeAll: (t 'k 'v) => (t 'k 'v);
+  };
+};
+
 let module NavigableKeyedCollection = {
   module type S1 = {
     type k;
@@ -780,6 +826,7 @@ let module PersistentMap = {
     type k;
     type t 'v;
 
+    include PersistentKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
     include KeyedMappable.S1 with type k := k and type t 'v := t 'v;
 
@@ -787,13 +834,12 @@ let module PersistentMap = {
     let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'v) => (t 'vAcc) => (t 'vAcc);
     let put: k => 'v => (t 'v) => (t 'v);
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
-    let remove: k => (t 'v) => (t 'v);
-    let removeAll: (t 'v) => (t 'v);
   };
 
   module type S2 = {
     type t 'k 'v;
 
+    include PersistentKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
     include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
@@ -801,8 +847,6 @@ let module PersistentMap = {
     let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'v) => (t 'k 'vAcc) => (t 'k 'vAcc);
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-    let remove: 'k => (t 'k 'v) => (t 'k 'v);
-    let removeAll: (t 'k 'v) => (t 'k 'v);
   };
 };
 
@@ -825,33 +869,25 @@ let module TransientMap = {
 
     type t 'v;
 
+    include TransientKeyedCollection.S1 with type k := k and type t 'v := t 'v;
+
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
-    let containsKey: k => (t 'v) => bool;
-    let count: (t 'v) => int;
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
-    let isEmpty: (t 'v) => bool;
-    let isNotEmpty: (t 'v) => bool;
     let put: k => 'v => (t 'v) => (t 'v);
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
-    let remove: k => (t 'v) => (t 'v);
-    let removeAll: (t 'v) => (t 'v);
   };
 
   module type S2 = {
     type t 'k 'v;
 
+    include TransientKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
-    let containsKey: 'k => (t 'k 'v) => bool;
-    let count: (t 'k 'v) => int;
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
-    let isEmpty: (t 'k 'v) => bool;
-    let isNotEmpty: (t 'k 'v) => bool;
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-    let remove: 'k => (t 'k 'v) => (t 'k 'v);
-    let removeAll: (t 'k 'v) => (t 'k 'v);
   };
 };
 
