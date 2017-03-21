@@ -812,10 +812,21 @@ let reduceWhile
     result;
   };
 
+  let triePredicate _ _ => !shouldContinue;
+  let rec trieReducer acc =>
+    IndexedTrie.reduceWhileWithResult triePredicate trieReducer predicate f acc;
+
   let acc = left |> CopyOnWriteArray.reduce while_::predicate f acc;
 
   let acc =
-    if (!shouldContinue) (IndexedTrie.reduceWhileWithResult shouldContinue predicate f acc middle)
+    if (!shouldContinue) (IndexedTrie.reduceWhileWithResult
+      triePredicate
+      trieReducer
+      predicate
+      f
+      acc
+      middle
+    )
     else acc;
 
   let acc =
@@ -890,10 +901,21 @@ let reduceRightWhile
     result;
   };
 
+  let triePredicate _ _ => !shouldContinue;
+  let rec trieReducer acc =>
+    IndexedTrie.reduceRightWhileWithResult triePredicate trieReducer predicate f acc;
+
   let acc = right |> CopyOnWriteArray.reduceRight while_::predicate f acc;
 
   let acc =
-    if (!shouldContinue) (IndexedTrie.reduceRightWhileWithResult shouldContinue predicate f acc middle)
+    if (!shouldContinue) (IndexedTrie.reduceRightWhileWithResult
+      triePredicate
+      trieReducer
+      predicate
+      f
+      acc
+      middle
+    )
     else acc;
 
   let acc =

@@ -80,11 +80,6 @@ let return (value: 'a): (t 'a) => {
   list: [value],
 };
 
-let reverse ({ count, list }: t 'a): (t 'a) => {
-  count,
-  list: list |> ImmList.reverse,
-};
-
 let toIterator ({ list }: t 'a): (Iterator.t 'a) =>
   Iterator.ofList list;
 

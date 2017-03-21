@@ -7,14 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Immutable;
+open ReUnit.Expect;
 open ReUnit.Test;
 
-ReUnit.run (describe "Immutable.re" [
-  DequeTest.test,
-  IteratorTest.test,
-  ListTest.test,
-  OptionTest.test,
-  SequenceTest.test,
-  StackTest.test,
-  VectorTest.test,
-]);
+let module Tester = StackTester.Make (Stack: Stack.S1) ({
+  let count = 10;
+});
+
+let test = describe "Stack" [ Tester.test ];

@@ -150,10 +150,10 @@ let module Expect = {
   let defer (expr: unit => 'a): (t 'a) =>
     try (Value (expr ())) { | exn => Error exn };
 
-  let shouldThrow (expr: unit => 'a) => {
+  let shouldRaise (expr: unit => 'a) => {
     let result = try (Value (expr ())) { | exn => Error exn };
     result |> forEach (fun _ =>
-      Pervasives.failwith "expected exception to be thrown"
+      Pervasives.failwith "expected exception to be raised"
     );
   };
 };

@@ -92,7 +92,7 @@ let test = describe "Iterator" [
       |> toBeEqualToInt 2;
 
     (fun () => Iterator.empty |> Iterator.findOrRaise (fun i => i == 2))
-      |> shouldThrow;
+      |> shouldRaise;
   }),
   it "flatMap" (fun () => {
     IntRange.create start::0 count::3

@@ -22,7 +22,7 @@ let test = describe "Option" [
   }),
   it "firstOrRaise" (fun () => {
     Option.return 1 |> Option.firstOrRaise |> expect |> toBeEqualToInt 1;
-    (fun () => Option.empty |> Option.firstOrRaise) |> shouldThrow;
+    (fun () => Option.empty |> Option.firstOrRaise) |> shouldRaise;
   }),
   it "flatMap" (fun () => {
     Option.return 1 |> Option.flatMap (fun i => Option.return (i + 2)) |> expect |> toBeEqualToSomeOfInt 3;

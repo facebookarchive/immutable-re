@@ -44,7 +44,7 @@ let module Expect: {
   let toBeEqualToTrue: (t bool) => unit;
   let toBeEqualToWith: ('a => 'a => bool) => ('a => string) => 'a => (t 'a) => unit;
 
-  let shouldThrow: (unit => 'a) => unit;
+  let shouldRaise: (unit => 'a) => unit;
 };
 
 let run: Test.t => unit;

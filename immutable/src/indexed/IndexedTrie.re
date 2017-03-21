@@ -30,36 +30,19 @@ let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch 
 };
 
 let rec reduceWhileWithResult
-    (shouldContinue: ref bool)
+    (triePredicate: 'acc => t 'a => bool)
+    (trieReducer: 'acc => t 'a => 'acc)
     (predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (trie: t 'a): 'acc => switch trie {
   | Empty => acc
   | Leaf _ values =>
-      values |> CopyOnWriteArray.reduce while_::predicate f acc
+      values |> CopyOnWriteArray.reduce
+        while_::predicate f acc
   | Level _ _ _ nodes =>
-      let reducer acc node =>
-        node |> reduceWhileWithResult shouldContinue predicate f acc;
-
-      let predicate _ _ => !shouldContinue;
-
-      nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
-};
-
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (trie: t 'a): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc next => {
-    let result = predicate acc next;
-    shouldContinue := result;
-    result;
-  };
-
-  reduceWhileWithResult shouldContinue predicate f acc trie;
+      nodes |> CopyOnWriteArray.reduce
+        while_::triePredicate trieReducer acc
 };
 
 let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
@@ -71,7 +54,8 @@ let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => sw
 };
 
 let rec reduceRightWhileWithResult
-    (shouldContinue: ref bool)
+    (triePredicate: 'acc => t 'a => bool)
+    (trieReducer: 'acc => t 'a => 'acc)
     (predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
@@ -80,27 +64,8 @@ let rec reduceRightWhileWithResult
   | Leaf _ values =>
       values |> CopyOnWriteArray.reduceRight while_::predicate f acc
   | Level _ _ _ nodes =>
-      let reducer acc node =>
-        node |> reduceRightWhileWithResult shouldContinue predicate f acc;
-
-      let predicate _ _ => !shouldContinue;
-
-      nodes |> CopyOnWriteArray.reduceRight while_::predicate reducer acc
-};
-
-let reduceRightWhile
-    (predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (trie: t 'a): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc next => {
-    let result = predicate acc next;
-    shouldContinue := result;
-    result;
-  };
-
-  reduceWhileWithResult shouldContinue predicate f acc trie;
+      nodes |> CopyOnWriteArray.reduceRight
+        while_::triePredicate trieReducer acc
 };
 
 let rec toSequence (trie: t 'a): (Sequence.t 'a) => switch trie {

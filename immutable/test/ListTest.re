@@ -26,7 +26,7 @@ let test = describe "List" [
     expect (List.first [1]) |> toBeEqualToSomeOfInt 1;
   }),
   it "firstOrRaise" (fun () => {
-    (fun ()=> List.firstOrRaise []) |> shouldThrow;
+    (fun ()=> List.firstOrRaise []) |> shouldRaise;
     expect (List.firstOrRaise [1]) |> toBeEqualToInt 1;
   }),
   it "fromReverse" (fun () => {
@@ -59,7 +59,7 @@ let test = describe "List" [
       |> toBeEqualToListOfInt [9, 8, 7, 6, 5, 4, 3, 2, 1];
 
     (fun () => List.removeFirstOrRaise [] |> ignore)
-      |> shouldThrow;
+      |> shouldRaise;
   }),
   it "return" (fun () => {
     List.return 1 |> expect |> toBeEqualToListOfInt [1];
