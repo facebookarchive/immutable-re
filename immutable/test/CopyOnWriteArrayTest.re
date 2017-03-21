@@ -7,15 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Immutable;
+open ReUnit.Expect;
 open ReUnit.Test;
 
-ReUnit.run (describe "Immutable.re" [
-  CopyOnWriteArrayTest.test,
-  DequeTest.test,
-  IteratorTest.test,
-  ListTest.test,
-  OptionTest.test,
-  SequenceTest.test,
-  StackTest.test,
-  VectorTest.test,
-]);
+let module Tester = DequeTester.Make (CopyOnWriteArray: Deque.S1) ({
+  let count = 100;
+});
+
+let test = describe "CopyOnWriteArray" Tester.tests;

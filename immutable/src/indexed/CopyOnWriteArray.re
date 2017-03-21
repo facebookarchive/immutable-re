@@ -69,7 +69,7 @@ let lastIndexOrRaise (arr: t 'a): int => {
 
 let last (arr: t 'a): (option 'a) => {
   let lastIndex = count arr - 1;
-  if (lastIndex > 0) (get lastIndex arr)
+  if (lastIndex >= 0) (get lastIndex arr)
   else None;
 };
 

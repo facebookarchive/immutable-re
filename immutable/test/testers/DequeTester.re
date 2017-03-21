@@ -159,5 +159,4 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
     ],
     ...StackTester.tests
   ]
-
 };
