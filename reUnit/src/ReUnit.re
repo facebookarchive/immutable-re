@@ -73,9 +73,6 @@ let module Test = {
 let module Expect = {
   type t 'a = | Value 'a | Error exn;
 
-  let defer (expr: unit => 'a): (t 'a) =>
-    try (Value (expr ())) { | exn => Error exn };
-
   let expect (value: 'a): (t 'a) => Value value;
 
   let failwith (message: string): (t 'a) =>
@@ -150,8 +147,15 @@ let module Expect = {
 
   let toBeEqualToTrue = toBeEqualToStructuralEquality string_of_bool true;
 
-  let throws (expect: t 'a) => expect
-    |> forEach(fun _ => Pervasives.failwith "expected exception to be thrown");
+  let defer (expr: unit => 'a): (t 'a) =>
+    try (Value (expr ())) { | exn => Error exn };
+
+  let shouldThrow (expr: unit => 'a) => {
+    let result = try (Value (expr ())) { | exn => Error exn };
+    result |> forEach (fun _ =>
+      Pervasives.failwith "expected exception to be thrown"
+    );
+  };
 };
 
 let run (tests: Test.t): unit => {

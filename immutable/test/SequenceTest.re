@@ -98,9 +98,7 @@ let test = describe "Sequence" [
       |> expect
       |> toBeEqualToInt 0;
 
-    (fun () => Sequence.empty |> Sequence.firstOrRaise)
-      |> defer
-      |> throws;
+    (fun () => Sequence.empty |> Sequence.firstOrRaise) |> shouldThrow;
   }),
   it "flatMap" (fun () => {
     IntRange.create start::0 count::3

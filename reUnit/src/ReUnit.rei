@@ -21,7 +21,6 @@ let module Expect: {
   /* In ocaml 4.03 there is a result type that Expect maps to directly.
    * In that case we could move these monadic functions into Immutable.re directly
    */
-  let defer: (unit => 'a) => (t 'a);
   let expect: 'a => (t 'a);
   let failwith: string => (t 'a);
   let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
@@ -44,7 +43,8 @@ let module Expect: {
   let toBeEqualToString: string => (t string) => unit;
   let toBeEqualToTrue: (t bool) => unit;
   let toBeEqualToWith: ('a => 'a => bool) => ('a => string) => 'a => (t 'a) => unit;
-  let throws: (t 'a) => unit;
+
+  let shouldThrow: (unit => 'a) => unit;
 };
 
 let run: Test.t => unit;
