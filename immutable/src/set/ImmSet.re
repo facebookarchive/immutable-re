@@ -39,15 +39,12 @@ let isEmpty ({ count }: t 'a): bool =>
 let isNotEmpty ({ count }: t 'a): bool =>
   count != 0;
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) ({ iterator }: t 'a): 'acc =>
-  iterator |> Iterator.reduce f acc;
-
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
+let reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     ({ iterator }: t 'a): 'acc =>
-  iterator |> Iterator.reduceWhile predicate f acc;
+  iterator |> Iterator.reduce while_::predicate f acc;
 
 let toIterator ({ iterator } as set: t 'a): (Iterator.t 'a) =>
   if (set === empty) Iterator.empty
@@ -56,8 +53,8 @@ let toIterator ({ iterator } as set: t 'a): (Iterator.t 'a) =>
 let toKeyedIterator ({ iterator }: t 'a): (KeyedIterator.t 'a 'a) =>
   if (iterator == Iterator.empty) KeyedIterator.empty
   else {
-    reduceWhile: fun predicate f acc => iterator |> Iterator.reduceWhile
-      (fun acc next => predicate acc next next)
+    reduce: fun predicate f acc => iterator |> Iterator.reduce
+      while_::(fun acc next => predicate acc next next)
       (fun acc next => f acc next next)
       acc
   };

@@ -79,7 +79,7 @@ let module BitmapTrieIntSet = {
           |> reduceWhileWithResult shouldContinue predicate f acc;
         let predicate _ _ => !shouldContinue;
 
-        nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+        nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
     | Entry value =>
         if (!shouldContinue && (predicate acc value)) (f acc value)
         else acc
@@ -197,24 +197,22 @@ let removeAll (_: t): t =>
 let toSequence ({ root }: t): (Sequence.t int) =>
   root |> BitmapTrieIntSet.toSequence;
 
-let reduce (f: 'acc => int => 'acc) (acc: 'acc) ({ root }: t): 'acc =>
-  root |> BitmapTrieIntSet.reduce f acc;
-
-let reduceWhile
-    (predicate: 'acc => int => bool)
+let reduce
+    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     ({ root }: t): 'acc =>
-  root |> BitmapTrieIntSet.reduceWhile predicate f acc;
+  if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
+  else (BitmapTrieIntSet.reduceWhile predicate f acc root);
 
 let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
-  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
+  else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
 let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduceWhile: fun predicate f acc => set |> reduceWhile
-    (fun acc next => predicate acc next next)
+  else { reduce: fun predicate f acc => set |> reduce
+    while_::(fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };

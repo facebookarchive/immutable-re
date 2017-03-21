@@ -11,11 +11,9 @@
 module type S = {
   type k;
   type t +'v;
-  
-  let reduceRight: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let reduceRightWhile:
-    ('acc => k => 'v => bool) =>
-    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+
+  let reduceRight:
+    while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let first: t 'v => option (k, 'v);
   let firstOrRaise: t 'v => (k, 'v);
   let last: t 'v => option (k, 'v);
@@ -25,10 +23,8 @@ module type S = {
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
-  let reduce: ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let reduceWhile:
-    ('acc => k => 'v => bool) =>
-    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let reduce:
+    while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterator: t 'v => Iterator.t (k, 'v);
   let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
   let containsKey: k => t 'v => bool;
@@ -129,25 +125,21 @@ let module Make = fun (Comparable: Comparable.S) => {
   let from (iter: KeyedIterator.t k 'v): (t 'v) =>
     empty |> putAll iter;
 
-  let reduce (f: 'acc => k => 'v => 'acc) (acc: 'acc) ({ tree }: t 'v): 'acc =>
-    tree |> AVLTreeMap.reduce f acc;
-
-  let reduceWhile
-      (predicate: 'acc => k => 'v => bool)
+  let reduce
+      while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
       (f: 'acc => k => 'v => 'acc)
       (acc: 'acc)
       ({ tree }: t 'v): 'acc =>
-    tree |> AVLTreeMap.reduceWhile predicate f acc;
+    if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduce f acc tree)
+    else (AVLTreeMap.reduceWhile predicate f acc tree);
 
-  let reduceRight (f: 'acc => k => 'v => 'acc) (acc: 'acc) ({ tree }: t 'v): 'acc =>
-    tree |> AVLTreeMap.reduceRight f acc;
-
-  let reduceRightWhile
-      (predicate: 'acc => k => 'v => bool)
+  let reduceRight
+      while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
       (f: 'acc => k => 'v => 'acc)
       (acc: 'acc)
       ({ tree }: t 'v): 'acc =>
-    tree |> AVLTreeMap.reduceRightWhile predicate f acc;
+    if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduceRight f acc tree)
+    else (AVLTreeMap.reduceRightWhile predicate f acc tree);
 
   let map (f: k => 'a => 'b) (map: t 'a): (t 'b) =>
     map |> reduce (fun acc k v => acc |> put k (f k v)) empty;
@@ -180,8 +172,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toIterator (map: t 'v): (Iterator.t (k, 'v)) =>
     if (isEmpty map) Iterator.empty
     else {
-      reduceWhile: fun predicate f acc => map |> reduceWhile
-        (fun acc k v => predicate acc (k, v))
+      reduce: fun predicate f acc => map |> reduce
+        while_::(fun acc k v => predicate acc (k, v))
         (fun acc k v => f acc (k, v))
         acc
     };
@@ -189,8 +181,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toIteratorRight (map: t 'v): (Iterator.t (k, 'v)) =>
     if (isEmpty map) Iterator.empty
     else {
-      reduceWhile: fun predicate f acc => map |> reduceRightWhile
-        (fun acc k v => predicate acc (k, v))
+      reduce: fun predicate f acc => map |> reduceRight
+        while_::(fun acc k v => predicate acc (k, v))
         (fun acc k v => f acc (k, v))
         acc
     };
@@ -198,13 +190,13 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toKeyedIterator (map: t 'v): (KeyedIterator.t k 'v) =>
     if (isEmpty map) KeyedIterator.empty
     else {
-      reduceWhile: fun predicate f acc => map |> reduceWhile predicate f acc
+      reduce: fun predicate f acc => map |> reduce while_::predicate f acc
     };
 
   let toKeyedIteratorRight (map: t 'v): (KeyedIterator.t k 'v) =>
     if (isEmpty map) KeyedIterator.empty
     else {
-      reduceWhile: fun predicate f acc => map |> reduceRightWhile predicate f acc
+      reduce: fun predicate f acc => map |> reduceRight while_::predicate f acc
     };
 
   let toMap (map: t 'v): (ImmMap.t k 'v) => {

@@ -89,23 +89,13 @@ let ofOption (opt: option 'a): (t 'a) => switch opt {
 };
 
 let rec reduce
-    (reducer: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (seq: t 'a): 'acc => switch (seq ()) {
-  | Next value next =>
-      let acc = reducer acc value;
-      reduce reducer acc next
-  | Completed => acc
-};
-
-let rec reduceWhile
-    (predicate: 'acc => 'a => bool)
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (reducer: 'acc => 'a => 'acc)
     (acc: 'acc)
     (seq: t 'a): 'acc => switch (seq ()) {
   | Next value next when predicate acc value =>
       let acc = reducer acc value;
-      reduceWhile predicate reducer acc next
+      reduce while_::predicate reducer acc next
   | _ => acc
 };
 
@@ -129,8 +119,8 @@ let rec scan
 let toIterator (seq: t 'a): (Iterator.t 'a) =>
   if (seq === empty) Iterator.empty
   else {
-    reduceWhile: fun predicate f acc =>
-      reduceWhile predicate f acc seq
+    reduce: fun predicate f acc =>
+      reduce while_::predicate f acc seq
   };
 
 let buffer

@@ -58,15 +58,12 @@ let mapReverse (f: 'a => 'b) ({ count, list }: t 'a): (t 'b) => {
   list: list |> ImmList.mapReverse f,
 };
 
-let reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) ({ list }: t 'a): 'acc =>
-  list |> ImmList.reduce f acc;
-
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
+let reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc )
     (acc: 'acc)
     ({ list }: t 'a): 'acc =>
-  list |> ImmList.reduceWhile predicate f acc;
+  list |> ImmList.reduce while_::predicate f acc;
 
 let removeAll (_: t 'a): (t 'a) => empty;
 

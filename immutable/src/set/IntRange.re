@@ -57,18 +57,8 @@ let lastOrRaise ({ count, start }: t): int =>
   if (count == 0) (failwith "empty")
   else start + count - 1;
 
-let reduce (f: 'acc => int => 'acc) (acc: 'acc) ({ count, start }: t): 'acc => {
-  let rec recurse f start count acc =>
-    if (count == 0) acc
-    else {
-      let acc = f acc start;
-      recurse f (start + 1) (count - 1) acc;
-    };
-  recurse f start count acc;
-};
-
-let reduceWhile
-    (predicate: 'acc => int => bool)
+let reduce
+    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     ({ count, start }: t): 'acc => {
@@ -82,18 +72,8 @@ let reduceWhile
   recurse predicate f start count acc;
 };
 
-let reduceRight (f: 'acc => int => 'acc) (acc: 'acc) ({ count, start }: t): 'acc => {
-  let rec recurse f start count acc =>
-    if (count == 0) acc
-    else {
-      let acc = f acc start;
-      recurse f (start - 1) (count - 1) acc;
-    };
-  recurse f (start + count - 1) count acc;
-};
-
-let reduceRightWhile
-    (predicate: 'acc => int => bool)
+let reduceRight
+    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     ({ count, start }: t): 'acc => {
@@ -126,24 +106,24 @@ let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
 
 let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
-  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
+  else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
 let toIteratorRight (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
-  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc set };
+  else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
 
 let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduceWhile: fun predicate f acc => set |> reduceWhile
-    (fun acc next => predicate acc next next)
+  else { reduce: fun predicate f acc => set |> reduce
+    while_::(fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };
 
 let toKeyedIteratorRight (set: t): (KeyedIterator.t int int) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduceWhile: fun predicate f acc => set |> reduceRightWhile
-    (fun acc next => predicate acc next next)
+  else { reduce: fun predicate f acc => set |> reduceRight
+    while_::(fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };

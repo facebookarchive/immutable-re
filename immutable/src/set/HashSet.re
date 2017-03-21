@@ -235,24 +235,22 @@ let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
   if (isEmpty set) Sequence.empty
   else root |> BitmapTrieSet.toSequence;
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (set: t 'a): 'acc =>
-  set |> toSequence |> Sequence.reduce f acc;
-
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
+/** FIXME: Implement this correctly. ecchh */
+let reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (set: t 'a): 'acc =>
-  set |> toSequence |> Sequence.reduceWhile predicate f acc;
+  set |> toSequence |> Sequence.reduce while_::predicate f acc;
 
 let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) Iterator.empty
-  else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc set };
+  else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
 let toKeyedIterator (set: t 'a): (KeyedIterator.t 'a 'a) =>
   if (isEmpty set) KeyedIterator.empty
-  else { reduceWhile: fun predicate f acc => set |> reduceWhile
-    (fun acc next => predicate acc next next)
+  else { reduce: fun predicate f acc => set |> reduce
+    while_::(fun acc next => predicate acc next next)
     (fun acc next => f acc next next)
     acc
   };

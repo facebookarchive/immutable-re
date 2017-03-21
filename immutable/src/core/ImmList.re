@@ -56,22 +56,15 @@ let rec mapReverseImpl (f: 'a => 'b) (src: t 'a) (dst: list 'b): (list 'b) => sw
 let mapReverse (f: 'a => 'b) (list: t 'a): (list 'b) =>
   mapReverseImpl f list [];
 
-let rec reduce (f: 'acc => 'a => 'acc ) (acc: 'acc) (list: t 'a): 'acc => switch list {
-  | [head, ...tail] =>
-      let acc = f acc head;
-      reduce f acc tail
-  | [] => acc
-};
-
-let rec reduceWhile
-    (predicate: 'acc => 'a => bool)
+let rec reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc )
     (acc: 'acc)
     (list: t 'a): 'acc => switch list {
   | [head, ...tail] =>
       if (predicate acc head) {
         let acc = f acc head;
-        reduceWhile predicate f acc tail
+        reduce while_::predicate f acc tail
       } else acc
   | [] => acc
 };

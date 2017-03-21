@@ -80,43 +80,33 @@ let reverse (deque: t 'a): (t 'a) => switch deque {
   | Descending vector => Ascending vector
 };
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switch deque {
-  | Ascending vector => vector |> Vector.reduce f acc;
-  | Descending vector => vector |> Vector.reduceRight f acc;
-};
-
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
+let reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (deque: t 'a): 'acc => switch deque {
-  | Ascending vector => vector |> Vector.reduceWhile predicate f acc;
-  | Descending vector => vector |> Vector.reduceRightWhile predicate f acc;
+  | Ascending vector => vector |> Vector.reduce while_::predicate f acc;
+  | Descending vector => vector |> Vector.reduceRight while_::predicate f acc;
 };
 
-let reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (deque: t 'a): 'acc => switch deque {
-  | Ascending vector => vector |> Vector.reduceRight f acc;
-  | Descending vector => vector |> Vector.reduce f acc;
-};
-
-let reduceRightWhile
-    (predicate: 'acc => 'a => bool)
+let reduceRight
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (deque: t 'a): 'acc => switch deque {
-  | Ascending vector => vector |> Vector.reduceRightWhile predicate f acc;
-  | Descending vector => vector |> Vector.reduceWhile predicate f acc;
+  | Ascending vector => vector |> Vector.reduceRight while_::predicate f acc;
+  | Descending vector => vector |> Vector.reduce while_::predicate f acc;
 };
 
 let removeAll (_: t 'a): (t 'a) => empty;
 
 let toIterator (deque: t 'a): (Iterator.t 'a) =>
  if (isEmpty deque) Iterator.empty
- else { reduceWhile: fun predicate f acc => reduceWhile predicate f acc deque };
+ else { reduce: fun predicate f acc => reduce while_::predicate f acc deque };
 
 let toIteratorRight (deque: t 'a): (Iterator.t 'a) =>
   if (isEmpty deque) Iterator.empty
-  else { reduceWhile: fun predicate f acc => reduceRightWhile predicate f acc deque };
+  else { reduce: fun predicate f acc => reduceRight while_::predicate f acc deque };
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequence

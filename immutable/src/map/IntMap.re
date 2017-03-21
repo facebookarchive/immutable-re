@@ -155,9 +155,9 @@ let module BitmapTrieIntMap = {
     | Level _ nodes _ =>
         let reducer acc node => node
           |> reduceWhileWithResult shouldContinue predicate f acc;
-        let predicate acc node => !shouldContinue;
+        let predicate _ _ => !shouldContinue;
 
-        nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+        nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
     | Entry key value =>
         if (!shouldContinue && (predicate acc key value)) (f acc key value)
         else acc
@@ -254,15 +254,13 @@ let isNotEmpty ({ count }: t 'v): bool => count != 0;
 let put (key: int) (value: 'v) (map: t 'v): (t 'v) =>
   map |> alter key (Functions.return @@ Option.return @@ value);
 
-let reduce (f: 'vcc => int => 'v => 'vcc) (acc: 'vcc) ({ root }: t 'v): 'vcc =>
-  root |> BitmapTrieIntMap.reduce f acc;
-
-let reduceWhile
-    (predicate: 'acc => int => 'v => bool)
+let reduce
+    while_::(predicate: 'acc => int => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => int => 'v => 'acc)
     (acc: 'acc)
     ({ root }: t 'v): 'acc =>
-  root |> BitmapTrieIntMap.reduceWhile predicate f acc;
+  if (predicate === Functions.alwaysTrue3) (BitmapTrieIntMap.reduce f acc root)
+  else (BitmapTrieIntMap.reduceWhile predicate f acc root);
 
 let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;
@@ -272,8 +270,8 @@ let removeAll (_: t 'v): (t 'v) => empty;
 let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
   if (isEmpty map) Iterator.empty
   else {
-    reduceWhile: fun predicate f acc => map |> reduceWhile
-      (fun acc k v => predicate acc (k, v))
+    reduce: fun predicate f acc => map |> reduce
+      while_::(fun acc k v => predicate acc (k, v))
       (fun acc k v => f acc (k, v))
       acc
   };
@@ -281,7 +279,7 @@ let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
 let toKeyedIterator (map: t 'v): (KeyedIterator.t int 'v) =>
   if (isEmpty map) KeyedIterator.empty
   else {
-    reduceWhile: fun predicate f acc => reduceWhile predicate f acc map
+    reduce: fun predicate f acc => reduce while_::predicate f acc map
   };
 
 let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>

@@ -67,16 +67,13 @@ let getOrRaise (equals: Equality.t 'k) (key: 'k) (map: t 'k 'v): 'v => {
 let put (equals: Equality.t 'k) (key: 'k) (value: 'v) (map: t 'k 'v): (t 'k 'v) =>
   alter equals key (Functions.return @@ Option.return @@ value) map;
 
-let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc =>
-  map |> CopyOnWriteArray.reduce (fun acc (k, v) => f acc k v) acc;
-
-let reduceWhile
-    (predicate: 'acc => 'k => 'v => bool)
+let reduce
+    while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
     (map: t 'k 'v): 'acc =>
-  map |> CopyOnWriteArray.reduceWhile
-    (fun acc (k, v) => predicate acc k v)
+  map |> CopyOnWriteArray.reduce
+    while_::(fun acc (k, v) => predicate acc k v)
     (fun acc (k, v) => f acc k v)
     acc;
 

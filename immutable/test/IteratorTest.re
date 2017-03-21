@@ -23,10 +23,10 @@ let test = describe "Iterator" [
       range3 |> IntRange.toIterator,
     ];
 
-    let acc = concatted |> Iterator.reduceWhile
-      (fun _ i => i < 4)
-      (fun acc i => acc + i)
-      0;
+    let acc = concatted |> Iterator.reduce
+      while_::(fun _ i => i < 4) (fun acc i =>
+        acc + i
+      ) 0;
     expect acc |> toBeEqualToInt 6;
 
     let emptyConcat = Iterator.concat [];
@@ -36,10 +36,10 @@ let test = describe "Iterator" [
     let range = IntRange.create start::0 count::5;
     let mapped = range |> IntRange.toIterator |> Iterator.map (fun i => i * 3);
 
-    let acc = mapped |> Iterator.reduceWhile
-      (fun _ i => i < 9)
-      (fun acc i => acc + i)
-      0;
+    let acc = mapped |> Iterator.reduce
+      while_::(fun _ i => i < 9) (fun acc i =>
+        acc + i
+      ) 0;
     expect acc |> toBeEqualToInt 9;
 
     let emptyMapped = Iterator.empty |> Iterator.map (fun i => i * 3);

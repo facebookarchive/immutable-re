@@ -58,13 +58,8 @@ let orDefault (defaultValue: 'a) (opt: t 'a): 'a => switch (opt) {
   | _ => defaultValue
 };
 
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (opt: t 'a): 'acc => switch opt {
-  | Some a => f acc a
-  | _ => acc
-};
-
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
+let reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (opt: t 'a): 'acc => switch opt {

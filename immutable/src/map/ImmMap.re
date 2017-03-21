@@ -61,24 +61,21 @@ let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
     if (set |> ImmSet.contains k) k
     else failwith "not found",
   keyedIterator: {
-    reduceWhile: fun predicate f acc =>
-      set |> ImmSet.toIterator |> Iterator.reduceWhile
-        (fun acc next => predicate acc next next)
+    reduce: fun predicate f acc =>
+      set |> ImmSet.toIterator |> Iterator.reduce
+        while_::(fun acc next => predicate acc next next)
         (fun acc next => f acc next next)
         acc
   },
   sequence: ImmSet.toSequence set |> Sequence.map (fun k => (k, k)),
 };
 
-let reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) ({ keyedIterator }: t 'k 'v): 'acc =>
-  keyedIterator |> KeyedIterator.reduce f acc;
-
-let reduceWhile
-    (predicate: 'acc => 'k => 'v => bool)
+let reduce
+    while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
     ({ keyedIterator }: t 'k 'v): 'acc =>
-  keyedIterator |> KeyedIterator.reduceWhile predicate f acc;
+  keyedIterator |> KeyedIterator.reduce while_::predicate f acc;
 
 let toIterator ({ keyedIterator }: t 'k 'v): (Iterator.t ('k, 'v)) =>
   keyedIterator |> KeyedIterator.toIterator;

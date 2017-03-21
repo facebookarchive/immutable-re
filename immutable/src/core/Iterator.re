@@ -8,27 +8,24 @@
  */
 
 type t 'a = {
-  reduceWhile: 'acc . ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'acc,
+  reduce: 'acc . ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'acc,
 };
 
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
+let reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (iter: t 'a): 'acc =>
-  iter.reduceWhile predicate f acc;
-
-let reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (iter: t 'a): 'acc =>
-  iter.reduceWhile Functions.alwaysTrue2 f acc;
+  iter.reduce predicate f acc;
 
 let empty: t 'a = {
-  reduceWhile: fun _ _ acc => acc
+  reduce: fun _ _ acc => acc
 };
 
 let concat (iters: list (t 'a)): (t 'a) => switch iters {
   | [] => empty
   | _ => {
-    reduceWhile: fun predicate f acc => {
+    reduce: fun predicate f acc => {
       let shouldContinue = ref true;
 
       let predicate acc next => {
@@ -37,9 +34,9 @@ let concat (iters: list (t 'a)): (t 'a) => switch iters {
         result;
       };
 
-      iters |> ImmList.reduceWhile
-        (fun _ _ => !shouldContinue)
-        (fun acc next => next |> reduceWhile predicate f acc)
+      iters |> ImmList.reduce
+        while_::(fun _ _ => !shouldContinue)
+        (fun acc next => next |> reduce while_::predicate f acc)
         acc
     }
   }
@@ -48,25 +45,24 @@ let concat (iters: list (t 'a)): (t 'a) => switch iters {
 let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => iter |> reduceWhile
-      predicate
-      (fun acc next => { sideEffect next; (f acc next) })
-      acc
+    reduce: fun predicate f acc => iter |> reduce
+      while_::predicate (fun acc next => {
+        sideEffect next; (f acc next)
+      }) acc
   };
 
 let every (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) true
-  else iter |> reduceWhile
-    (fun acc _ => acc)
-    (fun _ => f)
-    true;
+  else iter |> reduce
+    while_::(fun acc _ => acc) (fun _ =>
+      f
+    ) true;
 
 let find (f: 'a => bool) (iter: t 'a): (option 'a) =>
   if (iter === empty) None
-  else iter |> reduceWhile
-    (fun acc _ => Option.isEmpty acc)
-    (fun _ next => if (f next) (Some next) else None)
-    None;
+  else iter |> reduce while_::(fun acc _ => Option.isEmpty acc) (
+    fun _ next => if (f next) (Some next) else None
+  ) None;
 
 let findOrRaise (f: 'a => bool) (iter: t 'a): 'a =>
   find f iter |> Option.firstOrRaise;
@@ -74,16 +70,16 @@ let findOrRaise (f: 'a => bool) (iter: t 'a): 'a =>
 let filter (filter: 'a => bool) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => iter |> reduceWhile
-      predicate
-      (fun acc next => if (filter next) (f acc next) else acc)
-      acc
+    reduce: fun predicate f acc => iter |> reduce
+      while_::predicate (fun acc next =>
+        if (filter next) (f acc next) else acc
+      ) acc
   };
 
 let flatMap (mapper: 'a => t 'b) (iter: t 'a): (t 'b) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => {
+    reduce: fun predicate f acc => {
       let shouldContinue = ref true;
 
       let predicate acc next => {
@@ -92,17 +88,16 @@ let flatMap (mapper: 'a => t 'b) (iter: t 'a): (t 'b) =>
         result;
       };
 
-      iter |> reduceWhile
-        (fun _ _ => !shouldContinue)
-        (fun acc next => next |> mapper |> reduceWhile predicate f acc)
-        acc
+      iter |> reduce while_::(fun _ _ => !shouldContinue) (
+        fun acc next => next |> mapper |> reduce while_::predicate f acc
+      ) acc
     }
   };
 
 let flatten (iters: t (t 'a)): (t 'a) =>
   if (iters === empty) empty
   else {
-    reduceWhile: fun predicate f acc => {
+    reduce: fun predicate f acc => {
       let shouldContinue = ref true;
 
       let predicate acc next => {
@@ -111,18 +106,14 @@ let flatten (iters: t (t 'a)): (t 'a) =>
         result;
       };
 
-      iters |> reduceWhile
-        (fun _ _ => !shouldContinue)
-        (fun acc next => next |> reduceWhile predicate f acc)
-        acc
+      iters |> reduce while_::(fun _ _ => !shouldContinue) (fun acc next =>
+        next |> reduce while_::predicate f acc
+      ) acc
     }
   };
 
-let forEach (f: 'a => unit) (iter: t 'a) =>
-  iter |> reduce (fun _ => f) ();
-
-let forEachWhile (predicate: 'a => bool) (f: 'a => unit) (iter: t 'a) =>
-  iter |> reduceWhile (fun _ => predicate) (fun _ => f) ();
+let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (iter: t 'a) =>
+  iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
 let listAddFirstAll (iter: t 'a) (list: list 'a): (list 'a) =>
   iter |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
@@ -133,36 +124,36 @@ let listFromReverse (iter: t 'a): (list 'a) =>
 let map (mapper: 'a => 'b) (iter: t 'a): (t 'b) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => {
-      iter |> reduceWhile
-        /* FIXME: Memoize the mapper result so that we don't compute it twice */
-        (fun acc next => predicate acc (mapper next))
-        (fun acc next => f acc (mapper next))
-        acc
-    }
+    reduce: fun predicate f acc => iter |> reduce
+      /* FIXME: Memoize the mapper result so that we don't compute it twice */
+      while_::(fun acc next => predicate acc (mapper next)) (fun acc next =>
+        f acc (mapper next)
+      ) acc
   };
 
 let none (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) true
-  else iter |> reduceWhile
-    (fun acc _ => acc)
+  else iter |> reduce
+    while_::(fun acc _ => acc)
     (fun _ => f)
     true;
 
 let ofList (list: list 'a): (t 'a) =>
   if (ImmList.isEmpty list) empty
   else {
-    reduceWhile: fun predicate f acc => ImmList.reduceWhile predicate f acc list
+    reduce: fun predicate f acc =>
+      ImmList.reduce while_::predicate f acc list
   };
 
 let ofOption (opt: Option.t 'a): (t 'a) =>
   if (Option.isEmpty opt) empty
   else {
-    reduceWhile: fun predicate f acc => Option.reduceWhile predicate f acc opt
+    reduce: fun predicate f acc =>
+      Option.reduce while_::predicate f acc opt
   };
 
 let return (value: 'a): (t 'a) => {
-  reduceWhile: fun predicate f acc =>
+  reduce: fun predicate f acc =>
     if (predicate acc value) (f acc value)
     else acc
 };
@@ -170,7 +161,7 @@ let return (value: 'a): (t 'a) => {
 let skip (count: int) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => {
+    reduce: fun predicate f acc => {
       let count = ref count;
 
       let predicate acc next => {
@@ -185,14 +176,14 @@ let skip (count: int) (iter: t 'a): (t 'a) =>
         else f acc next;
       };
 
-      iter |> reduceWhile predicate f acc;
+      iter |> reduce while_::predicate f acc;
     }
   };
 
 let skipWhile (keepSkipping: 'a => bool) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => {
+    reduce: fun predicate f acc => {
       let doneSkipping = ref false;
 
       let f acc next =>
@@ -203,21 +194,21 @@ let skipWhile (keepSkipping: 'a => bool) (iter: t 'a): (t 'a) =>
           f acc next;
         };
 
-      iter |> reduceWhile predicate f acc
+      iter |> reduce while_::predicate f acc
     }
   };
 
 let some (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) false
-  else iter |> reduceWhile
-    (fun acc _ => not acc)
+  else iter |> reduce
+    while_::(fun acc _ => not acc)
     (fun _ => f)
     false;
 
 let take (count: int) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => {
+    reduce: fun predicate f acc => {
       let count = ref count;
 
       let predicate acc next => {
@@ -230,18 +221,18 @@ let take (count: int) (iter: t 'a): (t 'a) =>
         f acc next;
       };
 
-      iter |> reduceWhile predicate f acc;
+      iter |> reduce while_::predicate f acc;
     }
   };
 
 let takeWhile (keepTaking: 'a => bool) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
-    reduceWhile: fun predicate f acc => {
+    reduce: fun predicate f acc => {
       let predicate acc next =>
         if (keepTaking next) (predicate acc next)
         else false;
 
-      iter |> reduceWhile predicate f acc
+      iter |> reduce while_::predicate f acc
     }
   };

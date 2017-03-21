@@ -25,7 +25,7 @@ let generateTests
     (contains: int => 'set => bool)
     (n: int): (list Test.t) => [
   it (sprintf "add %i elements" n) (fun () => {
-    IntRange.create 0 n
+    IntRange.create start::0 count::n
       |> IntRange.reduce
         (fun acc i => acc |> add (hash i))
         (empty ())
@@ -73,7 +73,7 @@ let module SortedIntSet = SortedSet.Make {
 
 
 let test (n: int) (count: int): Test.t => {
-  let keys = IntRange.create 0 count;
+  let keys = IntRange.create start::0 count::count;
 
   let camlIntSet = keys
     |> IntRange.reduce

@@ -86,15 +86,13 @@ let module Reduceable = {
     type a;
     type t;
 
-    let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
-    let reduceWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   };
 
   module type S1 = {
     type t 'a;
 
-    let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let reduceWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let reduce:  while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   };
 };
 
@@ -103,15 +101,13 @@ let module ReduceableRight = {
     type a;
     type t;
 
-    let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
-    let reduceRightWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   };
 
   module type S1 = {
     type t 'a;
 
-    let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let reduceRightWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   };
 };
 
@@ -401,15 +397,13 @@ let module KeyedReduceable = {
     type k;
     type t 'v;
 
-    let reduce: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let reduceWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    let reduceWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   };
 };
 
@@ -418,15 +412,13 @@ let module KeyedReduceableRight = {
     type k;
     type t 'v;
 
-    let reduceRight: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let reduceRightWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let reduceRight: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    let reduceRightWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   };
 };
 

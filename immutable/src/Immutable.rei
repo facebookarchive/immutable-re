@@ -195,15 +195,13 @@ let module Reduceable: {
     type a;
     type t;
 
-    let reduce: ('acc => a => 'acc) => 'acc => t => 'acc;
-    let reduceWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   };
 
   module type S1 = {
     type t 'a;
 
-    let reduce: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let reduceWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   };
 };
 
@@ -212,15 +210,13 @@ let module ReduceableRight: {
     type a;
     type t;
 
-    let reduceRight: ('acc => a => 'acc) => 'acc => t => 'acc;
-    let reduceRightWhile: ('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   };
 
   module type S1 = {
     type t 'a;
 
-    let reduceRight: ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let reduceRightWhile: ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
   };
 };
 
@@ -291,8 +287,7 @@ let module Iterator: {
   let empty: (t 'a);
   let find: ('a => bool) => (t 'a) => (option 'a);
   let findOrRaise: ('a => bool) => (t 'a) => 'a;
-  let forEach: ('a => unit) => (t 'a) => unit;
-  let forEachWhile: ('a => bool) => ('a => unit) => (t 'a) => unit;
+  let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
   let none: ('a => bool) => (t 'a) => bool;
   let return: 'a => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
@@ -818,17 +813,13 @@ let module KeyedReduceable: {
     type k;
     type t 'v;
 
-    let reduce: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-
-    let reduceWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let reduce: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-
-    let reduceWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   };
 };
 
@@ -837,17 +828,13 @@ let module KeyedReduceableRight: {
     type k;
     type t 'v;
 
-    let reduceRight: ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-
-    let reduceRightWhile: ('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   };
 
   module type S2 = {
     type t 'k 'v;
 
-    let reduceRight: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-
-    let reduceRightWhile: ('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   };
 };
 
@@ -869,8 +856,7 @@ let module KeyedIterator: {
   let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
   let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
-  let forEach: ('k => 'v => unit) => (t 'k 'v) => unit;
-  let forEachWhile: ('k => 'v => bool) => ('k => 'v => unit) => (t 'k 'v) => unit;
+  let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
   let keys: (t 'k 'v) => (Iterator.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   let skip: int => (t 'k 'v) => (t 'k 'v);

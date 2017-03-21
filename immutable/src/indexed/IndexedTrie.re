@@ -37,14 +37,14 @@ let rec reduceWhileWithResult
     (trie: t 'a): 'acc => switch trie {
   | Empty => acc
   | Leaf _ values =>
-      values |> CopyOnWriteArray.reduceWhile predicate f acc
+      values |> CopyOnWriteArray.reduce while_::predicate f acc
   | Level _ _ _ nodes =>
       let reducer acc node =>
         node |> reduceWhileWithResult shouldContinue predicate f acc;
 
       let predicate _ _ => !shouldContinue;
 
-      nodes |> CopyOnWriteArray.reduceWhile predicate reducer acc
+      nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
 };
 
 let reduceWhile
@@ -78,14 +78,14 @@ let rec reduceRightWhileWithResult
     (trie: t 'a): 'acc => switch trie {
   | Empty => acc
   | Leaf _ values =>
-      values |> CopyOnWriteArray.reduceRightWhile predicate f acc
+      values |> CopyOnWriteArray.reduceRight while_::predicate f acc
   | Level _ _ _ nodes =>
       let reducer acc node =>
         node |> reduceRightWhileWithResult shouldContinue predicate f acc;
 
       let predicate _ _ => !shouldContinue;
 
-      nodes |> CopyOnWriteArray.reduceRightWhile predicate reducer acc
+      nodes |> CopyOnWriteArray.reduceRight while_::predicate reducer acc
 };
 
 let reduceRightWhile
