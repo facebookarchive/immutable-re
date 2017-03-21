@@ -91,10 +91,16 @@ let findValueOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'v =>
 let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty
   else {
-    reduce: fun predicate f acc => iter |> reduce
-      while_::predicate
-      (fun acc k v => if (filter k v) (f acc k v) else acc)
-      acc
+    reduce: fun predicate f acc => {
+      let predicate acc key value =>
+        if (filter key value) (predicate acc key value)
+        else true;
+
+      iter |> reduce
+        while_::predicate
+        (fun acc k v => if (filter k v) (f acc k v) else acc)
+        acc;
+    }
   };
 
 let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) =>
@@ -182,6 +188,10 @@ let skipWhile (keepSkipping: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
   else {
     reduce: fun predicate f acc => {
       let doneSkipping = ref false;
+
+      let predicate acc key value =>
+        if (!doneSkipping) (predicate acc key value)
+        else true;
 
       let f acc key value =>
         if (!doneSkipping) (f acc key value)

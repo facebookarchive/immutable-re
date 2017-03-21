@@ -273,11 +273,19 @@ let rec zipLongest3With
     (c: t 'c): (t 'd) => fun () => switch (a (), b (), c ()) {
   | (Next aValue aNext, Next bValue bNext, Next cValue cNext) =>
       Next (f (Some aValue) (Some bValue) (Some cValue)) (zipLongest3With f aNext bNext cNext)
+
   | (Next aValue aNext, Next bValue bNext, Completed) =>
       Next (f (Some aValue) (Some bValue) None) (zipLongest3With f aNext bNext empty)
   | (Next aValue aNext, Completed, Next cValue cNext) =>
       Next (f (Some aValue) None (Some cValue)) (zipLongest3With f aNext empty cNext)
   | (Completed, Next bValue bNext, Next cValue cNext) =>
       Next (f None (Some bValue) (Some cValue)) (zipLongest3With f empty bNext cNext)
+
+  | (Completed, Next bValue bNext, Completed) =>
+      Next (f None (Some bValue) None) (zipLongest3With f empty bNext empty)
+  | (Next aValue aNext, Completed, Completed) =>
+      Next (f (Some aValue) None None) (zipLongest3With f aNext empty empty)
+  | (Completed, Completed, Next cValue cNext) =>
+      Next (f None None (Some cValue)) (zipLongest3With f empty empty cNext)
   | _ => Completed
 };

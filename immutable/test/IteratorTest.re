@@ -51,26 +51,6 @@ let test = describe "Iterator" [
       |> expect
       |> toBeEqualToTrue;
   }),
-  it "flatMap" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.filter (fun i => i mod 2 == 0)
-      |> List.fromReverse
-      |> expect
-      |> toBeEqualToListOfInt [4, 2, 0];
-  }),
-  it "flatten" (fun () => {
-    [
-      IntRange.create start::0 count::2 |> IntRange.toIterator,
-      IntRange.create start::2 count::2 |> IntRange.toIterator,
-      IntRange.create start::4 count::2 |> IntRange.toIterator,
-    ] |> List.toIterator
-      |> Iterator.flatten
-      |> Iterator.take 5
-      |> List.fromReverse
-      |> expect
-      |> toBeEqualToListOfInt [4, 3, 2, 1, 0];
-  }),
   it "every" (fun () => {
     expect (Iterator.every (fun _ => false) Iterator.empty) |> toBeEqualToTrue;
 
@@ -114,6 +94,26 @@ let test = describe "Iterator" [
     (fun () => Iterator.empty |> Iterator.findOrRaise (fun i => i == 2))
       |> defer
       |> throws;
+  }),
+  it "flatMap" (fun () => {
+    IntRange.create start::0 count::3
+      |> IntRange.toIterator
+      |> Iterator.flatMap (fun i => List.toIterator [1, 1, 1] )
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [1, 1, 1, 1, 1, 1, 1, 1, 1];
+  }),
+  it "flatten" (fun () => {
+    [
+      IntRange.create start::0 count::2 |> IntRange.toIterator,
+      IntRange.create start::2 count::2 |> IntRange.toIterator,
+      IntRange.create start::4 count::2 |> IntRange.toIterator,
+    ] |> List.toIterator
+      |> Iterator.flatten
+      |> Iterator.take 5
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 3, 2, 1, 0];
   }),
   it "forEach" (fun () => {
     let last = ref 0;

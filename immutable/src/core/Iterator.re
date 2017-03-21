@@ -69,10 +69,16 @@ let findOrRaise (f: 'a => bool) (iter: t 'a): 'a =>
 let filter (filter: 'a => bool) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
-    reduce: fun predicate f acc => iter |> reduce
-      while_::predicate (fun acc next =>
-        if (filter next) (f acc next) else acc
-      ) acc
+    reduce: fun predicate f acc => {
+      let predicate acc next =>
+        if (filter next) (predicate acc next)
+        else true;
+
+      iter |> reduce
+        while_::predicate (fun acc next =>
+          if (filter next) (f acc next) else acc
+        ) acc;
+    }
   };
 
 let flatMap (mapper: 'a => t 'b) (iter: t 'a): (t 'b) =>
@@ -185,6 +191,10 @@ let skipWhile (keepSkipping: 'a => bool) (iter: t 'a): (t 'a) =>
   else {
     reduce: fun predicate f acc => {
       let doneSkipping = ref false;
+
+      let predicate acc next =>
+        if (!doneSkipping) (predicate acc next)
+        else true;
 
       let f acc next =>
         if (!doneSkipping) (f acc next)
