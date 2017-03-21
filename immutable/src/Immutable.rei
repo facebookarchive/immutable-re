@@ -863,6 +863,7 @@ let module KeyedIterator: {
   let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
   let keys: (t 'k 'v) => (Iterator.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+  let return: 'k => 'v => (t 'k 'v);
   let skip: int => (t 'k 'v) => (t 'k 'v);
   let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
