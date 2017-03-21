@@ -12,5 +12,6 @@ open ReUnit.Test;
 ReUnit.run (describe "Immutable.re" [
   IteratorTest.test,
   ListTest.test,
+  OptionTest.test,
   SequenceTest.test,
 ]);
