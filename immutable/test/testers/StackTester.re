@@ -17,7 +17,7 @@ module type Config = {
 };
 
 let module Make = fun (Stack: Stack.S1) (Config: Config) => {
-  let test = describe (sprintf "count: %i" Config.count) [
+  let tests = describe (sprintf "count: %i" Config.count) [
     it "addFirst" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
 
@@ -56,6 +56,16 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
     }),
     it "firstOrRaise" (fun () => {
       (fun () => Stack.empty |> Stack.firstOrRaise) |> shouldRaise;
+    }),
+    it "fromReverse" (fun () => {
+      let testData = IntRange.create start::0 count::Config.count;
+
+      IntRange.toIterator testData
+        |> Stack.fromReverse
+        |> Stack.toIterator
+        |> List.fromReverse
+        |> expect
+        |> toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
     }),
     it "isEmpty" (fun () => {
       Stack.empty |> Stack.isEmpty |> expect |> toBeEqualToTrue;
@@ -141,5 +151,5 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
         |> expect
         |> toBeEqualToInt (Config.count / 2);
     }),
-  ];
+  ] |> List.return;
 };

@@ -15,4 +15,4 @@ let module Tester = StackTester.Make (Stack: Stack.S1) ({
   let count = 10;
 });
 
-let test = describe "Stack" [ Tester.test ];
+let test = describe "Stack" Tester.tests;
