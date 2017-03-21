@@ -171,7 +171,7 @@ let test = describe "Sequence" [
       |> Sequence.toIterator
       |> List.fromReverse
       |> expect
-      |> toBeEqualToListOfInt [10, 6, 3, 1, 0];
+      |> toBeEqualToListOfInt [10, 6, 3, 1, 0, 0];
   }),
   it "skip" (fun () => {
     IntRange.create start::0 count::5

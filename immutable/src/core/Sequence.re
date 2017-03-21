@@ -105,15 +105,18 @@ let repeat (value: 'a): (t 'a) => {
   repeatForever value;
 };
 
-let rec scan
+let scan
     (reducer: 'acc => 'a => 'acc)
     (acc: 'acc)
-    (seq: t 'a): (t 'acc) => fun () => switch (seq ()) {
-  | Next value next => {
-      let acc = reducer acc value;
-      Next acc (scan reducer acc next)
-    }
-  | Completed => Completed
+    (seq: t 'a): (t 'acc) => {
+  let rec recurse reducer acc seq => fun () => switch (seq ()) {
+    | Next value next =>
+        let acc = reducer acc value;
+        Next acc (recurse reducer acc next)
+    | Completed => Completed
+  };
+
+  fun () => Next acc (recurse reducer acc seq);
 };
 
 let toIterator (seq: t 'a): (Iterator.t 'a) =>
