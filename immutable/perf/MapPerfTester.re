@@ -65,7 +65,7 @@ let module CamlIntMap = CamlMap.Make {
 
 let module SortedIntMap = SortedMap.Make {
   type t = int;
-  
+
   let compare = Comparator.structural;
   let equals = Equality.structural;
 };
@@ -80,7 +80,7 @@ let test (n: int) (count: int): Test.t => {
   let hashMapComparison = keys
     |> IntRange.reduce
       (fun acc i => acc |> TransientHashMap.put (hash i) i)
-      (TransientHashMap.empty ())
+      (TransientHashMap.emptyWith HashStrategy.structuralCompare)
     |> TransientHashMap.persist;
 
   let hashMapEquality = keys
@@ -131,7 +131,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapComparison)
           (fun () => keys)
-          HashMap.empty
+          (fun () => HashMap.emptyWith HashStrategy.structuralCompare)
           HashMap.put
           HashMap.remove
           HashMap.get
@@ -154,7 +154,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapComparison |> HashMap.mutate)
           (fun () => keys)
-          TransientHashMap.empty
+          (fun () => TransientHashMap.emptyWith HashStrategy.structuralCompare)
           TransientHashMap.put
           TransientHashMap.remove
           TransientHashMap.get

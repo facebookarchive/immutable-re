@@ -149,6 +149,12 @@ let none (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
     (fun _ => f)
     true;
 
+let return (key: 'k) (value: 'v): (t 'k 'v) => {
+  reduce: fun predicate f acc =>
+    if (predicate acc key value) (f acc key value)
+    else acc
+};
+
 let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty
   else {

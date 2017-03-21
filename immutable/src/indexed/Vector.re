@@ -1079,7 +1079,8 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
   get: fun i => get i vec,
   getOrRaise: fun i => getOrRaise i vec,
   keyedIterator: toKeyedIterator vec,
-  sequence: Sequence.zip2
+  sequence: Sequence.zip2With
+    (fun a b => (a, b))
     (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)
     (toSequence vec),
 };

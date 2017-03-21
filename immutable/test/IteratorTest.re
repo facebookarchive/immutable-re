@@ -27,19 +27,6 @@ let test = describe "Iterator" [
       |> expect
       |> toBeEqualToTrue;
   }),
-  it "map" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => i * 3)
-      |> Iterator.take 3
-      |> List.fromReverse
-      |> expect
-      |> toBeEqualToListOfInt [6, 3, 0];
-
-    Pervasives.(===) (Iterator.map (fun _ => 1) Iterator.empty) Iterator.empty
-      |> expect
-      |> toBeEqualToTrue;
-  }),
   it "doOnNext" (fun () => {
     let last = ref 0;
     IntRange.create start::0 count::5
@@ -134,6 +121,19 @@ let test = describe "Iterator" [
       |> IntRange.toIterator
       |> Iterator.forEach while_::(fun i => i < 3) (fun i => { last := i });
     expect !last |> toBeEqualToInt 2;
+  }),
+  it "map" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.map (fun i => i * 3)
+      |> Iterator.take 3
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [6, 3, 0];
+
+    Pervasives.(===) (Iterator.map (fun _ => 1) Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
   }),
   it "none" (fun () => {
     expect (Iterator.none (fun _ => false) Iterator.empty) |> toBeEqualToTrue;

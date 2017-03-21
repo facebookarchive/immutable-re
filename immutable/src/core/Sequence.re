@@ -167,9 +167,6 @@ let distinctUntilChangedWith
   }
 };
 
-let distinctUntilChanged (seq: t 'a): (t 'a) =>
-  seq |> distinctUntilChangedWith Equality.structural;
-
 let skip (count: int) (seq: t 'a): (t 'a) => fun () => {
   let rec skipIter (count: int) (iter: iterator 'a): (iterator 'a) => switch iter {
     | Next _ next =>
@@ -232,15 +229,22 @@ let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {
   ) None |? Completed;
 };
 
-let rec zip2 (a: t 'a) (b: t 'b): (t ('a, 'b)) => fun () => switch (a (), b ()) {
+let rec zip2With
+    (f: 'a => 'b => 'c)
+    (a: t 'a)
+    (b: t 'b): (t 'c) => fun () => switch (a (), b ()) {
   | (Next aValue aNext, Next bValue bNext) =>
-      Next (aValue, bValue) (zip2 aNext bNext)
+      Next (f aValue bValue) (zip2With f aNext bNext)
   | _ => Completed
 };
 
-let rec zip3 (a: t 'a) (b: t 'b) (c: t 'c): (t ('a, 'b, 'c)) => fun () => switch (a (), b (), c ()) {
+let rec zip3With
+    (f: 'a => 'b => 'c => 'd)
+    (a: t 'a)
+    (b: t 'b)
+    (c: t 'c): (t 'd) => fun () => switch (a (), b (), c ()) {
   | (Next aValue aNext, Next bValue bNext, Next cValue cNext) =>
-      Next (aValue, bValue, cValue) (zip3 aNext bNext cNext)
+      Next (f aValue bValue cValue) (zip3With f aNext bNext cNext)
   | _ => Completed
 };
 
@@ -250,27 +254,30 @@ let zipLongest (seqs: list (t 'a)): (t (list (option 'a))) => seqs
   |> zip
   |> takeWhile (ImmList.some Option.isNotEmpty);
 
-let rec zipLongest2 (a: t 'a) (b: t 'b): (t (option 'a, option 'b)) => fun () => switch (a (), b ()) {
+let rec zipLongest2With
+    (f: option 'a => option 'b => 'c)
+    (a: t 'a) (b: t 'b): (t 'c) => fun () => switch (a (), b ()) {
   | (Next aValue aNext, Next bValue bNext) =>
-      Next (Some aValue, Some bValue) (zipLongest2 aNext bNext)
+      Next (f (Some aValue) (Some bValue)) (zipLongest2With f aNext bNext)
   | (Next aValue aNext, Completed) =>
-      Next (Some aValue, None) (zipLongest2 aNext empty)
+      Next (f (Some aValue) None) (zipLongest2With f aNext empty)
   | (Completed, Next bValue bNext) =>
-      Next (None, Some bValue) (zipLongest2 empty bNext)
+      Next (f None (Some bValue)) (zipLongest2With f empty bNext)
   | _ => Completed
 };
 
-let rec zipLongest3
+let rec zipLongest3With
+    (f: option 'a => option 'b => option 'c => 'd)
     (a: t 'a)
     (b: t 'b)
-    (c: t 'c): (t (option 'a, option 'b, option 'c)) => fun () => switch (a (), b (), c ()) {
+    (c: t 'c): (t 'd) => fun () => switch (a (), b (), c ()) {
   | (Next aValue aNext, Next bValue bNext, Next cValue cNext) =>
-      Next (Some aValue, Some bValue, Some cValue) (zipLongest3 aNext bNext cNext)
+      Next (f (Some aValue) (Some bValue) (Some cValue)) (zipLongest3With f aNext bNext cNext)
   | (Next aValue aNext, Next bValue bNext, Completed) =>
-      Next (Some aValue, Some bValue, None) (zipLongest3 aNext bNext empty)
+      Next (f (Some aValue) (Some bValue) None) (zipLongest3With f aNext bNext empty)
   | (Next aValue aNext, Completed, Next cValue cNext) =>
-      Next (Some aValue, None, Some cValue) (zipLongest3 aNext empty cNext)
+      Next (f (Some aValue) None (Some cValue)) (zipLongest3With f aNext empty cNext)
   | (Completed, Next bValue bNext, Next cValue cNext) =>
-      Next (None, Some bValue, Some cValue) (zipLongest3 empty bNext cNext)
+      Next (f None (Some bValue) (Some cValue)) (zipLongest3With f empty bNext cNext)
   | _ => Completed
 };

@@ -324,14 +324,6 @@ type t 'k 'v = {
   strategy: HashStrategy.t 'k,
 };
 
-let emptyInstance = {
-  count: 0,
-  root: BitmapTrieMap.Empty,
-  strategy: HashStrategy.structuralCompare,
-};
-
-let empty (): (t 'k 'v) => emptyInstance;
-
 let emptyWith (strategy: HashStrategy.t 'k): (t 'k 'v) => {
   count: 0,
   root: BitmapTrieMap.Empty,
@@ -485,9 +477,6 @@ let module TransientHashMap = {
   let count (transient: t 'k 'v): int =>
     transient |> Transient.get |> count;
 
-  let empty (): (t 'k 'v) =>
-    empty () |> mutate;
-
   let get (key: 'k) (transient: t 'k 'v): (option 'v) =>
    transient |> Transient.get |> get key;
 
@@ -537,9 +526,6 @@ let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
 
 let fromWith (strategy: HashStrategy.t 'k) (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
   emptyWith strategy |> putAll iter;
-
-let from (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
-  fromWith (HashStrategy.structuralCompare) iter;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))

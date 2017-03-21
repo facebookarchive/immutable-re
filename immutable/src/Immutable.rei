@@ -379,11 +379,6 @@ let module Sequence: {
   let defer: (unit => t 'a) => (t 'a);
   /** [defer f] returns a Sequence that invokes the function [f] whenever the Sequence is iterated. */
 
-  let distinctUntilChanged: (t 'a) => (t 'a);
-  /** [distinctUntilChanged seq] returns a Sequence that contains only
-   *  distinct contiguous elements from [seq] using structural equality.
-   */
-
   let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
   /** [distinctUntilChangedWith equals seq] returns a Sequence that contains only
    *  distinct contiguous elements from [seq] using [equals] to equate elements.
@@ -415,13 +410,13 @@ let module Sequence: {
    *  Elements are produce until any Sequence in [seq] completes.
    */
 
-  let zip2: (t 'a) => (t 'b) => (t ('a, 'b));
-  /** [zip2 first second] merges two Sequences into a Sequence of tuples.
+  let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
+  /** [zip2With f first second] merges two Sequences into a Sequence of tuples.
    *  Elements are produce until either first or second complete.
    */
 
-  let zip3: (t 'a) => (t 'b) => (t 'c) => (t ('a, 'b, 'c));
-  /** [zip3 first second third] merges two Sequences into a Sequence of triples.
+  let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
+  /** [zip3With f first second third] merges two Sequences into a Sequence of triples.
    *  Elements are produce until either first, second, or third complete.
    */
 
@@ -430,13 +425,22 @@ let module Sequence: {
    *  Elements are produce until all Sequences in [seq] complete.
    */
 
-  let zipLongest2: (t 'a) => (t 'b) => (t (option 'a, option 'b));
-  /** [zip2 first second] merges two Sequences into a Sequence of tuples.
+  let zipLongest2With:
+    (option 'a => option 'b => 'c) =>
+    (t 'a) =>
+    (t 'b) =>
+    (t 'c);
+  /** [zipLongest2With f first second] merges two Sequences into a Sequence of tuples.
    *  Elements are produce until both first and second complete.
    */
 
-  let zipLongest3: (t 'a) => (t 'b) => (t 'c) => (t (option 'a, option 'b, option 'c));
-  /** [zip3 first second third] merges two Sequence into a Sequence of triples.
+  let zipLongest3With:
+    (option 'a => option 'b => option 'c => 'd) =>
+    (t 'a) =>
+    (t 'b) =>
+    (t 'c) =>
+    (t 'd);
+  /** [zipLongest3With f first second third] merges two Sequence into a Sequence of triples.
    *  Elements are produce until first, second, and third all complete.
    */
 };
@@ -1412,16 +1416,10 @@ let module rec HashSet: {
   include PersistentSet.S1 with type t 'a := t 'a;
   include Hashable.S1 with type t 'a := t 'a;
 
-  let empty: unit => (t 'a);
-  /** The empty HashSet with HashStrategy.structuralCompare hash strategy. */
-
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
   /** [emptyWith strategy] returns an empty HashSet using [strategy]
    *  for hashing and collision resolution.
    */
-
-  let from: (Iterator.t 'a) => (t 'a);
-  /** [from iter] returns an HashSet including the values in [iter]. */
 
   let fromWith: (HashStrategy.t 'a)  => (Iterator.t 'a) => (t 'a);
   /** [from iter] returns an HashSet including the values in [iter]. */
@@ -1443,9 +1441,6 @@ and TransientHashSet: {
   /** The TransientHashSet type. */
 
   include TransientSet.S1 with type t 'a := t 'a;
-
-  let empty: unit => (t 'a);
-  /** [empty ()] return a new empty TransientHashSet with the HashStrategy.structuralCompare hash strategy. */
 
   let emptyWith: (HashStrategy.t 'a) => (t 'a);
   /** [emptyWith strategy]  return a new empty TransientHashSet with the [strategy] hash strategy */
@@ -1664,16 +1659,8 @@ let module rec HashMap: {
 
   include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let empty: unit => (t 'k 'v);
-  /** The empty HashMap using the structuralCompare HashStrategy. */
-
   let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
   /** [emptyWith strategy] returns an empty HashMap using the HashStrategy [strategy]. */
-
-  let from: (KeyedIterator.t 'k 'v) => (t 'k 'v);
-  /** [from iter] returns a HashMap including the key/value pairs in [seq]
-   *  using the structuralCompare HashStrategy.
-   */
 
   let fromWith: (HashStrategy.t 'k) => (KeyedIterator.t 'k 'v) => (t 'k 'v);
   /** [fromWith strategy iter] returns a HashMap including the key/value pairs in [seq]
@@ -1697,9 +1684,6 @@ and TransientHashMap: {
   /** The TransientHashMap type. */
 
   include TransientMap.S2 with type t 'k 'v := t 'k 'v;
-
-  let empty: unit => (t 'k 'v);
-  /** [empty ()] returns a new empty TransientHashMap. */
 
   let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
   /** [emptyWith strategy] returns an empty TransientHashMap using the provided

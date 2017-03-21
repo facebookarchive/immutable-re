@@ -191,15 +191,6 @@ let contains (value: 'a) ({ root, strategy }: t 'a): bool => {
 
 let count ({ count }: t 'a): int => count;
 
-let emptyInstance = {
-  count: 0,
-  root: BitmapTrieSet.Empty,
-  strategy: HashStrategy.structuralCompare,
-};
-
-let empty (): (t 'a) =>
-  emptyInstance;
-
 let emptyWith (strategy: HashStrategy.t 'a): (t 'a) => {
   count: 0,
   root: BitmapTrieSet.Empty,
@@ -342,9 +333,6 @@ let module TransientHashSet = {
   let count (transient: t 'a): int =>
     transient |> Transient.get |> count;
 
-  let empty (): (t 'a) =>
-    empty () |> mutate;
-
   let persistentEmptyWith = emptyWith;
 
   let emptyWith (strategy: HashStrategy.t 'a): (t 'a) =>
@@ -392,9 +380,6 @@ let mutate = TransientHashSet.mutate;
 
 let addAll (iter: Iterator.t 'a) (set: t 'a): (t 'a) =>
   set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
-
-let from (iter: Iterator.t 'a): (t 'a) =>
-  empty () |> addAll iter;
 
 let fromWith (strategy: HashStrategy.t 'a) (iter: Iterator.t 'a): (t 'a) =>
   emptyWith strategy |> addAll iter;
