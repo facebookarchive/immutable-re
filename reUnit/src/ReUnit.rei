@@ -30,9 +30,11 @@ let module Expect: {
   let map: ('a => 'b) => (t 'a) => (t 'b);
   let return: 'a => (t 'a);
 
-  let toBeEqualTo: ('a => string) => 'a => (t 'a) => unit;
   let toBeEqualToFalse: (t bool) => unit;
   let toBeEqualToInt: int => (t int) => unit;
+  let toBeEqualToList: ('a => 'a => bool) => ('a => string) => (list 'a) => (t (list 'a)) => unit;
+  let toBeEqualToListOfInt: (list int) => (t (list int)) => unit;
+  let toBeEqualToListOfString: (list string) => (t (list string)) => unit;
   let toBeEqualToNone: ('a => string) => (t (option 'a)) => unit;
   let toBeEqualToNoneOfInt: (t (option int)) => unit;
   let toBeEqualToNoneOfString: (t (option string)) => unit;
@@ -41,7 +43,7 @@ let module Expect: {
   let toBeEqualToSomeOfString: string => (t (option string)) => unit;
   let toBeEqualToString: string => (t string) => unit;
   let toBeEqualToTrue: (t bool) => unit;
-  let toBeEqualToWith: (Equality.t 'a) => ('a => string) => 'a => (t 'a) => unit;
+  let toBeEqualToWith: ('a => 'a => bool) => ('a => string) => 'a => (t 'a) => unit;
   let throws: (t 'a) => unit;
 };
 

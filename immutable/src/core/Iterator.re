@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
+open Functions.Operators;
 
 type t 'a = {
   reduce: 'acc . ('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'acc,
@@ -54,9 +55,7 @@ let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
 let every (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) true
   else iter |> reduce
-    while_::(fun acc _ => acc) (fun _ =>
-      f
-    ) true;
+    while_::(fun acc _ => acc) (fun _ => f) true;
 
 let find (f: 'a => bool) (iter: t 'a): (option 'a) =>
   if (iter === empty) None
@@ -135,7 +134,7 @@ let none (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) true
   else iter |> reduce
     while_::(fun acc _ => acc)
-    (fun _ => f)
+    (fun _ => f >> not)
     true;
 
 let ofList (list: list 'a): (t 'a) =>
@@ -160,6 +159,7 @@ let return (value: 'a): (t 'a) => {
 
 let skip (count: int) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
+  else if (count == 0) iter
   else {
     reduce: fun predicate f acc => {
       let count = ref count;
@@ -207,6 +207,7 @@ let some (f: 'a => bool) (iter: t 'a): bool =>
 
 let take (count: int) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
+  else if (count == 0) empty
   else {
     reduce: fun predicate f acc => {
       let count = ref count;

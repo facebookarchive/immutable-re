@@ -9,6 +9,43 @@
 
 let identity a => a;
 
+let module Equality = {
+  let rec listWith
+      (equals: 'a => 'a => bool)
+      (this: list 'a)
+      (that: list 'a): bool => switch (this, that) {
+    | ([thisHead, ...thisTail], [thatHead, ...thatTail]) =>
+      if (equals thisHead thatHead) (listWith equals thisTail thatTail)
+      else false
+    | ([], []) => true
+    | _ => false
+  };
+};
+
+let module ToString = {
+  let ofList (toString: 'a => string) (list: list 'a): string => {
+    let buffer = Buffer.create 16;
+    Buffer.add_string buffer "[";
+
+    let rec recurse list => switch list {
+      | [head, ...tail] =>
+        Buffer.add_string buffer (toString head);
+        Buffer.add_string buffer ", ";
+        recurse tail;
+      | [] => ();
+    };
+
+    recurse list;
+    Buffer.add_string buffer "]";
+    buffer |> Buffer.contents;
+  };
+
+  let ofOption (toString: 'a => string) (opt: option 'a): string => switch opt {
+    | Some x => "Some (" ^ (toString x) ^ ")"
+    | None => "None"
+  };
+};
+
 let module Test = {
   type t =
     | Describe string (list t)
@@ -66,11 +103,8 @@ let module Expect = {
 
   let return = expect;
 
-  let stringOfOption (toString: 'a => string) (opt: option 'a): string =>
-    opt |> Option.reduce (fun _ => toString) "";
-
   let toBeEqualToWith
-      (equals: Equality.t 'a)
+      (equals: 'a => 'a => bool)
       (toString: 'a => string)
       (expected: 'a)
       (expect: t 'a) => expect |> flatMap (fun value =>
@@ -80,15 +114,24 @@ let module Expect = {
     else return value
   ) |> get |> ignore;
 
-  let toBeEqualTo (toString: 'a => string) =>
-   toBeEqualToWith Equality.structural toString;
+  let toBeEqualToStructuralEquality (toString: 'a => string) =>
+    toBeEqualToWith Pervasives.(==) toString;
 
-  let toBeEqualToFalse = toBeEqualTo string_of_bool false;
+  let toBeEqualToFalse = toBeEqualToStructuralEquality string_of_bool false;
 
-  let toBeEqualToInt = toBeEqualTo string_of_int;
+  let toBeEqualToInt = toBeEqualToStructuralEquality string_of_int;
+
+  let toBeEqualToList (equals: 'a => 'a => 'bool) (toString: 'a => string) =>
+    toBeEqualToWith (Equality.listWith equals) (ToString.ofList toString);
+
+  let toBeEqualToListOfInt (list: list int) =>
+    toBeEqualToList Pervasives.(==) string_of_int list;
+
+  let toBeEqualToListOfString (list: list string) =>
+    toBeEqualToList Pervasives.(==) (fun s => s) list;
 
   let toBeEqualToNone (toString: 'a => string) =>
-    toBeEqualTo (stringOfOption toString) None;
+    toBeEqualToStructuralEquality (ToString.ofOption toString) None;
 
   let toBeEqualToNoneOfInt (expect: t (option int)) =>
     toBeEqualToNone string_of_int expect;
@@ -97,15 +140,15 @@ let module Expect = {
     toBeEqualToNone identity expect;
 
   let toBeEqualToSome (toString: 'a => string) (value: 'a) =>
-    toBeEqualTo (stringOfOption toString) (Some value);
+    toBeEqualToStructuralEquality (ToString.ofOption toString) (Some value);
 
   let toBeEqualToSomeOfInt (value: int) => toBeEqualToSome string_of_int value;
 
   let toBeEqualToSomeOfString (value: string) => toBeEqualToSome identity value;
 
-  let toBeEqualToString = toBeEqualTo identity;
+  let toBeEqualToString = toBeEqualToStructuralEquality identity;
 
-  let toBeEqualToTrue = toBeEqualTo string_of_bool true;
+  let toBeEqualToTrue = toBeEqualToStructuralEquality string_of_bool true;
 
   let throws (expect: t 'a) => expect
     |> forEach(fun _ => Pervasives.failwith "expected exception to be thrown");

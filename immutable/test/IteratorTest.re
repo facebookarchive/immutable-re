@@ -13,55 +13,225 @@ open ReUnit.Test;
 
 let test = describe "Iterator" [
   it "concat" (fun () => {
-    let range1 = IntRange.create start::0 count::2;
-    let range2 = IntRange.create start::2 count::2;
-    let range3 = IntRange.create start::4 count::2;
+    Iterator.concat [
+        IntRange.create start::0 count::2 |> IntRange.toIterator,
+        IntRange.create start::2 count::2 |> IntRange.toIterator,
+        IntRange.create start::4 count::2 |> IntRange.toIterator,
+      ]
+      |> Iterator.take 5
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 3, 2, 1, 0];
 
-    let concatted = Iterator.concat [
-      range1 |> IntRange.toIterator,
-      range2 |> IntRange.toIterator,
-      range3 |> IntRange.toIterator,
-    ];
-
-    let acc = concatted |> Iterator.reduce
-      while_::(fun _ i => i < 4) (fun acc i =>
-        acc + i
-      ) 0;
-    expect acc |> toBeEqualToInt 6;
-
-    let emptyConcat = Iterator.concat [];
-    expect (emptyConcat === Iterator.empty) |> toBeEqualToTrue;
+    Pervasives.(===) (Iterator.concat []) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
   }),
   it "map" (fun () => {
-    let range = IntRange.create start::0 count::5;
-    let mapped = range |> IntRange.toIterator |> Iterator.map (fun i => i * 3);
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.map (fun i => i * 3)
+      |> Iterator.take 3
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [6, 3, 0];
 
-    let acc = mapped |> Iterator.reduce
-      while_::(fun _ i => i < 9) (fun acc i =>
-        acc + i
-      ) 0;
-    expect acc |> toBeEqualToInt 9;
-
-    let emptyMapped = Iterator.empty |> Iterator.map (fun i => i * 3);
-    expect (emptyMapped === Iterator.empty) |> toBeEqualToTrue;
+    Pervasives.(===) (Iterator.map (fun _ => 1) Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
   }),
-  it "doOnNext" (fun () => ()),
-  it "filter" (fun () => ()),
-  it "flatMap" (fun () => ()),
-  it "flatten" (fun () => ()),
-  it "reduce" (fun () => ()),
-  it "reduceWhile" (fun () => ()),
-  it "every" (fun () => ()),
-  it "empty" (fun () => ()),
-  it "find" (fun () => ()),
-  it "findOrRaise" (fun () => ()),
-  it "forEach" (fun () => ()),
-  it "forEachWhile" (fun () => ()),
-  it "none" (fun () => ()),
-  it "return" (fun () => ()),
-  it "skip" (fun () => ()),
-  it "skipWhile" (fun () => ()),
-  it "some" (fun () => ()),
-  it "take" (fun () => ()),
-  it "takeWhile" (fun () => ()),
+  it "doOnNext" (fun () => {
+    let last = ref 0;
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.doOnNext (fun i => { last := i })
+      |> Iterator.forEach ignore;
+    expect !last |> toBeEqualToInt 4;
+
+    Pervasives.(===) (Iterator.doOnNext (fun _ => ()) Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
+  }),
+  it "filter" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.filter (fun i => i mod 2 == 0)
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 2, 0];
+
+    Pervasives.(===) (Iterator.filter (fun _ => true) Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
+  }),
+  it "flatMap" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.filter (fun i => i mod 2 == 0)
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 2, 0];
+  }),
+  it "flatten" (fun () => {
+    [
+      IntRange.create start::0 count::2 |> IntRange.toIterator,
+      IntRange.create start::2 count::2 |> IntRange.toIterator,
+      IntRange.create start::4 count::2 |> IntRange.toIterator,
+    ] |> List.toIterator
+      |> Iterator.flatten
+      |> Iterator.take 5
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 3, 2, 1, 0];
+  }),
+  it "every" (fun () => {
+    expect (Iterator.every (fun _ => false) Iterator.empty) |> toBeEqualToTrue;
+
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.every (fun i => i >= 0)
+      |> expect
+      |> toBeEqualToTrue;
+
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.every (fun i => i < 3)
+      |> expect
+      |> toBeEqualToFalse;
+  }),
+  it "find" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.find (fun i => i == 2)
+      |> expect
+      |> toBeEqualToSomeOfInt 2;
+
+    Iterator.empty
+      |> Iterator.find (fun i => i == 2)
+      |> expect
+      |> toBeEqualToNoneOfInt;
+
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.find (fun i => i == 5)
+      |> expect
+      |> toBeEqualToNoneOfInt;
+  }),
+  it "findOrRaise" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.findOrRaise (fun i => i == 2)
+      |> expect
+      |> toBeEqualToInt 2;
+
+    (fun () => Iterator.empty |> Iterator.findOrRaise (fun i => i == 2))
+      |> defer
+      |> throws;
+  }),
+  it "forEach" (fun () => {
+    let last = ref 0;
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.forEach while_::(fun i => i < 3) (fun i => { last := i });
+    expect !last |> toBeEqualToInt 2;
+  }),
+  it "none" (fun () => {
+    expect (Iterator.none (fun _ => false) Iterator.empty) |> toBeEqualToTrue;
+
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.none (fun i => i >= 2)
+      |> expect
+      |> toBeEqualToFalse;
+
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.none (fun i => i < 0)
+      |> expect
+      |> toBeEqualToTrue;
+  }),
+  it "return" (fun () => {
+    Iterator.return 1
+      |> Iterator.reduce (fun acc i => acc + i) 0
+      |> expect
+      |> toBeEqualToInt 1;
+
+    Iterator.return 1
+      |> Iterator.reduce while_::(fun _ i => i < 0) (fun acc i => acc + i) 0
+      |> expect
+      |> toBeEqualToInt 0;
+  }),
+  it "skip" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.skip 3
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 3];
+
+    Pervasives.(===) (Iterator.skip 5 Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
+
+    let x = Iterator.return 8;
+    Pervasives.(===) (Iterator.skip 0 x) x
+      |> expect
+      |> toBeEqualToTrue;
+  }),
+  it "skipWhile" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.skipWhile (fun i => i < 3)
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 3];
+
+    Pervasives.(===) (Iterator.skipWhile (fun _ => true) Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
+  }),
+  it "some" (fun () => {
+    expect (Iterator.some (fun _ => false) Iterator.empty) |> toBeEqualToFalse;
+
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.some (fun i => i >= 2)
+      |> expect
+      |> toBeEqualToTrue;
+
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.some (fun i => i < 0)
+      |> expect
+      |> toBeEqualToFalse;
+  }),
+  it "take" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.take 3
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [2, 1, 0];
+
+    Pervasives.(===) (Iterator.take 5 Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
+
+    Pervasives.(===) (Iterator.return 8 |> Iterator.take 0) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
+  }),
+  it "takeWhile" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.takeWhile (fun i => i < 3)
+      |> Iterator.take 2
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [1, 0];
+
+    Pervasives.(===) (Iterator.skipWhile (fun _ => true) Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
+  }),
 ];
