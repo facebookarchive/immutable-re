@@ -40,6 +40,12 @@ let test = describe "List" [
       |> expect
       |> toBeEqualToListOfInt [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
   }),
+  it "reduce" (fun () => {
+    [0, 1, 2, 3, 4, 5] |> List.reduce
+        while_::(fun _ i => i < 4) (fun acc i => acc + i) 0
+      |> expect
+      |> toBeEqualToInt 6;
+  }),
   it "removeAll" (fun () => {
     [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
       |> List.removeAll
@@ -57,6 +63,12 @@ let test = describe "List" [
   }),
   it "return" (fun () => {
     List.return 1 |> expect |> toBeEqualToListOfInt [1];
+  }),
+  it "toIterator" (fun () => {
+    [0, 1, 2, 3, 4, 5] |> List.toIterator |> Iterator.reduce
+        while_::(fun _ i => i < 4) (fun acc i => acc + i) 0
+      |> expect
+      |> toBeEqualToInt 6;
   }),
   it "toSequence" (fun () => {
     List.toSequence [1, 2, 3]
