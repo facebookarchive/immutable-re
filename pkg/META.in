@@ -3,9 +3,5 @@
 version = "%{version}%"
 description = "immutable: Immutable data structures for Reason"
 
-# Batch compilation
-archive(syntax, preprocessor, utf8) = "-ignore"
-# This preprocessor doesn't seem to be installed
-
 archive(byte) = "immutable.cma"
 archive(native) = "immutable.cmxa"

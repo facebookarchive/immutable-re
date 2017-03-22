@@ -1,2 +1,2 @@
-<node_modules>: -traverse
+<node_modules/**>: -traverse
 <lib>: -traverse

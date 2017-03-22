@@ -19,5 +19,6 @@ let () =
   Pkg.describe "immutable" ~build ~change_logs:[] ~licenses:[] ~readmes:[] @@ fun c ->
   Ok [
     Pkg.lib "pkg/META";
-    Pkg.lib ~exts:Exts.library "immutable/src/Immutable" ~dst:"immutable";
+    Pkg.lib ~exts:(Exts.exts [".cmo"; ".cmx";".cmi"; ".cmt"; ".o"; ".cma"; ".cmxa"; ".a"]) "immutable/src/Immutable" ~dst:"immutable";
+
   ]
