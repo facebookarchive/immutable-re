@@ -27,6 +27,7 @@ let test = describe "Iterator" [
       |> expect
       |> toBeEqualToTrue;
   }),
+  it "defer" (fun () => ()),
   it "doOnNext" (fun () => {
     let last = ref 0;
     IntRange.create start::0 count::5
@@ -36,18 +37,6 @@ let test = describe "Iterator" [
     expect !last |> toBeEqualToInt 4;
 
     Pervasives.(===) (Iterator.doOnNext (fun _ => ()) Iterator.empty) Iterator.empty
-      |> expect
-      |> toBeEqualToTrue;
-  }),
-  it "filter" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.filter (fun i => i mod 2 == 0)
-      |> List.fromReverse
-      |> expect
-      |> toBeEqualToListOfInt [4, 2, 0];
-
-    Pervasives.(===) (Iterator.filter (fun _ => true) Iterator.empty) Iterator.empty
       |> expect
       |> toBeEqualToTrue;
   }),
@@ -65,6 +54,18 @@ let test = describe "Iterator" [
       |> Iterator.every (fun i => i < 3)
       |> expect
       |> toBeEqualToFalse;
+  }),
+  it "filter" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.filter (fun i => i mod 2 == 0)
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 2, 0];
+
+    Pervasives.(===) (Iterator.filter (fun _ => true) Iterator.empty) Iterator.empty
+      |> expect
+      |> toBeEqualToTrue;
   }),
   it "find" (fun () => {
     IntRange.create start::0 count::5
@@ -97,7 +98,7 @@ let test = describe "Iterator" [
   it "flatMap" (fun () => {
     IntRange.create start::0 count::3
       |> IntRange.toIterator
-      |> Iterator.flatMap (fun i => List.toIterator [1, 1, 1] )
+      |> Iterator.flatMap (fun _ => List.toIterator [1, 1, 1] )
       |> List.fromReverse
       |> expect
       |> toBeEqualToListOfInt [1, 1, 1, 1, 1, 1, 1, 1, 1];
@@ -120,6 +121,14 @@ let test = describe "Iterator" [
       |> IntRange.toIterator
       |> Iterator.forEach while_::(fun i => i < 3) (fun i => { last := i });
     expect !last |> toBeEqualToInt 2;
+  }),
+  it "generate" (fun () => {
+    Iterator.generate (fun i => i + 1) 0
+      |> Iterator.skip 3
+      |> Iterator.take 2
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 3];
   }),
   it "map" (fun () => {
     IntRange.create start::0 count::5
@@ -148,6 +157,13 @@ let test = describe "Iterator" [
       |> Iterator.none (fun i => i < 0)
       |> expect
       |> toBeEqualToTrue;
+  }),
+  it "repeat" (fun () => {
+    Iterator.repeat 5
+      |> Iterator.take 10
+      |> Iterator.reduce (fun acc _ => acc + 5) 0
+      |> expect
+      |> toBeEqualToInt 50;
   }),
   it "return" (fun () => {
     Iterator.return 1
@@ -203,6 +219,14 @@ let test = describe "Iterator" [
       |> Iterator.some (fun i => i < 0)
       |> expect
       |> toBeEqualToFalse;
+  }),
+  it "startWith" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.startWith (-1)
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [4, 3, 2, 1, 0, (-1)];
   }),
   it "take" (fun () => {
     IntRange.create start::0 count::5

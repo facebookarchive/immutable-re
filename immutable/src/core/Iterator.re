@@ -43,6 +43,11 @@ let concat (iters: list (t 'a)): (t 'a) => switch iters {
   }
 };
 
+let defer (provider: unit => (t 'a)): (t 'a) => {
+  reduce: fun predicate f acc =>
+    (provider ()).reduce predicate f acc
+};
+
 let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
@@ -120,6 +125,23 @@ let flatten (iters: t (t 'a)): (t 'a) =>
 let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (iter: t 'a) =>
   iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
+let generate (gen: 'acc => 'acc) (initialValue: 'acc): (t 'acc) => {
+  reduce: fun predicate f acc => {
+    let rec recurse gen value predicate f acc => {
+      let nextValue = gen value;
+
+      if (predicate acc nextValue) {
+        let acc = f acc nextValue;
+        recurse gen nextValue predicate f acc;
+      }
+      else acc;
+    };
+
+    let acc = f acc initialValue;
+    recurse gen initialValue predicate f acc;
+  }
+};
+
 let listAddFirstAll (iter: t 'a) (list: list 'a): (list 'a) =>
   iter |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
 
@@ -156,6 +178,18 @@ let ofOption (opt: Option.t 'a): (t 'a) =>
     reduce: fun predicate f acc =>
       Option.reduce while_::predicate f acc opt
   };
+
+let repeat (value: 'a): (t 'a) => {
+  reduce: fun predicate f acc => {
+    let rec recurse value predicate f acc =>
+      if (predicate acc value) {
+        let acc = f acc value;
+        recurse value predicate f acc;
+      }
+      else acc;
+    recurse value predicate f acc;
+  }
+};
 
 let return (value: 'a): (t 'a) => {
   reduce: fun predicate f acc =>
@@ -214,6 +248,9 @@ let some (f: 'a => bool) (iter: t 'a): bool =>
     while_::(fun acc _ => not acc)
     (fun _ => f)
     false;
+
+let startWith (value: 'a) (iter: t 'a): (t 'a) =>
+  concat [return value, iter];
 
 let take (count: int) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty

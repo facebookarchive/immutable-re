@@ -150,27 +150,11 @@ let module Concatable: {
    };
 };
 
-let module DoOnNextable: {
-  module type S1 = {
-    type t 'a;
-
-    let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-  };
-};
-
 let module Mappable: {
   module type S1 = {
     type t 'a;
 
     let map: ('a => 'b) => (t 'a) => (t 'b);
-  };
-};
-
-let module Filterable: {
-  module type S1 = {
-    type t 'a;
-
-    let filter: ('a => bool) => (t 'a) => (t 'a);
   };
 };
 
@@ -237,17 +221,6 @@ let module Skippable: {
   };
 };
 
-let module SkipWhileable: {
-  module type S1 = {
-    type t 'a;
-
-    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
-    /** [skipWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
-     *  skipping elements until [f] first returns false.
-     */
-  };
-};
-
 let module Takeable: {
   module type S1 = {
     type t 'a;
@@ -257,12 +230,35 @@ let module Takeable: {
   };
 };
 
-let module TakeWhileable: {
+let module Streamable: {
   module type S1 = {
     type t 'a;
 
+    include Concatable.S1 with type t 'a := t 'a;
+    include FlatMappable.S1 with type t 'a := t 'a;
+    include Flattenable.S1 with type t 'a := t 'a;
+    include Mappable.S1 with type t 'a := t 'a;
+    include Skippable.S1 with type t 'a := t 'a;
+    include Takeable.S1 with type t 'a := t 'a;
+
+    let defer: (unit => t 'a) => (t 'a);
+    /** [defer f] returns a Streamble that invokes the function [f] whenever the Sequence is enumerated. */
+
+    let doOnNext: ('a => unit) => (t 'a) => (t 'a);
+
+    let empty: (t 'a);
+    /** The empty Streamble. */
+
+    let filter: ('a => bool) => (t 'a) => (t 'a);
+    let generate: ('a => 'a) => 'a => (t 'a);
+    let repeat: 'a => (t 'a);
+    let return: 'a => (t 'a);
+    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
+    let startWith: 'a => (t 'a) => (t 'a);
+    /** [startWith value seq] returns a seq whose first elements is [value]. */
+
     let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-    /** [takeWhile f seq] returns a Sequence that applies the predicate [f] to each element in [seq],
+    /** [takeWhile f seq] returns a Streamble that applies the predicate [f] to each element in [seq],
      *  taking elements until [f] first returns false.
      */
   };
@@ -271,25 +267,14 @@ let module TakeWhileable: {
 let module Iterator: {
   type t 'a;
 
-  include Concatable.S1 with type t 'a := t 'a;
-  include Mappable.S1 with type t 'a := t 'a;
-  include DoOnNextable.S1 with type t 'a := t 'a;
-  include Filterable.S1 with type t 'a := t 'a;
-  include FlatMappable.S1 with type t 'a := t 'a;
-  include Flattenable.S1 with type t 'a := t 'a;
   include Reduceable.S1 with type t 'a := t 'a;
-  include Skippable.S1 with type t 'a := t 'a;
-  include SkipWhileable.S1 with type t 'a := t 'a;
-  include Takeable.S1 with type t 'a := t 'a;
-  include TakeWhileable.S1 with type t 'a := t 'a;
+  include Streamable.S1 with type t 'a := t 'a;
 
   let every: ('a => bool) => (t 'a) => bool;
-  let empty: (t 'a);
   let find: ('a => bool) => (t 'a) => (option 'a);
   let findOrRaise: ('a => bool) => (t 'a) => 'a;
   let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
   let none: ('a => bool) => (t 'a) => bool;
-  let return: 'a => (t 'a);
   let some: ('a => bool) => (t 'a) => bool;
 };
 
@@ -357,17 +342,8 @@ let module Sequence: {
   type t 'a;
   /** The Sequence type. */
 
-  include Concatable.S1 with type t 'a := t 'a;
-  include DoOnNextable.S1 with type t 'a := t 'a;
-  include Filterable.S1 with type t 'a := t 'a;
-  include FlatMappable.S1 with type t 'a := t 'a;
-  include Flattenable.S1 with type t 'a := t 'a;
-  include Mappable.S1 with type t 'a := t 'a;
   include Sequential.S1 with type t 'a := t 'a;
-  include Skippable.S1 with type t 'a := t 'a;
-  include SkipWhileable.S1 with type t 'a := t 'a;
-  include Takeable.S1 with type t 'a := t 'a;
-  include TakeWhileable.S1 with type t 'a := t 'a;
+  include Streamable.S1 with type t 'a := t 'a;
 
   let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
   /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
@@ -376,34 +352,16 @@ let module Sequence: {
    *  and elements are dropped if [seq] completes before filling the last buffer.
    */
 
-  let defer: (unit => t 'a) => (t 'a);
-  /** [defer f] returns a Sequence that invokes the function [f] whenever the Sequence is iterated. */
-
   let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
   /** [distinctUntilChangedWith equals seq] returns a Sequence that contains only
    *  distinct contiguous elements from [seq] using [equals] to equate elements.
    */
-
-  let empty: (t 'a);
-  /** The empty Sequence. */
-
-  let generate: ('acc => 'acc) => 'acc => (t 'acc);
-  /** [generate f acc] generates the infinite sequence x, f(x), f(f(x)), ...*/
-
-  let repeat: 'a => (t 'a);
-  /** [repeat value] returns a Sequence that repeats [value] forever. */
-
-  let return: 'a => (t 'a);
-  /** [return value] returns a single element Sequence containing [value]. */
 
   let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
   /** [scan f acc seq] returns a Sequence of accumulated values resulting from the
    *  application of the accumulator function [f] to each element in [seq] with the
    *  specified seed value [acc].
    */
-
-  let startWith: 'a => (t 'a) => (t 'a);
-  /** [startWith value seq] returns a seq whose first elements is [value]. */
 
   let zip: (list (t 'a)) => (t (list 'a));
   /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.

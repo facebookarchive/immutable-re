@@ -55,6 +55,7 @@ let test = describe "Sequence" [
       |> expect
       |> toBeEqualToListOfInt [5, 4, 3, 2, 1, 0];
   }),
+  it "defer" (fun () => ()),
   it "distinctUntilChangedWith" (fun () => {
     [ 1, 1, 1, 2, 2, 2, 3, 3, 4, 4 ]
       |> List.toSequence

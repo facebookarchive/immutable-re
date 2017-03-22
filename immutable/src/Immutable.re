@@ -41,14 +41,6 @@ let module Concatable = {
   };
 };
 
-let module DoOnNextable = {
-  module type S1 = {
-    type t 'a;
-
-    let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-  };
-};
-
 let module Mappable = {
   module type S1 = {
     type t 'a;
@@ -111,27 +103,11 @@ let module ReduceableRight = {
   };
 };
 
-let module Filterable = {
-  module type S1 = {
-    type t 'a;
-
-    let filter: ('a => bool) => (t 'a) => (t 'a);
-  };
-};
-
 let module Skippable = {
   module type S1 = {
     type t 'a;
 
     let skip: int => (t 'a) => (t 'a);
-  };
-};
-
-let module SkipWhileable = {
-  module type S1 = {
-    type t 'a;
-
-    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
   };
 };
 
@@ -143,11 +119,37 @@ let module Takeable = {
   };
 };
 
-let module TakeWhileable = {
+let module Streamable = {
   module type S1 = {
     type t 'a;
 
+    include Concatable.S1 with type t 'a := t 'a;
+    include FlatMappable.S1 with type t 'a := t 'a;
+    include Flattenable.S1 with type t 'a := t 'a;
+    include Mappable.S1 with type t 'a := t 'a;
+    include Skippable.S1 with type t 'a := t 'a;
+    include Takeable.S1 with type t 'a := t 'a;
+
+    let defer: (unit => t 'a) => (t 'a);
+    /** [defer f] returns a Streamble that invokes the function [f] whenever the Sequence is enumerated. */
+
+    let doOnNext: ('a => unit) => (t 'a) => (t 'a);
+
+    let empty: (t 'a);
+    /** The empty Streamble. */
+
+    let filter: ('a => bool) => (t 'a) => (t 'a);
+    let generate: ('a => 'a) => 'a => (t 'a);
+    let repeat: 'a => (t 'a);
+    let return: 'a => (t 'a);
+    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
+    let startWith: 'a => (t 'a) => (t 'a);
+    /** [startWith value seq] returns a seq whose first elements is [value]. */
+
     let takeWhile: ('a => bool) => (t 'a) => (t 'a);
+    /** [takeWhile f seq] returns a Streamble that applies the predicate [f] to each element in [seq],
+     *  taking elements until [f] first returns false.
+     */
   };
 };
 
