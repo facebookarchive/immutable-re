@@ -138,6 +138,33 @@ let module Streamable = {
   };
 };
 
+let module Zippable = {
+  module type S1 = {
+    type t 'a;
+
+    let zip: (list (t 'a)) => (t (list 'a));
+
+    let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
+
+    let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
+
+    let zipLongest: (list (t 'a)) => (t (list (option 'a)));
+
+    let zipLongest2With:
+      (option 'a => option 'b => 'c) =>
+      (t 'a) =>
+      (t 'b) =>
+      (t 'c);
+
+    let zipLongest3With:
+      (option 'a => option 'b => option 'c => 'd) =>
+      (t 'a) =>
+      (t 'b) =>
+      (t 'c) =>
+      (t 'd);
+  };
+};
+
 let module Iterator = Iterator;
 
 let module Iterable = {

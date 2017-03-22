@@ -273,6 +273,51 @@ let module Streamable: {
   };
 };
 
+let module Zippable: {
+  module type S1 = {
+    type t 'a;
+
+    let zip: (list (t 'a)) => (t (list 'a));
+    /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
+     *  Elements are produce until any Sequence in [seq] completes.
+     */
+
+    let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
+    /** [zip2With f first second] merges two Sequences into a Sequence of tuples.
+     *  Elements are produce until either first or second complete.
+     */
+
+    let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
+    /** [zip3With f first second third] merges two Sequences into a Sequence of triples.
+     *  Elements are produce until either first, second, or third complete.
+     */
+
+    let zipLongest: (list (t 'a)) => (t (list (option 'a)));
+    /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
+     *  Elements are produce until all Sequences in [seq] complete.
+     */
+
+    let zipLongest2With:
+      (option 'a => option 'b => 'c) =>
+      (t 'a) =>
+      (t 'b) =>
+      (t 'c);
+    /** [zipLongest2With f first second] merges two Sequences into a Sequence of tuples.
+     *  Elements are produce until both first and second complete.
+     */
+
+    let zipLongest3With:
+      (option 'a => option 'b => option 'c => 'd) =>
+      (t 'a) =>
+      (t 'b) =>
+      (t 'c) =>
+      (t 'd);
+    /** [zipLongest3With f first second third] merges two Sequence into a Sequence of triples.
+     *  Elements are produce until first, second, and third all complete.
+     */
+  };
+};
+
 let module Iterator: {
   type t 'a;
 
@@ -353,45 +398,7 @@ let module Sequence: {
 
   include Sequential.S1 with type t 'a := t 'a;
   include Streamable.S1 with type t 'a := t 'a;
-
-  let zip: (list (t 'a)) => (t (list 'a));
-  /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
-   *  Elements are produce until any Sequence in [seq] completes.
-   */
-
-  let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
-  /** [zip2With f first second] merges two Sequences into a Sequence of tuples.
-   *  Elements are produce until either first or second complete.
-   */
-
-  let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
-  /** [zip3With f first second third] merges two Sequences into a Sequence of triples.
-   *  Elements are produce until either first, second, or third complete.
-   */
-
-  let zipLongest: (list (t 'a)) => (t (list (option 'a)));
-  /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
-   *  Elements are produce until all Sequences in [seq] complete.
-   */
-
-  let zipLongest2With:
-    (option 'a => option 'b => 'c) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c);
-  /** [zipLongest2With f first second] merges two Sequences into a Sequence of tuples.
-   *  Elements are produce until both first and second complete.
-   */
-
-  let zipLongest3With:
-    (option 'a => option 'b => option 'c => 'd) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c) =>
-    (t 'd);
-  /** [zipLongest3With f first second third] merges two Sequence into a Sequence of triples.
-   *  Elements are produce until first, second, and third all complete.
-   */
+  include Zippable.S1 with type t 'a := t 'a;
 };
 
 let module List: {
