@@ -16,4 +16,4 @@ depends: [
   "topkg"       {=  "0.8.1"}
   "reason"      {=  "1.11.0"}
 ]
-available: [ ocaml-version = "4.02.3" ]
+available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
