@@ -1,7 +1,6 @@
-
 {
   "name": "Immutable.re",
-  "version": "0.0.1",
+  "version": "@version@",
   "description": "Persistent immutable collections for Reason",
   "repository": {
     "type": "git",
