@@ -99,6 +99,6 @@ let rec take (count: int) (list: t 'a): (t 'a) =>
   };
 
 let module Reducer = Reducer.Make1 {
-  type t 'a = list 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

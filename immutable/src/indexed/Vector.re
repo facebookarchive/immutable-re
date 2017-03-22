@@ -1122,8 +1122,7 @@ let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) =>
 let removeAt (index: int) (vec: t 'a): (t 'a) =>
   failwith "Not Implemented";
 
-type vector 'a = t 'a;
 let module Reducer = Reducer.Make1 {
-  type t 'a = vector 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

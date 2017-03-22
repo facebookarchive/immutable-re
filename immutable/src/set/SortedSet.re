@@ -234,11 +234,9 @@ let module Make = fun (Comparable: Comparable.S) => {
     /* FIXME: Improve this implementation to be O(log N) */
     ImmSet.union (toSet this) (toSet that) |> from;
 
-  type elt = a;
-  type sortedSet = t;
   let module Reducer = Reducer.Make {
-    type a = elt;
-    type t = sortedSet;
+    type nonrec a = a;
+    type nonrec t = t;
 
     let reduce = reduce;
   };

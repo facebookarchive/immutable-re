@@ -284,8 +284,7 @@ let mapReverse (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
   | Descending vector => Descending (Vector.mapReverse f vector)
 };
 
-type deque 'a = t 'a;
 let module Reducer = Reducer.Make1 {
-  type t 'a = deque 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

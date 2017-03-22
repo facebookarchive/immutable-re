@@ -338,8 +338,7 @@ let buffer
     |> filter (fun (_, counted, skipped) => counted == count && skipped == skip)
     |> map (fun (lst, _, _) => lst);
 
-type iterator 'a = t 'a;
 let module Reducer = Reducer.Make1 {
-  type t 'a = iterator 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

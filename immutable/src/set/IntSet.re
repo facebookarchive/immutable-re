@@ -356,10 +356,9 @@ let union (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */
   ImmSet.union (toSet this) (toSet that) |> from;
 
-type intSet = t;
 let module Reducer = Reducer.Make {
   type a = int;
-  type t = intSet;
-  
+  type nonrec t = t;
+
   let reduce = reduce;
 };

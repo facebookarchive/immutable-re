@@ -396,9 +396,7 @@ let union ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
   ImmSet.union (toSet this) (toSet that) |> fromWith strategy;
 
-
-type hashSet 'a = t 'a;
 let module Reducer = Reducer.Make1 {
-  type t 'a = hashSet 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

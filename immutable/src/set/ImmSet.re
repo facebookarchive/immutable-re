@@ -74,9 +74,7 @@ let union (this: t 'a) (that: t 'a): (Iterator.t 'a) => Iterator.concat [
   subtract that this,
 ];
 
-
-type set 'a = t 'a;
 let module Reducer = Reducer.Make1 {
-  type t 'a = set 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

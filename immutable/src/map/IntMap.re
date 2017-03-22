@@ -410,3 +410,9 @@ let merge
       )
       (mutate map)
     |> TransientIntMap.persist;
+
+let module KeyedReducer = KeyedReducer.Make1 {
+  type nonrec k = k;
+  type nonrec t 'v = t 'v;
+  let reduce = reduce;
+};

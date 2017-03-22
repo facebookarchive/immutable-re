@@ -543,3 +543,8 @@ let merge
       )
       (mutate map)
     |> TransientHashMap.persist;
+
+let module KeyedReducer = KeyedReducer.Make2 {
+  type nonrec t 'k 'v = t 'k 'v;
+  let reduce = reduce;
+};

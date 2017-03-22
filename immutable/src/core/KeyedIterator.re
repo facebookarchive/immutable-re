@@ -205,8 +205,7 @@ let toIterator (iter: t 'k 'v): (Iterator.t ('k, 'v)) =>
       acc
   };
 
-type keyedIterator 'k 'v = t 'k 'v;
 let module KeyedReducer = KeyedReducer.Make2 {
-  type t 'k 'v = keyedIterator 'k 'v;
+  type nonrec t 'k 'v = t 'k 'v;
   let reduce = reduce;
 };

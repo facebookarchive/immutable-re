@@ -370,6 +370,6 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
 };
 
 let module Reducer = Reducer.Make1 {
-  type t 'a = array 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

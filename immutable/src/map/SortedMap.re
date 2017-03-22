@@ -48,6 +48,7 @@ module type S = {
   let removeLastOrRaise: t 'v => t 'v;
   let empty: t 'v;
   let from: KeyedIterator.t k 'v => t 'v;
+  let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -225,4 +226,10 @@ let module Make = fun (Comparable: Comparable.S) => {
       }
     )
     map;
+
+  let module KeyedReducer = KeyedReducer.Make1 {
+    type nonrec k = k;
+    type nonrec t 'v = t 'v;
+    let reduce = reduce;
+  };
 };

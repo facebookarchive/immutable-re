@@ -422,6 +422,8 @@ let module Sequence: {
   include Sequential.S1 with type t 'a := t 'a;
   include Streamable.S1 with type t 'a := t 'a;
   include Zippable.S1 with type t 'a := t 'a;
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
 let module List: {
@@ -1135,6 +1137,8 @@ and Map: {
 
   let empty: (t 'k 'v);
   /** The empty Map. */
+
+  let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
 };
 
 let module Option: {
@@ -1701,6 +1705,8 @@ let module rec HashMap: {
    *
    *  Complexity: O(1)
    */
+
+  let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
 }
 
 and TransientHashMap: {
@@ -1743,6 +1749,8 @@ let module rec IntMap: {
    *
    *  Complexity: O(1)
    */
+
+  let module KeyedReducer: KeyedReducer.S1 with type k = int and type t 'v := t 'v;
 }
 
 and TransientIntMap: {
@@ -1776,6 +1784,8 @@ let module SortedMap: {
     /** [from iter] returns a SortedMap including the key/value pairs in [iter]
      *  using the structural comparison.
      */
+
+    let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
   };
 
   let module Make: (Comparable: Comparable.S) => S with type k = Comparable.t;

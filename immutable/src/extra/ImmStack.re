@@ -87,8 +87,7 @@ let toList ({ list }: t 'a): (list 'a) => list;
 
 let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
 
-type stack 'a = t 'a;
 let module Reducer = Reducer.Make1 {
-  type t 'a = stack 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };

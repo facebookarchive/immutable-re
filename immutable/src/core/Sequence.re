@@ -293,8 +293,7 @@ let rec zipLongest3With
   | _ => Completed
 };
 
-type sequence 'a = t 'a;
 let module Reducer = Reducer.Make1 {
-  type t 'a = sequence 'a;
+  type nonrec t 'a = t 'a;
   let reduce = reduce;
 };
