@@ -147,9 +147,6 @@ let module Expect = {
 
   let toBeEqualToTrue = toBeEqualToStructuralEquality string_of_bool true;
 
-  let defer (expr: unit => 'a): (t 'a) =>
-    try (Value (expr ())) { | exn => Error exn };
-
   let shouldRaise (expr: unit => 'a) => {
     let result = try (Value (expr ())) { | exn => Error exn };
     result |> forEach (fun _ =>

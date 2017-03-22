@@ -29,7 +29,7 @@ let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch 
       nodes |> CopyOnWriteArray.reduce reducer acc
 };
 
-let rec reduceWhileWithResult
+let reduceWhileWithResult
     (triePredicate: 'acc => t 'a => bool)
     (trieReducer: 'acc => t 'a => 'acc)
     (predicate: 'acc => 'a => bool)
@@ -53,7 +53,7 @@ let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => sw
       nodes |> CopyOnWriteArray.reduceRight reducer acc
 };
 
-let rec reduceRightWhileWithResult
+let reduceRightWhileWithResult
     (triePredicate: 'acc => t 'a => bool)
     (trieReducer: 'acc => t 'a => 'acc)
     (predicate: 'acc => 'a => bool)

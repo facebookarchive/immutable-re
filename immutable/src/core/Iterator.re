@@ -48,6 +48,37 @@ let defer (provider: unit => (t 'a)): (t 'a) => {
     (provider ()).reduce predicate f acc
 };
 
+let distinctUntilChangedWith
+    (equals: Equality.t 'a)
+    (iter: t 'a): (t 'a) => if (iter === empty) empty else {
+  reduce: fun predicate f acc => {
+    let previous = ref [||];
+
+    let predicate acc next =>
+      if (!previous === [||]) (
+        predicate acc next
+      )
+      else if (equals (!previous).(0) next |> not) (
+        predicate acc next
+      )
+      else true;
+
+    let f acc next =>
+      if (!previous === [||]) {
+        previous := [| next |];
+        f acc next
+      }
+      else if (equals (!previous).(0) next |> not) {
+        (!previous).(0) = next;
+        f acc next
+      }
+      else acc;
+
+    iter |> reduce while_::predicate f acc
+  }
+};
+
+
 let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
@@ -148,15 +179,26 @@ let listAddFirstAll (iter: t 'a) (list: list 'a): (list 'a) =>
 let listFromReverse (iter: t 'a): (list 'a) =>
   [] |> listAddFirstAll iter;
 
-let map (mapper: 'a => 'b) (iter: t 'a): (t 'b) =>
-  if (iter === empty) empty
-  else {
-    reduce: fun predicate f acc => iter |> reduce
-      /* FIXME: Memoize the mapper result so that we don't compute it twice */
-      while_::(fun acc next => predicate acc (mapper next)) (fun acc next =>
-        f acc (mapper next)
-      ) acc
-  };
+let map
+    (mapper: 'a => 'b)
+    (iter: t 'a): (t 'b) => if (iter === empty) empty else {
+  reduce: fun predicate f acc => {
+    let memoize = ref [||];
+
+    let predicate acc next => {
+      let next = mapper next;
+
+      if (!memoize === [||]) { memoize := [| next |] }
+      else { (!memoize).(0) = next; };
+
+      predicate acc next
+    };
+
+    let f acc _ => f acc (!memoize).(0);
+
+    iter |> reduce while_::predicate f acc
+  }
+};
 
 let none (f: 'a => bool) (iter: t 'a): bool =>
   if (iter === empty) true
@@ -195,6 +237,32 @@ let return (value: 'a): (t 'a) => {
   reduce: fun predicate f acc =>
     if (predicate acc value) (f acc value)
     else acc
+};
+
+let scan
+    (reducer: 'acc => 'a => 'acc)
+    (initialValue: 'acc)
+    (iter: t 'a): (t 'acc) => if (iter === empty) empty else {
+  reduce: fun predicate f acc => {
+    let result = ref (f acc initialValue);
+    let memoized = [| initialValue |];
+
+    let predicate acc next => {
+      let nextValue = reducer acc next;
+      memoized.(0) = nextValue;
+      predicate !result nextValue;
+    };
+
+    let f _ _ => {
+      let acc = memoized.(0);
+      result := f !result acc;
+      acc
+    };
+
+    iter.reduce predicate f initialValue |> ignore;
+
+    !result
+  }
 };
 
 let skip (count: int) (iter: t 'a): (t 'a) =>
@@ -284,3 +352,20 @@ let takeWhile (keepTaking: 'a => bool) (iter: t 'a): (t 'a) =>
       iter |> reduce while_::predicate f acc
     }
   };
+
+let buffer
+    count::(count: int)
+    skip::(skip: int)
+    (iter: t 'a): (t (list 'a)) =>
+  if (count <= 0 || skip <= 0) (failwith "out of range")
+  else if (iter === empty) empty
+  else iter |> scan (
+      fun (lst, counted, skipped) next =>
+        if (counted < count && skipped < skip) ([next, ...lst], counted + 1, skipped + 1)
+        else if (skipped < skip) (lst, counted, skipped + 1)
+        else if (counted < count) ([next, ...lst], counted + 1, skipped)
+        else if (skip < count) ([next, ...(ImmList.take (count - skip) lst)], counted, skipped)
+        else ([next], 1, 1)
+      ) ([], 0, 0)
+    |> filter (fun (_, counted, skipped) => counted == count && skipped == skip)
+    |> map (fun (lst, _, _) => lst);

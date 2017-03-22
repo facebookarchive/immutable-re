@@ -12,6 +12,34 @@ open ReUnit.Expect;
 open ReUnit.Test;
 
 let test = describe "Iterator" [
+  it "buffer" (fun () => {
+    let src = [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ] |> List.toIterator;
+
+    Iterator.buffer count::3 skip::3 src
+      |> Iterator.flatMap List.toIterator
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [ 7, 8, 9, 4, 5, 6, 1, 2, 3 ];
+
+    Iterator.buffer count::2 skip::3 src
+      |> Iterator.flatMap List.toIterator
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [ 7, 8, 4, 5, 1, 2 ];
+
+    Iterator.buffer count::2 skip::1 src
+      |> Iterator.flatMap List.toIterator
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [ 8, 9, 7, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1, 2 ];
+
+    Iterator.empty
+      |> Iterator.buffer count::3 skip::3
+      |> Iterator.flatMap List.toIterator
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt []
+  }),
   it "concat" (fun () => {
     Iterator.concat [
         IntRange.create start::0 count::2 |> IntRange.toIterator,
@@ -28,6 +56,14 @@ let test = describe "Iterator" [
       |> toBeEqualToTrue;
   }),
   it "defer" (fun () => ()),
+  it "distinctUntilChangedWith" (fun () => {
+    [ 1, 1, 1, 2, 2, 2, 3, 3, 4, 4 ]
+      |> List.toIterator
+      |> Iterator.distinctUntilChangedWith Equality.structural
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [ 4, 3, 2, 1 ];
+  }),
   it "doOnNext" (fun () => {
     let last = ref 0;
     IntRange.create start::0 count::5
@@ -175,6 +211,14 @@ let test = describe "Iterator" [
       |> Iterator.reduce while_::(fun _ i => i < 0) (fun acc i => acc + i) 0
       |> expect
       |> toBeEqualToInt 0;
+  }),
+  it "scan" (fun () => {
+    IntRange.create start::0 count::5
+      |> IntRange.toIterator
+      |> Iterator.scan (fun acc i => acc + i) 0
+      |> List.fromReverse
+      |> expect
+      |> toBeEqualToListOfInt [10, 6, 3, 1, 0, 0];
   }),
   it "skip" (fun () => {
     IntRange.create start::0 count::5

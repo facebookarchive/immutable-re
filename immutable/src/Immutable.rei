@@ -241,8 +241,20 @@ let module Streamable: {
     include Skippable.S1 with type t 'a := t 'a;
     include Takeable.S1 with type t 'a := t 'a;
 
+    let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
+    /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
+     *  into buffer lists of size [count], skipping [skip] number of elements in between
+     *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
+     *  and elements are dropped if [seq] completes before filling the last buffer.
+     */
+
     let defer: (unit => t 'a) => (t 'a);
     /** [defer f] returns a Streamble that invokes the function [f] whenever the Sequence is enumerated. */
+
+    let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
+    /** [distinctUntilChangedWith equals seq] returns a Sequence that contains only
+     *  distinct contiguous elements from [seq] using [equals] to equate elements.
+     */
 
     let doOnNext: ('a => unit) => (t 'a) => (t 'a);
 
@@ -253,6 +265,11 @@ let module Streamable: {
     let generate: ('a => 'a) => 'a => (t 'a);
     let repeat: 'a => (t 'a);
     let return: 'a => (t 'a);
+    let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
+    /** [scan f acc seq] returns a Sequence of accumulated values resulting from the
+     *  application of the accumulator function [f] to each element in [seq] with the
+     *  specified seed value [acc].
+     */
     let skipWhile: ('a => bool) => (t 'a) => (t 'a);
     let startWith: 'a => (t 'a) => (t 'a);
     /** [startWith value seq] returns a seq whose first elements is [value]. */
@@ -344,24 +361,6 @@ let module Sequence: {
 
   include Sequential.S1 with type t 'a := t 'a;
   include Streamable.S1 with type t 'a := t 'a;
-
-  let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
-  /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
-   *  into buffer lists of size [count], skipping [skip] number of elements in between
-   *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
-   *  and elements are dropped if [seq] completes before filling the last buffer.
-   */
-
-  let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
-  /** [distinctUntilChangedWith equals seq] returns a Sequence that contains only
-   *  distinct contiguous elements from [seq] using [equals] to equate elements.
-   */
-
-  let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
-  /** [scan f acc seq] returns a Sequence of accumulated values resulting from the
-   *  application of the accumulator function [f] to each element in [seq] with the
-   *  specified seed value [acc].
-   */
 
   let zip: (list (t 'a)) => (t (list 'a));
   /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
