@@ -22,7 +22,7 @@ let alter
     (f: option 'v => option 'v)
     (map: t 'k 'v): (t 'k 'v) => map
   |> CopyOnWriteArray.toKeyedIterator
-  |> KeyedIterator.findKey (fun _ => entryFinder equals key)
+  |> KeyedIterator.KeyedReducer.findKey (fun _ => entryFinder equals key)
   >>| (fun index => {
     let (entryKey, entryValue) = map |> CopyOnWriteArray.getOrRaise index;
     switch (f (Some entryValue)) {

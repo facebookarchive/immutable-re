@@ -7,10 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
  
-module type S = {
-  type t;
+module type S1 = {
+  type k;
+  type t 'v;
 
-  include Equatable.S with type t := t;
+  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+};
 
-  let compare: Comparator.t t;
+module type S2 = {
+  type t 'k 'v;
+
+  let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
 };

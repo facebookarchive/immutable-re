@@ -51,43 +51,6 @@ let doOnNext (sideEffect: 'k => 'v => unit) (iter: t 'k 'v): (t 'k 'v) =>
       acc
   };
 
-let every (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
-  if (iter === empty) true
-  else iter |> reduce
-    while_::(fun acc _ _ => acc)
-    (fun _ => f)
-    true;
-
-let find (f: 'k => 'v => bool) (iter: t 'k 'v): (option ('k, 'v)) =>
-  if (iter === empty) None
-  else iter |> reduce
-    while_::(fun acc _ _ => Option.isEmpty acc)
-    (fun _ k v => if (f k v) (Some (k, v)) else None)
-    None;
-
-let findOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'a =>
-  find f iter |> Option.firstOrRaise;
-
-let findKey (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'k) =>
-  if (iter === empty) None
-  else iter |> reduce
-    while_::(fun acc _ _ => Option.isEmpty acc)
-    (fun _ k v => if (f k v) (Some k) else None)
-    None;
-
-let findKeyOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'k =>
-  findKey f iter |> Option.firstOrRaise;
-
-let findValue (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'v) =>
-  if (iter === empty) None
-  else iter |> reduce
-    while_::(fun acc _ _ => Option.isEmpty acc)
-    (fun _ k v => if (f k v) (Some v) else None)
-    None;
-
-let findValueOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'v =>
-  findValue f iter |> Option.firstOrRaise;
-
 let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty
   else {
@@ -121,12 +84,6 @@ let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) =>
     }
   };
 
-let forEach
-    while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2
-    (f: 'k => 'v => unit)
-    (iter: t 'k 'v) =>
-  iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
-
 let keys (iter: t 'k 'v): (Iterator.t 'k) =>
   if (iter === empty) Iterator.empty
   else {
@@ -147,13 +104,6 @@ let map (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) =>
         acc
     }
   };
-
-let none (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
-  if (iter === empty) true
-  else iter |> reduce
-    while_::(fun acc _ _ => acc)
-    (fun _ => f)
-    true;
 
 let return (key: 'k) (value: 'v): (t 'k 'v) => {
   reduce: fun predicate f acc =>
@@ -237,13 +187,6 @@ let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
     }
   };
 
-let some (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
-  if (iter === empty) false
-  else iter |> reduce
-    while_::(fun acc _ _ => not acc)
-    (fun _ => f)
-    false;
-
 let values (iter: t 'k 'v): (Iterator.t 'v) =>
   if (iter === empty ) Iterator.empty
   else {
@@ -261,3 +204,9 @@ let toIterator (iter: t 'k 'v): (Iterator.t ('k, 'v)) =>
       (fun acc k v => f acc (k, v))
       acc
   };
+
+type keyedIterator 'k 'v = t 'k 'v;
+let module KeyedReducer = KeyedReducer.Make2 {
+  type t 'k 'v = keyedIterator 'k 'v;
+  let reduce = reduce;
+};

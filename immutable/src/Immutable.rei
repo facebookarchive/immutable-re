@@ -812,6 +812,42 @@ let module KeyedReduceable: {
   };
 };
 
+let module KeyedReducer: {
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    let every: (k => 'v => bool) => (t 'v) => bool;
+    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+    let findKey: (k => 'v => bool) => (t 'v) => (option k);
+    let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
+    let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
+    let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+    let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
+    let none: (k => 'v => bool) => (t 'v) => bool;
+    let some: (k => 'v => bool) => (t 'v) => bool;
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+    let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
+    let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
+    let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
+    let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+    let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
+    let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+    let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+  };
+
+  let module Make1: (KeyedReduceable: KeyedReduceable.S1) => S1 with type k = KeyedReduceable.k and type t 'v = KeyedReduceable.t 'v;
+  let module Make2: (KeyedReduceable: KeyedReduceable.S2) => S2 with type t 'k 'v = KeyedReduceable.t 'k 'v;
+};
+
 let module KeyedReduceableRight: {
   module type S1 = {
     type k;
@@ -836,26 +872,18 @@ let module KeyedIterator: {
   let concat: (list (t 'k 'v)) => (t 'k 'v);
   let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
   let empty: (t 'k 'v);
-  let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
-  let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
-  let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
-  let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
   let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
-  let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
   let keys: (t 'k 'v) => (Iterator.t 'k);
-  let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   let return: 'k => 'v => (t 'k 'v);
   let skip: int => (t 'k 'v) => (t 'k 'v);
   let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
-  let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   let take: int => (t 'k 'v) => (t 'k 'v);
   let takeWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
   let values: (t 'k 'v) => Iterator.t 'v;
+
+  let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
 };
 
 let module KeyedIterable: {

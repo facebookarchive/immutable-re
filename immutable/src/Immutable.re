@@ -66,20 +66,7 @@ let module FlatMappable = {
   };
 };
 
-let module Reduceable = {
-  module type S = {
-    type a;
-    type t;
-
-    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    let reduce:  while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  };
-};
+let module Reduceable = Reduceable;
 
 let module Reducer = Reducer;
 
@@ -408,20 +395,8 @@ let module KeyedMappable = {
   };
 };
 
-let module KeyedReduceable = {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  };
-};
+let module KeyedReduceable = KeyedReduceable;
+let module KeyedReducer = KeyedReducer;
 
 let module KeyedReduceableRight = {
   module type S1 = {

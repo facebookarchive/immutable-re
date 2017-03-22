@@ -25,7 +25,7 @@ let empty = [||];
 
 let remove (equality: Equality.t 'a) (value: 'a) (set: t 'a): (t 'a) => set
   |> CopyOnWriteArray.toKeyedIterator
-  |> KeyedIterator.findKey (fun _ => equality value)
+  |> KeyedIterator.KeyedReducer.findKey (fun _ => equality value)
   >>| (fun index => set |> CopyOnWriteArray.removeAt index)
   |? set;
 
