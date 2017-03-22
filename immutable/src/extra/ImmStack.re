@@ -86,3 +86,9 @@ let toIterator ({ list }: t 'a): (Iterator.t 'a) =>
 let toList ({ list }: t 'a): (list 'a) => list;
 
 let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
+
+type stack 'a = t 'a;
+let module Reducer = Reducer.Make1 {
+  type t 'a = stack 'a;
+  let reduce = reduce;
+};

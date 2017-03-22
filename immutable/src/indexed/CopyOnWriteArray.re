@@ -368,3 +368,8 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   keyedIterator: toKeyedIterator arr,
   sequence: toSequenceWithIndex arr,
 };
+
+let module Reducer = Reducer.Make1 {
+  type t 'a = array 'a;
+  let reduce = reduce;
+};

@@ -137,3 +137,10 @@ let toSet (set: t): (ImmSet.t int) => {
 
 let toMap (set: t): (ImmMap.t int int) =>
   set |> toSet |> ImmMap.ofSet;
+
+type intRange = t;
+let module Reducer = Reducer.Make {
+  type a = int;
+  type t = intRange;
+  let reduce = reduce;
+};

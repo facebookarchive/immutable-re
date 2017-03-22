@@ -36,8 +36,7 @@ let generateTests
   it (sprintf "get %i values" n) (fun () => {
     let vec = getTestData ();
     IntRange.create start::0 count::n
-      |> IntRange.toIterator
-      |> Iterator.forEach
+      |> IntRange.Reducer.forEach
         (fun i => vec |> get i |> ignore);
   }),
 ];

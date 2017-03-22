@@ -182,6 +182,34 @@ let module Reduceable: {
   };
 };
 
+let module Reducer: {
+  module type S = {
+    type a;
+    type t;
+
+    let every: (a => bool) => t => bool;
+    let find: (a => bool) => t => (option a);
+    let findOrRaise: (a => bool) => t => a;
+    let forEach: while_::(a => bool)? => (a => unit) => t => unit;
+    let none: (a => bool) => t => bool;
+    let some: (a => bool) => t => bool;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    let every: ('a => bool) => (t 'a) => bool;
+    let find: ('a => bool) => (t 'a) => (option 'a);
+    let findOrRaise: ('a => bool) => (t 'a) => 'a;
+    let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
+    let none: ('a => bool) => (t 'a) => bool;
+    let some: ('a => bool) => (t 'a) => bool;
+  };
+
+  let module Make: (Reduceable: Reduceable.S) => S with type a = Reduceable.a and type t = Reduceable.t;
+  let module Make1: (Reduceable: Reduceable.S1) => S1 with type t 'a = Reduceable.t 'a;
+};
+
 let module ReduceableRight: {
   module type S = {
     type a;
@@ -324,12 +352,7 @@ let module Iterator: {
   include Reduceable.S1 with type t 'a := t 'a;
   include Streamable.S1 with type t 'a := t 'a;
 
-  let every: ('a => bool) => (t 'a) => bool;
-  let find: ('a => bool) => (t 'a) => (option 'a);
-  let findOrRaise: ('a => bool) => (t 'a) => 'a;
-  let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
-  let none: ('a => bool) => (t 'a) => bool;
-  let some: ('a => bool) => (t 'a) => bool;
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
 let module Iterable: {
@@ -443,6 +466,8 @@ let module List: {
 
   let toSequence: (t 'a) => (Sequence.t 'a);
   /** [toSequence list] returns a Sequence of the elements in [list] in order. */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
 let module Collection: {
@@ -624,6 +649,8 @@ let module Stack: {
 
   let toList: (t 'a) => (list 'a);
   /** [toList stack] returns the underlying List backing the stack */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
 let module TransientStack: {
@@ -705,6 +732,8 @@ let module rec Deque: {
    *
    *  Complexity: O(1)
    */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
 
 and TransientDeque: {
@@ -1035,6 +1064,8 @@ let module rec Set: {
 
   let union: (t 'a) => (t 'a) => (Iterator.t 'a);
   /** [union this that] returns an Iterator of unique elements which occur in either [this] or [that]. */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
 
 and Map: {
@@ -1095,6 +1126,8 @@ let module Option: {
 
   let return: 'a => (t 'a);
   /** [return value] returns [Some value]. */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
 let module IndexedCollection: {
@@ -1165,6 +1198,8 @@ let module rec Vector: {
   include S1 with type t 'a := t 'a;
 
   let mutate: (t 'a) => (TransientVector.t 'a);
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
 
 and TransientVector: {
@@ -1242,6 +1277,8 @@ let module CopyOnWriteArray: {
    *
    *  Complexity: O(1)
    */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
 let module NavigableSet: {
@@ -1278,6 +1315,8 @@ let module IntRange: {
   let create: start::int => count::int => t;
 
   let empty: t;
+
+  let module Reducer: Reducer.S with type a = int and type t := t;
 };
 
 let module PersistentSet: {
@@ -1385,6 +1424,8 @@ let module rec HashSet: {
    *
    *  Complexity: O(1)
    */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
 
 and TransientHashSet: {
@@ -1422,6 +1463,8 @@ let module SortedSet: {
 
     let from: (Iterator.t a) => t;
     /** [from iter] returns a SortedSet including the values in [iter] using structural comparison. */
+
+    let module Reducer: Reducer.S with type a := a and type t := t;
   };
 
   let module Make: (Comparable: Comparable.S) => S with type a = Comparable.t;
@@ -1446,6 +1489,8 @@ let module rec IntSet: {
    *
    *  Complexity: O(1)
    */
+
+  let module Reducer: Reducer.S with type a = int and type t := t;
 }
 
 and TransientIntSet: {

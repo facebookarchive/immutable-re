@@ -78,7 +78,6 @@ let distinctUntilChangedWith
   }
 };
 
-
 let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
   else {
@@ -87,20 +86,6 @@ let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
         sideEffect next; (f acc next)
       }) acc
   };
-
-let every (f: 'a => bool) (iter: t 'a): bool =>
-  if (iter === empty) true
-  else iter |> reduce
-    while_::(fun acc _ => acc) (fun _ => f) true;
-
-let find (f: 'a => bool) (iter: t 'a): (option 'a) =>
-  if (iter === empty) None
-  else iter |> reduce while_::(fun acc _ => Option.isEmpty acc) (
-    fun _ next => if (f next) (Some next) else None
-  ) None;
-
-let findOrRaise (f: 'a => bool) (iter: t 'a): 'a =>
-  find f iter |> Option.firstOrRaise;
 
 let filter (filter: 'a => bool) (iter: t 'a): (t 'a) =>
   if (iter === empty) empty
@@ -153,9 +138,6 @@ let flatten (iters: t (t 'a)): (t 'a) =>
     }
   };
 
-let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (iter: t 'a) =>
-  iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
-
 let generate (gen: 'acc => 'acc) (initialValue: 'acc): (t 'acc) => {
   reduce: fun predicate f acc => {
     let rec recurse gen value predicate f acc => {
@@ -199,13 +181,6 @@ let map
     iter |> reduce while_::predicate f acc
   }
 };
-
-let none (f: 'a => bool) (iter: t 'a): bool =>
-  if (iter === empty) true
-  else iter |> reduce
-    while_::(fun acc _ => acc)
-    (fun _ => f >> not)
-    true;
 
 let ofList (list: list 'a): (t 'a) =>
   if (ImmList.isEmpty list) empty
@@ -310,13 +285,6 @@ let skipWhile (keepSkipping: 'a => bool) (iter: t 'a): (t 'a) =>
     }
   };
 
-let some (f: 'a => bool) (iter: t 'a): bool =>
-  if (iter === empty) false
-  else iter |> reduce
-    while_::(fun acc _ => not acc)
-    (fun _ => f)
-    false;
-
 let startWith (value: 'a) (iter: t 'a): (t 'a) =>
   concat [return value, iter];
 
@@ -369,3 +337,9 @@ let buffer
       ) ([], 0, 0)
     |> filter (fun (_, counted, skipped) => counted == count && skipped == skip)
     |> map (fun (lst, _, _) => lst);
+
+type iterator 'a = t 'a;
+let module Reducer = Reducer.Make1 {
+  type t 'a = iterator 'a;
+  let reduce = reduce;
+};

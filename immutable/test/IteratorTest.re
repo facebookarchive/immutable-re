@@ -69,27 +69,12 @@ let test = describe "Iterator" [
     IntRange.create start::0 count::5
       |> IntRange.toIterator
       |> Iterator.doOnNext (fun i => { last := i })
-      |> Iterator.forEach ignore;
+      |> Iterator.Reducer.forEach ignore;
     expect !last |> toBeEqualToInt 4;
 
     Pervasives.(===) (Iterator.doOnNext (fun _ => ()) Iterator.empty) Iterator.empty
       |> expect
       |> toBeEqualToTrue;
-  }),
-  it "every" (fun () => {
-    expect (Iterator.every (fun _ => false) Iterator.empty) |> toBeEqualToTrue;
-
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.every (fun i => i >= 0)
-      |> expect
-      |> toBeEqualToTrue;
-
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.every (fun i => i < 3)
-      |> expect
-      |> toBeEqualToFalse;
   }),
   it "filter" (fun () => {
     IntRange.create start::0 count::5
@@ -102,34 +87,6 @@ let test = describe "Iterator" [
     Pervasives.(===) (Iterator.filter (fun _ => true) Iterator.empty) Iterator.empty
       |> expect
       |> toBeEqualToTrue;
-  }),
-  it "find" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.find (fun i => i == 2)
-      |> expect
-      |> toBeEqualToSomeOfInt 2;
-
-    Iterator.empty
-      |> Iterator.find (fun i => i == 2)
-      |> expect
-      |> toBeEqualToNoneOfInt;
-
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.find (fun i => i == 5)
-      |> expect
-      |> toBeEqualToNoneOfInt;
-  }),
-  it "findOrRaise" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.findOrRaise (fun i => i == 2)
-      |> expect
-      |> toBeEqualToInt 2;
-
-    (fun () => Iterator.empty |> Iterator.findOrRaise (fun i => i == 2))
-      |> shouldRaise;
   }),
   it "flatMap" (fun () => {
     IntRange.create start::0 count::3
@@ -151,13 +108,6 @@ let test = describe "Iterator" [
       |> expect
       |> toBeEqualToListOfInt [4, 3, 2, 1, 0];
   }),
-  it "forEach" (fun () => {
-    let last = ref 0;
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.forEach while_::(fun i => i < 3) (fun i => { last := i });
-    expect !last |> toBeEqualToInt 2;
-  }),
   it "generate" (fun () => {
     Iterator.generate (fun i => i + 1) 0
       |> Iterator.skip 3
@@ -176,21 +126,6 @@ let test = describe "Iterator" [
       |> toBeEqualToListOfInt [6, 3, 0];
 
     Pervasives.(===) (Iterator.map (fun _ => 1) Iterator.empty) Iterator.empty
-      |> expect
-      |> toBeEqualToTrue;
-  }),
-  it "none" (fun () => {
-    expect (Iterator.none (fun _ => false) Iterator.empty) |> toBeEqualToTrue;
-
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.none (fun i => i >= 2)
-      |> expect
-      |> toBeEqualToFalse;
-
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.none (fun i => i < 0)
       |> expect
       |> toBeEqualToTrue;
   }),
@@ -248,21 +183,6 @@ let test = describe "Iterator" [
     Pervasives.(===) (Iterator.skipWhile (fun _ => true) Iterator.empty) Iterator.empty
       |> expect
       |> toBeEqualToTrue;
-  }),
-  it "some" (fun () => {
-    expect (Iterator.some (fun _ => false) Iterator.empty) |> toBeEqualToFalse;
-
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.some (fun i => i >= 2)
-      |> expect
-      |> toBeEqualToTrue;
-
-    IntRange.create start::0 count::5
-      |> IntRange.toIterator
-      |> Iterator.some (fun i => i < 0)
-      |> expect
-      |> toBeEqualToFalse;
   }),
   it "startWith" (fun () => {
     IntRange.create start::0 count::5

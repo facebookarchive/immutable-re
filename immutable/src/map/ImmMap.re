@@ -62,7 +62,7 @@ let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
     else failwith "not found",
   keyedIterator: {
     reduce: fun predicate f acc =>
-      set |> ImmSet.toIterator |> Iterator.reduce
+      set |> ImmSet.reduce
         while_::(fun acc next => predicate acc next next)
         (fun acc next => f acc next next)
         acc

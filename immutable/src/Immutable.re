@@ -81,6 +81,8 @@ let module Reduceable = {
   };
 };
 
+let module Reducer = Reducer;
+
 let module ReduceableRight = {
   module type S = {
     type a;
@@ -630,6 +632,11 @@ let module Option = {
 
   let toIterator = Iterator.ofOption;
   let toSequence = SequenceInternal.ofOption;
+
+  let module Reducer = Reducer.Make1 {
+    type t 'a = Option.t 'a;
+    let reduce = reduce;
+  };
 };
 
 let module IndexedCollection = {

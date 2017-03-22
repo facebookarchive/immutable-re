@@ -44,6 +44,7 @@ module type S = {
   let removeLastOrRaise: t => t;
   let empty: t;
   let from: Iterator.t a => t;
+  let module Reducer: Reducer.S with type a := a and type t := t;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -216,10 +217,10 @@ let module Make = fun (Comparable: Comparable.S) => {
   };
 
   let findRight (f: a => bool) (set: t): (option a) =>
-    set |> toIteratorRight |> Iterator.find f;
+    set |> toIteratorRight |> Iterator.Reducer.find f;
 
   let findRightOrRaise (f: a => bool) (set: t): a =>
-    set |> toIteratorRight |> Iterator.findOrRaise f;
+    set |> toIteratorRight |> Iterator.Reducer.findOrRaise f;
 
   let intersect (this: t) (that: t): t =>
     /* FIXME: Improve this implementation to be O(log N) */
@@ -232,4 +233,13 @@ let module Make = fun (Comparable: Comparable.S) => {
   let union (this: t) (that: t): t =>
     /* FIXME: Improve this implementation to be O(log N) */
     ImmSet.union (toSet this) (toSet that) |> from;
+
+  type elt = a;
+  type sortedSet = t;
+  let module Reducer = Reducer.Make {
+    type a = elt;
+    type t = sortedSet;
+
+    let reduce = reduce;
+  };
 };

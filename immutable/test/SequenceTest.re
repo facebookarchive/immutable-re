@@ -71,7 +71,7 @@ let test = describe "Sequence" [
       |> IntRange.toSequence
       |> Sequence.doOnNext (fun i => { last := i })
       |> Sequence.toIterator
-      |> Iterator.forEach ignore;
+      |> Iterator.Reducer.forEach ignore;
     expect !last |> toBeEqualToInt 4;
   }),
   it "filter" (fun () => {

@@ -292,3 +292,9 @@ let rec zipLongest3With
       Next (f None None (Some cValue)) (zipLongest3With f empty empty cNext)
   | _ => Completed
 };
+
+type sequence 'a = t 'a;
+let module Reducer = Reducer.Make1 {
+  type t 'a = sequence 'a;
+  let reduce = reduce;
+};

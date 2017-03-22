@@ -55,7 +55,7 @@ let generateTests
   it (sprintf "contains %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> IntRange.toIterator |> Iterator.forEach (fun i => map |> contains i |> ignore);
+    keys () |> IntRange.Reducer.forEach (fun i => map |> contains i |> ignore);
   }),
 ];
 

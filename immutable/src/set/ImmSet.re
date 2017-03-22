@@ -31,7 +31,7 @@ let empty: (t 'a) = {
 let equals (this: t 'a) (that: t 'a): bool =>
   if (this === that) true
   else if (this.count != that.count) false
-  else this.iterator |> Iterator.every that.contains;
+  else this.iterator |> Iterator.Reducer.every that.contains;
 
 let isEmpty ({ count }: t 'a): bool =>
   count == 0;
@@ -73,3 +73,10 @@ let union (this: t 'a) (that: t 'a): (Iterator.t 'a) => Iterator.concat [
   this |> toIterator,
   subtract that this,
 ];
+
+
+type set 'a = t 'a;
+let module Reducer = Reducer.Make1 {
+  type t 'a = set 'a;
+  let reduce = reduce;
+};

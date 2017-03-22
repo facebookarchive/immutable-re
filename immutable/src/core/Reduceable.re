@@ -7,16 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open ReUnit.Test;
+module type S = {
+  type a;
+  type t;
 
-ReUnit.run (describe "Immutable.re" [
-  CopyOnWriteArrayTest.test,
-  DequeTest.test,
-  IteratorTest.test,
-  ListTest.test,
-  OptionTest.test,
-  ReducerTest.test,
-  SequenceTest.test,
-  StackTest.test,
-  VectorTest.test,
-]);
+  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+};
+
+module type S1 = {
+  type t 'a;
+
+  let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+};

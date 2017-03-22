@@ -13,7 +13,7 @@ open Option.Operators;
 type t 'a = CopyOnWriteArray.t 'a;
 
 let contains (equality: Equality.t 'a) (value: 'a) (set: t 'a): bool =>
-  set |> CopyOnWriteArray.toIterator |> Iterator.some (equality value);
+  set |> CopyOnWriteArray.Reducer.some (equality value);
 
 let add (equality: Equality.t 'a) (value: 'a) (set: t 'a): (t 'a) =>
   if (contains equality value set) set

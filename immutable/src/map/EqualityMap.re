@@ -37,14 +37,12 @@ let contains
     (key: 'k)
     (value: 'v)
     (map: t 'k 'v) => map
-  |> CopyOnWriteArray.toIterator
-  |> Iterator.find (entryFinder keyEquals key)
+  |> CopyOnWriteArray.Reducer.find (entryFinder keyEquals key)
     >>| (fun (_, v) => valueEquals v value)
     |> Option.isNotEmpty;
 
 let containsKey (equals: Equality.t 'k) (key: 'k) (map: t 'k 'v) => map
-  |> CopyOnWriteArray.toIterator
-  |> Iterator.find (entryFinder equals key)
+  |> CopyOnWriteArray.Reducer.find (entryFinder equals key)
   |> Option.isNotEmpty;
 
 let count = CopyOnWriteArray.count;
@@ -54,13 +52,11 @@ let empty = [||];
 let firstOrRaise = CopyOnWriteArray.firstOrRaise;
 
 let get (equals: Equality.t 'k) (key: 'k) (map: t 'k 'v): (option 'v) => map
-  |> CopyOnWriteArray.toIterator
-  |> Iterator.find (entryFinder equals key) >>= (fun (_, v) => Some v);
+  |> CopyOnWriteArray.Reducer.find (entryFinder equals key) >>= (fun (_, v) => Some v);
 
 let getOrRaise (equals: Equality.t 'k) (key: 'k) (map: t 'k 'v): 'v => {
   let (_, v) = map
-    |> CopyOnWriteArray.toIterator
-    |> Iterator.findOrRaise (entryFinder equals key);
+    |> CopyOnWriteArray.Reducer.findOrRaise (entryFinder equals key);
   v
 };
 
