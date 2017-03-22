@@ -62,13 +62,6 @@ let module FlatMappable = {
     type t 'a;
 
     let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
-  };
-};
-
-let module Flattenable = {
-  module type S1 = {
-    type t 'a;
-
     let flatten:  (t (t 'a)) => (t 'a);
   };
 };
@@ -125,7 +118,6 @@ let module Streamable = {
 
     include Concatable.S1 with type t 'a := t 'a;
     include FlatMappable.S1 with type t 'a := t 'a;
-    include Flattenable.S1 with type t 'a := t 'a;
     include Mappable.S1 with type t 'a := t 'a;
     include Skippable.S1 with type t 'a := t 'a;
     include Takeable.S1 with type t 'a := t 'a;
