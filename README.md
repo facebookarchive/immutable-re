@@ -76,3 +76,7 @@ git clone git@github.com:facebookincubator/immutable-re.git
 cd immutable-re
 opam pin add -y immutable .
 ```
+
+License
+-------
+Immutable-re is [BSD-licensed](https://github.com/facebookincubator/immutable-re/blob/master/LICENSE.txt). We also provide an additional [patent grant](https://github.com/facebookincubator/immutable-re/blob/master/PATENTS.txt).
