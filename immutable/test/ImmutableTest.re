@@ -20,6 +20,7 @@ ReUnit.run (describe "Immutable.re" [
   OptionTest.test,
   ReducerTest.test,
   SequenceTest.test,
+  SetTest.test,
   StackTest.test,
   VectorTest.test,
 ]);
