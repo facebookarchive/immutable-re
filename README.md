@@ -72,7 +72,7 @@ opam init
 opam update
 opam switch 4.03.0
 eval $(opam config env)
-git clone git@github.com:facebook/immutable-re.git
+git clone git@github.com:facebookincubator/immutable-re.git
 cd immutable-re
 opam pin add -y immutable .
 ```
