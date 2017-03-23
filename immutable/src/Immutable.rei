@@ -750,21 +750,6 @@ and TransientDeque: {
    */
 };
 
-let module KeyedMappable: {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  };
-};
-
 let module KeyedReduceable: {
   module type S1 = {
     type k;
@@ -835,18 +820,33 @@ let module KeyedIterator: {
   type t 'k 'v;
 
   include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
-  include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
   let concat: (list (t 'k 'v)) => (t 'k 'v);
+  let defer: (unit => t 'k 'v) => (t 'k 'v);
+  let distinctUntilChangedWith:
+    keyEquals::(Equality.t 'k) =>
+    valueEquals::(Equality.t 'v) =>
+    (t 'k 'v) =>
+    (t 'k 'v);
   let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
   let empty: (t 'k 'v);
   let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
   let keys: (t 'k 'v) => (Iterator.t 'k);
+  let map:
+      keyMapper::('kA => 'vA => 'kB) =>
+      valueMapper::('kA => 'vA => 'vB) =>
+      (t 'kA 'vA) =>
+      (t 'kB 'vB);
   let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
+  let mapValues: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+
+  let repeat: 'k => 'v => (t 'k 'v);
   let return: 'k => 'v => (t 'k 'v);
+  let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterator.t 'acc);
   let skip: int => (t 'k 'v) => (t 'k 'v);
   let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+  let startWith: 'k => 'v => (t 'k 'v) => (t 'k 'v);
   let take: int => (t 'k 'v) => (t 'k 'v);
   let takeWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
@@ -1083,6 +1083,7 @@ and Map: {
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let keys: (t 'v) => (Set.t k);
+    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
     let values: (t 'v) => (Iterator.t 'v);
     let toMap: (t 'v) => (Map.t k 'v);
   };
@@ -1095,12 +1096,12 @@ and Map: {
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let keys: (t 'k 'v) => (Set.t 'k);
+    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
     let values: (t 'k 'v) => (Iterator.t 'v);
     let toMap: (t 'k 'v) => (Map.t 'k 'v);
   };
 
   include S2 with type t 'k 'v := t 'k 'v;
-  include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
   let empty: (t 'k 'v);
   /** The empty Map. */
@@ -1520,7 +1521,6 @@ let module PersistentMap: {
 
     include PersistentKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
-    include KeyedMappable.S1 with type k := k and type t 'v := t 'v;
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
 
@@ -1536,7 +1536,6 @@ let module PersistentMap: {
 
     include PersistentKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
-    include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
 

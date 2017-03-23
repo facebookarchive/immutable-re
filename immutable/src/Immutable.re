@@ -379,21 +379,6 @@ let module TransientDeque = {
   include Deque.TransientDeque;
 };
 
-let module KeyedMappable = {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  };
-};
-
 let module KeyedReduceable = KeyedReduceable;
 let module KeyedReducer = KeyedReducer;
 
@@ -582,6 +567,7 @@ let module Map = {
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let keys: (t 'v) => (ImmSet.t k);
+    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
     let values: (t 'v) => (Iterator.t 'v);
     let toMap: (t 'v) => (ImmMap.t k 'v);
   };
@@ -594,6 +580,7 @@ let module Map = {
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let keys: (t 'k 'v) => (ImmSet.t 'k);
+    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
     let values: (t 'k 'v) => (Iterator.t 'v);
     let toMap: (t 'k 'v) => (ImmMap.t 'k 'v);
   };
@@ -815,7 +802,6 @@ let module PersistentMap = {
 
     include PersistentKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
-    include KeyedMappable.S1 with type k := k and type t 'v := t 'v;
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
     let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'v) => (t 'vAcc) => (t 'vAcc);
@@ -828,7 +814,6 @@ let module PersistentMap = {
 
     include PersistentKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
-    include KeyedMappable.S2 with type t 'k 'v := t 'k 'v;
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
     let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'v) => (t 'k 'vAcc) => (t 'k 'vAcc);

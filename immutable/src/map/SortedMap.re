@@ -35,9 +35,9 @@ module type S = {
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
   let keys: t 'v => ImmSet.t k;
+  let map: (k => 'a => 'b) => t 'a => t 'b;
   let values: t 'v => Iterator.t 'v;
   let toMap: t 'v => ImmMap.t k 'v;
-  let map: (k => 'a => 'b) => t 'a => t 'b;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let merge:
     (k => option 'vAcc => option 'v => option 'vAcc) =>

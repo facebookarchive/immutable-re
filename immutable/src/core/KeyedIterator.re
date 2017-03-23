@@ -42,6 +42,51 @@ let concat (iters: list (t 'k 'v)): (t 'k 'v) => switch iters {
   }
 };
 
+let defer (provider: unit => (t 'k 'v)): (t 'k 'v) => {
+  reduce: fun predicate f acc =>
+    (provider ()).reduce predicate f acc
+};
+
+let distinctUntilChangedWith
+    keyEquals::(keyEquals: Equality.t 'k)
+    valueEquals::(valueEquals: Equality.t 'v)
+    (iter: t 'k 'v): (t 'k 'v) => if (iter === empty) empty else {
+  reduce: fun predicate f acc => {
+    let previousKey = ref [||];
+    let previousValue = ref [||];
+
+    let predicate acc key value =>
+      if (!previousKey === [||]) (
+        predicate acc key value
+      )
+      else if (
+        keyEquals (!previousKey).(0) key |> not ||
+        valueEquals (!previousValue).(0) value |> not
+      ) (
+        predicate acc key value
+      )
+      else true;
+
+    let f acc key value =>
+      if (!previousKey === [||]) {
+        previousKey := [| key |];
+        previousValue := [| value |];
+        f acc key value;
+      }
+      else if (
+        keyEquals (!previousKey).(0) key |> not ||
+        valueEquals (!previousValue).(0) value |> not
+      ) {
+        (!previousKey).(0) = key;
+        (!previousValue).(0) = value;
+        f acc key value
+      }
+      else acc;
+
+    iter |> reduce while_::predicate f acc
+  }
+};
+
 let doOnNext (sideEffect: 'k => 'v => unit) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty
   else {
@@ -93,34 +138,120 @@ let keys (iter: t 'k 'v): (Iterator.t 'k) =>
       acc
   };
 
-let map (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) =>
-  if (iter === empty) empty
-  else {
-    reduce: fun predicate f acc => {
-      iter |> reduce
-        /* FIXME: Memoize the mapper result so that we don't compute it twice */
-        while_::(fun acc k v => predicate acc k (mapper k v))
-        (fun acc k v => f acc k (mapper k v))
-        acc
-    }
-  };
+let map
+    keyMapper::(keyMapper: 'kA => 'vA => 'kB)
+    valueMapper::(valueMapper: 'kA => 'vA => 'vB)
+    (iter: t 'kA 'vA): (t 'kB 'vB) => if (iter === empty) empty else {
+  reduce: fun predicate f acc => {
+    let memoizedKey = ref [||];
+    let memoizedValue = ref [||];
+
+    let predicate acc key value => {
+      let nextKey = keyMapper key value;
+      let nextValue = valueMapper key value;
+
+      if (!memoizedKey === [||]) {
+        memoizedKey := [| nextKey |];
+        memoizedValue := [| nextValue |]
+      }
+      else {
+        (!memoizedKey).(0) = nextKey;
+        (!memoizedValue).(0) = nextValue;
+      };
+
+      predicate acc nextKey nextValue
+    };
+
+    let f acc _ _ => f acc (!memoizedKey).(0) (!memoizedValue).(0);
+
+    iter |> reduce while_::predicate f acc
+  }
+};
 
 let mapKeys (mapper: 'a => 'v => 'b) (iter: t 'a 'v): (t 'b 'v) =>
   if (iter === empty) empty
   else {
     reduce: fun predicate f acc => {
-      iter |> reduce
-        /* FIXME: Memoize the mapper result so that we don't compute it twice */
-        while_::(fun acc k v => predicate acc (mapper k v) v)
-        (fun acc k v => f acc (mapper k v) v)
-        acc
+      let memoizedKey = ref [||];
+
+      let predicate acc key value => {
+        let nextKey = mapper key value;
+
+        if (!memoizedKey === [||]) { memoizedKey := [| nextKey |] }
+        else { (!memoizedKey).(0) = nextKey; };
+
+        predicate acc nextKey value
+      };
+
+      let f acc _ value => f acc (!memoizedKey).(0) value;
+
+      iter |> reduce while_::predicate f acc
     }
   };
+
+let mapValues (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) =>
+  if (iter === empty) empty
+  else {
+    reduce: fun predicate f acc => {
+      let memoizedValue = ref [||];
+
+      let predicate acc key value => {
+        let nextValue = mapper key value;
+
+        if (!memoizedValue === [||]) { memoizedValue := [| nextValue |] }
+        else { (!memoizedValue).(0) = nextValue; };
+
+        predicate acc key nextValue
+      };
+
+      let f acc key _ => f acc key (!memoizedValue).(0);
+
+      iter |> reduce while_::predicate f acc
+    }
+  };
+
+let repeat (key:'k) (value: 'v): (t 'k 'v) => {
+  reduce: fun predicate f acc => {
+    let rec recurse key value predicate f acc =>
+      if (predicate acc key value) {
+        let acc = f acc key value;
+        recurse key value predicate f acc;
+      }
+      else acc;
+    recurse key value predicate f acc;
+  }
+};
 
 let return (key: 'k) (value: 'v): (t 'k 'v) => {
   reduce: fun predicate f acc =>
     if (predicate acc key value) (f acc key value)
     else acc
+};
+
+let scan
+    (reducer: 'acc => 'k => 'v => 'acc)
+    (initialValue: 'acc)
+    (iter: t 'k 'v): (Iterator.t 'acc) => if (iter === empty) Iterator.empty else {
+  reduce: fun predicate f acc => {
+    let result = ref (f acc initialValue);
+    let memoized = [| initialValue |];
+
+    let predicate acc key value => {
+      let nextValue = reducer acc key value;
+      memoized.(0) = nextValue;
+      predicate !result nextValue;
+    };
+
+    let f _ _ _ => {
+      let acc = memoized.(0);
+      result := f !result acc;
+      acc
+    };
+
+    iter.reduce predicate f initialValue |> ignore;
+
+    !result
+  }
 };
 
 let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>
@@ -166,6 +297,9 @@ let skipWhile (keepSkipping: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
       iter |> reduce while_::predicate f acc
     }
   };
+
+let startWith (key: 'k) (value: 'v) (iter: t 'k 'v): (t 'k 'v) =>
+  concat [return key value, iter];
 
 let take (count: int) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty

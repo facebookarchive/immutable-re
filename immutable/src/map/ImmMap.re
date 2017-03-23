@@ -91,7 +91,7 @@ let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
     let v = map.getOrRaise k;
     m k v;
   },
-  keyedIterator: map.keyedIterator |> KeyedIterator.map m,
+  keyedIterator: map.keyedIterator |> KeyedIterator.mapValues m,
   sequence: map.sequence |> Sequence.map (fun (k, v) => (k, m k v)),
 };
 
