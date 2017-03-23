@@ -17,15 +17,6 @@ let createWithComparator hash::(hash: Hash.t 'a) comparator::(comparator: Compar
 let createWithEquality hash::(hash: Hash.t 'a) equality::(equality: Equality.t 'a): (t 'a) =>
   Equality hash equality;
 
-let identity: (t 'a) =
-  Equality Hash.structural Equality.reference;
-
-let structuralCompare: (t 'a) =
-  Comparator Hash.structural Comparator.structural;
-
-let structuralEquality: (t 'a) =
-  Equality Hash.structural Equality.structural;
-
 let comparator (strategy: t 'a): (Comparator.t 'a) => switch strategy {
   | Comparator _ comparator => comparator;
   | Equality _ equality => fun x y =>

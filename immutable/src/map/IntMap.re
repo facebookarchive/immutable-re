@@ -121,23 +121,6 @@ let module BitmapTrieIntMap = {
     }
     else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner;
 
-  let rec containsWith
-      (equality: Equality.t 'v)
-      (depth: int)
-      (key: int)
-      (value: 'v)
-      (map: t 'v): bool => switch map {
-    | Level bitmap nodes _ =>
-        let bit = BitmapTrie.bitPos key depth;
-        let index = BitmapTrie.index bitmap bit;
-
-        (BitmapTrie.containsNode bitmap bit) &&
-        (containsWith equality (depth + 1) key value nodes.(index));
-    | Entry entryKey entryValue =>
-        key == entryKey && (equality value entryValue);
-    | Empty => false;
-  };
-
   let rec reduce (f: 'acc => int => 'v => 'acc) (acc: 'acc) (map: t 'v): 'acc => switch map {
     | Level _ nodes _ =>
         let reducer acc map => reduce f acc map;
@@ -232,12 +215,6 @@ let alter (key: int) (f: option 'v => option 'v) ({ count, root } as map: t 'v):
 
 let containsKey (key: int) ({ root }: t 'v): bool =>
   root |> BitmapTrieIntMap.containsKey 0 key;
-
-let containsWith (equality: Equality.t 'v) (key: int) (value: 'v) ({ root }: t 'v): bool =>
-  root |> BitmapTrieIntMap.containsWith equality 0 key value;
-
-let contains (key: int) (value: 'v) (map: t 'v): bool =>
-  map |> containsWith Equality.structural key value;
 
 let count ({ count }: t 'v): int => count;
 

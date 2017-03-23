@@ -13,8 +13,15 @@ open Printf;
 open ReUnit;
 open ReUnit.Test;
 
-/* Hash the indexes to ensure that results aren't skewed by continuous keys */
-let hash = Hash.random ();
+let hash = Hashtbl.hash;
+
+let compareStrategy = HashStrategy.createWithComparator
+  (fun i => i)
+  Comparator.int;
+
+let equalityStrategy = HashStrategy.createWithEquality
+  (fun i => i)
+  Equality.int;
 
 let generateTests
     (getTestData: unit => 'map)
@@ -60,14 +67,17 @@ let generateTests
 
 let module CamlIntMap = CamlMap.Make {
   type t = int;
-  let compare = Pervasives.compare;
+  let compare (this: int) (that: int): int =>
+    if (this == that) 0
+    else if (this > that) 1
+    else (-1);
 };
 
 let module SortedIntMap = SortedMap.Make {
   type t = int;
 
-  let compare = Comparator.structural;
-  let equals = Equality.structural;
+  let compare = Comparator.int;
+  let equals = Equality.int;
 };
 
 let test (n: int) (count: int): Test.t => {
@@ -80,13 +90,13 @@ let test (n: int) (count: int): Test.t => {
   let hashMapComparison = keys
     |> IntRange.reduce
       (fun acc i => acc |> TransientHashMap.put (hash i) i)
-      (TransientHashMap.emptyWith HashStrategy.structuralCompare)
+      (TransientHashMap.emptyWith compareStrategy)
     |> TransientHashMap.persist;
 
   let hashMapEquality = keys
     |> IntRange.reduce
       (fun acc i => acc |> TransientHashMap.put (hash i) i)
-      (TransientHashMap.emptyWith HashStrategy.structuralEquality)
+      (TransientHashMap.emptyWith equalityStrategy)
     |> TransientHashMap.persist;
 
   let intMap = keys
@@ -131,7 +141,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapComparison)
           (fun () => keys)
-          (fun () => HashMap.emptyWith HashStrategy.structuralCompare)
+          (fun () => HashMap.emptyWith compareStrategy)
           HashMap.put
           HashMap.remove
           HashMap.get
@@ -141,7 +151,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapEquality)
           (fun () => keys)
-          (fun () => HashMap.emptyWith HashStrategy.structuralEquality)
+          (fun () => HashMap.emptyWith equalityStrategy)
           HashMap.put
           HashMap.remove
           HashMap.get
@@ -154,7 +164,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapComparison |> HashMap.mutate)
           (fun () => keys)
-          (fun () => TransientHashMap.emptyWith HashStrategy.structuralCompare)
+          (fun () => TransientHashMap.emptyWith compareStrategy)
           TransientHashMap.put
           TransientHashMap.remove
           TransientHashMap.get
@@ -165,7 +175,7 @@ let test (n: int) (count: int): Test.t => {
         generateTests
           (fun () => hashMapEquality |> HashMap.mutate)
           (fun () => keys)
-          (fun () => TransientHashMap.emptyWith HashStrategy.structuralEquality)
+          (fun () => TransientHashMap.emptyWith equalityStrategy)
           TransientHashMap.put
           TransientHashMap.remove
           TransientHashMap.get

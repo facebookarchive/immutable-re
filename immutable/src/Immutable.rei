@@ -12,12 +12,6 @@ let module Hash: {
 
   type t 'a = 'a => int;
   /** The Hash function type */
-
-  let random: unit => (t 'a);
-  /** Creates a random structural hash function. */
-
-  let structural: (t 'a);
-  /** The default ocaml hash function. */
 };
 
 let module Hashable: {
@@ -40,11 +34,10 @@ let module Equality: {
   type t 'a = 'a => 'a => bool;
   /** The Equality function type. */
 
+  let int: (t int);
+
   let reference: (t 'a);
   /** The reference equality function, analogous to === */
-
-  let structural: (t 'a);
-  /** The structural equality function, analogous to == */
 };
 
 let module Equatable: {
@@ -83,6 +76,8 @@ let module Comparator: {
   let char: t char;
   /** Compares chars. */
 
+  let int: t int;
+
   let int32: t int32;
   /** Compares int32s. */
 
@@ -94,9 +89,6 @@ let module Comparator: {
 
   let string: t string;
   /** Compares strings. */
-
-  let structural: (t 'a);
-  /** The structural comparison function. */
 
   let toEquality: (t 'a) => (Equality.t 'a);
 };
@@ -129,15 +121,6 @@ let module HashStrategy: {
   /** [createWithEquality hash equality] returns a HashStrategy using the
    *  provided hash and equality functions.
    */
-
-  let identity: (t 'a);
-  /** A HashStrategy using structural hashing and reference equality. */
-
-  let structuralCompare: (t 'a);
-  /** A HashStrategy using structural hashing and structural comparison. */
-
-  let structuralEquality: (t 'a);
-  /** A HashStrategy using structural hashing and structural equality. */
 };
 
 let module Concatable: {

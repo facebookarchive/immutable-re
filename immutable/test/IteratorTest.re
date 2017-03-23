@@ -59,7 +59,7 @@ let test = describe "Iterator" [
   it "distinctUntilChangedWith" (fun () => {
     [ 1, 1, 1, 2, 2, 2, 3, 3, 4, 4 ]
       |> List.toIterator
-      |> Iterator.distinctUntilChangedWith Equality.structural
+      |> Iterator.distinctUntilChangedWith Equality.int
       |> List.fromReverse
       |> expect
       |> toBeEqualToListOfInt [ 4, 3, 2, 1 ];

@@ -14,7 +14,15 @@ open ReUnit;
 open ReUnit.Test;
 
 /* Hash the indexes to ensure that results aren't skewed by continuous keys */
-let hash = Hash.random ();
+let hash = Hashtbl.hash;
+
+let compareStrategy = HashStrategy.createWithComparator
+  (fun i => i)
+  Comparator.int;
+
+let equalityStrategy = HashStrategy.createWithEquality
+  (fun i => i)
+  Equality.int;
 
 let generateTests
     (getTestData: unit => 'set)
@@ -61,14 +69,17 @@ let generateTests
 
 let module CamlIntSet = CamlSet.Make {
   type t = int;
-  let compare = Pervasives.compare;
+  let compare (this: int) (that: int): int =>
+    if (this == that) 0
+    else if (this > that) 1
+    else (-1);
 };
 
 let module SortedIntSet = SortedSet.Make {
   type t = int;
 
-  let compare = Comparator.structural;
-  let equals = Equality.structural;
+  let compare = Comparator.int;
+  let equals = Equality.int;
 };
 
 
@@ -82,11 +93,11 @@ let test (n: int) (count: int): Test.t => {
 
   let hashStrategyComparator = HashStrategy.createWithComparator
     hash::(fun i => i)
-    comparator::Comparator.structural;
+    comparator::Comparator.int;
 
   let hashStrategyEquality = HashStrategy.createWithEquality
     hash::(fun i => i)
-    equality::Equality.structural;
+    equality::Equality.int;
 
   let hashSetComparison = keys
     |> IntRange.reduce
@@ -106,7 +117,7 @@ let test (n: int) (count: int): Test.t => {
       (TransientIntSet.empty ())
     |> TransientIntSet.persist;
 
-  let emptyHashSetEquality = HashSet.emptyWith HashStrategy.structuralEquality;
+  let emptyHashSetEquality = HashSet.emptyWith equalityStrategy;
 
   let sortedSet = keys
     |> IntRange.reduce

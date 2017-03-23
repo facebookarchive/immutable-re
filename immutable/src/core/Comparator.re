@@ -9,8 +9,8 @@
 
 type t 'a = 'a => 'a => Ordering.t;
 
-let make (compare: 'a => 'a => int) (that: 'a) (this: 'a): Ordering.t => {
-  let cmp = compare that this;
+let make (compare: 'a => 'a => int) (this: 'a) (that: 'a): Ordering.t => {
+  let cmp = compare this that;
 
   if (cmp > 0) Ordering.greaterThan
   else if (cmp < 0) Ordering.lessThan
@@ -19,6 +19,12 @@ let make (compare: 'a => 'a => int) (that: 'a) (this: 'a): Ordering.t => {
 
 let bytes = make Bytes.compare;
 let char = make Char.compare;
+
+let int (this: int) (that: int): Ordering.t =>
+  if (this == that) Ordering.equal
+  else if (this > that) Ordering.greaterThan
+  else Ordering.lessThan;
+
 let int32 = make Int32.compare;
 let int64 = make Int64.compare;
 let nativeInt = make Nativeint.compare;

@@ -87,8 +87,8 @@ let reduceRight
   recurse predicate f (start + count - 1) count acc;
 };
 
-let hash (set: t): int =>
-  set |> reduce (Hash.reducer Hash.structural) Hash.initialValue;
+let hash ({ start, count }: t): int =>
+  start + count;
 
 let toSequence ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>

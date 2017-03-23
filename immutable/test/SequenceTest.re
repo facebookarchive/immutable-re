@@ -59,7 +59,7 @@ let test = describe "Sequence" [
   it "distinctUntilChangedWith" (fun () => {
     [ 1, 1, 1, 2, 2, 2, 3, 3, 4, 4 ]
       |> List.toSequence
-      |> Sequence.distinctUntilChangedWith Equality.structural
+      |> Sequence.distinctUntilChangedWith Equality.int
       |> Sequence.toIterator
       |> List.fromReverse
       |> expect
