@@ -15,17 +15,9 @@ open ReUnit.Test;
 
 let hash = Hashtbl.hash;
 
-let compareStrategy = HashStrategy.createWithComparator
-  (fun i => i)
-  Comparator.int;
-
-let equalityStrategy = HashStrategy.createWithEquality
-  (fun i => i)
-  Equality.int;
-
 let generateTests
     (getTestData: unit => 'map)
-    (keys: unit => IntRange.t)
+    (keys: unit => Iterator.t int)
     (empty: unit => 'map)
     (put: int => int => 'map => 'map)
     (remove: int => 'map => 'map)
@@ -40,28 +32,26 @@ let generateTests
   it (sprintf "map with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToRemove = keys ()
-      |> IntRange.toSequence
-      |> Sequence.buffer count::1 skip::3
-      |> Sequence.map (fun [i] => i);
+      |> Iterator.buffer count::1 skip::3
+      |> Iterator.map (fun [i] => i);
 
-    keysToRemove |> Sequence.reduce (fun acc i => acc |> remove i) map |> ignore;
+    keysToRemove |> Iterator.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "map with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToUpdate = keys ()
-      |> IntRange.toSequence
-      |> Sequence.buffer count::1 skip::3
-      |> Sequence.map (fun [i] => i);
+      |> Iterator.buffer count::1 skip::3
+      |> Iterator.map (fun [i] => i);
 
     /* Multiply the updated value to avoid optimizations */
-    keysToUpdate |> Sequence.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
+    keysToUpdate |> Iterator.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
   }),
 
   it (sprintf "get %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> IntRange.Reducer.forEach (fun i => map |> get i |> ignore);
+    keys () |> Iterator.Reducer.forEach (fun i => map |> get i |> ignore);
   }),
 ];
 
@@ -81,34 +71,36 @@ let module SortedIntMap = SortedMap.Make {
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = IntRange.create start::0 count::count;
+  let keys = IntRange.create start::0 count::count |> IntRange.toIterator |> Iterator.map hash;
 
-  let camlIntMap = keys |> IntRange.reduce
-    (fun acc i => acc |> CamlIntMap.add (hash i) i)
+  let camlIntMap = keys |> Iterator.reduce
+    (fun acc i => acc |> CamlIntMap.add i i)
     CamlIntMap.empty;
 
-  let hashMapComparison = keys
-    |> IntRange.reduce
-      (fun acc i => acc |> TransientHashMap.put (hash i) i)
-      (TransientHashMap.emptyWith compareStrategy)
-    |> TransientHashMap.persist;
+  let hashMapEmpty = HashMap.empty
+    hash::(fun i => i)
+    comparator::Comparator.int;
 
-  let hashMapEquality = keys
-    |> IntRange.reduce
-      (fun acc i => acc |> TransientHashMap.put (hash i) i)
-      (TransientHashMap.emptyWith equalityStrategy)
-    |> TransientHashMap.persist;
+  let (<|) (f: 'a => 'b) (a: 'a): ('b) => f a;
+
+  let hashMap = keys
+    |> IntSet.from
+    |> IntSet.toKeyedIterator
+    |> HashMap.putAll
+    <| hashMapEmpty;
 
   let intMap = keys
-    |> IntRange.reduce
-      (fun acc i => acc |> TransientIntMap.put i i)
-      (TransientIntMap.empty ())
-    |> TransientIntMap.persist;
+    |> IntSet.from
+    |> IntSet.toMap
+    |> Map.toKeyedIterator
+    |> KeyedIterator.mapKeys (fun k _ => hash k)
+    |> IntMap.from;
 
   let sortedMap = keys
-    |> IntRange.reduce
-      (fun acc i => acc |> SortedIntMap.put i i)
-      SortedIntMap.empty;
+    |> IntSet.from
+    |> IntSet.toMap
+    |> Map.toKeyedIterator
+    |> SortedIntMap.from;
 
   let testGroup = [
     describe "CamlIntMap" (
@@ -136,52 +128,27 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "HashMap" [
-      describe "Comparison" (
-        generateTests
-          (fun () => hashMapComparison)
-          (fun () => keys)
-          (fun () => HashMap.emptyWith compareStrategy)
-          HashMap.put
-          HashMap.remove
-          HashMap.get
-          count
-      ),
-      describe "Equality" (
-        generateTests
-          (fun () => hashMapEquality)
-          (fun () => keys)
-          (fun () => HashMap.emptyWith equalityStrategy)
-          HashMap.put
-          HashMap.remove
-          HashMap.get
-          count
-      ),
-    ],
+    describe "HashMap" (
+      generateTests
+        (fun () => hashMap)
+        (fun () => keys)
+        (fun () => hashMapEmpty)
+        HashMap.put
+        HashMap.remove
+        HashMap.get
+        count
+    ),
 
-    describe "TransientHashMap" [
-      describe "Comparison" (
-        generateTests
-          (fun () => hashMapComparison |> HashMap.mutate)
-          (fun () => keys)
-          (fun () => TransientHashMap.emptyWith compareStrategy)
-          TransientHashMap.put
-          TransientHashMap.remove
-          TransientHashMap.get
-          count
-      ),
-
-      describe "Equality" (
-        generateTests
-          (fun () => hashMapEquality |> HashMap.mutate)
-          (fun () => keys)
-          (fun () => TransientHashMap.emptyWith equalityStrategy)
-          TransientHashMap.put
-          TransientHashMap.remove
-          TransientHashMap.get
-          count
-      ),
-    ],
+    describe "TransientHashMap" (
+      generateTests
+        (fun () => hashMap |> HashMap.mutate)
+        (fun () => keys)
+        (fun () => hashMapEmpty |> HashMap.mutate)
+        TransientHashMap.put
+        TransientHashMap.remove
+        TransientHashMap.get
+        count
+    ),
 
     describe "IntMap" (
       generateTests

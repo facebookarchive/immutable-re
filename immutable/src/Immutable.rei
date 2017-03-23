@@ -106,23 +106,6 @@ let module Comparable: {
   };
 };
 
-let module HashStrategy: {
-  /** Strategies for hashing values and resolving conflicts either using equality or comparison. */
-
-  type t 'a;
-  /** The HashStrategy type. */
-
-  let createWithComparator: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (t 'a);
-  /** [createWithComparator hash comparator] returns a HashStrategy using the
-   *  provided hash and comparator functions.
-   */
-
-  let createWithEquality: hash::(Hash.t 'a) => equality::(Equality.t 'a) => (t 'a);
-  /** [createWithEquality hash equality] returns a HashStrategy using the
-   *  provided hash and equality functions.
-   */
-};
-
 let module Concatable: {
   /** Module type signature for types that support concatenation.*/
   module type S1 = {
@@ -860,6 +843,7 @@ let module KeyedIterator: {
   let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
   let keys: (t 'k 'v) => (Iterator.t 'k);
+  let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
   let return: 'k => 'v => (t 'k 'v);
   let skip: int => (t 'k 'v) => (t 'k 'v);
   let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
@@ -1426,14 +1410,7 @@ let module rec HashSet: {
   include PersistentSet.S1 with type t 'a := t 'a;
   include Hashable.S1 with type t 'a := t 'a;
 
-  let emptyWith: (HashStrategy.t 'a) => (t 'a);
-  /** [emptyWith strategy] returns an empty HashSet using [strategy]
-   *  for hashing and collision resolution.
-   */
-
-  let fromWith: (HashStrategy.t 'a)  => (Iterator.t 'a) => (t 'a);
-  /** [from iter] returns an HashSet including the values in [iter]. */
-
+  let empty: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same elements as [set].
    *
@@ -1454,9 +1431,7 @@ and TransientHashSet: {
 
   include TransientSet.S1 with type t 'a := t 'a;
 
-  let emptyWith: (HashStrategy.t 'a) => (t 'a);
-  /** [emptyWith strategy]  return a new empty TransientHashSet with the [strategy] hash strategy */
-
+  let empty: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
   let persist: (t 'a) => (HashSet.t 'a);
   /** [persist transient] returns a persisted HashSet. Further attempts to access or mutate [transient]
    *  will throw.
@@ -1675,14 +1650,7 @@ let module rec HashMap: {
 
   include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
-  /** [emptyWith strategy] returns an empty HashMap using the HashStrategy [strategy]. */
-
-  let fromWith: (HashStrategy.t 'k) => (KeyedIterator.t 'k 'v) => (t 'k 'v);
-  /** [fromWith strategy iter] returns a HashMap including the key/value pairs in [seq]
-   *  using the provided HashStrategy [strategy].
-   */
-
+  let empty: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
   /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map].
    *
@@ -1703,11 +1671,7 @@ and TransientHashMap: {
 
   include TransientMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let emptyWith: (HashStrategy.t 'k) => (t 'k 'v);
-  /** [emptyWith strategy] returns an empty TransientHashMap using the provided
-   *  key HashStrategy.
-   */
-
+  let empty: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (TransientHashMap.t 'k 'v);
   let persist: (t 'k 'v) => (HashMap.t 'k 'v);
   /** [persist transient] returns a persisted HashMap. Further attempts to access or mutate [transient]
    *  will throw.

@@ -16,17 +16,9 @@ open ReUnit.Test;
 /* Hash the indexes to ensure that results aren't skewed by continuous keys */
 let hash = Hashtbl.hash;
 
-let compareStrategy = HashStrategy.createWithComparator
-  (fun i => i)
-  Comparator.int;
-
-let equalityStrategy = HashStrategy.createWithEquality
-  (fun i => i)
-  Equality.int;
-
 let generateTests
     (getTestData: unit => 'set)
-    (keys: unit => IntRange.t)
+    (keys: unit => Iterator.t int)
     (empty: unit => 'set)
     (add: int => 'set => 'set)
     (remove: int => 'set => 'set)
@@ -43,27 +35,25 @@ let generateTests
   it (sprintf "set with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToRemove = keys ()
-      |> IntRange.toSequence
-      |> Sequence.buffer count::1 skip::3
-      |> Sequence.map (fun [i] => i);
+      |> Iterator.buffer count::1 skip::3
+      |> Iterator.map (fun [i] => i);
 
-    keysToRemove |> Sequence.reduce (fun acc i => acc |> remove i) map |> ignore;
+    keysToRemove |> Iterator.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "set with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToUpdate = keys ()
-      |> IntRange.toSequence
-      |> Sequence.buffer count::1 skip::3
-      |> Sequence.map (fun [i] => i);
+      |> Iterator.buffer count::1 skip::3
+      |> Iterator.map (fun [i] => i);
 
-    keysToUpdate |> Sequence.reduce (fun acc i => acc |> add i) map |> ignore;
+    keysToUpdate |> Iterator.reduce (fun acc i => acc |> add i) map |> ignore;
   }),
 
   it (sprintf "contains %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> IntRange.Reducer.forEach (fun i => map |> contains i |> ignore);
+    keys () |> Iterator.Reducer.forEach (fun i => map |> contains i |> ignore);
   }),
 ];
 
@@ -82,45 +72,32 @@ let module SortedIntSet = SortedSet.Make {
   let equals = Equality.int;
 };
 
-
 let test (n: int) (count: int): Test.t => {
-  let keys = IntRange.create start::0 count::count;
+  let keys = IntRange.create start::0 count::count |> IntRange.toIterator |> Iterator.map hash;
 
   let camlIntSet = keys
-    |> IntRange.reduce
+    |> Iterator.reduce
       (fun acc i => acc |> CamlIntSet.add (hash i))
       CamlIntSet.empty;
 
-  let hashStrategyComparator = HashStrategy.createWithComparator
-    hash::(fun i => i)
+  let hashSetEmpty = HashSet.empty
+    hash::Functions.identity
     comparator::Comparator.int;
 
-  let hashStrategyEquality = HashStrategy.createWithEquality
-    hash::(fun i => i)
-    equality::Equality.int;
+  let (<|) (f: 'a => 'b) (a: 'a): ('b) => f a;
 
-  let hashSetComparison = keys
-    |> IntRange.reduce
-      (fun acc i => acc |> TransientHashSet.add i)
-      (TransientHashSet.emptyWith hashStrategyComparator)
-    |> TransientHashSet.persist;
-
-  let hashSetEquality = keys
-    |> IntRange.reduce
-      (fun acc i => acc |> TransientHashSet.add i)
-      (TransientHashSet.emptyWith hashStrategyEquality)
-    |> TransientHashSet.persist;
+  let hashSet = keys
+    |> HashSet.addAll
+    <| hashSetEmpty;
 
   let intSet = keys
-    |> IntRange.reduce
+    |> Iterator.reduce
       (fun acc i => acc |> TransientIntSet.add i)
       (TransientIntSet.empty ())
     |> TransientIntSet.persist;
 
-  let emptyHashSetEquality = HashSet.emptyWith equalityStrategy;
-
   let sortedSet = keys
-    |> IntRange.reduce
+    |> Iterator.reduce
       (fun acc i => acc |> SortedIntSet.add i)
       SortedIntSet.empty;
 
@@ -147,52 +124,27 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "HashSet" [
-      describe "Comparison" (
-        generateTests
-          (fun () => hashSetComparison)
-          (fun () => keys)
-          (fun () => HashSet.emptyWith hashStrategyComparator)
-          HashSet.add
-          HashSet.remove
-          HashSet.contains
-          count
-      ),
-      describe "Equality" (
-        generateTests
-          (fun () => hashSetEquality)
-          (fun () => keys)
-          (fun () => emptyHashSetEquality)
-          HashSet.add
-          HashSet.remove
-          HashSet.contains
-          count
-      ),
-    ],
+    describe "HashSet" (
+      generateTests
+        (fun () => hashSet)
+        (fun () => keys)
+        (fun () => hashSetEmpty)
+        HashSet.add
+        HashSet.remove
+        HashSet.contains
+        count
+    ),
 
-    describe "TransientHashSet" [
-      describe "Comparison" (
-        generateTests
-          (fun () => hashSetComparison |> HashSet.mutate)
-          (fun () => keys)
-          (fun () => TransientHashSet.emptyWith hashStrategyComparator)
-          TransientHashSet.add
-          TransientHashSet.remove
-          TransientHashSet.contains
-          count
-      ),
-
-      describe "Equality" (
-        generateTests
-          (fun () => hashSetEquality |> HashSet.mutate)
-          (fun () => keys)
-          (fun () => TransientHashSet.emptyWith hashStrategyEquality)
-          TransientHashSet.add
-          TransientHashSet.remove
-          TransientHashSet.contains
-          count
-      ),
-    ],
+    describe "TransientHashSet" (
+      generateTests
+        (fun () => hashSet |> HashSet.mutate)
+        (fun () => keys)
+        (fun () => hashSetEmpty |> HashSet.mutate)
+        TransientHashSet.add
+        TransientHashSet.remove
+        TransientHashSet.contains
+        count
+    ),
 
     describe "IntSet" (
       generateTests

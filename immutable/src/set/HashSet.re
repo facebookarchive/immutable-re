@@ -10,15 +10,14 @@
 let module BitmapTrieSet = {
   type t 'a =
     | Level int32 (array (t 'a)) Transient.Owner.t
-    | ComparatorCollision int (AVLTreeSet.t 'a)
-    | EqualitySetCollision int (EqualitySet.t 'a)
+    | Collision int (AVLTreeSet.t 'a)
     | Entry int 'a
     | Empty;
 
   type updateLevelNode 'a = Transient.Owner.t => int => (t 'a) => (t 'a) => (t 'a);
 
   let rec add
-      (hashStrategy: HashStrategy.t 'a)
+      (comparator: Comparator.t 'a)
       (updateLevelNode: updateLevelNode 'a)
       (owner: Transient.Owner.t)
       (depth: int)
@@ -31,7 +30,7 @@ let module BitmapTrieSet = {
 
         if (BitmapTrie.containsNode bitmap bit) {
           let childNode = nodes.(index);
-          let newChildNode = childNode |> add hashStrategy updateLevelNode owner (depth + 1) hash value;
+          let newChildNode = childNode |> add comparator updateLevelNode owner (depth + 1) hash value;
 
           if (childNode === newChildNode) set
           else (updateLevelNode owner index newChildNode set)
@@ -40,40 +39,28 @@ let module BitmapTrieSet = {
           let nodes = nodes |> CopyOnWriteArray.insertAt index entry;
           Level (Int32.logor bitmap bit) nodes owner;
         }
-    | EqualitySetCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> EqualitySet.add (HashStrategy.equals hashStrategy) value;
-        if (newEntrySet === entrySet) set else (EqualitySetCollision entryHash newEntrySet);
-    | EqualitySetCollision entryHash _ =>
+    | Collision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> AVLTreeSet.add comparator value;
+        if (newEntrySet === entrySet) set else (Collision entryHash newEntrySet);
+    | Collision entryHash _ =>
         let bitmap = BitmapTrie.bitPos entryHash depth;
-        Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
-    | ComparatorCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) value;
-        if (newEntrySet === entrySet) set else (ComparatorCollision entryHash newEntrySet);
-    | ComparatorCollision entryHash _ =>
-        let bitmap = BitmapTrie.bitPos entryHash depth;
-        Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
+        Level bitmap [| set |] owner |> add comparator updateLevelNode owner depth hash value;
     | Entry entryHash entryValue when hash == entryHash =>
-        if ((HashStrategy.comparator hashStrategy value entryValue) === Ordering.equal) set
-        else (switch hashStrategy {
-          | HashStrategy.Comparator _ _ =>
-              let set = AVLTreeSet.Empty
-                |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) entryValue
-                |> AVLTreeSet.add (HashStrategy.comparator hashStrategy) value;
-              ComparatorCollision entryHash set;
-          | HashStrategy.Equality _ _ =>
-            let set = EqualitySet.empty
-              |> EqualitySet.add (HashStrategy.equals hashStrategy) entryValue
-              |> EqualitySet.add (HashStrategy.equals hashStrategy) value;
-            EqualitySetCollision entryHash set;
-        });
+        if (Comparator.toEquality comparator value entryValue) set
+        else {
+          let set = AVLTreeSet.Empty
+            |> AVLTreeSet.add comparator entryValue
+            |> AVLTreeSet.add comparator value;
+          Collision entryHash set;
+        };
     | Entry entryHash _ =>
         let bitmap = BitmapTrie.bitPos entryHash depth;
-        Level bitmap [| set |] owner |> add hashStrategy updateLevelNode owner depth hash value;
+        Level bitmap [| set |] owner |> add comparator updateLevelNode owner depth hash value;
     | Empty => Entry hash value;
   };
 
   let rec contains
-      (hashStrategy: HashStrategy.t 'a)
+      (comparator: Comparator.t 'a)
       (depth: int)
       (hash: int)
       (value: 'a)
@@ -83,18 +70,16 @@ let module BitmapTrieSet = {
         let index = BitmapTrie.index bitmap bit;
 
         (BitmapTrie.containsNode bitmap bit) &&
-        (contains hashStrategy (depth + 1) hash value nodes.(index));
-    | EqualitySetCollision entryHash entrySet =>
-        (hash == entryHash) && (EqualitySet.contains (HashStrategy.equals hashStrategy) value entrySet);
-    | ComparatorCollision entryHash entrySet =>
-        (hash == entryHash) && (AVLTreeSet.contains (HashStrategy.comparator hashStrategy) value entrySet);
+        (contains comparator (depth + 1) hash value nodes.(index));
+    | Collision entryHash entrySet =>
+        (hash == entryHash) && (AVLTreeSet.contains comparator value entrySet);
     | Entry entryHash entryValue =>
-        (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Ordering.equal);
+        (hash == entryHash) && (Comparator.toEquality comparator entryValue value);
     | Empty => false;
   };
 
   let rec remove
-      (hashStrategy: HashStrategy.t 'a)
+      (comparator: Comparator.t 'a)
       (updateLevelNode: updateLevelNode 'a)
       (owner: Transient.Owner.t)
       (depth: int)
@@ -107,7 +92,7 @@ let module BitmapTrieSet = {
 
         if (BitmapTrie.containsNode bitmap bit) {
           let childNode = nodes.(index);
-          let newChildNode = childNode |> remove hashStrategy updateLevelNode owner (depth + 1) hash value;
+          let newChildNode = childNode |> remove comparator updateLevelNode owner (depth + 1) hash value;
 
           if (newChildNode === childNode) set
           else if (newChildNode === Empty) {
@@ -117,30 +102,21 @@ let module BitmapTrieSet = {
             else Empty;
           } else (updateLevelNode owner index newChildNode set);
         } else set;
-    | EqualitySetCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> EqualitySet.remove (HashStrategy.equals hashStrategy) value;
-
-        if (newEntrySet === entrySet) set
-        else if ((EqualitySet.count newEntrySet) == 1) {
-          let entryValue = entrySet |> EqualitySet.toSequence |> Sequence.firstOrRaise;
-          (Entry entryHash entryValue)
-        } else (EqualitySetCollision entryHash newEntrySet);
-    | ComparatorCollision entryHash entrySet when hash == entryHash =>
-        let newEntrySet = entrySet |> AVLTreeSet.remove (HashStrategy.comparator hashStrategy) value;
+    | Collision entryHash entrySet when hash == entryHash =>
+        let newEntrySet = entrySet |> AVLTreeSet.remove comparator value;
 
         if (newEntrySet === entrySet) set else (switch newEntrySet {
           | AVLTreeSet.Leaf entryValue => (Entry entryHash entryValue)
-          | _ => (ComparatorCollision entryHash newEntrySet)
+          | _ => (Collision entryHash newEntrySet)
         });
-    | Entry entryHash entryValue when (hash == entryHash) && ((HashStrategy.comparator hashStrategy entryValue value) === Ordering.equal) =>
+    | Entry entryHash entryValue when (hash == entryHash) && (Comparator.toEquality comparator entryValue value) =>
         Empty;
     | _ => set
   };
 
   let rec toSequence (set: t 'a): (Sequence.t 'a) => switch set {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
-    | ComparatorCollision _ entrySet => AVLTreeSet.toSequence entrySet;
-    | EqualitySetCollision _ entrySet => EqualitySet.toSequence entrySet;
+    | Collision _ entrySet => AVLTreeSet.toSequence entrySet;
     | Entry _ entryValue => Sequence.return entryValue;
     | Empty => Sequence.empty;
   };
@@ -167,56 +143,60 @@ let module BitmapTrieSet = {
 type t 'a = {
   count: int,
   root: BitmapTrieSet.t 'a,
-  strategy: HashStrategy.t 'a,
+  comparator: Comparator.t 'a,
+  hash: Hash.t 'a,
 };
 
-let add (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
-  let hash = HashStrategy.hash strategy value;
+let add (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
+  let keyHash = hash value;
   let newRoot = root |> BitmapTrieSet.add
-    strategy
+    comparator
     BitmapTrieSet.updateLevelNodePersistent
     Transient.Owner.none
     0
-    hash
+    keyHash
     value;
 
   if (newRoot === root) set
-  else { count: count + 1, root: newRoot, strategy };
+  else { count: count + 1, root: newRoot, hash, comparator };
 };
 
-let contains (value: 'a) ({ root, strategy }: t 'a): bool => {
-  let hash = HashStrategy.hash strategy value;
-  root |> BitmapTrieSet.contains strategy 0 hash value;
+let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
+  let keyHash = hash value;
+  root |> BitmapTrieSet.contains comparator 0 keyHash value;
 };
 
 let count ({ count }: t 'a): int => count;
 
-let emptyWith (strategy: HashStrategy.t 'a): (t 'a) => {
+let empty
+    hash::(hash: Hash.t 'a)
+    comparator::(comparator: Comparator.t 'a): (t 'a) => {
   count: 0,
   root: BitmapTrieSet.Empty,
-  strategy,
+  comparator,
+  hash,
 };
 
 let isEmpty ({ count }: t 'a): bool => count == 0;
 
 let isNotEmpty ({ count }: t 'a): bool => count != 0;
 
-let remove (value: 'a) ({ count, root, strategy } as set: t 'a): (t 'a) => {
-  let hash = HashStrategy.hash strategy value;
+let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
+  let keyHash = hash value;
   let newRoot = root |> BitmapTrieSet.remove
-    strategy
+    comparator
     BitmapTrieSet.updateLevelNodePersistent
     Transient.Owner.none
     0
-    hash
+    keyHash
     value;
 
   if (newRoot === root) set
-  else { count: count - 1, root: newRoot, strategy };
+  else { count: count - 1, root: newRoot, hash, comparator };
 };
 
-let removeAll ({ strategy }: t 'a): (t 'a) =>
-  emptyWith strategy;
+let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
+  empty hash::hash comparator::comparator;
 
 /* FIXME: Shouldn't use sequences to implement all these.
  * They're way slow.
@@ -258,10 +238,8 @@ let toSet (set: t 'a): (ImmSet.t 'a) =>
 let equals (this: t 'a) (that: t 'a): bool =>
   ImmSet.equals (toSet this) (toSet that);
 
-let hash ({ strategy } as set: t 'a): int => {
-  let hash = HashStrategy.hash strategy;
+let hash ({ hash, comparator } as set: t 'a): int =>
   set |> reduce (fun acc next => acc + hash next) 0;
-};
 
 let toMap (set: t 'a): (ImmMap.t 'a 'a) =>
   set |> toSet |> ImmMap.ofSet;
@@ -277,19 +255,19 @@ let module TransientHashSet = {
   let addImpl
       (owner: Transient.Owner.t)
       (value: 'a)
-      ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
-    let hash = HashStrategy.hash strategy value;
+      ({ count, root, hash, comparator } as set: hashSet 'a): (hashSet 'a) => {
+    let keyHash = hash value;
     if (set |> contains value) set
     else {
       let newRoot = root |> BitmapTrieSet.add
-        strategy
+        comparator
         BitmapTrieSet.updateLevelNodeTransient
         owner
         0
-        hash
+        keyHash
         value;
 
-      { count: count + 1, root: newRoot, strategy };
+      { count: count + 1, root: newRoot, hash, comparator };
     }
   };
 
@@ -299,20 +277,20 @@ let module TransientHashSet = {
   let addAllImpl
       (owner: Transient.Owner.t)
       (iter: Iterator.t 'a)
-      ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
+      ({ count, root, hash, comparator } as set: hashSet 'a): (hashSet 'a) => {
     let newCount = ref count;
 
     let newRoot = iter |> Iterator.reduce (fun acc value => {
-      let hash = HashStrategy.hash strategy value;
+      let keyHash = hash value;
 
-      if (acc |> BitmapTrieSet.contains strategy 0 hash value) acc
+      if (acc |> BitmapTrieSet.contains comparator 0 keyHash value) acc
       else  {
         let newRoot = acc |> BitmapTrieSet.add
-          strategy
+          comparator
           BitmapTrieSet.updateLevelNodeTransient
           owner
           0
-          hash
+          keyHash
           value;
 
         newCount := !newCount + 1;
@@ -321,7 +299,7 @@ let module TransientHashSet = {
     }) root;
 
     if (!newCount == count) set
-    else { count: !newCount, root: newRoot, strategy };
+    else { count: !newCount, root: newRoot, hash, comparator };
   };
 
   let addAll (iter: Iterator.t 'a) (transient: t 'a): (t 'a) =>
@@ -333,10 +311,13 @@ let module TransientHashSet = {
   let count (transient: t 'a): int =>
     transient |> Transient.get |> count;
 
-  let persistentEmptyWith = emptyWith;
+  let persistentEmpty = empty;
 
-  let emptyWith (strategy: HashStrategy.t 'a): (t 'a) =>
-    emptyWith strategy |> mutate;
+  let empty
+      hash::(hash: Hash.t 'a)
+      comparator::(comparator: Comparator.t 'a)
+      (): (t 'a) =>
+    empty hash::hash comparator::comparator |>  mutate;
 
   let isEmpty (transient: t 'a): bool =>
     transient |> Transient.get |> isEmpty;
@@ -350,18 +331,18 @@ let module TransientHashSet = {
   let removeImpl
       (owner: Transient.Owner.t)
       (value: 'a)
-      ({ count, root, strategy } as set: hashSet 'a): (hashSet 'a) => {
-    let hash = HashStrategy.hash strategy value;
+      ({ count, root, hash, comparator } as set: hashSet 'a): (hashSet 'a) => {
+    let keyHash = hash value;
     let newRoot = root |> BitmapTrieSet.remove
-      strategy
+      comparator
       BitmapTrieSet.updateLevelNodeTransient
       owner
       0
-      hash
+      keyHash
       value;
 
     if (newRoot === root) set
-    else { count: count - 1, root: newRoot, strategy };
+    else { count: count - 1, root: newRoot, hash, comparator };
   };
 
   let remove (value: 'a) (transient: t 'a): (t 'a) =>
@@ -369,8 +350,8 @@ let module TransientHashSet = {
 
   let removeAllImpl
       (_: Transient.Owner.t)
-      ({ strategy }: hashSet 'a): (hashSet 'a) =>
-    persistentEmptyWith strategy;
+      ({ hash, comparator }: hashSet 'a): (hashSet 'a) =>
+    persistentEmpty hash::hash comparator::comparator;
 
   let removeAll (transient: t 'a): (t 'a) =>
     transient |> Transient.update removeAllImpl;
@@ -381,20 +362,20 @@ let mutate = TransientHashSet.mutate;
 let addAll (iter: Iterator.t 'a) (set: t 'a): (t 'a) =>
   set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
 
-let fromWith (strategy: HashStrategy.t 'a) (iter: Iterator.t 'a): (t 'a) =>
-  emptyWith strategy |> addAll iter;
-
-let intersect ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
+let intersect ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  ImmSet.intersect (toSet this) (toSet that) |> fromWith strategy;
+  empty hash::hash comparator::comparator
+    |> addAll (ImmSet.intersect (toSet this) (toSet that));
 
-let subtract ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
+let subtract ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  ImmSet.subtract (toSet this) (toSet that) |> fromWith strategy;
+  empty hash::hash comparator::comparator
+    |> addAll (ImmSet.subtract (toSet this) (toSet that));
 
-let union ({ strategy } as this: t 'a) (that: t 'a): (t 'a) =>
+let union ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  ImmSet.union (toSet this) (toSet that) |> fromWith strategy;
+  empty hash::hash comparator::comparator
+    |> addAll (ImmSet.union (toSet this) (toSet that));
 
 let module Reducer = Reducer.Make1 {
   type nonrec t 'a = t 'a;

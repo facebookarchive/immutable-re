@@ -10,8 +10,7 @@
 let module BitmapTrieMap = {
   type t 'k 'v =
     | Level int32 (array (t 'k 'v)) Transient.Owner.t
-    | ComparatorCollision int (AVLTreeMap.t 'k 'v)
-    | EqualityCollision int (EqualityMap.t 'k 'v)
+    | Collision int (AVLTreeMap.t 'k 'v)
     | Entry int 'k 'v
     | Empty;
 
@@ -24,7 +23,7 @@ let module BitmapTrieMap = {
     | Replace;
 
   let rec alter
-      (hashStrategy: HashStrategy.t 'k)
+      (comparator: Comparator.t 'k)
       (updateLevelNode: updateLevelNode 'k 'v)
       (owner: Transient.Owner.t)
       (alterResult: ref alterResult)
@@ -34,7 +33,7 @@ let module BitmapTrieMap = {
       (f: option 'v => option 'v)
       (map: t 'k 'v): (t 'k 'v) => switch map {
     | Entry entryHash entryKey entryValue when (hash == entryHash) =>
-        if (HashStrategy.equals hashStrategy key entryKey) (
+        if (Comparator.toEquality comparator key entryKey) (
           switch (f @@ Option.return @@ entryValue) {
             | Some newEntryValue when newEntryValue === entryValue =>
                 alterResult := NoChange;
@@ -47,21 +46,12 @@ let module BitmapTrieMap = {
                 Empty
           })
         else (switch (f None) {
-          | Some value => switch hashStrategy {
-              | HashStrategy.Comparator _ comparator =>
-                  let map = AVLTreeMap.Empty
-                    |> AVLTreeMap.put comparator entryKey entryValue
-                    |> AVLTreeMap.put comparator key value;
-                  alterResult := Added;
-                  ComparatorCollision entryHash map;
-              | HashStrategy.Equality _ equals =>
-                  /* FIXME: Could improve this to avoid collisions. */
-                  let map = EqualityMap.empty
-                    |> EqualityMap.put equals entryKey entryValue
-                    |> EqualityMap.put equals key value;
-                  alterResult := Added;
-                  EqualityCollision entryHash map;
-            }
+          | Some value =>
+              let map = AVLTreeMap.Empty
+                |> AVLTreeMap.put comparator entryKey entryValue
+                |> AVLTreeMap.put comparator key value;
+              alterResult := Added;
+              Collision entryHash map;
           | None =>
               alterResult := NoChange;
               map;
@@ -70,54 +60,32 @@ let module BitmapTrieMap = {
         | Some newEntryValue =>
             let bitmap = BitmapTrie.bitPos entryHash depth;
             Level bitmap [| map |] owner
-              |> alter hashStrategy updateLevelNode owner alterResult depth hash key (Functions.return @@ Option.return @@ newEntryValue)
+              |> alter comparator updateLevelNode owner alterResult depth hash key (Functions.return @@ Option.return @@ newEntryValue)
         | _ =>
             alterResult := NoChange;
             map
       }
-    | EqualityCollision entryHash entryMap =>
-        let entryMapCount = EqualityMap.count entryMap;
-        let newEntryMap = entryMap |> EqualityMap.alter (HashStrategy.equals hashStrategy) key f;
-        let newEntryMapCount = EqualityMap.count newEntryMap;
-
-        if (newEntryMap === entryMap) {
-            alterResult := NoChange;
-            map
-        } else if (entryMapCount == newEntryMapCount) {
-          alterResult := Replace;
-          EqualityCollision entryHash newEntryMap;
-        } else if (newEntryMapCount > entryMapCount) {
-          alterResult := Added;
-          EqualityCollision entryHash newEntryMap;
-        } else if (entryMapCount == 1) {
-          alterResult := Removed;
-          let (entrykey, entryValue) = newEntryMap |> EqualityMap.firstOrRaise;
-          Entry entryHash entrykey entryValue;
-        } else {
-          alterResult := Removed;
-          EqualityCollision entryHash newEntryMap;
-        };
-    | ComparatorCollision entryHash entryMap =>
+    | Collision entryHash entryMap =>
         let collisionResult = ref AVLTreeMap.NoChange;
-        let newEntryMap = entryMap |> AVLTreeMap.alter (HashStrategy.comparator hashStrategy) collisionResult key f;
+        let newEntryMap = entryMap |> AVLTreeMap.alter comparator collisionResult key f;
 
         switch !collisionResult {
           | AVLTreeMap.Added =>
               alterResult := Added;
-              ComparatorCollision entryHash newEntryMap;
+              Collision entryHash newEntryMap;
           | AVLTreeMap.NoChange =>
               alterResult := NoChange;
               map
           | AVLTreeMap.Replace =>
               alterResult := Replace;
-              ComparatorCollision entryHash newEntryMap;
+              Collision entryHash newEntryMap;
           | AVLTreeMap.Removed => switch newEntryMap {
               | AVLTreeMap.Leaf k v =>
                   alterResult := Removed;
                   Entry entryHash k v;
               | _ =>
                 alterResult := Removed;
-                ComparatorCollision entryHash newEntryMap;
+                Collision entryHash newEntryMap;
             }
         };
     | Level bitmap nodes _ =>
@@ -126,7 +94,7 @@ let module BitmapTrieMap = {
 
         if (BitmapTrie.containsNode bitmap bit) {
           let childNode = nodes.(index);
-          let newChildNode = childNode |> alter hashStrategy updateLevelNode owner alterResult (depth + 1) hash key f;
+          let newChildNode = childNode |> alter comparator updateLevelNode owner alterResult (depth + 1) hash key f;
 
           switch !alterResult {
             | Added => map |> updateLevelNode owner index newChildNode
@@ -178,7 +146,7 @@ let module BitmapTrieMap = {
     else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner;
 
   let rec containsKey
-      (hashStrategy: HashStrategy.t 'k)
+      (comparator: Comparator.t 'k)
       (depth: int)
       (hash: int)
       (key: 'k)
@@ -188,18 +156,16 @@ let module BitmapTrieMap = {
         let index = BitmapTrie.index bitmap bit;
 
         (BitmapTrie.containsNode bitmap bit) &&
-        (containsKey hashStrategy (depth + 1) hash key nodes.(index));
-    | EqualityCollision entryHash entryMap =>
-        (hash == entryHash) && (EqualityMap.containsKey (HashStrategy.equals hashStrategy) key entryMap);
-    | ComparatorCollision entryHash entryMap =>
-        (hash == entryHash) && (AVLTreeMap.containsKey (HashStrategy.comparator hashStrategy) key entryMap);
+        (containsKey comparator (depth + 1) hash key nodes.(index));
+    | Collision entryHash entryMap =>
+        (hash == entryHash) && (AVLTreeMap.containsKey comparator key entryMap);
     | Entry entryHash entryKey _ =>
-        (hash == entryHash) && (HashStrategy.equals hashStrategy entryKey key);
+        (hash == entryHash) && (Comparator.toEquality comparator entryKey key);
     | Empty => false;
   };
 
   let rec get
-      (hashStrategy: HashStrategy.t 'k)
+      (comparator: Comparator.t 'k)
       (depth: int)
       (hash: int)
       (key: 'k)
@@ -208,23 +174,20 @@ let module BitmapTrieMap = {
         let bit = BitmapTrie.bitPos hash depth;
         let index = BitmapTrie.index bitmap bit;
 
-        if (BitmapTrie.containsNode bitmap bit) (get hashStrategy (depth + 1) hash key nodes.(index))
+        if (BitmapTrie.containsNode bitmap bit) (get comparator (depth + 1) hash key nodes.(index))
         else None
-    | EqualityCollision entryHash entryMap =>
-        if (hash == entryHash) (EqualityMap.get (HashStrategy.equals hashStrategy) key entryMap)
-        else None
-    | ComparatorCollision entryHash entryMap =>
-        if (hash == entryHash) (AVLTreeMap.get (HashStrategy.comparator hashStrategy) key entryMap)
+    | Collision entryHash entryMap =>
+        if (hash == entryHash) (AVLTreeMap.get comparator key entryMap)
         else None
     | Entry entryHash entryKey entryValue =>
-        if ((hash == entryHash) && (HashStrategy.equals hashStrategy entryKey key)) {
+        if ((hash == entryHash) && (Comparator.toEquality comparator entryKey key)) {
           Some entryValue
         } else None
     | Empty => None;
   };
 
   let rec getOrRaise
-      (hashStrategy: HashStrategy.t 'k)
+      (comparator: Comparator.t 'k)
       (depth: int)
       (hash: int)
       (key: 'k)
@@ -233,18 +196,13 @@ let module BitmapTrieMap = {
         let bit = BitmapTrie.bitPos hash depth;
         let index = BitmapTrie.index bitmap bit;
 
-        if (BitmapTrie.containsNode bitmap bit) (getOrRaise hashStrategy (depth + 1) hash key nodes.(index))
+        if (BitmapTrie.containsNode bitmap bit) (getOrRaise comparator (depth + 1) hash key nodes.(index))
         else (failwith "NotFound")
-    | EqualityCollision entryHash entryMap =>
-        if (hash == entryHash) (
-          EqualityMap.getOrRaise (HashStrategy.equals hashStrategy) key entryMap
-        )
-        else (failwith "NotFound")
-    | ComparatorCollision entryHash entryMap =>
-        if (hash == entryHash) (AVLTreeMap.getOrRaise (HashStrategy.comparator hashStrategy) key entryMap)
+    | Collision entryHash entryMap =>
+        if (hash == entryHash) (AVLTreeMap.getOrRaise comparator key entryMap)
         else (failwith "NotFound")
     | Entry entryHash entryKey entryValue =>
-        if ((hash == entryHash) && (HashStrategy.equals hashStrategy entryKey key)) {
+        if ((hash == entryHash) && (Comparator.toEquality comparator entryKey key)) {
           entryValue
         } else (failwith "NotFound")
     | Empty => failwith "NotFound";
@@ -254,10 +212,8 @@ let module BitmapTrieMap = {
     | Level _ nodes _ =>
         let reducer acc node => node |> reduce f acc;
         nodes |> CopyOnWriteArray.reduce reducer acc
-    | ComparatorCollision _ entryMap =>
+    | Collision _ entryMap =>
         entryMap |> AVLTreeMap.reduce f acc
-    | EqualityCollision _ entryMap =>
-        entryMap |> EqualityMap.reduce f acc
     | Entry _ entryKey entryValue =>
         f acc entryKey entryValue
     | Empty => acc
@@ -276,10 +232,8 @@ let module BitmapTrieMap = {
         let predicate _ _ => !shouldContinue;
 
         nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
-    | ComparatorCollision _ entryMap =>
+    | Collision _ entryMap =>
         entryMap |> AVLTreeMap.reduceWhileWithResult shouldContinue predicate f acc
-    | EqualityCollision _ entryMap =>
-        entryMap |> EqualityMap.reduce while_::predicate f acc
     | Entry _ entryKey entryValue =>
         if (!shouldContinue && (predicate acc entryKey entryValue)) (f acc entryKey entryValue)
         else acc
@@ -303,16 +257,14 @@ let module BitmapTrieMap = {
 
   let rec toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
-    | ComparatorCollision _ entryMap => AVLTreeMap.toSequence entryMap
-    | EqualityCollision _ entryMap => EqualityMap.toSequence entryMap;
+    | Collision _ entryMap => AVLTreeMap.toSequence entryMap
     | Entry _ entryKey entryValue => Sequence.return (entryKey, entryValue);
     | Empty => Sequence.empty;
   };
 
   let rec values (map: t 'k 'v): (Iterator.t 'v) => switch map {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
-    | ComparatorCollision _ entryMap => AVLTreeMap.values entryMap
-    | EqualityCollision _ entryMap => EqualityMap.values entryMap;
+    | Collision _ entryMap => AVLTreeMap.values entryMap
     | Entry _ _ entryValue => Iterator.return entryValue;
     | Empty => Iterator.empty;
   };
@@ -321,54 +273,58 @@ let module BitmapTrieMap = {
 type t 'k 'v = {
   count: int,
   root: BitmapTrieMap.t 'k 'v,
-  strategy: HashStrategy.t 'k,
+  comparator: Comparator.t 'k,
+  hash: Hash.t 'k,
 };
 
-let emptyWith (strategy: HashStrategy.t 'k): (t 'k 'v) => {
+let empty
+    hash::(hash: Hash.t 'k)
+    comparator::(comparator: Comparator.t 'k): (t 'k 'v) => {
   count: 0,
   root: BitmapTrieMap.Empty,
-  strategy,
+  comparator,
+  hash,
 };
 
 let alter
     (key: 'k)
     (f: option 'v => option 'v)
-    ({ count, root, strategy } as map: t 'k 'v): (t 'k 'v) => {
-  let hash = HashStrategy.hash strategy key;
+    ({ count, root, comparator, hash } as map: t 'k 'v): (t 'k 'v) => {
+  let hashKey = hash key;
   let alterResult = ref BitmapTrieMap.NoChange;
   let newRoot = root |> BitmapTrieMap.alter
-    strategy
+    comparator
     BitmapTrieMap.updateLevelNodePersistent
     Transient.Owner.none
     alterResult
     0
-    hash
+    hashKey
     key
     f;
 
   switch !alterResult {
-    | BitmapTrieMap.Added => { count: count + 1, root: newRoot, strategy }
+    | BitmapTrieMap.Added => { count: count + 1, root: newRoot, comparator, hash }
     | BitmapTrieMap.NoChange => map
-    | BitmapTrieMap.Replace => { count, root: newRoot, strategy }
-    | BitmapTrieMap.Removed => { count: count - 1, root: newRoot, strategy }
+    | BitmapTrieMap.Replace => { count, root: newRoot, comparator, hash }
+    | BitmapTrieMap.Removed => { count: count - 1, root: newRoot, comparator, hash }
   };
 };
 
-let containsKey (key: 'k) ({ root, strategy }: t 'k 'v): bool => {
-  let hash = HashStrategy.hash strategy key;
-  root |> BitmapTrieMap.containsKey strategy 0 hash key;
+let containsKey (key: 'k) ({ root, comparator, hash }: t 'k 'v): bool => {
+  let hashKey = hash key;
+  root |> BitmapTrieMap.containsKey comparator 0 hashKey key;
 };
 
 let count ({ count }: t 'k 'v): int => count;
 
-let get (key: 'k) ({ strategy, root }: t 'k 'v): (option 'v) => {
-  let hash = HashStrategy.hash strategy key;
-  root |> BitmapTrieMap.get strategy 0 hash key;
+let get (key: 'k) ({ root, comparator, hash }: t 'k 'v): (option 'v) => {
+  let hashKey = hash key;
+  root |> BitmapTrieMap.get comparator 0 hashKey key;
 };
 
-let getOrRaise (key: 'k) ({ root, strategy }: t 'k 'v): 'v => {
-  let hash = HashStrategy.hash strategy key;
-  root |> BitmapTrieMap.getOrRaise strategy 0 hash key;
+let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
+  let hashKey = hash key;
+  root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
 };
 
 let isEmpty ({ count }: t 'k 'v): bool =>
@@ -394,8 +350,8 @@ let reduce
 let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;
 
-let removeAll ({ strategy }: t 'k 'v): (t 'k 'v) =>
-  emptyWith strategy;
+let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
+  empty hash::hash comparator::comparator;
 
 let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
   if (isEmpty map) Iterator.empty
@@ -442,26 +398,26 @@ let module TransientHashMap = {
       (owner: Transient.Owner.t)
       (key: 'k)
       (f: option 'v => option 'v)
-      ({ count, root, strategy } as map: hashMap 'k 'v): (hashMap 'k 'v) => {
-    let hash = HashStrategy.hash strategy key;
+      ({ count, root, comparator, hash } as map: hashMap 'k 'v): (hashMap 'k 'v) => {
+    let hashKey = hash key;
     let alterResult = ref BitmapTrieMap.NoChange;
     let newRoot = root |> BitmapTrieMap.alter
-      strategy
+      comparator
       BitmapTrieMap.updateLevelNodeTransient
       owner
       alterResult
       0
-      hash
+      hashKey
       key
       f;
 
     switch !alterResult {
-      | BitmapTrieMap.Added => { count: count + 1, root: newRoot, strategy }
+      | BitmapTrieMap.Added => { count: count + 1, root: newRoot, comparator, hash }
       | BitmapTrieMap.NoChange => map
       | BitmapTrieMap.Replace =>
           if (newRoot === root) map
-          else { count, root: newRoot, strategy }
-      | BitmapTrieMap.Removed => { count: count - 1, root: newRoot, strategy }
+          else { count, root: newRoot, comparator, hash }
+      | BitmapTrieMap.Removed => { count: count - 1, root: newRoot, comparator, hash }
     };
   };
 
@@ -477,16 +433,19 @@ let module TransientHashMap = {
   let count (transient: t 'k 'v): int =>
     transient |> Transient.get |> count;
 
+  let persistentEmpty = empty;
+
+  let empty
+      hash::(hash: Hash.t 'k)
+      comparator::(comparator: Comparator.t 'k)
+      (): (t 'k 'v) =>
+    empty hash::hash comparator::comparator |> mutate;
+
   let get (key: 'k) (transient: t 'k 'v): (option 'v) =>
    transient |> Transient.get |> get key;
 
   let getOrRaise (key: 'k) (transient: t 'k 'v): 'v =>
     transient |> Transient.get |> getOrRaise key;
-
-  let persistentEmptyWith = emptyWith;
-
-  let emptyWith (strategy: HashStrategy.t 'k): (t 'k 'v) =>
-    persistentEmptyWith strategy |> mutate;
 
   let isEmpty (transient: t 'k 'v): bool =>
     transient |> Transient.get |> isEmpty;
@@ -508,8 +467,8 @@ let module TransientHashMap = {
 
   let removeAllImpl
       (_: Transient.Owner.t)
-      ({ strategy }: hashMap 'k 'v): (hashMap 'k 'v) =>
-    persistentEmptyWith strategy;
+      ({ comparator, hash }: hashMap 'k 'v): (hashMap 'k 'v) =>
+    persistentEmpty comparator::comparator hash::hash;
 
   let removeAll (transient: t 'k 'v): (t 'k 'v) =>
     transient |> Transient.update removeAllImpl;
@@ -517,15 +476,14 @@ let module TransientHashMap = {
 
 let mutate = TransientHashMap.mutate;
 
-let map (f: 'k => 'a => 'b) ({ strategy } as map: t 'k 'a): (t 'k 'b) => map
-  |> reduce (fun acc k v => acc |> TransientHashMap.put k (f k v)) (emptyWith strategy |> mutate)
+let map (f: 'k => 'a => 'b) ({ comparator, hash } as map: t 'k 'a): (t 'k 'b) => map
+  |> reduce (fun acc k v => acc
+      |> TransientHashMap.put k (f k v)
+    ) (empty comparator::comparator hash::hash |> mutate)
   |> TransientHashMap.persist;
 
 let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
-
-let fromWith (strategy: HashStrategy.t 'k) (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
-  emptyWith strategy |> putAll iter;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))

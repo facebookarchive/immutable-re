@@ -105,6 +105,18 @@ let map (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) =>
     }
   };
 
+let mapKeys (mapper: 'a => 'v => 'b) (iter: t 'a 'v): (t 'b 'v) =>
+  if (iter === empty) empty
+  else {
+    reduce: fun predicate f acc => {
+      iter |> reduce
+        /* FIXME: Memoize the mapper result so that we don't compute it twice */
+        while_::(fun acc k v => predicate acc (mapper k v) v)
+        (fun acc k v => f acc (mapper k v) v)
+        acc
+    }
+  };
+
 let return (key: 'k) (value: 'v): (t 'k 'v) => {
   reduce: fun predicate f acc =>
     if (predicate acc key value) (f acc key value)
