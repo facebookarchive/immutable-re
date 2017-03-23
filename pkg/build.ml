@@ -8,7 +8,7 @@ let () =
     let ocamlbuild = Conf.tool "rebuild" os in
     OS.Cmd.run @@ Cmd.(ocamlbuild % "-use-ocamlfind"
                                   %% (v "-I" % "immutable/src/core")
-                                  %% (v "-I" % "immutable/src/extra")
+                                  %% (v "-I" % "immutable/src/queues")
                                   %% (v "-I" % "immutable/src/indexed")
                                   %% (v "-I" % "immutable/src/utils")
                                   %% (v "-I" % "immutable/src/map")
