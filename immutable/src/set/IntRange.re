@@ -23,11 +23,14 @@ let create start::(start: int) count::(count: int): t => {
   else { start, count };
 };
 
-
 let compare
-    (this: t)
-    (that: t): Ordering.t =>
-  failwith "unimplemented";
+    ({ count: thisCount, start: thisStart }: t)
+    ({ count: thatCount, start: thatStart }: t): Ordering.t =>
+  if (thisStart > thatStart) Ordering.greaterThan
+  else if (thisStart < thatStart) Ordering.lessThan
+  else if (thisCount > thatCount) Ordering.greaterThan
+  else if (thisCount < thatCount) Ordering.lessThan
+  else Ordering.equal;
 
 let contains (value: int) ({ count, start }: t): bool =>
   value >= start && value < (start + count);
@@ -111,22 +114,6 @@ let toIterator (set: t): (Iterator.t int) =>
 let toIteratorRight (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
-
-let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
-  if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun predicate f acc => set |> reduce
-    while_::(fun acc next => predicate acc next next)
-    (fun acc next => f acc next next)
-    acc
-  };
-
-let toKeyedIteratorRight (set: t): (KeyedIterator.t int int) =>
-  if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun predicate f acc => set |> reduceRight
-    while_::(fun acc next => predicate acc next next)
-    (fun acc next => f acc next next)
-    acc
-  };
 
 let toSet (set: t): (ImmSet.t int) => {
   contains: fun v => contains v set,

@@ -209,14 +209,6 @@ let toIterator (set: t): (Iterator.t int) =>
   if (isEmpty set) Iterator.empty
   else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
-let toKeyedIterator (set: t): (KeyedIterator.t int int) =>
-  if (isEmpty set) KeyedIterator.empty
-  else { reduce: fun predicate f acc => set |> reduce
-    while_::(fun acc next => predicate acc next next)
-    (fun acc next => f acc next next)
-    acc
-  };
-
 let toSet (set: t): (ImmSet.t int) =>
   if (isEmpty set) ImmSet.empty
   else {

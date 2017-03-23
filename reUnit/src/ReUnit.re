@@ -78,7 +78,7 @@ let module Test = {
           let label = context ^ "[" ^ label ^ "]";
           tests |> List.rev_map (recurse label) |> List.flatten;
       | It label f =>
-          let label = context ^ ", (" ^ label ^ ")";
+          let label = context ^ "(" ^ label ^ ")";
           [(label, f)]
     };
     recurse "" test
@@ -195,7 +195,7 @@ let run (tests: Test.t): unit => {
     let startTime = Sys.time ();
     let result = try { f (); None } { | exn => Some exn };
     let endTime = Sys.time ();
-    Printf.printf "%f, %s" (endTime -. startTime) label;
+    Printf.printf "%f %s" (endTime -. startTime) label;
 
     switch result {
       | Some exn =>

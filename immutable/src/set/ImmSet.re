@@ -50,15 +50,6 @@ let toIterator ({ iterator } as set: t 'a): (Iterator.t 'a) =>
   if (set === empty) Iterator.empty
   else iterator;
 
-let toKeyedIterator ({ iterator }: t 'a): (KeyedIterator.t 'a 'a) =>
-  if (iterator == Iterator.empty) KeyedIterator.empty
-  else {
-    reduce: fun predicate f acc => iterator |> Iterator.reduce
-      while_::(fun acc next => predicate acc next next)
-      (fun acc next => f acc next next)
-      acc
-  };
-
 let toSequence ({ sequence }: t 'a): (Sequence.t 'a) => sequence;
 
 let toSet (set: t 'a): (t 'a) => set;

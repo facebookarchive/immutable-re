@@ -535,7 +535,6 @@ let module Set = {
     include Equatable.S with type t := t;
 
     let contains: a => t => bool;
-    let toKeyedIterator: t => KeyedIterator.t a a;
     let toMap: t => (ImmMap.t a a);
     let toSet: t => (ImmSet.t a);
   };
@@ -547,7 +546,6 @@ let module Set = {
     include Equatable.S1 with type t 'a := t 'a;
 
     let contains: 'a => (t 'a) => bool;
-    let toKeyedIterator: (t 'a) => (KeyedIterator.t 'a 'a);
     let toMap: (t 'a) => (ImmMap.t 'a 'a);
     let toSet: (t 'a) => (ImmSet.t 'a);
   };
@@ -682,8 +680,6 @@ let module NavigableSet = {
 
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
-
-    let toKeyedIteratorRight: t => (KeyedIterator.t a a);
   };
 
   module type S1 = {
@@ -691,8 +687,6 @@ let module NavigableSet = {
 
     include Set.S1 with type t 'a := t 'a;
     include NavigableCollection.S1 with type t 'a := t 'a;
-
-    let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t 'a 'a);
   };
 };
 

@@ -20,10 +20,8 @@ module type S = {
   let lastOrRaise: t => a;
   let toIteratorRight: t => Iterator.t a;
   let toSequenceRight: t => Sequence.t a;
-  let toKeyedIteratorRight: t => KeyedIterator.t a a;
   let equals: Equality.t t;
   let contains: a => t => bool;
-  let toKeyedIterator: t => KeyedIterator.t a a;
   let toMap: t => ImmMap.t a a;
   let toSet: t => ImmSet.t a;
   let reduce:
@@ -178,24 +176,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     if (isEmpty set) Iterator.empty
     else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
 
-  let toKeyedIterator (set: t): (KeyedIterator.t a a)  =>
-    if (isEmpty set) KeyedIterator.empty
-    else {
-      reduce: fun predicate f acc => set |> reduce
-        while_::(fun acc next => predicate acc next next)
-        (fun acc next => f acc next next)
-        acc
-    };
-
-  let toKeyedIteratorRight (set: t): (KeyedIterator.t a a) =>
-    if (isEmpty set) KeyedIterator.empty
-    else {
-      reduce: fun predicate f acc => set |> reduceRight
-        while_::(fun acc next => predicate acc next next)
-        (fun acc next => f acc next next)
-        acc
-    };
-
   let toSet (set: t): (ImmSet.t a) => {
     contains: fun a => contains a set,
     count: count set,
@@ -203,18 +183,8 @@ let module Make = fun (Comparable: Comparable.S) => {
     sequence: toSequence set,
   };
 
-  let toMap (set: t): (ImmMap.t a a) => {
-    containsKey: fun k => set |> contains k,
-    count: count set,
-    get: fun k =>
-      if (set |> contains k) (Some k)
-      else None,
-    getOrRaise: fun k =>
-      if (set |> contains k) k
-      else failwith "not found",
-    keyedIterator: toKeyedIterator set,
-    sequence: toSequence set |> Sequence.map (fun k => (k, k)),
-  };
+  let toMap (set: t): (ImmMap.t a a) =>
+    set |> toSet |> ImmMap.ofSet;
 
   let findRight (f: a => bool) (set: t): (option a) =>
     set |> toIteratorRight |> Iterator.Reducer.find f;

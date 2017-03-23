@@ -12,6 +12,7 @@ open ReUnit.Test;
 ReUnit.run (describe "Immutable.re" [
   CopyOnWriteArrayTest.test,
   DequeTest.test,
+  IntRangeTest.test,
   IteratorTest.test,
   KeyedIteratorTest.test,
   KeyedReducerTest.test,
