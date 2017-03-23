@@ -18,31 +18,38 @@ let module Test: {
 let module Expect: {
   type t 'a;
 
-  /* In ocaml 4.03 there is a result type that Expect maps to directly.
-   * In that case we could move these monadic functions into Immutable.re directly
-   */
   let expect: 'a => (t 'a);
-  let failwith: string => (t 'a);
-  let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
-  let forEach: ('a => unit) => (t 'a) => unit;
-  let get: (t 'a) => 'a;
-  let map: ('a => 'b) => (t 'a) => (t 'b);
-  let return: 'a => (t 'a);
 
   let toBeEqualToFalse: (t bool) => unit;
   let toBeEqualToInt: int => (t int) => unit;
-  let toBeEqualToList: ('a => 'a => bool) => ('a => string) => (list 'a) => (t (list 'a)) => unit;
+  let toBeEqualToList:
+    equals::('a => 'a => bool) =>
+    toString::('a => string) =>
+    (list 'a) =>
+    (t (list 'a)) => unit;
   let toBeEqualToListOfInt: (list int) => (t (list int)) => unit;
   let toBeEqualToListOfString: (list string) => (t (list string)) => unit;
-  let toBeEqualToNone: ('a => string) => (t (option 'a)) => unit;
+  let toBeEqualToNone:
+    toString::('a => string) =>
+    (t (option 'a)) =>
+    unit;
   let toBeEqualToNoneOfInt: (t (option int)) => unit;
   let toBeEqualToNoneOfString: (t (option string)) => unit;
-  let toBeEqualToSome: ('a => string) => 'a => (t (option 'a)) => unit;
+  let toBeEqualToSome:
+    equals::('a => 'a => bool) =>
+    toString::('a => string) =>
+    'a =>
+    (t (option 'a)) => unit;
   let toBeEqualToSomeOfInt: int => (t (option int)) => unit;
   let toBeEqualToSomeOfString: string => (t (option string)) => unit;
   let toBeEqualToString: string => (t string) => unit;
   let toBeEqualToTrue: (t bool) => unit;
-  let toBeEqualToWith: ('a => 'a => bool) => ('a => string) => 'a => (t 'a) => unit;
+  let toBeEqualToWith:
+    equals::('a => 'a => bool) =>
+    toString::('a => string) =>
+    'a =>
+    (t 'a) =>
+    unit;
 
   let shouldRaise: (unit => 'a) => unit;
 };

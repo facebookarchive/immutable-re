@@ -11,13 +11,28 @@ let identity a => a;
 
 let module Equality = {
   let rec listWith
-      (equals: 'a => 'a => bool)
+      equals::(equals: 'a => 'a => bool)
       (this: list 'a)
       (that: list 'a): bool => switch (this, that) {
     | ([thisHead, ...thisTail], [thatHead, ...thatTail]) =>
       if (equals thisHead thatHead) (listWith equals thisTail thatTail)
       else false
     | ([], []) => true
+    | _ => false
+  };
+
+  let bool (this: bool) (that: bool) =>
+    this === that;
+
+  let int (this: int) (that: int) =>
+    this === that;
+
+  let optionWith
+      equals::(equals: 'a => 'a => bool)
+      (this: option 'a)
+      (that: option 'a): bool => switch (this, that) {
+    | (Some this, Some that) => equals this that
+    | (None, None) => true
     | _ => false
   };
 };
@@ -75,12 +90,14 @@ let module Expect = {
 
   let expect (value: 'a): (t 'a) => Value value;
 
-  let failwith (message: string): (t 'a) =>
-    try (failwith message) { | exn => Error exn };
-
   let flatMap (f: 'a => t 'b) (expect: t 'a): (t 'b) => switch expect {
     | Value a => f a
     | Error exn => Error exn
+  };
+
+  let firstOrRaise (expect: t 'a): 'a => switch expect {
+    | Value a => a
+    | Error exn => /* reraise */ raise exn
   };
 
   let forEach (f: 'a => unit) (expect: t 'a): unit => switch expect {
@@ -88,47 +105,44 @@ let module Expect = {
     | Error _ => ()
   };
 
-  let get (expect: t 'a): 'a => switch expect {
-    | Value a => a
-    | Error exn => /* reraise */ raise exn
-  };
-
-  let map (f: 'a => 'b) (expect: t 'a): (t 'b) => switch expect {
-    | Value a => Value (f a)
-    | Error exn => Error exn
-  };
-
-  let return = expect;
-
   let toBeEqualToWith
-      (equals: 'a => 'a => bool)
-      (toString: 'a => string)
+      equals::(equals: 'a => 'a => bool)
+      toString::(toString: 'a => string)
       (expected: 'a)
-      (expect: t 'a) => expect |> flatMap (fun value =>
+      (actual: t 'a) => actual |> flatMap (fun value =>
     if (not (equals expected value)) (
       failwith ("expected: " ^ (toString expected) ^ " but got: " ^ (toString value))
     )
-    else return value
-  ) |> get |> ignore;
+    else expect value
+  ) |> firstOrRaise |> ignore;
 
-  let toBeEqualToStructuralEquality (toString: 'a => string) =>
-    toBeEqualToWith Pervasives.(==) toString;
+  let toBeEqualToFalse = toBeEqualToWith
+    equals::Equality.bool
+    toString::string_of_bool
+    false;
 
-  let toBeEqualToFalse = toBeEqualToStructuralEquality string_of_bool false;
+  let toBeEqualToInt = toBeEqualToWith
+    equals::Equality.int
+    toString::string_of_int;
 
-  let toBeEqualToInt = toBeEqualToStructuralEquality string_of_int;
-
-  let toBeEqualToList (equals: 'a => 'a => 'bool) (toString: 'a => string) =>
-    toBeEqualToWith (Equality.listWith equals) (ToString.ofList toString);
+  let toBeEqualToList
+      equals::(equals: 'a => 'a => 'bool)
+      toString::(toString: 'a => string) =>
+    toBeEqualToWith
+      equals::(Equality.listWith equals::equals)
+      toString::(ToString.ofList toString);
 
   let toBeEqualToListOfInt (list: list int) =>
-    toBeEqualToList Pervasives.(==) string_of_int list;
+    toBeEqualToList equals::Pervasives.(==) toString::string_of_int list;
 
   let toBeEqualToListOfString (list: list string) =>
-    toBeEqualToList Pervasives.(==) (fun s => s) list;
+    toBeEqualToList equals::Pervasives.(==) toString::(fun s => s) list;
 
-  let toBeEqualToNone (toString: 'a => string) =>
-    toBeEqualToStructuralEquality (ToString.ofOption toString) None;
+  let toBeEqualToNone toString::(toString: 'a => string) =>
+    toBeEqualToWith
+      equals::(Equality.optionWith equals::Pervasives.(===))
+      toString::(ToString.ofOption toString)
+      None;
 
   let toBeEqualToNoneOfInt (expect: t (option int)) =>
     toBeEqualToNone string_of_int expect;
@@ -136,16 +150,36 @@ let module Expect = {
   let toBeEqualToNoneOfString (expect: t (option 'a)) =>
     toBeEqualToNone identity expect;
 
-  let toBeEqualToSome (toString: 'a => string) (value: 'a) =>
-    toBeEqualToStructuralEquality (ToString.ofOption toString) (Some value);
+  let toBeEqualToSome
+      equals::(equals: 'a => 'a => bool)
+      toString::(toString: 'a => string)
+      (value: 'a) =>
+    toBeEqualToWith
+      equals::(Equality.optionWith equals::equals)
+      toString::(ToString.ofOption toString)
+      (Some value);
 
-  let toBeEqualToSomeOfInt (value: int) => toBeEqualToSome string_of_int value;
+  let toBeEqualToSomeOfInt (value: int) =>
+    toBeEqualToSome
+      equals::Equality.int
+      toString::string_of_int
+      value;
 
-  let toBeEqualToSomeOfString (value: string) => toBeEqualToSome identity value;
+  let toBeEqualToSomeOfString (value: string) =>
+    toBeEqualToSome
+      equals::(Pervasives.(==))
+      toString::identity
+      value;
 
-  let toBeEqualToString = toBeEqualToStructuralEquality identity;
+  let toBeEqualToString (value: string) => toBeEqualToWith
+    equals::(Pervasives.(==))
+    toString::identity
+    value;
 
-  let toBeEqualToTrue = toBeEqualToStructuralEquality string_of_bool true;
+  let toBeEqualToTrue = toBeEqualToWith
+   equals::Equality.bool
+   toString::string_of_bool
+   true;
 
   let shouldRaise (expr: unit => 'a) => {
     let result = try (Value (expr ())) { | exn => Error exn };
