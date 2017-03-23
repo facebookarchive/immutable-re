@@ -1,12 +1,14 @@
 Immutable Collections For Reason
 ================================
 
-# Views
+# Features
+
+## Views
   * Seq: Lazy iterators.
   * Set: Collections of unique values.
   * Map: Mapped key value pairs.
 
-# Concrete Collection Types
+## Concrete Collection Types
   * CopyOnWriteArray: An opaque wrapper around arrays that provides copy on write operations. Good for small lists of values.
   * Deque: Double-ended queue, with amortized O(1) appends/prepends and head/tail access.
   * HashBiMap: Bi-directional maps that maintain a unique key to value relationship.
@@ -25,12 +27,52 @@ Immutable Collections For Reason
   * Vector: Indexed data-structure with amortized O(1) appends/prepends, and log32 indexed lookups and updates. Vector also
     supports efficient slicing operation (range, skip, take) that do not leak memory.
 
-# Utilities
+## Utilities
   * Comparator: Functions for comparing two values of a given type.
   * Equality: Functions for comparing two values for equality.
   * Hash: Functions for generating unique hash functions.
   * Ordering: The set of valid return values from a comparator function.
 
-# Transient Mutability
+## Transient Mutability
 
 BiMap, Deque, HashMap, HashMultiset, HashSet, IntMap, and Vector support temporary mutability for improved performance. For more details see: http://clojure.org/reference/transients
+
+# Installing
+
+## Installing `immutable` via OPAM
+
+```bash
+# On OSX, install opam via Homebrew:
+brew update
+brew install opam
+# On Linux, see here (you will need opam >= 1.2.2): http://opam.ocaml.org/doc/Install.html
+
+opam init
+# Add this to your ~/.bashrc (or ~/.zshrc):
+#   eval $(opam config env)
+
+opam update
+opam switch 4.03.0
+eval $(opam config env)
+opam install immutable
+```
+
+## Contributing to development
+
+```bash
+# On OSX, install opam via Homebrew:
+brew update
+brew install opam
+# On Linux, see here (you will need opam >= 1.2.2): http://opam.ocaml.org/doc/Install.html
+
+opam init
+# Add this to your ~/.bashrc (or ~/.zshrc):
+#   eval $(opam config env)
+
+opam update
+opam switch 4.03.0
+eval $(opam config env)
+git clone git@github.com:facebookincubator/immutable-re.git
+cd immutable-re
+opam pin add -y immutable .
+```

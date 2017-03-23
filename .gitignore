@@ -18,3 +18,5 @@ _build/**
 *.log
 /node_modules/
 /lib/
+/immutable.install
+/pkg/META
