@@ -22,20 +22,20 @@ let module Expect: {
 
   let toBeEqualToFalse: (t bool) => unit;
   let toBeEqualToInt: int => (t int) => unit;
-  let toBeEqualToList:
+  let toBeEqualToListWith:
     equals::('a => 'a => bool) =>
     toString::('a => string) =>
     (list 'a) =>
     (t (list 'a)) => unit;
   let toBeEqualToListOfInt: (list int) => (t (list int)) => unit;
   let toBeEqualToListOfString: (list string) => (t (list string)) => unit;
-  let toBeEqualToNone:
+  let toBeEqualToNoneWith:
     toString::('a => string) =>
     (t (option 'a)) =>
     unit;
   let toBeEqualToNoneOfInt: (t (option int)) => unit;
   let toBeEqualToNoneOfString: (t (option string)) => unit;
-  let toBeEqualToSome:
+  let toBeEqualToSomeWith:
     equals::('a => 'a => bool) =>
     toString::('a => string) =>
     'a =>

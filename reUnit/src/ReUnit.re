@@ -125,7 +125,7 @@ let module Expect = {
     equals::Equality.int
     toString::string_of_int;
 
-  let toBeEqualToList
+  let toBeEqualToListWith
       equals::(equals: 'a => 'a => 'bool)
       toString::(toString: 'a => string) =>
     toBeEqualToWith
@@ -133,24 +133,24 @@ let module Expect = {
       toString::(ToString.ofList toString);
 
   let toBeEqualToListOfInt (list: list int) =>
-    toBeEqualToList equals::Pervasives.(==) toString::string_of_int list;
+    toBeEqualToListWith equals::Pervasives.(==) toString::string_of_int list;
 
   let toBeEqualToListOfString (list: list string) =>
-    toBeEqualToList equals::Pervasives.(==) toString::(fun s => s) list;
+    toBeEqualToListWith equals::Pervasives.(==) toString::(fun s => s) list;
 
-  let toBeEqualToNone toString::(toString: 'a => string) =>
+  let toBeEqualToNoneWith toString::(toString: 'a => string) =>
     toBeEqualToWith
       equals::(Equality.optionWith equals::Pervasives.(===))
       toString::(ToString.ofOption toString)
       None;
 
   let toBeEqualToNoneOfInt (expect: t (option int)) =>
-    toBeEqualToNone string_of_int expect;
+    toBeEqualToNoneWith string_of_int expect;
 
   let toBeEqualToNoneOfString (expect: t (option 'a)) =>
-    toBeEqualToNone identity expect;
+    toBeEqualToNoneWith identity expect;
 
-  let toBeEqualToSome
+  let toBeEqualToSomeWith
       equals::(equals: 'a => 'a => bool)
       toString::(toString: 'a => string)
       (value: 'a) =>
@@ -160,13 +160,13 @@ let module Expect = {
       (Some value);
 
   let toBeEqualToSomeOfInt (value: int) =>
-    toBeEqualToSome
+    toBeEqualToSomeWith
       equals::Equality.int
       toString::string_of_int
       value;
 
   let toBeEqualToSomeOfString (value: string) =>
-    toBeEqualToSome
+    toBeEqualToSomeWith
       equals::(Pervasives.(==))
       toString::identity
       value;

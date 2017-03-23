@@ -14,6 +14,7 @@ ReUnit.run (describe "Immutable.re" [
   DequeTest.test,
   IteratorTest.test,
   KeyedIteratorTest.test,
+  KeyedReducerTest.test,
   ListTest.test,
   OptionTest.test,
   ReducerTest.test,

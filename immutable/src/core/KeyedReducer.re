@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
+
 module type S1 = {
   type k;
   type t 'v;
@@ -84,7 +86,7 @@ let module Make1 = fun (KeyedReduceable: KeyedReduceable.S1) => {
   let none (f: k => 'v => bool) (keyedReduceable: t 'v): bool =>
     keyedReduceable |> KeyedReduceable.reduce
       while_::(fun acc _ _ => acc)
-      (fun _ => f)
+      (fun _ k v => f k v |> not)
       true;
 
   let some (f: k => 'v => bool) (keyedReduceable: t 'v): bool =>
@@ -139,7 +141,7 @@ let module Make2 = fun (KeyedReduceable: KeyedReduceable.S2) => {
   let none (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): bool =>
     keyedReduceable |> KeyedReduceable.reduce
       while_::(fun acc _ _ => acc)
-      (fun _ => f)
+      (fun _ k v => f k v |> not)
       true;
 
   let some (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): bool =>
