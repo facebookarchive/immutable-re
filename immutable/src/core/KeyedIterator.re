@@ -256,6 +256,7 @@ let scan
 
 let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty
+  else if (count == 0) iter
   else {
     reduce: fun predicate f acc => {
       let count = ref count;
@@ -303,6 +304,7 @@ let startWith (key: 'k) (value: 'v) (iter: t 'k 'v): (t 'k 'v) =>
 
 let take (count: int) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter === empty) empty
+  else if (count === 0) empty
   else {
     reduce: fun predicate f acc => {
       let count = ref count;
