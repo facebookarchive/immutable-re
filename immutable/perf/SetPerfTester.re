@@ -80,7 +80,7 @@ let test (n: int) (count: int): Test.t => {
       (fun acc i => acc |> CamlIntSet.add (hash i))
       CamlIntSet.empty;
 
-  let hashSetEmpty = HashSet.empty
+  let hashSetEmpty = HashSet.emptyWith
     hash::Functions.identity
     comparator::Comparator.int;
 

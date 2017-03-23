@@ -1410,7 +1410,7 @@ let module rec HashSet: {
   include PersistentSet.S1 with type t 'a := t 'a;
   include Hashable.S1 with type t 'a := t 'a;
 
-  let empty: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
+  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same elements as [set].
    *
@@ -1431,7 +1431,7 @@ and TransientHashSet: {
 
   include TransientSet.S1 with type t 'a := t 'a;
 
-  let empty: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
+  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
   let persist: (t 'a) => (HashSet.t 'a);
   /** [persist transient] returns a persisted HashSet. Further attempts to access or mutate [transient]
    *  will throw.
@@ -1650,7 +1650,7 @@ let module rec HashMap: {
 
   include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let empty: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
+  let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
   /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map].
    *
@@ -1671,7 +1671,7 @@ and TransientHashMap: {
 
   include TransientMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let empty: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (TransientHashMap.t 'k 'v);
+  let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (TransientHashMap.t 'k 'v);
   let persist: (t 'k 'v) => (HashMap.t 'k 'v);
   /** [persist transient] returns a persisted HashMap. Further attempts to access or mutate [transient]
    *  will throw.

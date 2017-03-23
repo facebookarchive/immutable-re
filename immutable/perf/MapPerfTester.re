@@ -77,7 +77,7 @@ let test (n: int) (count: int): Test.t => {
     (fun acc i => acc |> CamlIntMap.add i i)
     CamlIntMap.empty;
 
-  let hashMapEmpty = HashMap.empty
+  let hashMapEmpty = HashMap.emptyWith
     hash::(fun i => i)
     comparator::Comparator.int;
 
