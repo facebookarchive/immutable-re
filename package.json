@@ -20,15 +20,15 @@
 
     "build-docs": "eval $(dependencyEnv) && nopam && rm -rf ./docs && mkdir -p ./docs && refmt -p ml immutable/src/Immutable.rei > ./docs/Immutable.mli && ocamldoc -html -d docs ./docs/Immutable.mli && rm -f ./docs/Immutable.mli",
 
-    "build-test": "eval $(dependencyEnv) && nopam && rebuild -cflag -g -Is immutable/src,immutable/src/set,immutable/src/core,immutable/src/extra,immutable/src/indexed,immutable/src/map,immutable/src/utils,reUnit/src,immutable/test/testers,immutable/test ./immutable/test/ImmutableTest.byte",
+    "build-test": "eval $(dependencyEnv) && nopam && rebuild -cflag -g -Is immutable/src,immutable/src/set,immutable/src/core,immutable/src/queue,immutable/src/indexed,immutable/src/map,immutable/src/utils,reUnit/src,immutable/test/testers,immutable/test ./immutable/test/ImmutableTest.byte",
     "run-test": "eval $(dependencyEnv) && ./_build/immutable/test/ImmutableTest.byte",
     "test": "npm run clean && npm run build-test && npm run run-test",
 
-    "build-perf-debug": "eval $(dependencyEnv) && nopam && rebuild -cflag -g -Is immutable/src/set,immutable/src/core,immutable/src/extra,immutable/src/indexed,immutable/src/map,immutable/src/utils,immutable/src,reUnit/src,immutable/perf ./immutable/perf/PerfTest.byte 2>&1 | berror.native --path-to-refmttype refmttype",
+    "build-perf-debug": "eval $(dependencyEnv) && nopam && rebuild -cflag -g -Is immutable/src/set,immutable/src/core,immutable/src/queue,immutable/src/indexed,immutable/src/map,immutable/src/utils,immutable/src,reUnit/src,immutable/perf ./immutable/perf/PerfTest.byte 2>&1 | berror.native --path-to-refmttype refmttype",
     "run-perf-debug": "eval $(dependencyEnv) && ./_build/immutable/perf/PerfTest.byte",
     "perf-debug": "npm run clean && npm run build-perf-debug && npm run run-perf-debug",
 
-    "build-perf": "eval $(dependencyEnv) && nopam && rebuild -Is immutable/src/set,immutable/src/core,immutable/src/extra,immutable/src/indexed,immutable/src/map,immutable/src/utils,immutable/src,reUnit/src,immutable/perf -ocamlopt \"ocamlopt -p -inline 100 -unsafe -noassert -nodynlink\" ./immutable/perf/PerfTest.native 2>&1 | berror.native --path-to-refmttype refmttype",
+    "build-perf": "eval $(dependencyEnv) && nopam && rebuild -Is immutable/src/set,immutable/src/core,immutable/src/queue,immutable/src/indexed,immutable/src/map,immutable/src/utils,immutable/src,reUnit/src,immutable/perf -ocamlopt \"ocamlopt -p -inline 100 -unsafe -noassert -nodynlink\" ./immutable/perf/PerfTest.native 2>&1 | berror.native --path-to-refmttype refmttype",
     "run-perf": "eval $(dependencyEnv) && ./_build/immutable/perf/PerfTest.native",
     "perf": "npm run clean && npm run build-perf && npm run run-perf",
 
