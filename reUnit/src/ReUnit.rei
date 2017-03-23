@@ -16,39 +16,35 @@ let module Test: {
 };
 
 let module Expect: {
-  type t 'a;
-
-  let expect: 'a => (t 'a);
-
-  let toBeEqualToFalse: (t bool) => unit;
-  let toBeEqualToInt: int => (t int) => unit;
+  let toBeEqualToFalse: bool => unit;
+  let toBeEqualToInt: int => int => unit;
   let toBeEqualToListWith:
     equals::('a => 'a => bool) =>
     toString::('a => string) =>
     (list 'a) =>
-    (t (list 'a)) => unit;
-  let toBeEqualToListOfInt: (list int) => (t (list int)) => unit;
-  let toBeEqualToListOfString: (list string) => (t (list string)) => unit;
+    (list 'a) => unit;
+  let toBeEqualToListOfInt: (list int) => (list int) => unit;
+  let toBeEqualToListOfString: (list string) => (list string) => unit;
   let toBeEqualToNoneWith:
     toString::('a => string) =>
-    (t (option 'a)) =>
+    (option 'a) =>
     unit;
-  let toBeEqualToNoneOfInt: (t (option int)) => unit;
-  let toBeEqualToNoneOfString: (t (option string)) => unit;
+  let toBeEqualToNoneOfInt: (option int) => unit;
+  let toBeEqualToNoneOfString: (option string) => unit;
   let toBeEqualToSomeWith:
     equals::('a => 'a => bool) =>
     toString::('a => string) =>
     'a =>
-    (t (option 'a)) => unit;
-  let toBeEqualToSomeOfInt: int => (t (option int)) => unit;
-  let toBeEqualToSomeOfString: string => (t (option string)) => unit;
-  let toBeEqualToString: string => (t string) => unit;
-  let toBeEqualToTrue: (t bool) => unit;
+    (option 'a) => unit;
+  let toBeEqualToSomeOfInt: int => (option int) => unit;
+  let toBeEqualToSomeOfString: string => (option string) => unit;
+  let toBeEqualToString: string => string => unit;
+  let toBeEqualToTrue: bool => unit;
   let toBeEqualToWith:
     equals::('a => 'a => bool) =>
     toString::('a => string) =>
     'a =>
-    (t 'a) =>
+    'a =>
     unit;
 
   let shouldRaise: (unit => 'a) => unit;

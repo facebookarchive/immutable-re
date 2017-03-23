@@ -8,7 +8,7 @@
  */
 
 open Immutable;
-open ReUnit.Expect;
+open ReUnit;
 open ReUnit.Test;
 
 let module SortedIntMap = SortedMap.Make {
@@ -21,192 +21,173 @@ let emptyHashIntMap = HashMap.emptyWith
   hash::(fun i => i)
   comparator::Comparator.int;
 
-let toBeEqualToIntPair = toBeEqualToWith
+let expectToBeEqualToIntPair = Expect.toBeEqualToWith
   equals::(fun (a, b) (c, d) => a === c && b === c)
   toString::(fun (a, b) => "(" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ ")");
 
-let toBeEqualToSomeOfIntPair = toBeEqualToSomeWith
+let expectToBeEqualToSomeOfIntPair = Expect.toBeEqualToSomeWith
   equals::(fun (a, b) (c, d) => a === c && b === c)
   toString::(fun (a, b) => "(" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ ")");
 
-let toBeEqualToNoneOfIntPair = toBeEqualToNoneWith
+let expectToBeEqualToNoneOfIntPair = Expect.toBeEqualToNoneWith
   toString::(fun (a, b) => "(" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ ")");
 
 let test = describe "KeyedReducer" [
   describe "S1" [
     it "every" (fun () => {
-      expect (SortedIntMap.KeyedReducer.every (fun _ _ => false) SortedIntMap.empty) |> toBeEqualToTrue;
+      SortedIntMap.KeyedReducer.every (fun _ _ => false) SortedIntMap.empty
+        |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.every (fun k v => k >= 0 && v >= 0)
-        |> expect
-        |> toBeEqualToTrue;
+        |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.every (fun k v => k < 3 && v < 3)
-        |> expect
-        |> toBeEqualToFalse;
+        |> Expect.toBeEqualToFalse;
     }),
     it "find" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
-        |> expect
-        |> toBeEqualToSomeOfIntPair (2, 2);
+        |> expectToBeEqualToSomeOfIntPair (2, 2);
 
       SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
-        |> expect
-        |> toBeEqualToNoneOfIntPair;
+        |> expectToBeEqualToNoneOfIntPair;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.find (fun k v => k == 5 && v == 5)
-        |> expect
-        |> toBeEqualToNoneOfIntPair;
+        |> expectToBeEqualToNoneOfIntPair;
     }),
     it "findOrRaise" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
-        |> expect
-        |> toBeEqualToIntPair (2, 2);
+        |> expectToBeEqualToIntPair (2, 2);
 
       (fun () => SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
-      ) |> shouldRaise;
+      ) |> Expect.shouldRaise;
 
       (fun () => IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k == 5 && v == 5)
-      ) |> shouldRaise;
+      ) |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {
       let last = ref 0;
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.forEach while_::(fun k v => k < 3) (fun k v => { last := k });
-      expect !last |> toBeEqualToInt 2;
+      !last |> Expect.toBeEqualToInt 2;
     }),
     it "none" (fun () => {
-      expect (SortedIntMap.KeyedReducer.none (fun _ _ => false) SortedIntMap.empty) |> toBeEqualToTrue;
+      SortedIntMap.KeyedReducer.none (fun _ _ => false) SortedIntMap.empty |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.none (fun k v => k >= 5 && v >= 5)
-        |> expect
-        |> toBeEqualToTrue;
+        |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.none (fun k v => k < 3 && v < 3)
-        |> expect
-        |> toBeEqualToFalse;
+        |> Expect.toBeEqualToFalse;
     }),
     it "some" (fun () => {
-      expect (SortedIntMap.KeyedReducer.some (fun _ _ => false) SortedIntMap.empty) |> toBeEqualToFalse;
+      SortedIntMap.KeyedReducer.some (fun _ _ => false) SortedIntMap.empty |> Expect.toBeEqualToFalse;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.some (fun k v => k >= 5 && v >= 5)
-        |> expect
-        |> toBeEqualToFalse;
+        |> Expect.toBeEqualToFalse;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.some (fun k v => k < 3 && k > 1 && v < 3 && v > 1)
-        |> expect
-        |> toBeEqualToTrue;
+        |> Expect.toBeEqualToTrue;
     }),
   ],
   describe "S2" [
     it "every" (fun () => {
-      expect (HashMap.KeyedReducer.every (fun _ _ => false) emptyHashIntMap) |> toBeEqualToTrue;
+      HashMap.KeyedReducer.every (fun _ _ => false) emptyHashIntMap |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.every (fun k v => k >= 0 && v >= 0)
-        |> expect
-        |> toBeEqualToTrue;
+        |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.every (fun k v => k < 3 && v < 3)
-        |> expect
-        |> toBeEqualToFalse;
+        |> Expect.toBeEqualToFalse;
     }),
     it "find" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
-        |> expect
-        |> toBeEqualToSomeOfIntPair (2, 2);
+        |> expectToBeEqualToSomeOfIntPair (2, 2);
 
       emptyHashIntMap
         |> HashMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
-        |> expect
-        |> toBeEqualToNoneOfIntPair;
+        |> expectToBeEqualToNoneOfIntPair;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.find (fun k v => k == 5 && v == 5)
-        |> expect
-        |> toBeEqualToNoneOfIntPair;
+        |> expectToBeEqualToNoneOfIntPair;
     }),
     it "findOrRaise" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
-        |> expect
-        |> toBeEqualToIntPair (2, 2);
+        |> expectToBeEqualToIntPair (2, 2);
 
       (fun () => emptyHashIntMap
         |> HashMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
-      ) |> shouldRaise;
+      ) |> Expect.shouldRaise;
 
       (fun () => IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.findOrRaise (fun k v => k == 5 && v == 5)
-      ) |> shouldRaise;
+      ) |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {
       let last = ref 0;
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.forEach while_::(fun k v => k < 3) (fun k v => { last := k });
-      expect !last |> toBeEqualToInt 2;
+      !last |> Expect.toBeEqualToInt 2;
     }),
     it "none" (fun () => {
-      expect (HashMap.KeyedReducer.none (fun _ _ => false) emptyHashIntMap) |> toBeEqualToTrue;
+      HashMap.KeyedReducer.none (fun _ _ => false) emptyHashIntMap |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.none (fun k v => k >= 5 && v >= 5)
-        |> expect
-        |> toBeEqualToTrue;
+        |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) emptyHashIntMap
         |> HashMap.KeyedReducer.none (fun k v => k < 3 && v < 3)
-        |> expect
-        |> toBeEqualToFalse;
+        |> Expect.toBeEqualToFalse;
     }),
     it "some" (fun () => {
-      expect (HashMap.KeyedReducer.some (fun _ _ => false) emptyHashIntMap) |> toBeEqualToFalse;
+      HashMap.KeyedReducer.some (fun _ _ => false) emptyHashIntMap |> Expect.toBeEqualToFalse;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.some (fun k v => k >= 5 && v >= 5)
-        |> expect
-        |> toBeEqualToFalse;
+        |> Expect.toBeEqualToFalse;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) SortedIntMap.empty
         |> SortedIntMap.KeyedReducer.some (fun k v => k < 3 && k > 1 && v < 3 && v > 1)
-        |> expect
-        |> toBeEqualToTrue;
+        |> Expect.toBeEqualToTrue;
     }),
   ],
 ];

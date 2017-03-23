@@ -86,35 +86,14 @@ let module Test = {
 };
 
 let module Expect = {
-  type t 'a = | Value 'a | Error exn;
-
-  let expect (value: 'a): (t 'a) => Value value;
-
-  let flatMap (f: 'a => t 'b) (expect: t 'a): (t 'b) => switch expect {
-    | Value a => f a
-    | Error exn => Error exn
-  };
-
-  let firstOrRaise (expect: t 'a): 'a => switch expect {
-    | Value a => a
-    | Error exn => /* reraise */ raise exn
-  };
-
-  let forEach (f: 'a => unit) (expect: t 'a): unit => switch expect {
-    | Value a => (f a)
-    | Error _ => ()
-  };
-
   let toBeEqualToWith
       equals::(equals: 'a => 'a => bool)
       toString::(toString: 'a => string)
       (expected: 'a)
-      (actual: t 'a) => actual |> flatMap (fun value =>
-    if (not (equals expected value)) (
-      failwith ("expected: " ^ (toString expected) ^ " but got: " ^ (toString value))
-    )
-    else expect value
-  ) |> firstOrRaise |> ignore;
+      (actual: 'a) =>
+    if (not (equals expected actual)) (
+      failwith ("expected: " ^ (toString expected) ^ " but got: " ^ (toString actual))
+    );
 
   let toBeEqualToFalse = toBeEqualToWith
     equals::Equality.bool
@@ -144,10 +123,10 @@ let module Expect = {
       toString::(ToString.ofOption toString)
       None;
 
-  let toBeEqualToNoneOfInt (expect: t (option int)) =>
+  let toBeEqualToNoneOfInt (expect: (option int)) =>
     toBeEqualToNoneWith string_of_int expect;
 
-  let toBeEqualToNoneOfString (expect: t (option 'a)) =>
+  let toBeEqualToNoneOfString (expect: (option 'a)) =>
     toBeEqualToNoneWith identity expect;
 
   let toBeEqualToSomeWith
@@ -181,11 +160,15 @@ let module Expect = {
    toString::string_of_bool
    true;
 
-  let shouldRaise (expr: unit => 'a) => {
-    let result = try (Value (expr ())) { | exn => Error exn };
-    result |> forEach (fun _ =>
-      Pervasives.failwith "expected exception to be raised"
-    );
+  exception DidNotRaise;
+
+  let shouldRaise (expr: unit => 'a) => try {
+    expr ();
+    raise DidNotRaise;
+  }{
+    | DidNotRaise =>
+        failwith "expected exception to be raised"
+    | exn => ()
   };
 };
 

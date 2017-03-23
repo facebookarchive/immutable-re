@@ -8,86 +8,76 @@
  */
 
 open Immutable;
-open ReUnit.Expect;
+open ReUnit;
 open ReUnit.Test;
 
 let test = describe "Set" [
   it "contains" (fun () => {
     let range = IntRange.create start::0 count::200 |> IntRange.toSet;
-    range |> Set.contains (-1) |> expect |> toBeEqualToFalse;
-    range |> Set.contains 10 |> expect |> toBeEqualToTrue;
-    range |> Set.contains 200 |> expect |> toBeEqualToFalse;
+    range |> Set.contains (-1) |> Expect.toBeEqualToFalse;
+    range |> Set.contains 10 |> Expect.toBeEqualToTrue;
+    range |> Set.contains 200 |> Expect.toBeEqualToFalse;
   }),
   it "count" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.count
-      |> expect
-      |> toBeEqualToInt 200;
+      |> Expect.toBeEqualToInt 200;
   }),
   it "equals" (fun () => {
     let set1 = IntRange.create start::0 count::200 |> IntRange.toSet;
     Set.equals set1 set1
-      |> expect
-      |> toBeEqualToTrue;
+      |> Expect.toBeEqualToTrue;
 
     let setEqualToSet1 = IntRange.create start::0 count::200 |> IntRange.toSet;
     Set.equals set1 setEqualToSet1
-      |> expect
-      |> toBeEqualToTrue;
+      |> Expect.toBeEqualToTrue;
 
     let setSameCountDifferentStartThanSet1 = IntRange.create start::(-10) count::200 |> IntRange.toSet;
     Set.equals set1 setSameCountDifferentStartThanSet1
-      |> expect
-      |> toBeEqualToFalse;
+      |> Expect.toBeEqualToFalse;
 
     let setDifferentCountSameStartAsSet1 = IntRange.create start::0 count::199 |> IntRange.toSet;
     Set.equals set1 setDifferentCountSameStartAsSet1
-      |> expect
-      |> toBeEqualToFalse;
+      |> Expect.toBeEqualToFalse;
   }),
   it "isEmpty" (fun () => {
-    Set.empty |> Set.isEmpty |> expect |> toBeEqualToTrue;
+    Set.empty |> Set.isEmpty |> Expect.toBeEqualToTrue;
     IntRange.create start::0 count::199
       |> IntRange.toSet
       |> Set.isEmpty
-      |> expect
-      |> toBeEqualToFalse;
+      |> Expect.toBeEqualToFalse;
   }),
   it "isNotEmpty" (fun () => {
-    Set.empty |> Set.isNotEmpty |> expect |> toBeEqualToFalse;
+    Set.empty |> Set.isNotEmpty |> Expect.toBeEqualToFalse;
     IntRange.create start::0 count::199
       |> IntRange.toSet
       |> Set.isNotEmpty
-      |> expect
-      |> toBeEqualToTrue;
+      |> Expect.toBeEqualToTrue;
   }),
   it "reduce" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
-      |> expect
-      |> toBeEqualToInt 10;
+      |> Expect.toBeEqualToInt 10;
   }),
   it "toIterator" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.toIterator
       |> Iterator.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
-      |> expect
-      |> toBeEqualToInt 10;
+      |> Expect.toBeEqualToInt 10;
   }),
   it "toSequence" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.toSequence
       |> Sequence.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
-      |> expect
-      |> toBeEqualToInt 10;
+      |> Expect.toBeEqualToInt 10;
   }),
   it "toSet" (fun () => {
     let set = IntRange.create start::0 count::200 |> IntRange.toSet;
-    Pervasives.(===) set (Set.toSet set) |> expect |> toBeEqualToTrue;
+    Pervasives.(===) set (Set.toSet set) |> Expect.toBeEqualToTrue;
   }),
   it "intersect" (fun () => {
     let set1 = IntRange.create start::0 count::200 |> IntRange.toSet;
@@ -97,8 +87,7 @@ let test = describe "Set" [
       |> IntSet.from
       |> IntSet.toSet
       |> Set.equals (IntRange.create start::50 count::150 |> IntRange.toSet)
-      |> expect
-      |> toBeEqualToTrue;
+      |> Expect.toBeEqualToTrue;
   }),
   it "subtract" (fun () => {
     let set1 = IntRange.create start::0 count::200 |> IntRange.toSet;
@@ -108,34 +97,31 @@ let test = describe "Set" [
       |> IntSet.from
       |> IntSet.toSet
       |> Set.equals (IntRange.create start::0 count::50 |> IntRange.toSet)
-      |> expect
-      |> toBeEqualToTrue;
+      |> Expect.toBeEqualToTrue;
   }),
   it "toMap" (fun () => {
     let map = IntRange.create start::0 count::200 |> IntRange.toSet |> Set.toMap;
-    map |> Map.containsKey 10 |> expect |> toBeEqualToTrue;
-    map |> Map.containsKey (-10) |> expect |> toBeEqualToFalse;
-    map |> Map.containsKey 300 |> expect |> toBeEqualToFalse;
+    map |> Map.containsKey 10 |> Expect.toBeEqualToTrue;
+    map |> Map.containsKey (-10) |> Expect.toBeEqualToFalse;
+    map |> Map.containsKey 300 |> Expect.toBeEqualToFalse;
 
-    map |> Map.get 10 |> expect |> toBeEqualToSomeOfInt 10;
-    map |> Map.get (-10) |> expect |> toBeEqualToNoneOfInt;
+    map |> Map.get 10 |> Expect.toBeEqualToSomeOfInt 10;
+    map |> Map.get (-10) |> Expect.toBeEqualToNoneOfInt;
 
-    map |> Map.getOrRaise 10 |> expect |> toBeEqualToInt 10;
-    (fun () => map |> Map.getOrRaise (-10)) |> shouldRaise;
+    map |> Map.getOrRaise 10 |> Expect.toBeEqualToInt 10;
+    (fun () => map |> Map.getOrRaise (-10)) |> Expect.shouldRaise;
 
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.toMap
       |> Map.reduce while_::(fun acc k v => k < 5) (fun acc k v => v + acc) 0
-      |> expect
-      |> toBeEqualToInt 10;
+      |> Expect.toBeEqualToInt 10;
 
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.toMap
       |> Map.reduce while_::(fun acc k v => v < 5) (fun acc k v => k + acc) 0
-      |> expect
-      |> toBeEqualToInt 10;
+      |> Expect.toBeEqualToInt 10;
   }),
   it "union" (fun () => {
     let set1 = IntRange.create start::0 count::200 |> IntRange.toSet;
@@ -145,7 +131,6 @@ let test = describe "Set" [
       |> IntSet.from
       |> IntSet.toSet
       |> Set.equals (IntRange.create start::0 count::250 |> IntRange.toSet)
-      |> expect
-      |> toBeEqualToTrue;
+      |> Expect.toBeEqualToTrue;
   }),
 ];

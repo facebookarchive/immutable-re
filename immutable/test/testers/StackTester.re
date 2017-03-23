@@ -9,7 +9,7 @@
 
 open Printf;
 open Immutable;
-open ReUnit.Expect;
+open ReUnit;
 open ReUnit.Test;
 
 module type Config = {
@@ -25,18 +25,17 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
         |> IntRange.reduce
           (fun acc i => {
             let acc = Stack.addFirst i acc;
-            expect (Stack.first acc) |> toBeEqualToSomeOfInt i;
-            expect (Stack.firstOrRaise acc) |> toBeEqualToInt i;
-            expect (Stack.count acc) |> toBeEqualToInt (i + 1);
-            expect (Stack.isEmpty acc) |> toBeEqualToFalse;
-            expect (Stack.isNotEmpty acc) |> toBeEqualToTrue;
+            Stack.first acc |> Expect.toBeEqualToSomeOfInt i;
+            Stack.firstOrRaise acc |> Expect.toBeEqualToInt i;
+            Stack.count acc |> Expect.toBeEqualToInt (i + 1);
+            Stack.isEmpty acc |> Expect.toBeEqualToFalse;
+            Stack.isNotEmpty acc |> Expect.toBeEqualToTrue;
             acc
           })
           Stack.empty
         |> Stack.toIterator
         |> List.fromReverse
-        |> expect
-        |> toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
     }),
     it "addFirstAll" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
@@ -45,17 +44,16 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
         |> Stack.addFirstAll (IntRange.toIterator testData)
         |> Stack.toIterator
         |> List.fromReverse
-        |> expect
-        |> toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
     }),
     it "count" (fun () => {
-      Stack.empty |> Stack.count |> expect |> toBeEqualToInt 0;
+      Stack.empty |> Stack.count |> Expect.toBeEqualToInt 0;
     }),
     it "first" (fun () => {
-      Stack.empty |> Stack.first |> expect |> toBeEqualToNoneOfInt;
+      Stack.empty |> Stack.first |> Expect.toBeEqualToNoneOfInt;
     }),
     it "firstOrRaise" (fun () => {
-      (fun () => Stack.empty |> Stack.firstOrRaise) |> shouldRaise;
+      (fun () => Stack.empty |> Stack.firstOrRaise) |> Expect.shouldRaise;
     }),
     it "fromReverse" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
@@ -64,14 +62,13 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
         |> Stack.fromReverse
         |> Stack.toIterator
         |> List.fromReverse
-        |> expect
-        |> toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
     }),
     it "isEmpty" (fun () => {
-      Stack.empty |> Stack.isEmpty |> expect |> toBeEqualToTrue;
+      Stack.empty |> Stack.isEmpty |> Expect.toBeEqualToTrue;
     }),
     it "isNotEmpty" (fun () => {
-      Stack.empty |> Stack.isNotEmpty |> expect |> toBeEqualToFalse;
+      Stack.empty |> Stack.isNotEmpty |> Expect.toBeEqualToFalse;
     }),
     it "mapReverse" (fun () => {
       IntRange.create start::0 count::Config.count
@@ -80,8 +77,7 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
         |> Stack.mapReverse (fun i => i + 1)
         |> Stack.toIterator
         |> List.fromReverse
-        |> expect
-        |> toBeEqualToListOfInt (List.fromReverse
+        |> Expect.toBeEqualToListOfInt (List.fromReverse
           (IntRange.create start::1 count::Config.count |> IntRange.toIterator)
         );
     }),
@@ -93,8 +89,7 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
             while_::(fun acc i => i < (Config.count / 2))
             (fun acc i => acc + 1)
             0
-        |> expect
-        |> toBeEqualToInt (Config.count / 2);
+        |> Expect.toBeEqualToInt (Config.count / 2);
     }),
     it "removeAll" (fun () => {
       IntRange.create start::0 count::Config.count
@@ -102,8 +97,7 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
         |> Stack.fromReverse
         |> Stack.removeAll
         |> Stack.count
-        |> expect
-        |> toBeEqualToInt 0;
+        |> Expect.toBeEqualToInt 0;
     }),
     it "removeFirstOrRaise" (fun () => {
       let range = IntRange.create start::0 count::Config.count;
@@ -112,20 +106,20 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
 
       let emptyStack = range |> IntRange.reduceRight
         (fun acc i => {
-          expect (Stack.first acc) |> toBeEqualToSomeOfInt i;
-          expect (Stack.firstOrRaise acc) |> toBeEqualToInt i;
-          expect (Stack.count acc) |> toBeEqualToInt (i + 1);
-          expect (Stack.isEmpty acc) |> toBeEqualToFalse;
-          expect (Stack.isNotEmpty acc) |> toBeEqualToTrue;
+          Stack.first acc |> Expect.toBeEqualToSomeOfInt i;
+          Stack.firstOrRaise acc |> Expect.toBeEqualToInt i;
+          Stack.count acc |> Expect.toBeEqualToInt (i + 1);
+          Stack.isEmpty acc |> Expect.toBeEqualToFalse;
+          Stack.isNotEmpty acc |> Expect.toBeEqualToTrue;
           Stack.removeFirstOrRaise acc;
         }) fullStack;
 
-      Stack.isEmpty emptyStack |> expect |> toBeEqualToTrue;
+      Stack.isEmpty emptyStack |> Expect.toBeEqualToTrue;
     }),
     it "return" (fun () => {
       let stack = Stack.return 1;
-      stack |> Stack.count |> expect |> toBeEqualToInt 1;
-      stack |> Stack.firstOrRaise |> expect |> toBeEqualToInt 1;
+      stack |> Stack.count |> Expect.toBeEqualToInt 1;
+      stack |> Stack.firstOrRaise |> Expect.toBeEqualToInt 1;
     }),
     it "toIterator" (fun () => {
       IntRange.create start::0 count::Config.count
@@ -136,8 +130,7 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
             while_::(fun acc i => i < (Config.count / 2))
             (fun acc i => acc + 1)
             0
-        |> expect
-        |> toBeEqualToInt (Config.count / 2);
+        |> Expect.toBeEqualToInt (Config.count / 2);
     }),
     it "toSequence" (fun () => {
       IntRange.create start::0 count::Config.count
@@ -148,8 +141,7 @@ let module Make = fun (Stack: Stack.S1) (Config: Config) => {
             while_::(fun acc i => i < (Config.count / 2))
             (fun acc i => acc + 1)
             0
-        |> expect
-        |> toBeEqualToInt (Config.count / 2);
+        |> Expect.toBeEqualToInt (Config.count / 2);
     }),
   ] |> List.return;
 };

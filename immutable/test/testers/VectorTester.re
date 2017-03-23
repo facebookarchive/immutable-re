@@ -9,7 +9,7 @@
 
 open Printf;
 open Immutable;
-open ReUnit.Expect;
+open ReUnit;
 open ReUnit.Test;
 
 let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
@@ -40,8 +40,7 @@ let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
               expected
             |> Sequence.toIterator
             |> Iterator.Reducer.every Functions.identity
-            |> expect
-            |> toBeEqualToTrue;
+            |> Expect.toBeEqualToTrue;
         }),
         it "left larger than right" (fun () => {
           let firstSegmentCount = Config.count / 4;
@@ -66,8 +65,7 @@ let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
               expected
             |> Sequence.toIterator
             |> Iterator.Reducer.every Functions.identity
-            |> expect
-            |> toBeEqualToTrue;
+            |> Expect.toBeEqualToTrue;
         }),
         it "right larger than left" (fun () => {
           let secondSegmentCount = Config.count / 4;
@@ -92,8 +90,7 @@ let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
               expected
             |> Sequence.toIterator
             |> Iterator.Reducer.every Functions.identity
-            |> expect
-            |> toBeEqualToTrue;
+            |> Expect.toBeEqualToTrue;
         }),
       ],
       it "get" (fun () => {
@@ -101,11 +98,11 @@ let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
           |> IntRange.toIterator
           |> Vector.from;
 
-        vector |> Vector.get (-1) |> expect |> toBeEqualToNoneOfInt;
-        vector |> Vector.get Config.count |> expect |> toBeEqualToNoneOfInt;
+        vector |> Vector.get (-1) |> Expect.toBeEqualToNoneOfInt;
+        vector |> Vector.get Config.count |> Expect.toBeEqualToNoneOfInt;
 
         vector |> Vector.toIterator |> Iterator.Reducer.forEach (fun i => {
-          vector |> Vector.get i |> expect |> toBeEqualToSomeOfInt i;
+          vector |> Vector.get i |> Expect.toBeEqualToSomeOfInt i;
         });
       }),
       it "getOrRaise" (fun () => {
@@ -113,11 +110,11 @@ let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
           |> IntRange.toIterator
           |> Vector.from;
 
-        (fun () => vector |> Vector.getOrRaise (-1)) |> shouldRaise;
-        (fun () => vector |> Vector.getOrRaise Config.count) |> shouldRaise;
+        (fun () => vector |> Vector.getOrRaise (-1)) |> Expect.shouldRaise;
+        (fun () => vector |> Vector.getOrRaise Config.count) |> Expect.shouldRaise;
 
         vector |> Vector.toIterator |> Iterator.Reducer.forEach (fun i => {
-          vector |> Vector.getOrRaise i |> expect |> toBeEqualToInt i;
+          vector |> Vector.getOrRaise i |> Expect.toBeEqualToInt i;
         });
       }),
       it "init" (fun () => {
@@ -125,7 +122,7 @@ let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
         vector
           |> Vector.toIterator
           |> Iterator.Reducer.forEach (fun i => {
-              vector |> Vector.getOrRaise (i - 1) |> expect |> toBeEqualToInt i;
+              vector |> Vector.getOrRaise (i - 1) |> Expect.toBeEqualToInt i;
             });
       }),
       it "insertAt" (fun () => { () }),

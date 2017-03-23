@@ -9,7 +9,7 @@
 
 open Printf;
 open Immutable;
-open ReUnit.Expect;
+open ReUnit;
 open ReUnit.Test;
 
 let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
@@ -24,18 +24,17 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
           |> IntRange.reduce
             (fun acc i => {
               let acc = Deque.addLast i acc;
-              expect (Deque.last acc) |> toBeEqualToSomeOfInt i;
-              expect (Deque.lastOrRaise acc) |> toBeEqualToInt i;
-              expect (Deque.count acc) |> toBeEqualToInt (i + 1);
-              expect (Deque.isEmpty acc) |> toBeEqualToFalse;
-              expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
+              Deque.last acc |> Expect.toBeEqualToSomeOfInt i;
+              Deque.lastOrRaise acc |> Expect.toBeEqualToInt i;
+              Deque.count acc |> Expect.toBeEqualToInt (i + 1);
+              Deque.isEmpty acc |> Expect.toBeEqualToFalse;
+              Deque.isNotEmpty acc |> Expect.toBeEqualToTrue;
               acc
             })
             Deque.empty
           |> Deque.toIterator
           |> List.fromReverse
-          |> expect
-          |> toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
+          |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
       }),
       it "addLastAll" (fun () => {
         let testData = IntRange.create start::0 count::Config.count;
@@ -44,8 +43,7 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
           |> Deque.addLastAll (IntRange.toIterator testData)
           |> Deque.toIterator
           |> List.fromReverse
-          |> expect
-          |> toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
+          |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
       }),
       it "from" (fun () => {
         let testData = IntRange.create start::0 count::Config.count;
@@ -54,14 +52,13 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
           |> Deque.from
           |> Deque.toIterator
           |> List.fromReverse
-          |> expect
-          |> toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
+          |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
       }),
       it "last" (fun () => {
-        Deque.empty |> Deque.last |> expect |> toBeEqualToNoneOfInt;
+        Deque.empty |> Deque.last |> Expect.toBeEqualToNoneOfInt;
       }),
       it "lastOrRaise" (fun () => {
-        (fun () => Deque.empty |> Deque.lastOrRaise) |> shouldRaise;
+        (fun () => Deque.empty |> Deque.lastOrRaise) |> Expect.shouldRaise;
       }),
       it "map" (fun () => {
         IntRange.create start::0 count::Config.count
@@ -70,8 +67,7 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
           |> Deque.map (fun i => i + 1)
           |> Deque.toIterator
           |> List.fromReverse
-          |> expect
-          |> toBeEqualToListOfInt (List.fromReverse
+          |> Expect.toBeEqualToListOfInt (List.fromReverse
             (IntRange.create start::1 count::Config.count |> IntRange.toIterator)
           );
       }),
@@ -83,8 +79,7 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
               while_::(fun acc i => i >= (Config.count / 2))
               (fun acc i => i)
               0
-          |> expect
-          |> toBeEqualToInt (Config.count / 2);
+          |> Expect.toBeEqualToInt (Config.count / 2);
       }),
       it "removeLastOrRaise" (fun () => {
         let range = IntRange.create start::0 count::Config.count;
@@ -93,15 +88,15 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
 
         let emptyDeque = range |> IntRange.reduceRight
           (fun acc i => {
-            expect (Deque.last acc) |> toBeEqualToSomeOfInt i;
-            expect (Deque.lastOrRaise acc) |> toBeEqualToInt i;
-            expect (Deque.count acc) |> toBeEqualToInt (i + 1);
-            expect (Deque.isEmpty acc) |> toBeEqualToFalse;
-            expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
+            Deque.last acc |> Expect.toBeEqualToSomeOfInt i;
+            Deque.lastOrRaise acc |> Expect.toBeEqualToInt i;
+            Deque.count acc |> Expect.toBeEqualToInt (i + 1);
+            Deque.isEmpty acc |> Expect.toBeEqualToFalse;
+            Deque.isNotEmpty acc |> Expect.toBeEqualToTrue;
             Deque.removeLastOrRaise acc;
           }) fullDeque;
 
-        Deque.isEmpty emptyDeque |> expect |> toBeEqualToTrue;
+        Deque.isEmpty emptyDeque |> Expect.toBeEqualToTrue;
       }),
       it "toIteratorRight" (fun () => {
         IntRange.create start::0 count::Config.count
@@ -112,8 +107,7 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
               while_::(fun acc i => i >= (Config.count / 2))
               (fun acc i => acc - 1)
               Config.count
-          |> expect
-          |> toBeEqualToInt (Config.count / 2);
+          |> Expect.toBeEqualToInt (Config.count / 2);
       }),
       it "toSequenceRight" (fun () => {
         IntRange.create start::0 count::Config.count
@@ -124,8 +118,7 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
               while_::(fun acc i => i >= (Config.count / 2))
               (fun acc i => acc - 1)
               Config.count
-          |> expect
-          |> toBeEqualToInt (Config.count / 2);
+          |> Expect.toBeEqualToInt (Config.count / 2);
       }),
       it "addLast, removeFirstOrRaise" (fun () => {
         let testData = IntRange.create start::0 count::Config.count;
@@ -133,11 +126,11 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
 
         testData |> IntRange.reduce
           (fun acc i => {
-            expect (Deque.first acc) |> toBeEqualToSomeOfInt i;
-            expect (Deque.firstOrRaise acc) |> toBeEqualToInt i;
-            expect (Deque.count acc) |> toBeEqualToInt (Config.count - i);
-            expect (Deque.isEmpty acc) |> toBeEqualToFalse;
-            expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
+            Deque.first acc |> Expect.toBeEqualToSomeOfInt i;
+            Deque.firstOrRaise acc |> Expect.toBeEqualToInt i;
+            Deque.count acc |> Expect.toBeEqualToInt (Config.count - i);
+            Deque.isEmpty acc |> Expect.toBeEqualToFalse;
+            Deque.isNotEmpty acc |> Expect.toBeEqualToTrue;
             Deque.removeFirstOrRaise acc;
           }) deque |> ignore
       }),
@@ -148,11 +141,11 @@ let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
 
         testData |> IntRange.reduceRight
           (fun acc i => {
-            expect (Deque.last acc) |> toBeEqualToSomeOfInt i;
-            expect (Deque.lastOrRaise acc) |> toBeEqualToInt i;
-            expect (Deque.count acc) |> toBeEqualToInt (i + 1);
-            expect (Deque.isEmpty acc) |> toBeEqualToFalse;
-            expect (Deque.isNotEmpty acc) |> toBeEqualToTrue;
+            Deque.last acc |> Expect.toBeEqualToSomeOfInt i;
+            Deque.lastOrRaise acc |> Expect.toBeEqualToInt i;
+            Deque.count acc |> Expect.toBeEqualToInt (i + 1);
+            Deque.isEmpty acc |> Expect.toBeEqualToFalse;
+            Deque.isNotEmpty acc |> Expect.toBeEqualToTrue;
             Deque.removeLastOrRaise acc;
           }) deque |> ignore;
       })
