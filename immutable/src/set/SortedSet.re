@@ -34,14 +34,14 @@ module type S = {
   let removeAll: t => t;
   let add: a => t => t;
   let addAll: Iterator.t a => t => t;
+  let empty: t;
+  let from: (Iterator.t a) => t;
   let intersect: t => t => t;
   let remove: a => t => t;
   let subtract: t => t => t;
   let union: t => t => t;
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
-  let empty: t;
-  let from: Iterator.t a => t;
   let module Reducer: Reducer.S with type a := a and type t := t;
 };
 

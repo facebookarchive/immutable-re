@@ -12,11 +12,7 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-module type Config = {
-  let count: int;
-};
-
-let module Make = fun (Stack: Stack.S1) (Config: Config) => {
+let module Make = fun (Stack: Stack.S1) (Config: TesterConfig.S) => {
   let tests = describe (sprintf "count: %i" Config.count) [
     it "addFirst" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;

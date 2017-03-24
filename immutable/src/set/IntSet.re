@@ -153,6 +153,8 @@ let module BitmapTrieIntSet = {
     else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner;
 };
 
+type a = int;
+
 type t = {
   count: int,
   root: BitmapTrieIntSet.t,

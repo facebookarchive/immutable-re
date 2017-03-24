@@ -12,7 +12,7 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let module Make = fun (Deque: Deque.S1) (Config: StackTester.Config) => {
+let module Make = fun (Deque: Deque.S1) (Config: TesterConfig.S) => {
   let module StackTester = StackTester.Make (Deque: Stack.S1) Config;
 
   let tests = [

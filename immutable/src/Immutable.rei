@@ -1299,10 +1299,11 @@ let module NavigableSet: {
 let module IntRange: {
   /** Represents a contiguous Set of discrete integers */
 
+  type a = int;
   type t;
   /** The IntRange type.*/
 
-  include NavigableSet.S with type a := int and type t := t;
+  include NavigableSet.S with type a := a and type t := t;
   include Comparable.S with type t := t;
   include Hashable.S with type t := t;
 
@@ -1310,7 +1311,7 @@ let module IntRange: {
 
   let empty: t;
 
-  let module Reducer: Reducer.S with type a = int and type t := t;
+  let module Reducer: Reducer.S with type a = a and type t := t;
 };
 
 let module PersistentSet: {
@@ -1323,6 +1324,8 @@ let module PersistentSet: {
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
+    let empty: t;
+    let from: (Iterator.t a) => t;
     let intersect: t => t => t;
     let remove: a => t => t;
     let subtract: t => t => t;
@@ -1406,6 +1409,7 @@ let module rec HashSet: {
   include Hashable.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
+  let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same elements as [set].
    *
@@ -1443,12 +1447,6 @@ let module SortedSet: {
     include Comparable.S with type t := t;
     include PersistentNavigableSet.S with type a := a and type t := t;
 
-    let empty: t;
-    /** The empty SortedSet using structural comparison */
-
-    let from: (Iterator.t a) => t;
-    /** [from iter] returns a SortedSet including the values in [iter] using structural comparison. */
-
     let module Reducer: Reducer.S with type a := a and type t := t;
   };
 
@@ -1458,16 +1456,11 @@ let module SortedSet: {
 let module rec IntSet: {
   /** A set implementation optimized for storing sparse ints. */
 
+  type a = int;
   type t;
   /** The IntSet type. */
 
-  include PersistentSet.S with type a := int and type t := t;
-
-  let empty: t;
-  /** The empty IntSet. */
-
-  let from: (Iterator.t int) => t;
-  /** [from iter] returns an IntSet including the values in [iter]. */
+  include PersistentSet.S with type a := a and type t := t;
 
   let mutate: t => TransientIntSet.t;
   /** [mutate set] returns a TransientIntSet containing the same elements as [set].
@@ -1475,7 +1468,7 @@ let module rec IntSet: {
    *  Complexity: O(1)
    */
 
-  let module Reducer: Reducer.S with type a = int and type t := t;
+  let module Reducer: Reducer.S with type a = a and type t := t;
 }
 
 and TransientIntSet: {
@@ -1483,11 +1476,11 @@ and TransientIntSet: {
    *  TransientIntSet instance will throw. Intended for implementing bulk mutation
    *  operations efficiently.
    */
-
+  type a = int;
   type t;
   /** The TransientIntSet type. */
 
-  include TransientSet.S with type a = int and type t := t;
+  include TransientSet.S with type a := a and type t := t;
 
   let empty: unit => t;
   /** [empty ()] return a new empty TransientIntSet. */
@@ -1674,10 +1667,11 @@ and TransientHashMap: {
 let module rec IntMap: {
   /** A Map optimized for integer keys. */
 
+  type k = int;
   type t 'v;
   /** The IntMap type. */
 
-  include PersistentMap.S1 with type k = int and type t 'v := t 'v;
+  include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
   let empty: (t 'v);
 
@@ -1690,13 +1684,14 @@ let module rec IntMap: {
    *  Complexity: O(1)
    */
 
-  let module KeyedReducer: KeyedReducer.S1 with type k = int and type t 'v := t 'v;
+  let module KeyedReducer: KeyedReducer.S1 with type k = k and type t 'v := t 'v;
 }
 
 and TransientIntMap: {
+  type k = int;
   type t 'v;
 
-  include TransientMap.S1 with type k = int and type t 'v := t 'v;
+  include TransientMap.S1 with type k := k and type t 'v := t 'v;
 
   let empty: unit => (t 'v);
   /** [empty ()] returns a new empty TransientIntMap. */

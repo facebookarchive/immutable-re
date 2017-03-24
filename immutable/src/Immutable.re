@@ -702,6 +702,8 @@ let module PersistentSet = {
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
+    let empty: t;
+    let from: (Iterator.t a) => t;
     let intersect: t => t => t;
     let remove: a => t => t;
     let subtract: t => t => t;

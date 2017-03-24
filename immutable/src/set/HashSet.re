@@ -354,6 +354,12 @@ let mutate = TransientHashSet.mutate;
 let addAll (iter: Iterator.t 'a) (set: t 'a): (t 'a) =>
   set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
 
+let fromWith
+    hash::(hash: Hash.t 'a)
+    comparator::(comparator: Comparator.t 'a)
+    (iterator: Iterator.t 'a): (t 'a) =>
+  emptyWith hash::hash comparator::comparator |> addAll iterator;
+
 let intersect ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
   emptyWith hash::hash comparator::comparator
