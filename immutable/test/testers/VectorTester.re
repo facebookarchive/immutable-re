@@ -375,7 +375,15 @@ let module Make = fun (Vector: Vector.S1) (Config: StackTester.Config) => {
               fun i v => Config.count - v - 1 |> Expect.toBeEqualToInt i
             );
       }),
-      it "toKeyedIteratorRight" (fun () => { () }),
+      it "toKeyedIteratorRight" (fun () => {
+        IntRange.create start::0 count::Config.count
+          |> IntRange.toIteratorRight
+          |> Vector.from
+          |> Vector.toKeyedIteratorRight
+          |> KeyedIterator.KeyedReducer.forEach (
+              fun i v => Config.count - v - 1 |> Expect.toBeEqualToInt i
+            );
+      }),
       it "toMap" (fun () => {
         let map = IntRange.create start::0 count::Config.count
           |> IntRange.toIterator
