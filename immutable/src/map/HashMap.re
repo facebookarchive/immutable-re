@@ -259,14 +259,14 @@ let module BitmapTrieMap = {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
     | Collision _ entryMap => AVLTreeMap.toSequence entryMap
     | Entry _ entryKey entryValue => Sequence.return (entryKey, entryValue);
-    | Empty => Sequence.empty;
+    | Empty => Sequence.empty ();
   };
 
   let rec values (map: t 'k 'v): (Iterator.t 'v) => switch map {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
     | Collision _ entryMap => AVLTreeMap.values entryMap
     | Entry _ _ entryValue => Iterator.return entryValue;
-    | Empty => Iterator.empty;
+    | Empty => Iterator.empty ();
   };
 };
 
@@ -279,7 +279,8 @@ type t 'k 'v = {
 
 let emptyWith
     hash::(hash: Hash.t 'k)
-    comparator::(comparator: Comparator.t 'k): (t 'k 'v) => {
+    comparator::(comparator: Comparator.t 'k)
+    (): (t 'k 'v) => {
   count: 0,
   root: BitmapTrieMap.Empty,
   comparator,
@@ -351,10 +352,10 @@ let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;
 
 let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
-  emptyWith hash::hash comparator::comparator;
+  emptyWith hash::hash comparator::comparator ();
 
 let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
-  if (isEmpty map) Iterator.empty
+  if (isEmpty map) (Iterator.empty ())
   else {
     reduce: fun predicate f acc => map |> reduce
       while_::(fun acc k v => predicate acc (k, v))
@@ -363,7 +364,7 @@ let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
   };
 
 let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
-  if (isEmpty map) KeyedIterator.empty
+  if (isEmpty map) (KeyedIterator.empty ())
   else {
     reduce: fun predicate f acc => map |> reduce while_::predicate f acc
   };
@@ -379,8 +380,8 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   count: (count map),
   get: fun i => get i map,
   getOrRaise: fun i => getOrRaise i map,
-  keyedIterator: toKeyedIterator map,
-  sequence: toSequence map,
+  keyedIterator: fun () => toKeyedIterator map,
+  sequence: fun () => toSequence map,
 };
 
 let keys (map: t 'k 'v): (ImmSet.t 'k) =>
@@ -439,7 +440,7 @@ let module TransientHashMap = {
       hash::(hash: Hash.t 'k)
       comparator::(comparator: Comparator.t 'k)
       (): (t 'k 'v) =>
-    persistentEmptyWith hash::hash comparator::comparator |> mutate;
+    persistentEmptyWith hash::hash comparator::comparator () |> mutate;
 
   let get (key: 'k) (transient: t 'k 'v): (option 'v) =>
    transient |> Transient.get |> get key;
@@ -468,7 +469,7 @@ let module TransientHashMap = {
   let removeAllImpl
       (_: Transient.Owner.t)
       ({ comparator, hash }: hashMap 'k 'v): (hashMap 'k 'v) =>
-    persistentEmptyWith comparator::comparator hash::hash;
+    persistentEmptyWith comparator::comparator hash::hash ();
 
   let removeAll (transient: t 'k 'v): (t 'k 'v) =>
     transient |> Transient.update removeAllImpl;
@@ -479,11 +480,17 @@ let mutate = TransientHashMap.mutate;
 let map (f: 'k => 'a => 'b) ({ comparator, hash } as map: t 'k 'a): (t 'k 'b) => map
   |> reduce (fun acc k v => acc
       |> TransientHashMap.put k (f k v)
-    ) (emptyWith comparator::comparator hash::hash |> mutate)
+    ) (emptyWith comparator::comparator hash::hash () |> mutate)
   |> TransientHashMap.persist;
 
 let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
+
+let fromWith
+    hash::(hash: Hash.t 'k)
+    comparator::(comparator: Comparator.t 'k)
+    (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
+  emptyWith hash::hash comparator::comparator () |> putAll iter;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))

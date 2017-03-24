@@ -244,7 +244,7 @@ let module Streamable: {
 
     let doOnNext: ('a => unit) => (t 'a) => (t 'a);
 
-    let empty: (t 'a);
+    let empty: unit => (t 'a);
     /** The empty Streamble. */
 
     let filter: ('a => bool) => (t 'a) => (t 'a);
@@ -407,7 +407,7 @@ let module List: {
   let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter list] returns a new List with the values in [iter] prepended. */
 
-  let empty: (t 'a);
+  let empty: unit => (t 'a);
   /** The empty List. */
 
   let fromReverse: (Iterator.t 'a) => (t 'a);
@@ -586,7 +586,7 @@ let module Stack: {
     let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
     /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
 
-    let empty: (t 'a);
+    let empty: unit => (t 'a);
     /** The empty Vector. */
 
     let fromReverse: (Iterator.t 'a) => (t 'a);
@@ -829,7 +829,7 @@ let module KeyedIterator: {
     (t 'k 'v) =>
     (t 'k 'v);
   let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
-  let empty: (t 'k 'v);
+  let empty: unit => (t 'k 'v);
   let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
   let keys: (t 'k 'v) => (Iterator.t 'k);
@@ -1012,7 +1012,7 @@ let module NavigableKeyedCollection: {
 
 let module rec Set: {
   /** A read only view of an underlying set of unique values. The intent of this type is to enable
-   *  interop between alternative concrete implementations such as [SortedSet] and [HashSet].
+   *  interop between alternative concrete implementations such as [SortedSet] and [g].
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
@@ -1044,7 +1044,7 @@ let module rec Set: {
 
   include S1 with type t 'a := t 'a;
 
-  let empty: (t 'a);
+  let empty: unit => (t 'a);
   /** The empty Set. */
 
   let intersect: (t 'a) => (t 'a) => (Iterator.t 'a);
@@ -1101,7 +1101,7 @@ and Map: {
 
   include S2 with type t 'k 'v := t 'k 'v;
 
-  let empty: (t 'k 'v);
+  let empty: unit => (t 'k 'v);
   /** The empty Map. */
 
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
@@ -1119,7 +1119,7 @@ let module Option: {
   include Mappable.S1 with type t 'a := t 'a;
   include SequentialCollection.S1 with type t 'a := t 'a;
 
-  let empty: (t 'a);
+  let empty: unit => (t 'a);
   /** The empty Option, None. */
 
   let return: 'a => (t 'a);
@@ -1309,7 +1309,7 @@ let module IntRange: {
 
   let create: start::int => count::int => t;
 
-  let empty: t;
+  let empty: unit => t;
 
   let module Reducer: Reducer.S with type a = a and type t := t;
 };
@@ -1324,7 +1324,7 @@ let module PersistentSet: {
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
-    let empty: t;
+    let empty: unit => t;
     let from: (Iterator.t a) => t;
     let intersect: t => t => t;
     let remove: a => t => t;
@@ -1408,7 +1408,7 @@ let module rec HashSet: {
   include PersistentSet.S1 with type t 'a := t 'a;
   include Hashable.S1 with type t 'a := t 'a;
 
-  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
+  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (HashSet.t 'a);
   let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same elements as [set].
@@ -1511,6 +1511,14 @@ let module PersistentMap: {
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
 
+    let empty: unit => (t 'v);
+    /** The empty SortedMap using the structural comparator. */
+
+    let from: (KeyedIterator.t k 'v) => (t 'v);
+    /** [from iter] returns a SortedMap including the key/value pairs in [iter]
+     *  using the structural comparison.
+     */
+
     let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'v) => (t 'vAcc) => (t 'vAcc);
 
     let put: k => 'v => (t 'v) => (t 'v);
@@ -1572,6 +1580,9 @@ let module TransientMap: {
      *  If [f] returns Some, alter returns add or updates the mapping
      *  from [key] in [transient].
      */
+
+    let empty: unit => (t 'v);
+    /** [empty ()] returns a new empty TransientIntMap. */
 
     let get: k => (t 'v) => (option 'v);
     /** [tryGet key transient] returns the value associated with [key] or None
@@ -1636,7 +1647,12 @@ let module rec HashMap: {
 
   include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
+  let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (HashMap.t 'k 'v);
+  let fromWith:
+      hash::(Hash.t 'k) =>
+      comparator::(Comparator.t 'k) =>
+      (KeyedIterator.t 'k 'v) =>
+      (HashMap.t 'k 'v);
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
   /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map].
    *
@@ -1673,11 +1689,6 @@ let module rec IntMap: {
 
   include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
-  let empty: (t 'v);
-
-  let from: (KeyedIterator.t int 'v) => (t 'v);
-  /** [from iter] returns an IntMap including the key/value pairs in [iter]. */
-
   let mutate: (t 'v) => (TransientIntMap.t 'v);
   /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map].
    *
@@ -1692,9 +1703,6 @@ and TransientIntMap: {
   type t 'v;
 
   include TransientMap.S1 with type k := k and type t 'v := t 'v;
-
-  let empty: unit => (t 'v);
-  /** [empty ()] returns a new empty TransientIntMap. */
 
   let persist: (t 'v) => (IntMap.t 'v);
   /** [persist transient] returns a persisted HashBiMap. Further attempts to access or mutate [transient]
@@ -1711,14 +1719,6 @@ let module SortedMap: {
     /** The SortedMap type. */
 
     include PersistentNavigableMap.S1 with type k := k and type t 'v := t 'v;
-
-    let empty: (t 'v);
-    /** The empty SortedMap using the structural comparator. */
-
-    let from: (KeyedIterator.t k 'v) => (t 'v);
-    /** [from iter] returns a SortedMap including the key/value pairs in [iter]
-     *  using the structural comparison.
-     */
 
     let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
   };

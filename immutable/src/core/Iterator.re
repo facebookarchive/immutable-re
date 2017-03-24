@@ -19,12 +19,14 @@ let reduce
     (iter: t 'a): 'acc =>
   iter.reduce predicate f acc;
 
-let empty: t 'a = {
-  reduce: fun _ _ acc => acc
+let emptyReducer _ _ acc => acc;
+
+let empty (): t 'a => {
+  reduce: emptyReducer
 };
 
 let concat (iters: list (t 'a)): (t 'a) => switch iters {
-  | [] => empty
+  | [] => empty ()
   | _ => {
     reduce: fun predicate f acc => {
       let shouldContinue = ref true;
@@ -50,7 +52,7 @@ let defer (provider: unit => (t 'a)): (t 'a) => {
 
 let distinctUntilChangedWith
     (equals: Equality.t 'a)
-    (iter: t 'a): (t 'a) => if (iter === empty) empty else {
+    (iter: t 'a): (t 'a) => if (iter.reduce === emptyReducer) iter else {
   reduce: fun predicate f acc => {
     let previous = ref [||];
 
@@ -79,7 +81,7 @@ let distinctUntilChangedWith
 };
 
 let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::predicate (fun acc next => {
@@ -88,7 +90,7 @@ let doOnNext (sideEffect: 'a => unit) (iter: t 'a): (t 'a) =>
   };
 
 let filter (filter: 'a => bool) (iter: t 'a): (t 'a) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => {
       let predicate acc next =>
@@ -103,7 +105,7 @@ let filter (filter: 'a => bool) (iter: t 'a): (t 'a) =>
   };
 
 let flatMap (mapper: 'a => t 'b) (iter: t 'a): (t 'b) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) (empty ())
   else {
     reduce: fun predicate f acc => {
       let shouldContinue = ref true;
@@ -121,7 +123,7 @@ let flatMap (mapper: 'a => t 'b) (iter: t 'a): (t 'b) =>
   };
 
 let flatten (iters: t (t 'a)): (t 'a) =>
-  if (iters === empty) empty
+  if (iters.reduce === emptyReducer) (empty ())
   else {
     reduce: fun predicate f acc => {
       let shouldContinue = ref true;
@@ -163,7 +165,7 @@ let listFromReverse (iter: t 'a): (list 'a) =>
 
 let map
     (mapper: 'a => 'b)
-    (iter: t 'a): (t 'b) => if (iter === empty) empty else {
+    (iter: t 'a): (t 'b) => if (iter.reduce === emptyReducer) (empty ()) else {
   reduce: fun predicate f acc => {
     let memoize = ref [||];
 
@@ -183,14 +185,14 @@ let map
 };
 
 let ofList (list: list 'a): (t 'a) =>
-  if (ImmList.isEmpty list) empty
+  if (ImmList.isEmpty list) (empty ())
   else {
     reduce: fun predicate f acc =>
       ImmList.reduce while_::predicate f acc list
   };
 
 let ofOption (opt: Option.t 'a): (t 'a) =>
-  if (Option.isEmpty opt) empty
+  if (Option.isEmpty opt) (empty ())
   else {
     reduce: fun predicate f acc =>
       Option.reduce while_::predicate f acc opt
@@ -217,7 +219,7 @@ let return (value: 'a): (t 'a) => {
 let scan
     (reducer: 'acc => 'a => 'acc)
     (initialValue: 'acc)
-    (iter: t 'a): (t 'acc) => if (iter === empty) empty else {
+    (iter: t 'a): (t 'acc) => if (iter.reduce === emptyReducer) (empty ()) else {
   reduce: fun predicate f acc => {
     let result = ref (f acc initialValue);
     let memoized = [| initialValue |];
@@ -241,7 +243,7 @@ let scan
 };
 
 let skip (count: int) (iter: t 'a): (t 'a) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else if (count == 0) iter
   else {
     reduce: fun predicate f acc => {
@@ -264,7 +266,7 @@ let skip (count: int) (iter: t 'a): (t 'a) =>
   };
 
 let skipWhile (keepSkipping: 'a => bool) (iter: t 'a): (t 'a) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => {
       let doneSkipping = ref false;
@@ -289,8 +291,8 @@ let startWith (value: 'a) (iter: t 'a): (t 'a) =>
   concat [return value, iter];
 
 let take (count: int) (iter: t 'a): (t 'a) =>
-  if (iter === empty) empty
-  else if (count == 0) empty
+  if (iter.reduce === emptyReducer) iter
+  else if (count === 0) (empty ())
   else {
     reduce: fun predicate f acc => {
       let count = ref count;
@@ -310,7 +312,7 @@ let take (count: int) (iter: t 'a): (t 'a) =>
   };
 
 let takeWhile (keepTaking: 'a => bool) (iter: t 'a): (t 'a) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => {
       let predicate acc next =>
@@ -326,7 +328,7 @@ let buffer
     skip::(skip: int)
     (iter: t 'a): (t (list 'a)) =>
   if (count <= 0 || skip <= 0) (failwith "out of range")
-  else if (iter === empty) empty
+  else if (iter.reduce === emptyReducer) (empty ())
   else iter |> scan (
       fun (lst, counted, skipped) next =>
         if (counted < count && skipped < skip) ([next, ...lst], counted + 1, skipped + 1)

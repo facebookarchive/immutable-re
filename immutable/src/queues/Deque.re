@@ -11,7 +11,7 @@ type t 'a =
   | Ascending (Vector.t 'a)
   | Descending (Vector.t 'a);
 
-let empty: (t 'a) = Ascending Vector.empty;
+let empty (): (t 'a) => Ascending (Vector.empty ());
 
 let addFirst (value: 'a) (deque: t 'a): (t 'a) => switch deque {
   | Ascending vector =>
@@ -98,14 +98,14 @@ let reduceRight
   | Descending vector => vector |> Vector.reduce while_::predicate f acc;
 };
 
-let removeAll (_: t 'a): (t 'a) => empty;
+let removeAll (_: t 'a): (t 'a) => empty ();
 
 let toIterator (deque: t 'a): (Iterator.t 'a) =>
- if (isEmpty deque) Iterator.empty
+ if (isEmpty deque) (Iterator.empty ())
  else { reduce: fun predicate f acc => reduce while_::predicate f acc deque };
 
 let toIteratorRight (deque: t 'a): (Iterator.t 'a) =>
-  if (isEmpty deque) Iterator.empty
+  if (isEmpty deque) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc deque };
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
@@ -186,7 +186,7 @@ let module TransientDeque = {
   };
 
   let empty (): (t 'a) =>
-    empty |> mutate;
+    empty () |> mutate;
 
   let first (transient: t 'a): (option 'a) => switch (Transient.get transient) {
     | Ascending vector => vector |> TransientVector.first
@@ -222,7 +222,7 @@ let module TransientDeque = {
   let removeAllImpl
       (_: Transient.Owner.t)
       (_: transientDequeImpl 'a): (transientDequeImpl 'a) =>
-    Ascending (Vector.empty |> Vector.mutate);
+    Ascending (TransientVector.empty ());
 
   let removeAll (transient: t 'a): (t 'a) =>
     transient |> Transient.update removeAllImpl;
@@ -269,10 +269,10 @@ let addLastAll (iter: Iterator.t 'a) (deque: t 'a): (t 'a) => deque
   |> TransientDeque.persist;
 
 let from (iter: Iterator.t 'a): (t 'a) =>
-  empty |> addLastAll iter;
+  empty () |> addLastAll iter;
 
 let fromReverse (iter: Iterator.t 'a): (t 'a) =>
-  empty|> addFirstAll iter;
+  empty () |> addFirstAll iter;
 
 let map (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
   | Ascending vector => Ascending (Vector.map f vector)

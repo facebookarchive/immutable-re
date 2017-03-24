@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
 open Option.Operators;
 
 type t 'k 'v = {
@@ -14,8 +15,8 @@ type t 'k 'v = {
   count: int,
   get: 'k => (option 'v),
   getOrRaise: 'k => 'v,
-  keyedIterator: (KeyedIterator.t 'k 'v),
-  sequence: (Sequence.t ('k, 'v)),
+  keyedIterator: unit => (KeyedIterator.t 'k 'v),
+  sequence: unit => (Sequence.t ('k, 'v)),
 };
 
 let containsKey (key: 'k) ({ containsKey }: t 'k 'v): bool =>
@@ -23,7 +24,7 @@ let containsKey (key: 'k) ({ containsKey }: t 'k 'v): bool =>
 
 let count ({ count }: t 'k 'v) => count;
 
-let empty: (t 'k 'v) = {
+let empty (): (t 'k 'v) => {
   containsKey: fun _ => false,
   count: 0,
   get: fun _ => None,
@@ -47,8 +48,8 @@ let isNotEmpty ({ count }: t 'k 'v): bool =>
 let keys (map: t 'k 'v): (ImmSet.t 'k) => {
   contains: fun k => map |> containsKey k,
   count: map.count,
-  iterator: map.keyedIterator |> KeyedIterator.keys,
-  sequence: map.sequence |> Sequence.map (fun (k, _) => k),
+  iterator: map.keyedIterator >> KeyedIterator.keys,
+  sequence: map.sequence >> Sequence.map (fun (k, _) => k),
 };
 
 let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
@@ -60,14 +61,14 @@ let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
   getOrRaise: fun k =>
     if (set |> ImmSet.contains k) k
     else failwith "not found",
-  keyedIterator: {
+  keyedIterator: fun () => {
     reduce: fun predicate f acc =>
       set |> ImmSet.reduce
         while_::(fun acc next => predicate acc next next)
         (fun acc next => f acc next next)
         acc
   },
-  sequence: ImmSet.toSequence set |> Sequence.map (fun k => (k, k)),
+  sequence: fun () => ImmSet.toSequence set |> Sequence.map (fun k => (k, k)),
 };
 
 let reduce
@@ -75,13 +76,13 @@ let reduce
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
     ({ keyedIterator }: t 'k 'v): 'acc =>
-  keyedIterator |> KeyedIterator.reduce while_::predicate f acc;
+  keyedIterator () |> KeyedIterator.reduce while_::predicate f acc;
 
 let toIterator ({ keyedIterator }: t 'k 'v): (Iterator.t ('k, 'v)) =>
-  keyedIterator |> KeyedIterator.toIterator;
+  keyedIterator () |> KeyedIterator.toIterator;
 
 let toKeyedIterator ({ keyedIterator }: t 'k 'v): (KeyedIterator.t 'k 'v) =>
-  keyedIterator;
+  keyedIterator ();
 
 let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
   containsKey: map.containsKey,
@@ -91,16 +92,17 @@ let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
     let v = map.getOrRaise k;
     m k v;
   },
-  keyedIterator: map.keyedIterator |> KeyedIterator.mapValues m,
-  sequence: map.sequence |> Sequence.map (fun (k, v) => (k, m k v)),
+  keyedIterator: map.keyedIterator >> KeyedIterator.mapValues m,
+  sequence: map.sequence >> Sequence.map (fun (k, v) => (k, m k v)),
 };
 
 let toMap (map: t 'k 'v): (t 'k 'v) => map;
 
-let toSequence ({ sequence }: t 'k 'v): (Sequence.t ('k, 'v)) => sequence;
+let toSequence ({ sequence }: t 'k 'v): (Sequence.t ('k, 'v)) =>
+  sequence ();
 
 let values ({ keyedIterator }: t 'k 'v): (Iterator.t 'v) =>
-  keyedIterator |> KeyedIterator.values;
+  keyedIterator () |> KeyedIterator.values;
 
 let module KeyedReducer = KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;

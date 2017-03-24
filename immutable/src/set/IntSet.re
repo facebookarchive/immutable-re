@@ -131,7 +131,7 @@ let module BitmapTrieIntSet = {
   let rec toSequence (set: t): (Sequence.t int) => switch set {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
     | Entry entryValue => Sequence.return entryValue;
-    | Empty => Sequence.empty;
+    | Empty => Sequence.empty ();
   };
 
   let updateLevelNodePersistent
@@ -176,7 +176,7 @@ let contains (value: int) ({ root }: t): bool =>
 
 let count ({ count }: t): int => count;
 
-let empty: t = { count: 0, root: BitmapTrieIntSet.Empty };
+let empty (): t => { count: 0, root: BitmapTrieIntSet.Empty };
 
 let isEmpty ({ count }: t): bool => count == 0;
 
@@ -194,7 +194,7 @@ let remove (value: int) ({ count, root } as set: t): t => {
 };
 
 let removeAll (_: t): t =>
-  empty;
+  empty ();
 
 let toSequence ({ root }: t): (Sequence.t int) =>
   root |> BitmapTrieIntSet.toSequence;
@@ -208,16 +208,16 @@ let reduce
   else (BitmapTrieIntSet.reduceWhile predicate f acc root);
 
 let toIterator (set: t): (Iterator.t int) =>
-  if (isEmpty set) Iterator.empty
+  if (isEmpty set) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
 let toSet (set: t): (ImmSet.t int) =>
-  if (isEmpty set) ImmSet.empty
+  if (isEmpty set) (ImmSet.empty ())
   else {
     contains: fun v => contains v set,
     count: count set,
-    iterator: toIterator set,
-    sequence: toSequence set,
+    iterator: fun () => toIterator set,
+    sequence: fun () => toSequence set,
   };
 
 let equals (this: t) (that: t): bool =>
@@ -294,7 +294,7 @@ let module TransientIntSet = {
   let persistentEmpty = empty;
 
   let empty (): t =>
-    empty |> mutate;
+    empty () |> mutate;
 
   let isEmpty (transient: t): bool =>
     transient |> Transient.get |> isEmpty;
@@ -324,7 +324,7 @@ let module TransientIntSet = {
 
   let removeAllImpl
       (_: Transient.Owner.t)
-      (_: intSet): intSet => persistentEmpty;
+      (_: intSet): intSet => persistentEmpty ();
 
   let removeAll (transient: t): t =>
     transient |> Transient.update removeAllImpl;
@@ -336,7 +336,7 @@ let addAll (iter: Iterator.t int) (set: t): t =>
   set |> mutate |> TransientIntSet.addAll iter |> TransientIntSet.persist;
 
 let from (iter: Iterator.t int): t =>
-  empty |> addAll iter;
+  empty () |> addAll iter;
 
 let intersect (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */

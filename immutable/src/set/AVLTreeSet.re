@@ -285,7 +285,7 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
 };
 
 let rec toSequence (tree: t 'a): (Sequence.t 'a) => switch tree {
-  | Empty => Sequence.empty
+  | Empty => Sequence.empty ()
   | Leaf v => Sequence.return v
   | Node _ left v right => Sequence.concat [
       Sequence.defer(fun () => toSequence left),
@@ -295,7 +295,7 @@ let rec toSequence (tree: t 'a): (Sequence.t 'a) => switch tree {
 };
 
 let rec toSequenceRight (tree: t 'a): (Sequence.t 'a) => switch tree {
-  | Empty => Sequence.empty
+  | Empty => Sequence.empty ()
   | Leaf v => Sequence.return v
   | Node _ left v right => Sequence.concat [
       Sequence.defer(fun () => toSequenceRight right),

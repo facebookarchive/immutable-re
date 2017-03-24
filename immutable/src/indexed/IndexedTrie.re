@@ -69,13 +69,13 @@ let reduceRightWhileWithResult
 };
 
 let rec toSequence (trie: t 'a): (Sequence.t 'a) => switch trie {
-  | Empty => Sequence.empty
+  | Empty => Sequence.empty ()
   | Leaf _ values => values |> CopyOnWriteArray.toSequence
   | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
 };
 
 let rec toSequenceRight (trie: t 'a): (Sequence.t 'a) => switch trie {
-  | Empty => Sequence.empty
+  | Empty => Sequence.empty ()
   | Leaf _ values => values |> CopyOnWriteArray.toSequenceRight
   | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceRight |> Sequence.flatMap toSequenceRight
 };

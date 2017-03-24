@@ -18,12 +18,14 @@ let reduce
     (iter: t 'k 'v): 'acc =>
   iter.reduce predicate f acc;
 
-let empty: t 'k 'v = {
-  reduce: fun _ _ acc => acc
+let emptyReducer _ _ acc => acc;
+
+let empty (): t 'k 'v => {
+  reduce: emptyReducer
 };
 
 let concat (iters: list (t 'k 'v)): (t 'k 'v) => switch iters {
-  | [] => empty
+  | [] => empty ()
   | _ => {
     reduce: fun predicate f acc => {
       let shouldContinue = ref true;
@@ -50,7 +52,7 @@ let defer (provider: unit => (t 'k 'v)): (t 'k 'v) => {
 let distinctUntilChangedWith
     keyEquals::(keyEquals: Equality.t 'k)
     valueEquals::(valueEquals: Equality.t 'v)
-    (iter: t 'k 'v): (t 'k 'v) => if (iter === empty) empty else {
+    (iter: t 'k 'v): (t 'k 'v) => if (iter.reduce === emptyReducer) iter else {
   reduce: fun predicate f acc => {
     let previousKey = ref [||];
     let previousValue = ref [||];
@@ -88,7 +90,7 @@ let distinctUntilChangedWith
 };
 
 let doOnNext (sideEffect: 'k => 'v => unit) (iter: t 'k 'v): (t 'k 'v) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::predicate
@@ -97,7 +99,7 @@ let doOnNext (sideEffect: 'k => 'v => unit) (iter: t 'k 'v): (t 'k 'v) =>
   };
 
 let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => {
       let predicate acc key value =>
@@ -112,7 +114,7 @@ let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
   };
 
 let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) (empty ())
   else {
     reduce: fun predicate f acc => {
       let shouldContinue = ref true;
@@ -130,7 +132,7 @@ let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) =>
   };
 
 let keys (iter: t 'k 'v): (Iterator.t 'k) =>
-  if (iter === empty) Iterator.empty
+  if (iter.reduce === emptyReducer) (Iterator.empty ())
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::(fun acc k _ => predicate acc k)
@@ -141,7 +143,7 @@ let keys (iter: t 'k 'v): (Iterator.t 'k) =>
 let map
     keyMapper::(keyMapper: 'kA => 'vA => 'kB)
     valueMapper::(valueMapper: 'kA => 'vA => 'vB)
-    (iter: t 'kA 'vA): (t 'kB 'vB) => if (iter === empty) empty else {
+    (iter: t 'kA 'vA): (t 'kB 'vB) => if (iter.reduce === emptyReducer) (empty ()) else {
   reduce: fun predicate f acc => {
     let memoizedKey = ref [||];
     let memoizedValue = ref [||];
@@ -169,7 +171,7 @@ let map
 };
 
 let mapKeys (mapper: 'a => 'v => 'b) (iter: t 'a 'v): (t 'b 'v) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) (empty ())
   else {
     reduce: fun predicate f acc => {
       let memoizedKey = ref [||];
@@ -190,7 +192,7 @@ let mapKeys (mapper: 'a => 'v => 'b) (iter: t 'a 'v): (t 'b 'v) =>
   };
 
 let mapValues (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) (empty ())
   else {
     reduce: fun predicate f acc => {
       let memoizedValue = ref [||];
@@ -231,7 +233,7 @@ let return (key: 'k) (value: 'v): (t 'k 'v) => {
 let scan
     (reducer: 'acc => 'k => 'v => 'acc)
     (initialValue: 'acc)
-    (iter: t 'k 'v): (Iterator.t 'acc) => if (iter === empty) Iterator.empty else {
+    (iter: t 'k 'v): (Iterator.t 'acc) => if (iter.reduce === emptyReducer) (Iterator.empty ()) else {
   reduce: fun predicate f acc => {
     let result = ref (f acc initialValue);
     let memoized = [| initialValue |];
@@ -255,7 +257,7 @@ let scan
 };
 
 let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else if (count == 0) iter
   else {
     reduce: fun predicate f acc => {
@@ -278,7 +280,7 @@ let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>
   };
 
 let skipWhile (keepSkipping: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => {
       let doneSkipping = ref false;
@@ -303,8 +305,8 @@ let startWith (key: 'k) (value: 'v) (iter: t 'k 'v): (t 'k 'v) =>
   concat [return key value, iter];
 
 let take (count: int) (iter: t 'k 'v): (t 'k 'v) =>
-  if (iter === empty) empty
-  else if (count === 0) empty
+  if (iter.reduce === emptyReducer) iter
+  else if (count === 0) (empty ())
   else {
     reduce: fun predicate f acc => {
       let count = ref count;
@@ -324,7 +326,7 @@ let take (count: int) (iter: t 'k 'v): (t 'k 'v) =>
   };
 
 let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
-  if (iter === empty) empty
+  if (iter.reduce === emptyReducer) iter
   else {
     reduce: fun predicate f acc => {
       let predicate acc key value =>
@@ -336,7 +338,7 @@ let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
   };
 
 let values (iter: t 'k 'v): (Iterator.t 'v) =>
-  if (iter === empty ) Iterator.empty
+  if (iter.reduce === emptyReducer ) (Iterator.empty ())
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::(fun acc _ v => predicate acc v)
@@ -345,7 +347,7 @@ let values (iter: t 'k 'v): (Iterator.t 'v) =>
   };
 
 let toIterator (iter: t 'k 'v): (Iterator.t ('k, 'v)) =>
-  if (iter === empty ) Iterator.empty
+  if (iter.reduce === emptyReducer ) (Iterator.empty ())
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::(fun acc k v => predicate acc (k, v))

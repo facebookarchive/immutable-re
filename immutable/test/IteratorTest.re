@@ -30,7 +30,7 @@ let test = describe "Iterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 8, 9, 7, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1, 2 ];
 
-    Iterator.empty
+    (Iterator.empty ())
       |> Iterator.buffer count::3 skip::3
       |> Iterator.flatMap List.toIterator
       |> List.fromReverse
@@ -45,9 +45,6 @@ let test = describe "Iterator" [
       |> Iterator.take 5
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 3, 2, 1, 0];
-
-    Pervasives.(===) (Iterator.concat []) Iterator.empty
-      |> Expect.toBeEqualToTrue;
   }),
   it "defer" (fun () => ()),
   it "distinctUntilChangedWith" (fun () => {
@@ -65,7 +62,8 @@ let test = describe "Iterator" [
       |> Iterator.Reducer.forEach ignore;
     !last |> Expect.toBeEqualToInt 4;
 
-    Pervasives.(===) (Iterator.doOnNext (fun _ => ()) Iterator.empty) Iterator.empty
+    let empty = Iterator.empty ();
+    Pervasives.(===) (Iterator.doOnNext (fun _ => ()) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "filter" (fun () => {
@@ -75,7 +73,8 @@ let test = describe "Iterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 2, 0];
 
-    Pervasives.(===) (Iterator.filter (fun _ => true) Iterator.empty) Iterator.empty
+    let empty = Iterator.empty ();
+    Pervasives.(===) (Iterator.filter (fun _ => true) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "flatMap" (fun () => {
@@ -110,9 +109,6 @@ let test = describe "Iterator" [
       |> Iterator.take 3
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [6, 3, 0];
-
-    Pervasives.(===) (Iterator.map (fun _ => 1) Iterator.empty) Iterator.empty
-      |> Expect.toBeEqualToTrue;
   }),
   it "repeat" (fun () => {
     Iterator.repeat 5
@@ -143,7 +139,8 @@ let test = describe "Iterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 3];
 
-    Pervasives.(===) (Iterator.skip 5 Iterator.empty) Iterator.empty
+    let empty = Iterator.empty ();
+    Pervasives.(===) (Iterator.skip 5 empty) empty
       |> Expect.toBeEqualToTrue;
 
     let x = Iterator.return 8;
@@ -157,7 +154,8 @@ let test = describe "Iterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 3];
 
-    Pervasives.(===) (Iterator.skipWhile (fun _ => true) Iterator.empty) Iterator.empty
+    let empty = Iterator.empty ();
+    Pervasives.(===) (Iterator.skipWhile (fun _ => true) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "startWith" (fun () => {
@@ -174,10 +172,8 @@ let test = describe "Iterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [2, 1, 0];
 
-    Pervasives.(===) (Iterator.take 5 Iterator.empty) Iterator.empty
-      |> Expect.toBeEqualToTrue;
-
-    Pervasives.(===) (Iterator.return 8 |> Iterator.take 0) Iterator.empty
+    let empty = Iterator.empty ();
+    Pervasives.(===) (Iterator.take 5 empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "takeWhile" (fun () => {
@@ -188,7 +184,8 @@ let test = describe "Iterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [1, 0];
 
-    Pervasives.(===) (Iterator.skipWhile (fun _ => true) Iterator.empty) Iterator.empty
+    let empty = Iterator.empty ();
+    Pervasives.(===) (Iterator.takeWhile (fun _ => true) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
 ];

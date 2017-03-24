@@ -12,8 +12,8 @@ open Functions.Operators;
 type t 'a = {
   contains: 'a => bool,
   count: int,
-  iterator: (Iterator.t 'a),
-  sequence: (Sequence.t 'a),
+  iterator: unit => (Iterator.t 'a),
+  sequence: unit => (Sequence.t 'a),
 };
 
 let contains (value: 'a) ({ contains }: t 'a): bool =>
@@ -21,7 +21,7 @@ let contains (value: 'a) ({ contains }: t 'a): bool =>
 
 let count ({ count }: t 'a): int => count;
 
-let empty: (t 'a) = {
+let empty (): (t 'a) => {
   contains: fun _ => false,
   count: 0,
   iterator: Iterator.empty,
@@ -31,7 +31,7 @@ let empty: (t 'a) = {
 let equals (this: t 'a) (that: t 'a): bool =>
   if (this === that) true
   else if (this.count != that.count) false
-  else this.iterator |> Iterator.Reducer.every that.contains;
+  else this.iterator () |> Iterator.Reducer.every that.contains;
 
 let isEmpty ({ count }: t 'a): bool =>
   count == 0;
@@ -44,13 +44,13 @@ let reduce
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     ({ iterator }: t 'a): 'acc =>
-  iterator |> Iterator.reduce while_::predicate f acc;
+  iterator () |> Iterator.reduce while_::predicate f acc;
 
 let toIterator ({ iterator } as set: t 'a): (Iterator.t 'a) =>
-  if (set === empty) Iterator.empty
-  else iterator;
+  iterator ();
 
-let toSequence ({ sequence }: t 'a): (Sequence.t 'a) => sequence;
+let toSequence ({ sequence }: t 'a): (Sequence.t 'a) =>
+  sequence ();
 
 let toSet (set: t 'a): (t 'a) => set;
 

@@ -22,9 +22,6 @@ let test = describe "KeyedIterator" [
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 3, 2, 1, 0];
-
-    Pervasives.(===) (KeyedIterator.concat []) KeyedIterator.empty
-      |> Expect.toBeEqualToTrue;
   }),
   it "defer" (fun () => ()),
   it "distinctUntilChangedWith" (fun () => {
@@ -66,7 +63,8 @@ let test = describe "KeyedIterator" [
       |> KeyedIterator.KeyedReducer.forEach (fun k v => ());
     !last |> Expect.toBeEqualToInt 4;
 
-    Pervasives.(===) (KeyedIterator.doOnNext (fun _ _ => ()) KeyedIterator.empty) KeyedIterator.empty
+    let empty = KeyedIterator.empty ();
+    Pervasives.(===) (KeyedIterator.doOnNext (fun _ _ => ()) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "filter" (fun () => {
@@ -82,7 +80,8 @@ let test = describe "KeyedIterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 2, 0];
 
-    Pervasives.(===) (Iterator.filter (fun _ => true) Iterator.empty) Iterator.empty
+    let empty = KeyedIterator.empty ();
+    Pervasives.(===) (KeyedIterator.filter (fun _ _ => true) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "flatMap" (fun () => {
@@ -186,11 +185,8 @@ let test = describe "KeyedIterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [3, 3 ,3, 3, 3];
 
-    Pervasives.(===) (KeyedIterator.skip 5 KeyedIterator.empty) KeyedIterator.empty
-      |> Expect.toBeEqualToTrue;
-
-    let x = KeyedIterator.return 8 8;
-    Pervasives.(===) (KeyedIterator.skip 0 x) x
+    let empty = KeyedIterator.empty ();
+    Pervasives.(===) (KeyedIterator.skip 5 empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "skipWhile" (fun () => {
@@ -202,9 +198,10 @@ let test = describe "KeyedIterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [3, 3, 3, 3, 3];
 
+    let empty = KeyedIterator.empty ();
     Pervasives.(===)
-        (KeyedIterator.skipWhile (fun _ _ => true) KeyedIterator.empty)
-        KeyedIterator.empty
+        (KeyedIterator.skipWhile (fun _ _ => true) empty)
+        empty
       |> Expect.toBeEqualToTrue;
   }),
   it "startWith" (fun () => {
@@ -222,10 +219,8 @@ let test = describe "KeyedIterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [3, 3, 3];
 
-    Pervasives.(===) (KeyedIterator.take 5 KeyedIterator.empty) KeyedIterator.empty
-      |> Expect.toBeEqualToTrue;
-
-    Pervasives.(===) (KeyedIterator.return 8 8  |> KeyedIterator.take 0) KeyedIterator.empty
+    let empty = KeyedIterator.empty ();
+    Pervasives.(===) (KeyedIterator.take 5 empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "takeWhile" (fun () => {
@@ -237,7 +232,8 @@ let test = describe "KeyedIterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [2, 2];
 
-    Pervasives.(===) (Iterator.takeWhile (fun _ => true) Iterator.empty) Iterator.empty
+    let empty = KeyedIterator.empty ();
+    Pervasives.(===) (KeyedIterator.takeWhile (fun _ _ => true) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
   it "values" (fun () => ()),

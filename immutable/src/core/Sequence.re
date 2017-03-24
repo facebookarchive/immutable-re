@@ -16,13 +16,15 @@ type iterator 'a =
 
 and t 'a = unit => iterator 'a;
 
-let empty: (t 'a) = fun () => Completed;
+let emptySeq () => Completed;
+
+let empty (): (t 'a) => emptySeq;
 
 let return (value: 'a): (t 'a) => fun () =>
-  Next value empty;
+  Next value (empty ());
 
 let rec ofList (list: list 'a): (t 'a) => fun () => switch list {
-  | [value] => Next value empty
+  | [value] => Next value (empty ())
   | [value, ...tail] => Next value (ofList tail)
   | [] => Completed
 };
@@ -85,7 +87,7 @@ let flatMap (f: 'a => (t 'b)) (seq: t 'a): (t 'b) =>
 
 let ofOption (opt: option 'a): (t 'a) => switch opt {
   | Some value => return value
-  | None => empty
+  | None => (empty ())
 };
 
 let rec reduce
@@ -119,12 +121,10 @@ let scan
   fun () => Next acc (recurse reducer acc seq);
 };
 
-let toIterator (seq: t 'a): (Iterator.t 'a) =>
-  if (seq === empty) Iterator.empty
-  else {
-    reduce: fun predicate f acc =>
-      reduce while_::predicate f acc seq
-  };
+let toIterator (seq: t 'a): (Iterator.t 'a) => {
+  reduce: fun predicate f acc =>
+    reduce while_::predicate f acc seq
+};
 
 let buffer
     count::(count: int)
@@ -144,7 +144,7 @@ let buffer
         if (counted == count && skipped == skip) (Next lst nextSequence)
         else (nextSequence ())
     | Completed =>
-        if (counted == count && skipped == skip) (Next lst empty)
+        if (counted == count && skipped == skip) (Next lst (empty ()))
         else Completed
   };
 
@@ -217,7 +217,7 @@ let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {
   let nextSequence: (t (list 'a)) = fun () =>
     (iters |> ImmList.mapReverse (fun next => switch next {
       | Next _ next => next
-      | Completed => empty
+      | Completed => (empty ())
     }) |> zip) ();
 
   iters |> ImmList.reduce (
@@ -263,9 +263,9 @@ let rec zipLongest2With
   | (Next aValue aNext, Next bValue bNext) =>
       Next (f (Some aValue) (Some bValue)) (zipLongest2With f aNext bNext)
   | (Next aValue aNext, Completed) =>
-      Next (f (Some aValue) None) (zipLongest2With f aNext empty)
+      Next (f (Some aValue) None) (zipLongest2With f aNext (empty ()))
   | (Completed, Next bValue bNext) =>
-      Next (f None (Some bValue)) (zipLongest2With f empty bNext)
+      Next (f None (Some bValue)) (zipLongest2With f (empty ()) bNext)
   | _ => Completed
 };
 
@@ -278,18 +278,18 @@ let rec zipLongest3With
       Next (f (Some aValue) (Some bValue) (Some cValue)) (zipLongest3With f aNext bNext cNext)
 
   | (Next aValue aNext, Next bValue bNext, Completed) =>
-      Next (f (Some aValue) (Some bValue) None) (zipLongest3With f aNext bNext empty)
+      Next (f (Some aValue) (Some bValue) None) (zipLongest3With f aNext bNext (empty ()))
   | (Next aValue aNext, Completed, Next cValue cNext) =>
-      Next (f (Some aValue) None (Some cValue)) (zipLongest3With f aNext empty cNext)
+      Next (f (Some aValue) None (Some cValue)) (zipLongest3With f aNext (empty ()) cNext)
   | (Completed, Next bValue bNext, Next cValue cNext) =>
-      Next (f None (Some bValue) (Some cValue)) (zipLongest3With f empty bNext cNext)
+      Next (f None (Some bValue) (Some cValue)) (zipLongest3With f (empty ()) bNext cNext)
 
   | (Completed, Next bValue bNext, Completed) =>
-      Next (f None (Some bValue) None) (zipLongest3With f empty bNext empty)
+      Next (f None (Some bValue) None) (zipLongest3With f (empty ()) bNext (empty ()))
   | (Next aValue aNext, Completed, Completed) =>
-      Next (f (Some aValue) None None) (zipLongest3With f aNext empty empty)
+      Next (f (Some aValue) None None) (zipLongest3With f aNext (empty ()) (empty ()))
   | (Completed, Completed, Next cValue cNext) =>
-      Next (f None None (Some cValue)) (zipLongest3With f empty empty cNext)
+      Next (f None None (Some cValue)) (zipLongest3With f (empty ()) (empty ()) cNext)
   | _ => Completed
 };
 

@@ -114,7 +114,7 @@ let module Streamable = {
     let defer: (unit => t 'a) => (t 'a);
     let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
     let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-    let empty: (t 'a);
+    let empty: unit => (t 'a);
     let filter: ('a => bool) => (t 'a) => (t 'a);
     let generate: ('a => 'a) => 'a => (t 'a);
     let repeat: 'a => (t 'a);
@@ -324,7 +324,7 @@ let module Stack = {
 
     let addFirst: 'a => (t 'a) => (t 'a);
     let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-    let empty: (t 'a);
+    let empty: unit => (t 'a);
     let fromReverse: (Iterator.t 'a) => (t 'a);
     let return: 'a => (t 'a);
     let removeFirstOrRaise: (t 'a) => (t 'a);
@@ -702,7 +702,7 @@ let module PersistentSet = {
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
-    let empty: t;
+    let empty: unit => t;
     let from: (Iterator.t a) => t;
     let intersect: t => t => t;
     let remove: a => t => t;
@@ -800,6 +800,8 @@ let module PersistentMap = {
     include Map.S1 with type k := k and type t 'v := t 'v;
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+    let empty: unit => (t 'v);
+    let from: (KeyedIterator.t k 'v) => (t 'v);
     let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'v) => (t 'vAcc) => (t 'vAcc);
     let put: k => 'v => (t 'v) => (t 'v);
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
@@ -840,6 +842,7 @@ let module TransientMap = {
     include TransientKeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+    let empty: unit => (t 'v);
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let put: k => 'v => (t 'v) => (t 'v);

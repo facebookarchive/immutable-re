@@ -120,7 +120,7 @@ type t 'a = {
   right: array 'a,
 };
 
-let empty = {
+let empty () => {
   left: [||],
   middle: IndexedTrie.empty,
   right: [||],
@@ -140,7 +140,7 @@ let module PersistentVector = VectorImpl.Make {
     leftCount + middleCount + rightCount;
   };
 
-  let empty () => empty;
+  let empty () => empty ();
 
   let addFirst (_: Transient.Owner.t) (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
     if ((tailIsFull left) && (CopyOnWriteArray.isNotEmpty right)) {
@@ -655,7 +655,7 @@ module TransientVector = {
   let count (transient: t 'a): int =>
     transient |> Transient.get |> TransientVectorImpl.count;
 
-  let empty () => empty |> mutate;
+  let empty () => empty () |> mutate;
 
   let isEmpty (transient: t 'a): bool =>
     transient |> Transient.get |> TransientVectorImpl.isEmpty;
@@ -784,13 +784,15 @@ let addLastAll (iter: Iterator.t 'a) (vec: t 'a): (t 'a) => vec
   |> TransientVector.persist;
 
 let from (iter: Iterator.t 'a): (t 'a) =>
-  empty |> addLastAll iter;
+  empty () |> addLastAll iter;
 
 let fromReverse (iter: Iterator.t 'a): (t 'a) =>
-  empty|> addFirstAll iter;
+  empty () |> addFirstAll iter;
 
 let init (count: int) (f: int => 'a): (t 'a) => IntRange.create start::0 count::count
-  |> IntRange.reduce (fun acc next => acc |> TransientVector.addLast (f next)) (mutate empty)
+  |> IntRange.reduce (fun acc next =>
+      acc |> TransientVector.addLast (f next)) (mutate (empty ())
+    )
   |> TransientVector.persist;
 
 let reduceImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
@@ -975,36 +977,36 @@ let reduceRightWithIndex
 let map (f: 'a => 'b) (vector: t 'a): (t 'b) => vector
   |> reduce
     (fun acc next => acc |> TransientVector.addLast @@ f @@ next)
-    (mutate empty)
+    (mutate (empty ()))
   |> TransientVector.persist;
 
 let mapWithIndex (f: int => 'a => 'b) (vector: t 'a): (t 'b) => vector
   |> reduceWithIndex
     (fun acc index next => acc |> TransientVector.addLast @@ f index @@ next)
-    (mutate empty)
+    (mutate (empty ()))
   |> TransientVector.persist;
 
 let mapReverse (f: 'a => 'b) (vector: t 'a): (t 'b) => vector
   |> reduceRight
     (fun acc next => acc |> TransientVector.addLast @@ f @@ next)
-    (mutate empty)
+    (mutate (empty ()))
   |> TransientVector.persist;
 
 let mapReverseWithIndex (f: int => 'a => 'b) (vector: t 'a): (t 'b) => vector
   |> reduceWithIndex
     (fun acc index next => acc |> TransientVector.addFirst @@ f index @@ next)
-    (mutate empty)
+    (mutate (empty ()))
   |> TransientVector.persist;
 
 let return (value: 'a): (t 'a) =>
-  empty |> addLast value;
+  empty () |> addLast value;
 
 let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   let vectorCount = count vec;
   let leftCount = CopyOnWriteArray.count left;
   let middleCount = IndexedTrie.count middle;
 
-  if (skipCount >= vectorCount) empty
+  if (skipCount >= vectorCount) (empty ())
   else if (skipCount <= 0) vec
   else if (skipCount < leftCount) {
     left: left |> CopyOnWriteArray.skip skipCount,
@@ -1085,19 +1087,19 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) =
 };
 
 let toIterator (vec: t 'a): (Iterator.t 'a) =>
-  if (isEmpty vec) Iterator.empty
+  if (isEmpty vec) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc vec };
 
 let toIteratorRight (vec: t 'a): (Iterator.t 'a) =>
-  if (isEmpty vec) Iterator.empty
+  if (isEmpty vec) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc vec };
 
 let toKeyedIterator (vec: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty vec) KeyedIterator.empty
+  if (isEmpty vec) (KeyedIterator.empty ())
   else { reduce: fun predicate f acc => reduceWithIndex while_::predicate f acc vec };
 
 let toKeyedIteratorRight (vec: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty vec) KeyedIterator.empty
+  if (isEmpty vec) (KeyedIterator.empty ())
   else { reduce: fun predicate f acc => reduceRightWithIndex while_::predicate f acc vec };
 
 let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
@@ -1117,8 +1119,8 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
   count: count vec,
   get: fun i => get i vec,
   getOrRaise: fun i => getOrRaise i vec,
-  keyedIterator: toKeyedIterator vec,
-  sequence: Sequence.zip2With
+  keyedIterator: fun () => toKeyedIterator vec,
+  sequence: fun () => Sequence.zip2With
     (fun a b => (a, b))
     (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)
     (toSequence vec),

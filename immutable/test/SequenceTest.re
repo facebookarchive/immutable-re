@@ -33,7 +33,7 @@ let test = describe "Sequence" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 8, 9, 7, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1, 2 ];
 
-    Sequence.empty
+    (Sequence.empty ())
       |> Sequence.buffer count::3 skip::3
       |> Sequence.toIterator
       |> Iterator.flatMap List.toIterator
@@ -82,7 +82,7 @@ let test = describe "Sequence" [
       |> Sequence.first
       |> Expect.toBeEqualToSomeOfInt 0;
 
-    Sequence.empty |> Sequence.first |> Expect.toBeEqualToNoneOfInt;
+    (Sequence.empty ()) |> Sequence.first |> Expect.toBeEqualToNoneOfInt;
   }),
   it "firstOrRaise" (fun () => {
     IntRange.create start::0 count::10
@@ -90,7 +90,7 @@ let test = describe "Sequence" [
       |> Sequence.firstOrRaise
       |> Expect.toBeEqualToInt 0;
 
-    (fun () => Sequence.empty |> Sequence.firstOrRaise) |> Expect.shouldRaise;
+    (fun () => (Sequence.empty ()) |> Sequence.firstOrRaise) |> Expect.shouldRaise;
   }),
   it "flatMap" (fun () => {
     IntRange.create start::0 count::3

@@ -42,14 +42,14 @@ let test = describe "Set" [
       |> Expect.toBeEqualToFalse;
   }),
   it "isEmpty" (fun () => {
-    Set.empty |> Set.isEmpty |> Expect.toBeEqualToTrue;
+    (Set.empty ()) |> Set.isEmpty |> Expect.toBeEqualToTrue;
     IntRange.create start::0 count::199
       |> IntRange.toSet
       |> Set.isEmpty
       |> Expect.toBeEqualToFalse;
   }),
   it "isNotEmpty" (fun () => {
-    Set.empty |> Set.isNotEmpty |> Expect.toBeEqualToFalse;
+    (Set.empty ()) |> Set.isNotEmpty |> Expect.toBeEqualToFalse;
     IntRange.create start::0 count::199
       |> IntRange.toSet
       |> Set.isNotEmpty

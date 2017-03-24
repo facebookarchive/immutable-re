@@ -41,7 +41,7 @@ let addLastAll (iter: Iterator.t 'a) (arr: t 'a): (t 'a) =>
    */
   iter |> Iterator.reduce (fun acc next => acc |> addLast next) arr;
 
-let empty: (t 'a) = [||];
+let empty (): (t 'a) => [||];
 
 let from (iter: Iterator.t 'a): (t 'a) =>
   [||] |> addLastAll iter;
@@ -236,7 +236,7 @@ let mapReverseWithIndex (f: int => 'a => 'b) (arr: t 'a): (t 'b) =>
   }
   else [||];
 
-let removeAll (_: t 'a): (t 'a) => empty;
+let removeAll (_: t 'a): (t 'a) => empty ();
 
 let removeLastOrRaise (arr: t 'a): (t 'a) => {
   let count = count arr;
@@ -309,23 +309,23 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (arr: t 'a): (t 'a) =
 };
 
 let toIterator (arr: t 'a): (Iterator.t 'a) =>
-  if (isEmpty arr) Iterator.empty
+  if (isEmpty arr) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc arr };
 
 let toIteratorRight (arr: t 'a): (Iterator.t 'a) =>
-  if (isEmpty arr) Iterator.empty
+  if (isEmpty arr) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc arr };
 
 let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty arr) KeyedIterator.empty
+  if (isEmpty arr) (KeyedIterator.empty ())
   else { reduce: fun predicate f acc => reduceWithIndex while_::predicate f acc arr };
 
 let toKeyedIteratorRight (arr: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty arr) KeyedIterator.empty
+  if (isEmpty arr) (KeyedIterator.empty ())
   else { reduce: fun predicate f acc => reduceRightWithIndex while_::predicate f acc arr };
 
 let toSequenceRight (arr: t 'a): (Sequence.t 'a) =>
-  if (isEmpty arr) Sequence.empty
+  if (isEmpty arr) (Sequence.empty ())
   else {
     let rec loop index => fun () =>
       if (index < 0) Sequence.Completed
@@ -334,7 +334,7 @@ let toSequenceRight (arr: t 'a): (Sequence.t 'a) =>
   };
 
 let toSequence (arr: t 'a): (Sequence.t 'a) =>
-  if (isEmpty arr) Sequence.empty
+  if (isEmpty arr) (Sequence.empty ())
   else {
     let arrCount = count arr;
     let rec loop index => fun () =>
@@ -389,8 +389,8 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   count: count arr,
   get: fun i => get i arr,
   getOrRaise: fun index => getOrRaise index arr,
-  keyedIterator: toKeyedIterator arr,
-  sequence: toSequenceWithIndex arr,
+  keyedIterator: fun () => toKeyedIterator arr,
+  sequence: fun () => toSequenceWithIndex arr,
 };
 
 let module Reducer = Reducer.Make1 {

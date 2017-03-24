@@ -118,7 +118,7 @@ let module BitmapTrieSet = {
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
     | Collision _ entrySet => AVLTreeSet.toSequence entrySet;
     | Entry _ entryValue => Sequence.return entryValue;
-    | Empty => Sequence.empty;
+    | Empty => Sequence.empty ();
   };
 
   let updateLevelNodePersistent
@@ -170,7 +170,8 @@ let count ({ count }: t 'a): int => count;
 
 let emptyWith
     hash::(hash: Hash.t 'a)
-    comparator::(comparator: Comparator.t 'a): (t 'a) => {
+    comparator::(comparator: Comparator.t 'a)
+    (): (t 'a) => {
   count: 0,
   root: BitmapTrieSet.Empty,
   comparator,
@@ -196,14 +197,14 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 };
 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
-  emptyWith hash::hash comparator::comparator;
+  emptyWith hash::hash comparator::comparator ();
 
 /* FIXME: Shouldn't use sequences to implement all these.
  * They're way slow.
  */
 
 let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
-  if (isEmpty set) Sequence.empty
+  if (isEmpty set) (Sequence.empty ())
   else root |> BitmapTrieSet.toSequence;
 
 /** FIXME: Implement this correctly. ecchh */
@@ -215,16 +216,16 @@ let reduce
   set |> toSequence |> Sequence.reduce while_::predicate f acc;
 
 let toIterator (set: t 'a): (Iterator.t 'a) =>
-  if (isEmpty set) Iterator.empty
+  if (isEmpty set) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
 let toSet (set: t 'a): (ImmSet.t 'a) =>
-  if (isEmpty set) ImmSet.empty
+  if (isEmpty set) (ImmSet.empty ())
   else {
     contains: fun v => contains v set,
     count: count set,
-    iterator: toIterator set,
-    sequence: toSequence set,
+    iterator: fun () => toIterator set,
+    sequence: fun () => toSequence set,
   };
 
 let equals (this: t 'a) (that: t 'a): bool =>
@@ -309,7 +310,7 @@ let module TransientHashSet = {
       hash::(hash: Hash.t 'a)
       comparator::(comparator: Comparator.t 'a)
       (): (t 'a) =>
-    persistentEmptyWith hash::hash comparator::comparator |>  mutate;
+    persistentEmptyWith hash::hash comparator::comparator () |>  mutate;
 
   let isEmpty (transient: t 'a): bool =>
     transient |> Transient.get |> isEmpty;
@@ -343,7 +344,7 @@ let module TransientHashSet = {
   let removeAllImpl
       (_: Transient.Owner.t)
       ({ hash, comparator }: hashSet 'a): (hashSet 'a) =>
-    persistentEmptyWith hash::hash comparator::comparator;
+    persistentEmptyWith hash::hash comparator::comparator ();
 
   let removeAll (transient: t 'a): (t 'a) =>
     transient |> Transient.update removeAllImpl;
@@ -358,21 +359,21 @@ let fromWith
     hash::(hash: Hash.t 'a)
     comparator::(comparator: Comparator.t 'a)
     (iterator: Iterator.t 'a): (t 'a) =>
-  emptyWith hash::hash comparator::comparator |> addAll iterator;
+  emptyWith hash::hash comparator::comparator () |> addAll iterator;
 
 let intersect ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator
+  emptyWith hash::hash comparator::comparator ()
     |> addAll (ImmSet.intersect (toSet this) (toSet that));
 
 let subtract ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator
+  emptyWith hash::hash comparator::comparator ()
     |> addAll (ImmSet.subtract (toSet this) (toSet that));
 
 let union ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator
+  emptyWith hash::hash comparator::comparator ()
     |> addAll (ImmSet.union (toSet this) (toSet that));
 
 let module Reducer = Reducer.Make1 {

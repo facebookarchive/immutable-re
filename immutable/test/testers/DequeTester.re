@@ -31,7 +31,7 @@ let module Make = fun (Deque: Deque.S1) (Config: TesterConfig.S) => {
               Deque.isNotEmpty acc |> Expect.toBeEqualToTrue;
               acc
             })
-            Deque.empty
+            (Deque.empty ())
           |> Deque.toIterator
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
@@ -39,7 +39,7 @@ let module Make = fun (Deque: Deque.S1) (Config: TesterConfig.S) => {
       it "addLastAll" (fun () => {
         let testData = IntRange.create start::0 count::Config.count;
 
-        Deque.empty
+        (Deque.empty ())
           |> Deque.addLastAll (IntRange.toIterator testData)
           |> Deque.toIterator
           |> List.fromReverse
@@ -55,10 +55,10 @@ let module Make = fun (Deque: Deque.S1) (Config: TesterConfig.S) => {
           |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterator testData));
       }),
       it "last" (fun () => {
-        Deque.empty |> Deque.last |> Expect.toBeEqualToNoneOfInt;
+        (Deque.empty ()) |> Deque.last |> Expect.toBeEqualToNoneOfInt;
       }),
       it "lastOrRaise" (fun () => {
-        (fun () => Deque.empty |> Deque.lastOrRaise) |> Expect.shouldRaise;
+        (fun () => (Deque.empty ()) |> Deque.lastOrRaise) |> Expect.shouldRaise;
       }),
       it "map" (fun () => {
         IntRange.create start::0 count::Config.count
@@ -122,7 +122,7 @@ let module Make = fun (Deque: Deque.S1) (Config: TesterConfig.S) => {
       }),
       it "addLast, removeFirstOrRaise" (fun () => {
         let testData = IntRange.create start::0 count::Config.count;
-        let deque = Deque.empty |> Deque.addLastAll (IntRange.toIterator testData);
+        let deque = (Deque.empty ()) |> Deque.addLastAll (IntRange.toIterator testData);
 
         testData |> IntRange.reduce
           (fun acc i => {
@@ -137,7 +137,7 @@ let module Make = fun (Deque: Deque.S1) (Config: TesterConfig.S) => {
 
       it "addFirst, removeLastOrRaise" (fun () => {
         let testData = IntRange.create start::0 count::Config.count;
-        let deque = Deque.empty |> Deque.addFirstAll (IntRange.toIteratorRight testData);
+        let deque = (Deque.empty ()) |> Deque.addFirstAll (IntRange.toIteratorRight testData);
 
         testData |> IntRange.reduceRight
           (fun acc i => {

@@ -14,7 +14,7 @@ let count (opt: t 'a): int => switch opt {
   | None => 0
 };
 
-let empty: (t 'a) = None;
+let empty (): (t 'a) => None;
 
 let first = Functions.identity;
 

@@ -28,7 +28,7 @@ let module Make = fun (Stack: Stack.S1) (Config: TesterConfig.S) => {
             Stack.isNotEmpty acc |> Expect.toBeEqualToTrue;
             acc
           })
-          Stack.empty
+          (Stack.empty ())
         |> Stack.toIterator
         |> List.fromReverse
         |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
@@ -36,20 +36,20 @@ let module Make = fun (Stack: Stack.S1) (Config: TesterConfig.S) => {
     it "addFirstAll" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
 
-      Stack.empty
+      (Stack.empty ())
         |> Stack.addFirstAll (IntRange.toIterator testData)
         |> Stack.toIterator
         |> List.fromReverse
         |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
     }),
     it "count" (fun () => {
-      Stack.empty |> Stack.count |> Expect.toBeEqualToInt 0;
+      (Stack.empty ()) |> Stack.count |> Expect.toBeEqualToInt 0;
     }),
     it "first" (fun () => {
-      Stack.empty |> Stack.first |> Expect.toBeEqualToNoneOfInt;
+      (Stack.empty ()) |> Stack.first |> Expect.toBeEqualToNoneOfInt;
     }),
     it "firstOrRaise" (fun () => {
-      (fun () => Stack.empty |> Stack.firstOrRaise) |> Expect.shouldRaise;
+      (fun () => (Stack.empty ()) |> Stack.firstOrRaise) |> Expect.shouldRaise;
     }),
     it "fromReverse" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
@@ -61,10 +61,10 @@ let module Make = fun (Stack: Stack.S1) (Config: TesterConfig.S) => {
         |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
     }),
     it "isEmpty" (fun () => {
-      Stack.empty |> Stack.isEmpty |> Expect.toBeEqualToTrue;
+      (Stack.empty ()) |> Stack.isEmpty |> Expect.toBeEqualToTrue;
     }),
     it "isNotEmpty" (fun () => {
-      Stack.empty |> Stack.isNotEmpty |> Expect.toBeEqualToFalse;
+      (Stack.empty ()) |> Stack.isNotEmpty |> Expect.toBeEqualToFalse;
     }),
     it "mapReverse" (fun () => {
       IntRange.create start::0 count::Config.count

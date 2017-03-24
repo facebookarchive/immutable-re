@@ -34,7 +34,7 @@ module type S = {
   let removeAll: t => t;
   let add: a => t => t;
   let addAll: Iterator.t a => t => t;
-  let empty: t;
+  let empty: unit => t;
   let from: (Iterator.t a) => t;
   let intersect: t => t => t;
   let remove: a => t => t;
@@ -68,14 +68,14 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let count ({ count }: t): int => count;
 
-  let empty: t = { count: 0, tree: AVLTreeSet.Empty };
+  let empty (): t => { count: 0, tree: AVLTreeSet.Empty };
 
   let isEmpty ({ count }: t): bool => count == 0;
 
   let isNotEmpty ({ count }: t): bool => count != 0;
 
   let from (iter: Iterator.t a): t =>
-    empty |> addAll iter;
+    empty () |> addAll iter;
 
   let reduce
       while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
@@ -99,7 +99,7 @@ let module Make = fun (Comparable: Comparable.S) => {
   };
 
   let removeAll (_: t): t =>
-    empty;
+    empty ();
 
   let removeFirstOrRaise ({ count, tree }: t): t => {
     let newTree = AVLTreeSet.removeFirstOrRaise tree;
@@ -169,18 +169,18 @@ let module Make = fun (Comparable: Comparable.S) => {
     AVLTreeSet.lastOrRaise tree;
 
   let toIterator (set: t): (Iterator.t a) =>
-    if (isEmpty set) Iterator.empty
+    if (isEmpty set) (Iterator.empty ())
     else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
   let toIteratorRight (set: t): (Iterator.t a) =>
-    if (isEmpty set) Iterator.empty
+    if (isEmpty set) (Iterator.empty ())
     else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
 
   let toSet (set: t): (ImmSet.t a) => {
     contains: fun a => contains a set,
     count: count set,
-    iterator: toIterator set,
-    sequence: toSequence set,
+    iterator: fun () => toIterator set,
+    sequence: fun () => toSequence set,
   };
 
   let toMap (set: t): (ImmMap.t a a) =>

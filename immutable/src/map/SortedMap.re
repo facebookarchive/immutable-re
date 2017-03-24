@@ -11,43 +11,44 @@
 module type S = {
   type k;
   type t +'v;
-
-  let reduceRight:
-    while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let first: t 'v => option (k, 'v);
-  let firstOrRaise: t 'v => (k, 'v);
-  let last: t 'v => option (k, 'v);
-  let lastOrRaise: t 'v => (k, 'v);
-  let toIteratorRight: t 'v => Iterator.t (k, 'v);
-  let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
-  let toSequenceRight: t 'v => Sequence.t (k, 'v);
-  let remove: k => t 'v => t 'v;
-  let removeAll: t 'v => t 'v;
-  let reduce:
-    while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let toIterator: t 'v => Iterator.t (k, 'v);
-  let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
-  let containsKey: k => t 'v => bool;
-  let count: t 'v => int;
-  let isEmpty: t 'v => bool;
-  let isNotEmpty: t 'v => bool;
-  let toSequence: t 'v => Sequence.t (k, 'v);
-  let get: k => t 'v => option 'v;
-  let getOrRaise: k => t 'v => 'v;
-  let keys: t 'v => ImmSet.t k;
-  let map: (k => 'a => 'b) => t 'a => t 'b;
-  let values: t 'v => Iterator.t 'v;
-  let toMap: t 'v => ImmMap.t k 'v;
-  let alter: k => (option 'v => option 'v) => t 'v => t 'v;
-  let merge:
+  let reduceRight :
+    while_::('acc => k => 'v => bool)? =>
+    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let first : t 'v => option (k, 'v);
+  let firstOrRaise : t 'v => (k, 'v);
+  let last : t 'v => option (k, 'v);
+  let lastOrRaise : t 'v => (k, 'v);
+  let toIteratorRight : t 'v => Iterator.t (k, 'v);
+  let toKeyedIteratorRight : t 'v => KeyedIterator.t k 'v;
+  let toSequenceRight : t 'v => Sequence.t (k, 'v);
+  let remove : k => t 'v => t 'v;
+  let removeAll : t 'v => t 'v;
+  let reduce :
+    while_::('acc => k => 'v => bool)? =>
+    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let toIterator : t 'v => Iterator.t (k, 'v);
+  let toKeyedIterator : t 'v => KeyedIterator.t k 'v;
+  let containsKey : k => t 'v => bool;
+  let count : t 'v => int;
+  let isEmpty : t 'v => bool;
+  let isNotEmpty : t 'v => bool;
+  let toSequence : t 'v => Sequence.t (k, 'v);
+  let get : k => t 'v => option 'v;
+  let getOrRaise : k => t 'v => 'v;
+  let keys : t 'v => ImmSet.t k;
+  let map : (k => 'a => 'b) => t 'a => t 'b;
+  let values : t 'v => Iterator.t 'v;
+  let toMap : t 'v => ImmMap.t k 'v;
+  let alter : k => (option 'v => option 'v) => t 'v => t 'v;
+  let empty : unit => t 'v;
+  let from : KeyedIterator.t k 'v => t 'v;
+  let merge :
     (k => option 'vAcc => option 'v => option 'vAcc) =>
     t 'v => t 'vAcc => t 'vAcc;
-  let put: k => 'v => t 'v => t 'v;
-  let putAll: KeyedIterator.t k 'v => t 'v => t 'v;
-  let removeFirstOrRaise: t 'v => t 'v;
-  let removeLastOrRaise: t 'v => t 'v;
-  let empty: t 'v;
-  let from: KeyedIterator.t k 'v => t 'v;
+  let put : k => 'v => t 'v => t 'v;
+  let putAll : KeyedIterator.t k 'v => t 'v => t 'v;
+  let removeFirstOrRaise : t 'v => t 'v;
+  let removeLastOrRaise : t 'v => t 'v;
   let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
 };
 
@@ -61,7 +62,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     tree: AVLTreeMap.t k 'v,
   };
 
-  let empty: (t 'v) = {
+  let empty (): (t 'v) => {
     count: 0,
     tree: AVLTreeMap.Empty,
   };
@@ -124,7 +125,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) map;
 
   let from (iter: KeyedIterator.t k 'v): (t 'v) =>
-    empty |> putAll iter;
+    empty () |> putAll iter;
 
   let reduce
       while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
@@ -143,13 +144,13 @@ let module Make = fun (Comparable: Comparable.S) => {
     else (AVLTreeMap.reduceRightWhile predicate f acc tree);
 
   let map (f: k => 'a => 'b) (map: t 'a): (t 'b) =>
-    map |> reduce (fun acc k v => acc |> put k (f k v)) empty;
+    map |> reduce (fun acc k v => acc |> put k (f k v)) (empty ());
 
   let remove (key: k) (map: t 'v): (t 'v) =>
     map |> alter key Functions.alwaysNone;
 
   let removeAll (_: t 'v): (t 'v) =>
-    empty;
+    empty ();
 
   let removeFirstOrRaise ({ count, tree }: t 'v): (t 'v) => {
     let newTree = tree |> AVLTreeMap.removeFirstOrRaise;
@@ -171,7 +172,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     tree |> AVLTreeMap.values;
 
   let toIterator (map: t 'v): (Iterator.t (k, 'v)) =>
-    if (isEmpty map) Iterator.empty
+    if (isEmpty map) (Iterator.empty ())
     else {
       reduce: fun predicate f acc => map |> reduce
         while_::(fun acc k v => predicate acc (k, v))
@@ -180,7 +181,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     };
 
   let toIteratorRight (map: t 'v): (Iterator.t (k, 'v)) =>
-    if (isEmpty map) Iterator.empty
+    if (isEmpty map) (Iterator.empty ())
     else {
       reduce: fun predicate f acc => map |> reduceRight
         while_::(fun acc k v => predicate acc (k, v))
@@ -189,13 +190,13 @@ let module Make = fun (Comparable: Comparable.S) => {
     };
 
   let toKeyedIterator (map: t 'v): (KeyedIterator.t k 'v) =>
-    if (isEmpty map) KeyedIterator.empty
+    if (isEmpty map) (KeyedIterator.empty ())
     else {
       reduce: fun predicate f acc => map |> reduce while_::predicate f acc
     };
 
   let toKeyedIteratorRight (map: t 'v): (KeyedIterator.t k 'v) =>
-    if (isEmpty map) KeyedIterator.empty
+    if (isEmpty map) (KeyedIterator.empty ())
     else {
       reduce: fun predicate f acc => map |> reduceRight while_::predicate f acc
     };
@@ -205,8 +206,8 @@ let module Make = fun (Comparable: Comparable.S) => {
     count: (count map),
     get: fun i => get i map,
     getOrRaise: fun i => getOrRaise i map,
-    keyedIterator: toKeyedIterator map,
-    sequence: toSequence map,
+    keyedIterator: fun () => toKeyedIterator map,
+    sequence: fun () => toSequence map,
   };
 
   let keys (map: t 'v): (ImmSet.t k) =>

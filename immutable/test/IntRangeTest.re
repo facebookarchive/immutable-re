@@ -66,7 +66,7 @@ let test = describe "IntRange" [
   it "equals" (fun () => {
     IntRange.equals
         (IntRange.create start::(-10) count::0)
-        IntRange.empty
+        (IntRange.empty ())
       |> Expect.toBeEqualToTrue;
 
     IntRange.equals
@@ -88,7 +88,7 @@ let test = describe "IntRange" [
     IntRange.create start::1 count::20
       |> IntRange.first
       |> Expect.toBeEqualToSomeOfInt 1;
-    IntRange.empty
+    (IntRange.empty ())
     |> IntRange.first
     |> Expect.toBeEqualToNoneOfInt;
   }),
@@ -96,22 +96,22 @@ let test = describe "IntRange" [
     IntRange.create start::1 count::20
       |> IntRange.firstOrRaise
       |> Expect.toBeEqualToInt 1;
-    (fun () => IntRange.empty |> IntRange.firstOrRaise) |> Expect.shouldRaise;
+    (fun () => (IntRange.empty ()) |> IntRange.firstOrRaise) |> Expect.shouldRaise;
   }),
   it "hash"  (fun () => ()),
   it "isEmpty"  (fun () => {
-    IntRange.empty |> IntRange.isEmpty |> Expect.toBeEqualToTrue;
+    (IntRange.empty ()) |> IntRange.isEmpty |> Expect.toBeEqualToTrue;
     IntRange.create start::1 count::20 |> IntRange.isEmpty |> Expect.toBeEqualToFalse;
   }),
   it "isNotEmpty"  (fun () => {
-    IntRange.empty |> IntRange.isNotEmpty |> Expect.toBeEqualToFalse;
+    (IntRange.empty ()) |> IntRange.isNotEmpty |> Expect.toBeEqualToFalse;
     IntRange.create start::1 count::20 |> IntRange.isNotEmpty |> Expect.toBeEqualToTrue;
   }),
   it "last"  (fun () => {
     IntRange.create start::1 count::20
       |> IntRange.last
       |> Expect.toBeEqualToSomeOfInt 20;
-    IntRange.empty
+    (IntRange.empty ())
     |> IntRange.last
     |> Expect.toBeEqualToNoneOfInt;
   }),
@@ -119,7 +119,7 @@ let test = describe "IntRange" [
     IntRange.create start::1 count::20
       |> IntRange.lastOrRaise
       |> Expect.toBeEqualToInt 20;
-    (fun () => IntRange.empty |> IntRange.lastOrRaise) |> Expect.shouldRaise;
+    (fun () => (IntRange.empty ()) |> IntRange.lastOrRaise) |> Expect.shouldRaise;
   }),
   it "reduce"  (fun () => {
     IntRange.create start::1 count::20

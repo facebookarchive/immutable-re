@@ -222,7 +222,7 @@ let reduceRightWhile
 };
 
 let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
-  | Empty => Sequence.empty
+  | Empty => Sequence.empty ()
   | Leaf k v => Sequence.return (k, v)
   | Node _ left k v right => Sequence.concat [
       Sequence.defer(fun () => toSequence left),
@@ -232,7 +232,7 @@ let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
 };
 
 let rec toSequenceRight (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
-  | Empty => Sequence.empty
+  | Empty => Sequence.empty ()
   | Leaf k v => Sequence.return (k, v)
   | Node _ left k v right => Sequence.concat [
       Sequence.defer(fun () => toSequenceRight right),
@@ -242,7 +242,7 @@ let rec toSequenceRight (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
 };
 
 let rec values (tree: t 'k 'v): (Iterator.t 'v) => switch tree {
-  | Empty => Iterator.empty
+  | Empty => Iterator.empty ()
   | Leaf _ v => Iterator.return v
   | Node _ left _ v right => Iterator.concat [
       values left,

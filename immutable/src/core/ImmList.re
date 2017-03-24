@@ -19,7 +19,7 @@ let rec countImpl (list: t 'a) (count: int): int => switch list {
 
 let count (list: t 'a): int => countImpl list 0;
 
-let empty: (t 'a) = [];
+let empty (): (t 'a) => [];
 
 let isEmpty (list: t 'a): bool => switch list {
   | [] => true

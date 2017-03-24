@@ -44,7 +44,7 @@ let test = describe "Map" [
     (fun () => map |> Map.getOrRaise (-10)) |> Expect.shouldRaise;
   }),
   it "isEmpty" (fun () => {
-    Map.empty |> Map.isEmpty |> Expect.toBeEqualToTrue;
+    (Map.empty ()) |> Map.isEmpty |> Expect.toBeEqualToTrue;
     IntRange.create start::0 count::199
       |> IntRange.toSet
       |> Set.toMap
@@ -52,7 +52,7 @@ let test = describe "Map" [
       |> Expect.toBeEqualToFalse;
   }),
   it "isNotEmpty" (fun () => {
-    Map.empty |> Map.isNotEmpty |> Expect.toBeEqualToFalse;
+    (Map.empty ()) |> Map.isNotEmpty |> Expect.toBeEqualToFalse;
     IntRange.create start::0 count::199
       |> IntRange.toSet
       |> Set.toMap

@@ -32,7 +32,7 @@ let addFirstAll (values: Iterator.t 'a) ({ count, list }: t 'a): (t 'a) => {
 
 let count ({ count }: t 'a): int => count;
 
-let empty: t 'a = {
+let empty (): t 'a => {
   count: 0,
   list: [],
 };
@@ -45,7 +45,7 @@ let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
 
 let fromReverse (iter: Iterator.t 'a): (t 'a) =>
-  empty |> addFirstAll iter;
+  empty () |> addFirstAll iter;
 
 let isEmpty ({ list }: t 'a): bool =>
   list |> ImmList.isEmpty;
@@ -65,7 +65,7 @@ let reduce
     ({ list }: t 'a): 'acc =>
   list |> ImmList.reduce while_::predicate f acc;
 
-let removeAll (_: t 'a): (t 'a) => empty;
+let removeAll (_: t 'a): (t 'a) => empty ();
 
 let removeFirstOrRaise ({ count, list }: t 'a): (t 'a) => ({
   count: count - 1,

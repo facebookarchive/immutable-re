@@ -165,7 +165,7 @@ let module BitmapTrieIntMap = {
   let rec toSequence (map: t 'v): (Sequence.t (int, 'v)) => switch map {
     | Entry key value => Sequence.return (key, value)
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
-    | Empty => Sequence.empty;
+    | Empty => Sequence.empty ();
   };
 
   let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
@@ -182,7 +182,7 @@ let module BitmapTrieIntMap = {
   let rec values (map: t 'v): (Iterator.t 'v) => switch map {
     | Entry _ value => Iterator.return value
     | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
-    | Empty => Iterator.empty;
+    | Empty => Iterator.empty ();
   };
 };
 
@@ -193,7 +193,7 @@ type t 'v = {
   root: (BitmapTrieIntMap.t 'v),
 };
 
-let empty: t 'v = { count: 0, root: BitmapTrieIntMap.Empty };
+let empty (): t 'v => { count: 0, root: BitmapTrieIntMap.Empty };
 
 let alter (key: int) (f: option 'v => option 'v) ({ count, root } as map: t 'v): (t 'v) => {
   let alterResult = ref BitmapTrieIntMap.NoChange;
@@ -242,10 +242,10 @@ let reduce
 let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;
 
-let removeAll (_: t 'v): (t 'v) => empty;
+let removeAll (_: t 'v): (t 'v) => empty ();
 
 let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
-  if (isEmpty map) Iterator.empty
+  if (isEmpty map) (Iterator.empty ())
   else {
     reduce: fun predicate f acc => map |> reduce
       while_::(fun acc k v => predicate acc (k, v))
@@ -254,7 +254,7 @@ let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
   };
 
 let toKeyedIterator (map: t 'v): (KeyedIterator.t int 'v) =>
-  if (isEmpty map) KeyedIterator.empty
+  if (isEmpty map) (KeyedIterator.empty ())
   else {
     reduce: fun predicate f acc => reduce while_::predicate f acc map
   };
@@ -270,8 +270,8 @@ let toMap (map: t 'v): (ImmMap.t int 'v) => {
   count: (count map),
   get: fun i => get i map,
   getOrRaise: fun i => getOrRaise i map,
-  keyedIterator: toKeyedIterator map,
-  sequence: toSequence map,
+  keyedIterator: fun () => toKeyedIterator map,
+  sequence: fun () =>toSequence map,
 };
 
 let keys (map: t 'v): (ImmSet.t int) =>
@@ -320,7 +320,7 @@ let module TransientIntMap = {
 
   let persistentEmpty = empty;
   let empty (): t 'v =>
-    empty |> mutate;
+    empty () |> mutate;
 
   let get (key: int) (transient: t 'v): (option 'v) =>
     transient |> Transient.get |> get key;
@@ -350,7 +350,7 @@ let module TransientIntMap = {
 
   let removeAllImpl
       (_: Transient.Owner.t)
-      (_: intMap 'v): (intMap 'v) => persistentEmpty;
+      (_: intMap 'v): (intMap 'v) => persistentEmpty ();
 
   let removeAll (transient: t 'v): (t 'v) =>
       transient |> Transient.update removeAllImpl;
@@ -366,10 +366,10 @@ let putAll (iter: KeyedIterator.t int 'v) (map: t 'v): (t 'v) => map
 let map (f: int => 'v => 'b) (map: t 'v): (t 'b) => map
   |> reduce
     (fun acc key value => acc |> TransientIntMap.put key (f key value))
-    (mutate empty)
+    (mutate (empty ()))
   |> TransientIntMap.persist;
 
-let from (iter: KeyedIterator.t int 'v): (t 'v) => putAll iter empty;
+let from (iter: KeyedIterator.t int 'v): (t 'v) => putAll iter (empty ());
 
 let merge
     (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))
