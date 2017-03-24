@@ -642,8 +642,8 @@ let module Vector = {
 
     let init: int => (int => 'a) => (t 'a);
     let insertAt: int => 'a => (t 'a) => (t 'a);
-    let range: int => (option int) => (t 'a) => (t 'a);
     let removeAt: int => (t 'a) => (t 'a);
+    let slice: start::int? => end_::int? => (t 'a) => (t 'a);
     let update: int => 'a => (t 'a) => (t 'a);
     let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
     let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);

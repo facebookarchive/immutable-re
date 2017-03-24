@@ -115,16 +115,6 @@ let concat (arrays: list (array 'a)): (array 'a) => {
 
 let ofUnsafe (arr: array 'a): (t 'a) => arr;
 
-let range
-    (startIndex: int)
-    (newCount: option int)
-    (arr: t 'a): (t 'a) => {
-  let newCount = newCount |? (count arr) - startIndex;
-
-  if (startIndex == 0 && newCount == (count arr)) arr
-  else Array.sub arr startIndex newCount;
-};
-
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
@@ -277,12 +267,46 @@ let removeFirstOrRaise (arr: t 'a): (t 'a) =>
 let return (value: 'a): (t 'a) => [| value |];
 
 let skip (startIndex: int) (arr: t 'a): (t 'a) => {
-  let newCount = (count arr) - startIndex;
-  Array.sub arr startIndex newCount;
+  let arrCount = count arr;
+
+  if (startIndex < 0) (failwith "startIndex is < 0")
+  else if (startIndex >= arrCount) [||]
+  else if (startIndex === 0) arr
+  else {
+    let newCount = arrCount - startIndex;
+    Array.sub arr startIndex newCount;
+  };
 };
 
-let take (newCount: int) (arr: t 'a): (t 'a) =>
-  Array.sub arr 0 newCount;
+let take (newCount: int) (arr: t 'a): (t 'a) => {
+  let arrCount = count arr;
+
+  if (newCount < 0) (failwith "count is < 0")
+  else if (newCount >= arrCount) arr
+  else if (newCount === 0) [||]
+  else Array.sub arr 0 newCount;
+};
+
+let slice start::(start: int)=0 end_::(end_: option int)=? (arr: t 'a): (t 'a) => {
+  let arrayLength = count arr;
+
+  let end_ = switch end_ {
+    | Some end_ => end_
+    | None => arrayLength
+  };
+
+  let skipCount =
+    if (start >= 0) start
+    else (arrayLength + start);
+
+  let takeCount =
+    if (end_ >= 0) end_
+    else (arrayLength + end_ - skipCount);
+
+  if (skipCount === 0 && takeCount === arrayLength) arr
+  /** FIXME: Intentionally bad for now */
+  else arr |> skip skipCount |> take takeCount;
+};
 
 let toIterator (arr: t 'a): (Iterator.t 'a) =>
   if (isEmpty arr) Iterator.empty

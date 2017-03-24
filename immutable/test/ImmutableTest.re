@@ -9,6 +9,35 @@
 
 open ReUnit.Test;
 
+open Immutable;
+
+/*
+let count = 50000;
+let vector = IntRange.create start::0 count::count
+  |> IntRange.toIterator
+  |> Vector.from;
+
+let countDiv4 = count / 4;
+
+vector
+  |> Vector.slice start::countDiv4
+  |> Vector.toSequence
+  |> Sequence.zipLongest2With
+      (fun a b => a == b)
+      (IntRange.create start::countDiv4 count::(count - countDiv4) |> IntRange.toSequence)
+  |> Sequence.Reducer.every (fun i => i)
+  |> ignore;
+
+vector
+  |> Vector.slice start::(-countDiv4)
+  |> Vector.toSequence
+  |> Sequence.zipLongest2With
+      (fun a b => a == b)
+      (IntRange.create start::(count - countDiv4) count::countDiv4 |> IntRange.toSequence)
+  |> Sequence.Reducer.every (fun i => i)
+  |> ignore;
+*/
+
 ReUnit.run (describe "Immutable.re" [
   CopyOnWriteArrayTest.test,
   DequeTest.test,

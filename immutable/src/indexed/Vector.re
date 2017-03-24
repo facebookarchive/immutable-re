@@ -1005,6 +1005,7 @@ let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   let middleCount = IndexedTrie.count middle;
 
   if (skipCount >= vectorCount) empty
+  else if (skipCount <= 0) vec
   else if (skipCount < leftCount) {
     left: left |> CopyOnWriteArray.skip skipCount,
     middle,
@@ -1063,9 +1064,25 @@ let take (takeCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   }
 };
 
-/* FIXME: Likely could be made more efficient with a custom implementation */
-let range (startIndex: int) (takeCount: option int) (vec: t 'a): (t 'a) =>
-   vec |> skip startIndex |> take (takeCount |? (count vec));
+let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) => {
+  let vecCount = count vec;
+
+  let end_ = switch end_ {
+    | Some end_ => end_
+    | None => vecCount
+  };
+
+  let skipCount =
+    if (start >= 0) start
+    else (vecCount + start);
+
+  let takeCount =
+    if (end_ >= 0) end_
+    else (vecCount + end_ - skipCount);
+
+  if (skipCount === 0 && takeCount === vecCount) vec
+  else vec |> skip skipCount |> take takeCount;
+};
 
 let toIterator (vec: t 'a): (Iterator.t 'a) =>
   if (isEmpty vec) Iterator.empty
