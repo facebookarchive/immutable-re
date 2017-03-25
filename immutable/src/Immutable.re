@@ -84,26 +84,12 @@ module type ReverseMappable_1 = {
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
 };
 
-module type Skippable_1 = {
-  type t 'a;
-
-  let skip: int => (t 'a) => (t 'a);
-};
-
-module type Takeable_1 = {
-  type t 'a;
-
-  let take: int => (t 'a) => (t 'a);
-};
-
 module type Streamable_1 = {
   type t 'a;
 
   include Concatable_1 with type t 'a := t 'a;
   include FlatMappable_1 with type t 'a := t 'a;
   include Mappable_1 with type t 'a := t 'a;
-  include Skippable_1 with type t 'a := t 'a;
-  include Takeable_1 with type t 'a := t 'a;
 
   let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
   let defer: (unit => t 'a) => (t 'a);
@@ -115,8 +101,10 @@ module type Streamable_1 = {
   let repeat: 'a => (t 'a);
   let return: 'a => (t 'a);
   let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
+  let skip: int => (t 'a) => (t 'a);
   let skipWhile: ('a => bool) => (t 'a) => (t 'a);
   let startWith: 'a => (t 'a) => (t 'a);
+  let take: int => (t 'a) => (t 'a);
   let takeWhile: ('a => bool) => (t 'a) => (t 'a);
 };
 

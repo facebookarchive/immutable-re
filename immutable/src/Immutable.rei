@@ -150,28 +150,12 @@ module type ReverseMappable_1 = {
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
 };
 
-module type Skippable_1 = {
-  type t 'a;
-
-  let skip: int => (t 'a) => (t 'a);
-  /** [skip count seq] returns a Sequence that skips the first [count] elements in [seq]. */
-};
-
-module type Takeable_1 = {
-  type t 'a;
-
-  let take: int => (t 'a) => (t 'a);
-  /** [take count seq] returns a Sequence that includes the first [count] elements in [seq]. */
-};
-
 module type Streamable_1 = {
   type t 'a;
 
   include Concatable_1 with type t 'a := t 'a;
   include FlatMappable_1 with type t 'a := t 'a;
   include Mappable_1 with type t 'a := t 'a;
-  include Skippable_1 with type t 'a := t 'a;
-  include Takeable_1 with type t 'a := t 'a;
 
   let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
   /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
@@ -202,10 +186,11 @@ module type Streamable_1 = {
    *  application of the accumulator function [f] to each element in [seq] with the
    *  specified seed value [acc].
    */
+  let skip: int => (t 'a) => (t 'a);
   let skipWhile: ('a => bool) => (t 'a) => (t 'a);
   let startWith: 'a => (t 'a) => (t 'a);
   /** [startWith value seq] returns a seq whose first elements is [value]. */
-
+  let take: int => (t 'a) => (t 'a);
   let takeWhile: ('a => bool) => (t 'a) => (t 'a);
   /** [takeWhile f seq] returns a Streamble that applies the predicate [f] to each element in [seq],
    *  taking elements until [f] first returns false.
@@ -1586,13 +1571,13 @@ let module rec Vector: {
   include Deque_1 with type t 'a := t 'a;
   include IndexedCollection_1 with type t 'a := t 'a;
   include IndexedMappable_1 with type t 'a := t 'a;
-  include Skippable_1 with type t 'a := t 'a;
-  include Takeable_1 with type t 'a := t 'a;
 
   let init: int => (int => 'a) => (t 'a);
   let insertAt: int => 'a => (t 'a) => (t 'a);
   let removeAt: int => (t 'a) => (t 'a);
+  let skip: int => (t 'a) => (t 'a);
   let slice: start::int? => end_::int? => (t 'a) => (t 'a);
+  let take: int => (t 'a) => (t 'a);
   let update: int => 'a => (t 'a) => (t 'a);
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
   let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
