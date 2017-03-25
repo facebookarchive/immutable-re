@@ -81,7 +81,7 @@ let test (n: int) (count: int): Test.t => {
     describe "Stack" (
       generateTests
         (fun () => stack)
-        (fun () => Stack.empty)
+        Stack.empty
         Stack.addFirst
         (fun _ _ v => v)
         Stack.removeFirstOrRaise
@@ -91,7 +91,7 @@ let test (n: int) (count: int): Test.t => {
     describe "Vector" (
       generateTests
         (fun () => vector)
-        (fun () => Vector.empty)
+        Vector.empty
         Vector.addLast
         Vector.update
         Vector.removeLastOrRaise
@@ -101,7 +101,7 @@ let test (n: int) (count: int): Test.t => {
     describe "TransientVector" (
       generateTests
         (fun () => vector |> Vector.mutate)
-        (fun () => Vector.empty |> Vector.mutate)
+        (fun () => Vector.empty () |> Vector.mutate)
         TransientVector.addLast
         TransientVector.update
         TransientVector.removeLastOrRaise
