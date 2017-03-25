@@ -84,24 +84,17 @@ let test (n: int) (count: int): Test.t => {
   let (<|) (f: 'a => 'b) (a: 'a): ('b) => f a;
 
   let hashMap = keys
-    |> IntSet.from
-    |> IntSet.toMap
-    |> Map.toKeyedIterator
-    |> HashMap.putAll
+    |> Iterator.map (fun i => (i, i))
+    |> HashMap.putAllEntries
     <| hashMapEmpty;
 
   let intMap = keys
-    |> IntSet.from
-    |> IntSet.toMap
-    |> Map.toKeyedIterator
-    |> KeyedIterator.mapKeys (fun k _ => hash k)
-    |> IntMap.from;
+    |> Iterator.map (fun i => (i, i))
+    |> IntMap.fromEntries;
 
   let sortedMap = keys
-    |> IntSet.from
-    |> IntSet.toMap
-    |> Map.toKeyedIterator
-    |> SortedIntMap.from;
+    |> Iterator.map (fun i => (i, i))
+    |> SortedIntMap.fromEntries;
 
   let testGroup = [
     describe "CamlIntMap" (
