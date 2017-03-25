@@ -11,7 +11,7 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
-let module Tester = DequeTester.Make (Deque: Deque.S1) ({
+let module Tester = DequeTester.Make (Deque: Deque_1) ({
   let count = 5000;
 });
 

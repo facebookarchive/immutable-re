@@ -124,9 +124,6 @@ let toSet (set: t): (ImmSet.t int) => {
   sequence: fun () => toSequence set,
 };
 
-let toMap (set: t): (ImmMap.t int int) =>
-  set |> toSet |> ImmMap.ofSet;
-
 let module Reducer = Reducer.Make {
   type a = int;
   type nonrec t = t;

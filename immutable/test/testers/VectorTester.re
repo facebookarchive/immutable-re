@@ -12,8 +12,8 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let module Make = fun (Vector: Vector.S1) (Config: TesterConfig.S) => {
-  let module DequeTester = DequeTester.Make (Deque: Deque.S1) Config;
+let module Make = fun (Vector: Vector_1) (Config: TesterConfig.S) => {
+  let module DequeTester = DequeTester.Make (Deque: Deque_1) Config;
 
   let tests = [
     describe (sprintf "count: %i" Config.count) [

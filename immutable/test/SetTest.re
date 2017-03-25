@@ -75,10 +75,6 @@ let test = describe "Set" [
       |> Sequence.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
-  it "toSet" (fun () => {
-    let set = IntRange.create start::0 count::200 |> IntRange.toSet;
-    Pervasives.(===) set (Set.toSet set) |> Expect.toBeEqualToTrue;
-  }),
   it "intersect" (fun () => {
     let set1 = IntRange.create start::0 count::200 |> IntRange.toSet;
     let set2 = IntRange.create start::50 count::300 |> IntRange.toSet;
@@ -98,30 +94,6 @@ let test = describe "Set" [
       |> IntSet.toSet
       |> Set.equals (IntRange.create start::0 count::50 |> IntRange.toSet)
       |> Expect.toBeEqualToTrue;
-  }),
-  it "toMap" (fun () => {
-    let map = IntRange.create start::0 count::200 |> IntRange.toSet |> Set.toMap;
-    map |> Map.containsKey 10 |> Expect.toBeEqualToTrue;
-    map |> Map.containsKey (-10) |> Expect.toBeEqualToFalse;
-    map |> Map.containsKey 300 |> Expect.toBeEqualToFalse;
-
-    map |> Map.get 10 |> Expect.toBeEqualToSomeOfInt 10;
-    map |> Map.get (-10) |> Expect.toBeEqualToNoneOfInt;
-
-    map |> Map.getOrRaise 10 |> Expect.toBeEqualToInt 10;
-    (fun () => map |> Map.getOrRaise (-10)) |> Expect.shouldRaise;
-
-    IntRange.create start::0 count::200
-      |> IntRange.toSet
-      |> Set.toMap
-      |> Map.reduce while_::(fun acc k v => k < 5) (fun acc k v => v + acc) 0
-      |> Expect.toBeEqualToInt 10;
-
-    IntRange.create start::0 count::200
-      |> IntRange.toSet
-      |> Set.toMap
-      |> Map.reduce while_::(fun acc k v => v < 5) (fun acc k v => k + acc) 0
-      |> Expect.toBeEqualToInt 10;
   }),
   it "union" (fun () => {
     let set1 = IntRange.create start::0 count::200 |> IntRange.toSet;

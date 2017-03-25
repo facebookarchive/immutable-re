@@ -12,19 +12,19 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int) => {
+let test (module PersistentMap: PersistentMap_1 with type k = int) (count: int) => {
   let countDiv2 = count / 2;
   let countDiv4 = count / 4;
 
   let hash = Hashtbl.hash;
 
   let keyValuePairs = IntRange.create start::0 count::count
-    |> IntRange.toSet
-    |> Set.toMap
-    |> Map.toKeyedIterator;
-  let map = PersistentMap.from keyValuePairs;
-  let keyValuePairsHashed = keyValuePairs |> KeyedIterator.mapKeys (fun k _ => hash k);
-  let mapHashed = PersistentMap.from keyValuePairsHashed;
+    |> IntRange.toIterator
+    |> Iterator.map (fun i => (i, i));
+  let map = PersistentMap.fromEntries keyValuePairs;
+
+  let keyValuePairsHashed = keyValuePairs |> Iterator.map (fun (k, v) => (hash k, v));
+  let mapHashed = PersistentMap.fromEntries keyValuePairsHashed;
 
   describe (sprintf "count: %i" count) [
     it "alter" (fun () => {
@@ -40,7 +40,7 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
           });
     }),
     it "containsKey" (fun () => {
-      keyValuePairsHashed |> KeyedIterator.KeyedReducer.forEach (fun k _ => {
+      keyValuePairsHashed |> Iterator.Reducer.forEach (fun (k, _) => {
         mapHashed |> PersistentMap.containsKey k |> Expect.toBeEqualToTrue
       });
 
@@ -58,7 +58,7 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
     }),
     it "from" (fun () => ()),
     it "get" (fun () => {
-      keyValuePairsHashed |> KeyedIterator.KeyedReducer.forEach (fun k v => {
+      keyValuePairsHashed |> Iterator.Reducer.forEach (fun (k, v) => {
         mapHashed |> PersistentMap.get k |> Expect.toBeEqualToSomeOfInt v;
       });
 
@@ -66,7 +66,7 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
       map |> PersistentMap.get count |> Expect.toBeEqualToNoneOfInt;
     }),
     it "getOrRaise" (fun () => {
-      keyValuePairsHashed |> KeyedIterator.KeyedReducer.forEach (fun k v => {
+      keyValuePairsHashed |> Iterator.Reducer.forEach (fun (k, v) => {
         mapHashed |> PersistentMap.getOrRaise k |> Expect.toBeEqualToInt v;
       });
 
@@ -84,7 +84,7 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
     it "keys" (fun () => {
       let keySet = mapHashed |> PersistentMap.keys;
 
-      keyValuePairsHashed |> KeyedIterator.keys |> Iterator.Reducer.forEach (fun i => {
+      keyValuePairsHashed |> Iterator.Reducer.forEach (fun (i, _) => {
         keySet |> Set.contains i |> Expect.toBeEqualToTrue;
       });
 
@@ -99,16 +99,14 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
     }),
     it "merge" (fun () => {
       let acc = IntRange.create start::0 count::countDiv2
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> PersistentMap.from;
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> PersistentMap.fromEntries;
 
       let next = IntRange.create start::countDiv2 count::countDiv2
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> PersistentMap.from;
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> PersistentMap.fromEntries;
 
       let merged = PersistentMap.merge
         (fun _ vAcc vNext => switch (vAcc, vNext) {
@@ -129,7 +127,7 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
     }),
     it "put" (fun () => {
       let map = keyValuePairsHashed
-        |> KeyedIterator.reduce (fun acc k v => {
+        |> Iterator.reduce (fun acc (k, v) => {
             acc |> PersistentMap.containsKey k |> Expect.toBeEqualToFalse;
             let acc = acc |> PersistentMap.put k v;
             acc |> PersistentMap.getOrRaise k |> Expect.toBeEqualToInt v;
@@ -143,11 +141,11 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
     }),
     it "putAll" (fun () => {
       let map = PersistentMap.empty ();
-      keyValuePairsHashed |> KeyedIterator.keys |> Iterator.Reducer.forEach (fun k => {
+      keyValuePairsHashed |> Iterator.Reducer.forEach (fun (k, _) => {
         map |> PersistentMap.containsKey k |> Expect.toBeEqualToFalse;
       });
 
-      let map = PersistentMap.empty () |> PersistentMap.putAll keyValuePairsHashed;
+      let map = PersistentMap.empty () |> PersistentMap.putAllEntries keyValuePairsHashed;
       map |> PersistentMap.keys |> Set.Reducer.forEach (fun k => {
         map |> PersistentMap.containsKey k |> Expect.toBeEqualToTrue;
       });

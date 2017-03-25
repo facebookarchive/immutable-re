@@ -26,12 +26,11 @@ let navigationTests (count: int) => {
   describe (sprintf "count: %i" count) [
     it "first" (fun () => {
       SortedIntMap.empty () |> SortedIntMap.first |> Option.map fst |> Expect.toBeEqualToNoneOfInt;
-      
+
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries
         |> SortedIntMap.first
         |> Option.map fst
         |> Expect.toBeEqualToSomeOfInt (-countDiv2);
@@ -39,10 +38,9 @@ let navigationTests (count: int) => {
     it "firstOrRaise" (fun () => {
       (fun () => SortedIntMap.empty () |> SortedIntMap.firstOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries
         |> SortedIntMap.firstOrRaise
         |> fst
         |> Expect.toBeEqualToInt (-countDiv2);
@@ -51,10 +49,9 @@ let navigationTests (count: int) => {
       SortedIntMap.empty () |> SortedIntMap.last |> Option.map fst |> Expect.toBeEqualToNoneOfInt;
 
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries
         |> SortedIntMap.last
         |> Option.map fst
         |> Expect.toBeEqualToSomeOfInt (countDiv2 - 1);
@@ -62,10 +59,9 @@ let navigationTests (count: int) => {
     it "lastOrRaise" (fun () => {
       (fun () => SortedIntMap.empty () |> SortedIntMap.lastOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries
         |> SortedIntMap.lastOrRaise
         |> fst
         |> Expect.toBeEqualToInt (countDiv2 - 1);
@@ -79,10 +75,9 @@ let navigationTests (count: int) => {
     }),*/
     it "removeFirstOrRaise" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from;
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries;
 
       IntRange.create start::0 count::count
         |> IntRange.reduce (fun acc i => {
@@ -95,10 +90,9 @@ let navigationTests (count: int) => {
     }),
     it "removeLastOrRaise" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from;
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries;
 
       IntRange.create start::0 count::count
         |> IntRange.reduceRight (fun acc i => {
@@ -111,20 +105,18 @@ let navigationTests (count: int) => {
     }),
     it "toIteratorRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries
         |> SortedIntMap.toIteratorRight
         |> Iterator.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toSequenceRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toSet
-        |> Set.toMap
-        |> Map.toKeyedIterator
-        |> SortedIntMap.from
+        |> IntRange.toIterator
+        |> Iterator.map (fun i => (i, i))
+        |> SortedIntMap.fromEntries
         |> SortedIntMap.toSequenceRight
         |> Sequence.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
@@ -133,6 +125,6 @@ let navigationTests (count: int) => {
 };
 
 let test = describe "SortedMap" [
-  PersistentMapTester.test (module SortedIntMap: PersistentMap.S1  with type k = SortedIntMap.k) 100,
-  PersistentMapTester.test (module SortedIntMap: PersistentMap.S1 with type k = SortedIntMap.k) 10000,
+  PersistentMapTester.test (module SortedIntMap: PersistentMap_1  with type k = SortedIntMap.k) 100,
+  PersistentMapTester.test (module SortedIntMap: PersistentMap_1 with type k = SortedIntMap.k) 10000,
 ];

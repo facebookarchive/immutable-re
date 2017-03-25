@@ -52,25 +52,6 @@ let keys (map: t 'k 'v): (ImmSet.t 'k) => {
   sequence: map.sequence >> Sequence.map (fun (k, _) => k),
 };
 
-let ofSet (set: ImmSet.t 'a): (t 'a 'a) => {
-  containsKey: fun k => set |> ImmSet.contains k,
-  count: ImmSet.count set,
-  get: fun k =>
-    if (set |> ImmSet.contains k) (Some k)
-    else None,
-  getOrRaise: fun k =>
-    if (set |> ImmSet.contains k) k
-    else failwith "not found",
-  keyedIterator: fun () => {
-    reduce: fun predicate f acc =>
-      set |> ImmSet.reduce
-        while_::(fun acc next => predicate acc next next)
-        (fun acc next => f acc next next)
-        acc
-  },
-  sequence: fun () => ImmSet.toSequence set |> Sequence.map (fun k => (k, k)),
-};
-
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)
@@ -95,8 +76,6 @@ let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
   keyedIterator: map.keyedIterator >> KeyedIterator.mapValues m,
   sequence: map.sequence >> Sequence.map (fun (k, v) => (k, m k v)),
 };
-
-let toMap (map: t 'k 'v): (t 'k 'v) => map;
 
 let toSequence ({ sequence }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   sequence ();

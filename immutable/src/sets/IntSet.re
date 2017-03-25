@@ -80,9 +80,6 @@ let equals (this: t) (that: t): bool =>
 let hash (set: t): int => set
   |> reduce (fun acc next => acc + next) 0;
 
-let toMap (set: t): (ImmMap.t int int) =>
-  set |> toSet |> ImmMap.ofSet;
-
 let module TransientIntSet = {
   type a = int;
 

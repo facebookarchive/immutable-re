@@ -131,6 +131,17 @@ let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) =>
     }
   };
 
+let fromEntries (iter: Iterator.t ('k, 'v)): (t 'k 'v) =>
+  if (iter.reduce === Iterator.emptyReducer) (empty ())
+  else {
+    reduce: fun predicate f acc => {
+      let predicate acc (k, v) => predicate acc k v;
+      let f acc (k, v) => f acc k v;
+
+      iter |> Iterator.reduce while_::predicate f acc;
+    }
+  };
+
 let keys (iter: t 'k 'v): (Iterator.t 'k) =>
   if (iter.reduce === emptyReducer) (Iterator.empty ())
   else {

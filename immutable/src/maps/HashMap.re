@@ -222,11 +222,23 @@ let map (f: 'k => 'a => 'b) ({ comparator, hash } as map: t 'k 'a): (t 'k 'b) =>
 let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
 
+let putAllEntries (iter: Iterator.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) => iter
+  |> Iterator.reduce
+    (fun acc (k, v) => acc |> TransientHashMap.put k v)
+    (map |> mutate)
+  |> TransientHashMap.persist;
+
 let fromWith
     hash::(hash: Hash.t 'k)
     comparator::(comparator: Comparator.t 'k)
     (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator |> putAll iter;
+
+let fromEntriesWith
+    hash::(hash: Hash.t 'k)
+    comparator::(comparator: Comparator.t 'k)
+    (iter: Iterator.t ('k, 'v)): (t 'k 'v) =>
+  emptyWith hash::hash comparator::comparator |> putAllEntries iter;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))

@@ -184,13 +184,24 @@ let putAll (iter: KeyedIterator.t int 'v) (map: t 'v): (t 'v) => map
   |> TransientIntMap.putAll iter
   |> TransientIntMap.persist;
 
+let putAllEntries (iter: Iterator.t ('k, 'v)) (map: t 'v): (t 'v) => iter
+  |> Iterator.reduce
+    (fun acc (k, v) => acc |> TransientIntMap.put k v)
+    (map |> mutate)
+  |> TransientIntMap.persist;
+
+
 let map (f: int => 'v => 'b) (map: t 'v): (t 'b) => map
   |> reduce
     (fun acc key value => acc |> TransientIntMap.put key (f key value))
     (mutate (empty ()))
   |> TransientIntMap.persist;
 
-let from (iter: KeyedIterator.t int 'v): (t 'v) => putAll iter (empty ());
+let from (iter: KeyedIterator.t int 'v): (t 'v) =>
+  empty () |> putAll iter;
+
+let fromEntries (iter: Iterator.t (k, 'v)): (t 'v) =>
+  empty () |> putAllEntries iter;
 
 let merge
     (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))

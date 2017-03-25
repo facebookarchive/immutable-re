@@ -11,7 +11,7 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
-let module HashIntMap: PersistentMap.S1 with type k = int = {
+let module HashIntMap: PersistentMap_1 with type k = int = {
   type k = int;
   type t 'v = HashMap.t k 'v;
 
@@ -21,11 +21,14 @@ let module HashIntMap: PersistentMap.S1 with type k = int = {
   let empty () => HashMap.emptyWith
     hash::(fun i => i)
     comparator::Comparator.int;
-
   let from iter => HashMap.fromWith
     hash::(fun i => i)
     comparator::Comparator.int
     iter;
+  let fromEntries entries => HashMap.fromEntriesWith
+    hash::(fun i => i)
+    comparator::Comparator.int
+    entries;
   let isEmpty = HashMap.isEmpty;
   let isNotEmpty = HashMap.isNotEmpty;
   let get = HashMap.get;
@@ -35,6 +38,7 @@ let module HashIntMap: PersistentMap.S1 with type k = int = {
   let merge = HashMap.merge;
   let put = HashMap.put;
   let putAll = HashMap.putAll;
+  let putAllEntries = HashMap.putAllEntries;
   let reduce = HashMap.reduce;
   let remove = HashMap.remove;
   let removeAll = HashMap.removeAll;
@@ -46,6 +50,6 @@ let module HashIntMap: PersistentMap.S1 with type k = int = {
 };
 
 let test = describe "HashMap" [
-  PersistentMapTester.test (module HashIntMap: PersistentMap.S1 with type k = HashIntMap.k) 100,
-  PersistentMapTester.test (module HashIntMap: PersistentMap.S1 with type k = HashIntMap.k) 10000,
+  PersistentMapTester.test (module HashIntMap: PersistentMap_1 with type k = HashIntMap.k) 100,
+  PersistentMapTester.test (module HashIntMap: PersistentMap_1 with type k = HashIntMap.k) 10000,
 ];

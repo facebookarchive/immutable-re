@@ -33,23 +33,23 @@ module type S = {
   let count: t 'v => int;
   let isEmpty: t 'v => bool;
   let isNotEmpty: t 'v => bool;
+  let keys: t 'v => ImmSet.t k;
   let toSequence: t 'v => Sequence.t (k, 'v);
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
-  let keys: t 'v => ImmSet.t k;
   let map: (k => 'a => 'b) => t 'a => t 'b;
   let values: t 'v => Iterator.t 'v;
   let toMap: t 'v => ImmMap.t k 'v;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let empty: unit => t 'v;
   let from: KeyedIterator.t k 'v => t 'v;
+  let fromEntries: Iterator.t (k, 'v) => t 'v;
   let merge:
     (k => option 'vAcc => option 'v => option 'vAcc) =>
-    t 'vAcc =>
-    t 'v =>
-    t 'vAcc;
+    t 'vAcc => t 'v => t 'vAcc;
   let put: k => 'v => t 'v => t 'v;
   let putAll: KeyedIterator.t k 'v => t 'v => t 'v;
+  let putAllEntries: Iterator.t (k, 'v) => t 'v => t 'v;
   let removeFirstOrRaise: t 'v => t 'v;
   let removeLastOrRaise: t 'v => t 'v;
   let module KeyedReducer: KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
@@ -127,8 +127,14 @@ let module Make = fun (Comparable: Comparable.S) => {
   let putAll (iter: KeyedIterator.t k 'v) (map: t 'v): (t 'v) =>
     iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) map;
 
+  let putAllEntries (iter: Iterator.t (k, 'v)) (map: t 'v): (t 'v) =>
+    iter |> Iterator.reduce (fun acc (k, v) => acc |> put k v) map;
+
   let from (iter: KeyedIterator.t k 'v): (t 'v) =>
     empty () |> putAll iter;
+
+  let fromEntries (iter: Iterator.t (k, 'v)): (t 'v) =>
+    empty () |> putAllEntries iter;
 
   let reduce
       while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3

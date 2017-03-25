@@ -100,9 +100,6 @@ let equals (this: t 'a) (that: t 'a): bool =>
 let hash ({ hash, comparator } as set: t 'a): int =>
   set |> reduce (fun acc next => acc + hash next) 0;
 
-let toMap (set: t 'a): (ImmMap.t 'a 'a) =>
-  set |> toSet |> ImmMap.ofSet;
-
 let module TransientHashSet = {
   type hashSet 'a = t 'a;
 

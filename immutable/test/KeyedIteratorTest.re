@@ -11,14 +11,24 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
+let (>>) (f1: 'a => 'b) (f2: 'b => 'c) (a: 'a) => f2 (f1 a);
+
 let test = describe "KeyedIterator" [
   it "concat" (fun () => {
     KeyedIterator.concat [
-        IntRange.create start::0 count::2 |> IntRange.toMap |> Map.toKeyedIterator,
-        IntRange.create start::2 count::2 |> IntRange.toMap |> Map.toKeyedIterator,
-        IntRange.create start::4 count::2 |> IntRange.toMap |> Map.toKeyedIterator,
-      ]
-      |> KeyedIterator.take 5
+      IntRange.create start::0 count::2
+        |> IntRange.toIterator
+        |> Iterator.map (fun i: (int, int) => (i, i))
+        |> KeyedIterator.fromEntries,
+      IntRange.create start::2 count::2
+        |> IntRange.toIterator
+        |> Iterator.map (fun i: (int, int) => (i, i))
+        |> KeyedIterator.fromEntries,
+      IntRange.create start::4 count::2
+        |> IntRange.toIterator
+        |> Iterator.map (fun i: (int, int) => (i, i))
+        |> KeyedIterator.fromEntries,
+    ] |> KeyedIterator.take 5
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 3, 2, 1, 0];

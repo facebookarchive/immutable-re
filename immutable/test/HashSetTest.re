@@ -11,7 +11,7 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
-let module HashIntSet: PersistentSet.S with type a = int = {
+let module HashIntSet: PersistentSet with type a = int = {
   type a = int;
   type t = HashSet.t a;
 
@@ -34,7 +34,6 @@ let module HashIntSet: PersistentSet.S with type a = int = {
   let removeAll = HashSet.removeAll;
   let subtract = HashSet.subtract;
   let toIterator = HashSet.toIterator;
-  let toMap = HashSet.toMap;
   let toSequence = HashSet.toSequence;
   let toSet = HashSet.toSet;
   let union = HashSet.union;

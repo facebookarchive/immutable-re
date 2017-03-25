@@ -22,7 +22,6 @@ module type S = {
   let toSequenceRight: t => Sequence.t a;
   let equals: Equality.t t;
   let contains: a => t => bool;
-  let toMap: t => ImmMap.t a a;
   let toSet: t => ImmSet.t a;
   let reduce:
     while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -35,14 +34,14 @@ module type S = {
   let removeAll: t => t;
   let add: a => t => t;
   let addAll: Iterator.t a => t => t;
-  let from: (Iterator.t a) => t;
+  let from: Iterator.t a => t;
   let intersect: t => t => t;
   let remove: a => t => t;
   let subtract: t => t => t;
   let union: t => t => t;
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
-  let module Reducer: Reducer.S with type a := a and type t := t;
+  let module Reducer: Reducer.S with type a:= a and type t:= t;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -182,15 +181,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     iterator: fun () => toIterator set,
     sequence: fun () => toSequence set,
   };
-
-  let toMap (set: t): (ImmMap.t a a) =>
-    set |> toSet |> ImmMap.ofSet;
-
-  let findRight (f: a => bool) (set: t): (option a) =>
-    set |> toIteratorRight |> Iterator.Reducer.find f;
-
-  let findRightOrRaise (f: a => bool) (set: t): a =>
-    set |> toIteratorRight |> Iterator.Reducer.findOrRaise f;
 
   let intersect (this: t) (that: t): t =>
     /* FIXME: Improve this implementation to be O(log N) */

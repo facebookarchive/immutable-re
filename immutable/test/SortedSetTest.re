@@ -109,7 +109,7 @@ let navigationTests (count: int) => {
 };
 
 let test = describe "SortedSet" [
-  PersistentSetTester.test (module SortedIntSet: PersistentSet.S with type a = IntSet.a) 100,
-  PersistentSetTester.test (module SortedIntSet: PersistentSet.S with type a = IntSet.a) 10000,
+  PersistentSetTester.test (module SortedIntSet: PersistentSet with type a = IntSet.a) 100,
+  PersistentSetTester.test (module SortedIntSet: PersistentSet with type a = IntSet.a) 10000,
   navigationTests 10000,
 ];

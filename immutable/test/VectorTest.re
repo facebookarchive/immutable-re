@@ -11,23 +11,23 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
-let module Tester10 = VectorTester.Make (Vector: Vector.S1) ({
+let module Tester10 = VectorTester.Make (Vector: Vector_1) ({
   let count = 10;
 });
 
-let module Tester50 = VectorTester.Make (Vector: Vector.S1) ({
+let module Tester50 = VectorTester.Make (Vector: Vector_1) ({
   let count = 50;
 });
 
-let module Tester200 = VectorTester.Make (Vector: Vector.S1) ({
+let module Tester200 = VectorTester.Make (Vector: Vector_1) ({
   let count = 200;
 });
 
-let module Tester2000 = VectorTester.Make (Vector: Vector.S1) ({
+let module Tester2000 = VectorTester.Make (Vector: Vector_1) ({
   let count = 2000;
 });
 
-let module Tester50000 = VectorTester.Make (Vector: Vector.S1) ({
+let module Tester50000 = VectorTester.Make (Vector: Vector_1) ({
   let count = 50000;
 });
 

@@ -11,7 +11,7 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
-let module Tester = VectorTester.Make (CopyOnWriteArray: Vector.S1) ({
+let module Tester = VectorTester.Make (CopyOnWriteArray: Vector_1) ({
   let count = 100;
 });
 

@@ -11,7 +11,7 @@ open Immutable;
 open ReUnit.Expect;
 open ReUnit.Test;
 
-let module Tester = StackTester.Make (Stack: Stack.S1) ({
+let module Tester = StackTester.Make (Stack: Stack_1) ({
   let count = 10;
 });
 
