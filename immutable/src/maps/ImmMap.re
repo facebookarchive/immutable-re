@@ -77,6 +77,8 @@ let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
   sequence: map.sequence >> Sequence.map (fun (k, v) => (k, m k v)),
 };
 
+let toMap (map: t 'k 'v): (t 'k 'v) => map;
+
 let toSequence ({ sequence }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   sequence ();
 

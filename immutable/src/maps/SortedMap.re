@@ -11,7 +11,7 @@
 module type S = {
   type k;
   type t +'v;
-  
+
   let reduceRight:
     while_::('acc => k => 'v => bool)? =>
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
@@ -37,13 +37,13 @@ module type S = {
   let toSequence: t 'v => Sequence.t (k, 'v);
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
-  let map: (k => 'a => 'b) => t 'a => t 'b;
   let values: t 'v => Iterator.t 'v;
   let toMap: t 'v => ImmMap.t k 'v;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let empty: unit => t 'v;
   let from: KeyedIterator.t k 'v => t 'v;
   let fromEntries: Iterator.t (k, 'v) => t 'v;
+  let map: (k => 'a => 'b) => t 'a => t 'b;
   let merge:
     (k => option 'vAcc => option 'v => option 'vAcc) =>
     t 'vAcc => t 'v => t 'vAcc;

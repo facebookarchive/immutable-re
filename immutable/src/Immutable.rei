@@ -453,35 +453,39 @@ module type NavigableCollection_1 = {
   let toSequenceRight: (t 'a) => (Sequence.t 'a);
 };
 
-module type UniqueCollection = {
-  type a;
-  type t;
-
-  include Collection with type a := a and type t := t;
-  include Equatable with type t := t;
-
-  let contains: a => t => bool;
-};
-
-module type UniqueCollection_1 = {
-  type t 'a;
-
-  include Collection_1 with type t 'a := t 'a;
-  include Equatable_1 with type t 'a := t 'a;
-
-  let contains: 'a => (t 'a) => bool;
-};
-
-let module Set: {
+let module rec Set: {
   /** A read only view of an underlying set of unique values. The intent of this type is to enable
    *  interop between alternative concrete implementations such as [SortedSet] and [g].
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
+   module type S = {
+     type a;
+     type t;
+
+     include Collection with type a := a and type t := t;
+     include Equatable with type t := t;
+
+     let contains: a => t => bool;
+
+     let toSet: t => Set.t a;
+   };
+
+   module type S1 = {
+     type t 'a;
+
+     include Collection_1 with type t 'a := t 'a;
+     include Equatable_1 with type t 'a := t 'a;
+
+     let contains: 'a => (t 'a) => bool;
+
+     let toSet: (t 'a) => Set.t 'a;
+   };
+
   type t 'a;
   /** The Set type. */
 
-  include UniqueCollection_1 with type t 'a := t 'a;
+  include S1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
   /** The empty Set. */
@@ -502,28 +506,11 @@ let module Set: {
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
-module type Set = {
-  type a;
-  type t;
-
-  include UniqueCollection with type a := a and type t := t;
-
-  let toSet: t => Set.t a;
-};
-
-module type Set_1 = {
-  type t 'a;
-
-  include UniqueCollection_1 with type t 'a := t 'a;
-
-  let toSet: t 'a => Set.t 'a;
-};
-
 module type PersistentSet = {
   type a;
   type t;
 
-  include Set with type a := a and type t := t;
+  include Set.S with type a := a and type t := t;
   include PersistentCollection with type a := a and type t := t;
 
   let add: a => t => t;
@@ -538,7 +525,7 @@ module type PersistentSet = {
 module type PersistentSet_1 = {
   type t 'a;
 
-  include Set_1 with type t 'a := t 'a;
+  include Set.S1 with type t 'a := t 'a;
   include PersistentCollection_1 with type t 'a := t 'a;
 
   let add: 'a => (t 'a) => (t 'a);
@@ -576,14 +563,14 @@ module type NavigableSet = {
   type a;
   type t;
 
-  include Set with type a := a and type t := t;
+  include Set.S with type a := a and type t := t;
   include NavigableCollection with type a := a and type t := t;
 };
 
 module type NavigableSet_1 = {
   type t 'a;
 
-  include Set_1 with type t 'a := t 'a;
+  include Set.S1 with type t 'a := t 'a;
   include NavigableCollection_1 with type t 'a := t 'a;
 };
 
@@ -858,61 +845,46 @@ module type NavigableKeyedCollection_2 = {
   let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
 };
 
-module type KeyValueCollection_1 = {
-  type k;
-  type t 'v;
-
-  include KeyedCollection_1 with type k := k and type t 'v := t 'v;
-
-  let get: k => (t 'v) => (option 'v);
-  let getOrRaise: k => (t 'v) => 'v;
-  let map: (k => 'a => 'b) => (t 'a) => (t 'b);
-  let values: (t 'v) => (Iterator.t 'v);
-};
-
-module type KeyValueCollection_2 = {
-  type t 'k 'v;
-
-  include KeyedCollection_2 with type t 'k 'v := t 'k 'v;
-
-  let get: 'k => (t 'k 'v) => (option 'v);
-  let getOrRaise: 'k => (t 'k 'v) => 'v;
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  let values: (t 'k 'v) => (Iterator.t 'v);
-};
-
-let module Map: {
+let module rec Map: {
   /** A read only view of an underlying set of key/value pairs. The intent of this type is to enable
    *  interop between alternative concrete implementations such as [SortedMap] and [HashMap].
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
+   module type S1 = {
+     type k;
+     type t 'v;
+
+     include KeyedCollection_1 with type k := k and type t 'v := t 'v;
+
+     let get: k => (t 'v) => (option 'v);
+     let getOrRaise: k => (t 'v) => 'v;
+     let values: (t 'v) => (Iterator.t 'v);
+     let toMap: (t 'v) => Map.t k 'v;
+   };
+
+   module type S2 = {
+     type t 'k 'v;
+
+     include KeyedCollection_2 with type t 'k 'v := t 'k 'v;
+
+     let get: 'k => (t 'k 'v) => (option 'v);
+     let getOrRaise: 'k => (t 'k 'v) => 'v;
+     let values: (t 'k 'v) => (Iterator.t 'v);
+     let toMap: (t 'k 'v) => Map.t 'k 'v;
+   };
+
   type t 'k 'v;
   /** The map type. */
 
-  include KeyValueCollection_2 with type t 'k 'v := t 'k 'v;
+  include S2 with type t 'k 'v := t 'k 'v;
 
   let empty: unit => (t 'k 'v);
   /** The empty Map. */
 
+  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
-};
-
-module type Map_1 = {
-  type k;
-  type t 'v;
-
-  include KeyValueCollection_1 with type k := k and type t 'v := t 'v;
-
-  let toMap: (t 'v) => Map.t k 'v;
-};
-
-module type Map_2 = {
-  type t 'k 'v;
-
-  include KeyValueCollection_2 with type t 'k 'v := t 'k 'v;
-
-  let toMap: (t 'k 'v) => Map.t 'k 'v;
 };
 
 module type PersistentMap_1 = {
@@ -920,7 +892,7 @@ module type PersistentMap_1 = {
   type t 'v;
 
   include PersistentKeyedCollection_1 with type k := k and type t 'v := t 'v;
-  include Map_1 with type k := k and type t 'v := t 'v;
+  include Map.S1 with type k := k and type t 'v := t 'v;
 
   let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
 
@@ -933,6 +905,8 @@ module type PersistentMap_1 = {
    */
 
   let fromEntries: (Iterator.t (k, 'v)) => (t 'v);
+
+  let map: (k => 'a => 'b) => (t 'a) => (t 'b);
 
   let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
 
@@ -947,9 +921,11 @@ module type PersistentMap_2 = {
   type t 'k 'v;
 
   include PersistentKeyedCollection_2 with type t 'k 'v := t 'k 'v;
-  include Map_2 with type t 'k 'v := t 'k 'v;
+  include Map.S2 with type t 'k 'v := t 'k 'v;
 
   let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+
+  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
 
   let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
 
@@ -1038,7 +1014,7 @@ module type NavigableMap_1 = {
   type t 'v;
 
   include NavigableKeyedCollection_1 with type k := k and type t 'v := t 'v;
-  include Map_1 with type k := k and type t 'v := t 'v;
+  include Map.S1 with type k := k and type t 'v := t 'v;
 };
 
 module type PersistentNavigableMap_1 = {

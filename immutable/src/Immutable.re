@@ -258,49 +258,37 @@ module type NavigableCollection_1 = {
   let toSequenceRight: (t 'a) => (Sequence.t 'a);
 };
 
-module type UniqueCollection = {
-  type a;
-  type t;
+let module Set = {
+  include ImmSet;
 
-  include Collection with type a := a and type t := t;
-  include Equatable with type t := t;
+  module type S = {
+    type a;
+    type t;
 
-  let contains: a => t => bool;
-};
+    include Collection with type a := a and type t := t;
+    include Equatable with type t := t;
 
-module type UniqueCollection_1 = {
-  type t 'a;
+    let contains: a => t => bool;
 
-  include Collection_1 with type t 'a := t 'a;
-  include Equatable_1 with type t 'a := t 'a;
+    let toSet: t => ImmSet.t a;
+  };
 
-  let contains: 'a => (t 'a) => bool;
-};
+  module type S1 = {
+    type t 'a;
 
-let module Set = ImmSet;
+    include Collection_1 with type t 'a := t 'a;
+    include Equatable_1 with type t 'a := t 'a;
 
-module type Set = {
-  type a;
-  type t;
-
-  include UniqueCollection with type a := a and type t := t;
-
-  let toSet: t => Set.t a;
-};
-
-module type Set_1 = {
-  type t 'a;
-
-  include UniqueCollection_1 with type t 'a := t 'a;
-
-  let toSet: t 'a => Set.t 'a;
+    let contains: 'a => (t 'a) => bool;
+    let toSet: (t 'a) => ImmSet.t 'a;
+  };
 };
 
 module type PersistentSet = {
   type a;
   type t;
 
-  include Set with type a := a and type t := t;
+  include Set.S with type a := a and type t := t;
   include PersistentCollection with type a := a and type t := t;
 
   let add: a => t => t;
@@ -315,7 +303,7 @@ module type PersistentSet = {
 module type PersistentSet_1 = {
   type t 'a;
 
-  include Set_1 with type t 'a := t 'a;
+  include Set.S1 with type t 'a := t 'a;
   include PersistentCollection_1 with type t 'a := t 'a;
 
   let add: 'a => (t 'a) => (t 'a);
@@ -353,14 +341,14 @@ module type NavigableSet = {
   type a;
   type t;
 
-  include Set with type a := a and type t := t;
+  include Set.S with type a := a and type t := t;
   include NavigableCollection with type a := a and type t := t;
 };
 
 module type NavigableSet_1 = {
   type t 'a;
 
-  include Set_1 with type t 'a := t 'a;
+  include Set.S1 with type t 'a := t 'a;
   include NavigableCollection_1 with type t 'a := t 'a;
 };
 
@@ -541,46 +529,31 @@ module type NavigableKeyedCollection_2 = {
   let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
 };
 
-module type KeyValueCollection_1 = {
-  type k;
-  type t 'v;
+let module Map = {
+  include ImmMap;
 
-  include KeyedCollection_1 with type k := k and type t 'v := t 'v;
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  let get: k => (t 'v) => (option 'v);
-  let getOrRaise: k => (t 'v) => 'v;
-  let map: (k => 'a => 'b) => (t 'a) => (t 'b);
-  let values: (t 'v) => (Iterator.t 'v);
-};
+    include KeyedCollection_1 with type k := k and type t 'v := t 'v;
 
-module type KeyValueCollection_2 = {
-  type t 'k 'v;
+    let get: k => (t 'v) => (option 'v);
+    let getOrRaise: k => (t 'v) => 'v;
+    let values: (t 'v) => (Iterator.t 'v);
+    let toMap: (t 'v) => ImmMap.t k 'v;
+  };
 
-  include KeyedCollection_2 with type t 'k 'v := t 'k 'v;
+  module type S2 = {
+    type t 'k 'v;
 
-  let get: 'k => (t 'k 'v) => (option 'v);
-  let getOrRaise: 'k => (t 'k 'v) => 'v;
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  let values: (t 'k 'v) => (Iterator.t 'v);
-};
+    include KeyedCollection_2 with type t 'k 'v := t 'k 'v;
 
-let module Map = ImmMap;
-
-module type Map_1 = {
-  type k;
-  type t 'v;
-
-  include KeyValueCollection_1 with type k := k and type t 'v := t 'v;
-
-  let toMap: (t 'v) => Map.t k 'v;
-};
-
-module type Map_2 = {
-  type t 'k 'v;
-
-  include KeyValueCollection_2 with type t 'k 'v := t 'k 'v;
-
-  let toMap: (t 'k 'v) => Map.t 'k 'v;
+    let get: 'k => (t 'k 'v) => (option 'v);
+    let getOrRaise: 'k => (t 'k 'v) => 'v;
+    let values: (t 'k 'v) => (Iterator.t 'v);
+    let toMap: (t 'k 'v) => ImmMap.t 'k 'v;
+  };
 };
 
 module type PersistentMap_1 = {
@@ -588,12 +561,13 @@ module type PersistentMap_1 = {
   type t 'v;
 
   include PersistentKeyedCollection_1 with type k := k and type t 'v := t 'v;
-  include Map_1 with type k := k and type t 'v := t 'v;
+  include Map.S1 with type k := k and type t 'v := t 'v;
 
   let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
   let empty: unit => (t 'v);
   let from: (KeyedIterator.t k 'v) => (t 'v);
   let fromEntries: (Iterator.t (k, 'v)) => (t 'v);
+  let map: (k => 'a => 'b) => (t 'a) => (t 'b);
   let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
   let put: k => 'v => (t 'v) => (t 'v);
   let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
@@ -604,9 +578,10 @@ module type PersistentMap_2 = {
   type t 'k 'v;
 
   include PersistentKeyedCollection_2 with type t 'k 'v := t 'k 'v;
-  include Map_2 with type t 'k 'v := t 'k 'v;
+  include Map.S2 with type t 'k 'v := t 'k 'v;
 
   let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
   let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
   let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
   let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
@@ -645,7 +620,7 @@ module type NavigableMap_1 = {
   type t 'v;
 
   include NavigableKeyedCollection_1 with type k := k and type t 'v := t 'v;
-  include Map_1 with type k := k and type t 'v := t 'v;
+  include Map.S1 with type k := k and type t 'v := t 'v;
 };
 
 module type PersistentNavigableMap_1 = {

@@ -52,6 +52,8 @@ let toIterator ({ iterator } as set: t 'a): (Iterator.t 'a) =>
 let toSequence ({ sequence }: t 'a): (Sequence.t 'a) =>
   sequence ();
 
+let toSet (set: t 'a): (t 'a) => set;
+
 let intersect (this: t 'a) (that: t 'a): (Iterator.t 'a) =>
   this |> toIterator |> Iterator.filter (that.contains);
 
