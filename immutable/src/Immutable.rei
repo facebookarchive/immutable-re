@@ -1222,37 +1222,24 @@ module type IndexedMappable_1 = {
    */
 };
 
-let module IntRange: {
-  /** Represents a contiguous Set of discrete integers */
-
-  type a = int;
-  type t;
-  /** The IntRange type.*/
-
-  include NavigableSet with type a := a and type t := t;
-  include Comparable with type t := t;
-  include Hashable with type t := t;
-
-  let create: start::int => count::int => t;
-
-  let module Reducer: Reducer.S with type a := a and type t := t;
-};
-
-let module rec HashSet: {
-  /** A set implementation that utilizes hashing and comparison
-   *  or equality for collision resolution.
+let module rec Deque: {
+  /** A double-ended queue with efficient appends [addLast], prepends [addFirst]
+   *  and removals from either end of the queue [removeFirstOrRaise] [removeLastOrRaise].
    */
 
   type t 'a;
-  /** The HashSet type. */
+  /** The Deque type. */
 
-  include PersistentSet_1 with type t 'a := t 'a;
-  include Hashable_1 with type t 'a := t 'a;
+  include Deque_1 with type t 'a := t 'a;
 
-  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
-  let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
-  let mutate: (t 'a) => (TransientHashSet.t 'a);
-  /** [mutate set] returns a TransientHashSet containing the same elements as [set].
+  let mutate: (t 'a) => (TransientDeque.t 'a);
+  /** [mutate deque] returns a TransientDeque containing the same elements as [deque].
+   *
+   *  Complexity: O(_1)
+   */
+
+  let reverse: (t 'a) => (t 'a);
+  /** [reverse deque] returns a new Deque with [deque]'s elements reversed.
    *
    *  Complexity: O(_1)
    */
@@ -1260,76 +1247,26 @@ let module rec HashSet: {
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
 
-and TransientHashSet: {
-  /** A temporarily mutable HashSet. Once persisted, any further operations on a
-   *  TransientHashSet instance will throw. Intended for implementing bulk mutation
-   *  operations efficiently.
+and TransientDeque: {
+  /** A temporarily mutable Deque. Once persisted, any further operations on a
+   *  TransientDeque instance will throw. Intended for implementing bulk mutation operations efficiently.
    */
 
   type t 'a;
-  /** The TransientHashSet type. */
 
-  include TransientSet_1 with type t 'a := t 'a;
+  include TransientDeque_1 with type t 'a := t 'a;
+  /** The TransientDeque type. */
 
-  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
-  let persist: (t 'a) => (HashSet.t 'a);
-  /** [persist transient] returns a persisted HashSet. Further attempts to access or mutate [transient]
+  let persist: (t 'a) => (Deque.t 'a);
+  /** [persist transient] returns a persisted Deque. Further attempts to access or mutate [transient]
    *  will throw.
    */
-};
 
-let module rec IntSet: {
-  /** A set implementation optimized for storing sparse ints. */
-
-  type a = int;
-  type t;
-  /** The IntSet type. */
-
-  include PersistentSet with type a := a and type t := t;
-
-  let mutate: t => TransientIntSet.t;
-  /** [mutate set] returns a TransientIntSet containing the same elements as [set].
+  let reverse: (t 'a) => (t 'a);
+  /** [reverse transient] reverse [transient]'s elements.
    *
    *  Complexity: O(_1)
    */
-
-  let module Reducer: Reducer.S with type a = a and type t := t;
-}
-
-and TransientIntSet: {
-  /** A temporarily mutable IntSet. Once persisted, any further operations on a
-   *  TransientIntSet instance will throw. Intended for implementing bulk mutation
-   *  operations efficiently.
-   */
-  type a = int;
-  type t;
-  /** The TransientIntSet type. */
-
-  include TransientSet with type a := a and type t := t;
-
-  let empty: unit => t;
-  /** [empty ()] return a new empty TransientIntSet. */
-
-  let persist: t => IntSet.t;
-  /** [persist transient] returns a persisted IntSet. Further attempts to access or mutate [transient]
-   *  will throw.
-   */
-};
-
-let module SortedSet: {
-  /** AVL tree based Set implementation. */
-  module type S = {
-    type a;
-    type t;
-    /** The SortedSet type */
-
-    include Comparable with type t := t;
-    include PersistentNavigableSet with type a := a and type t := t;
-
-    let module Reducer: Reducer.S with type a := a and type t := t;
-  };
-
-  let module Make: (Comparable: Comparable) => S with type a = Comparable.t;
 };
 
 let module rec HashMap: {
@@ -1379,6 +1316,46 @@ and TransientHashMap: {
    */
 };
 
+let module rec HashSet: {
+  /** A set implementation that utilizes hashing and comparison
+   *  or equality for collision resolution.
+   */
+
+  type t 'a;
+  /** The HashSet type. */
+
+  include PersistentSet_1 with type t 'a := t 'a;
+  include Hashable_1 with type t 'a := t 'a;
+
+  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
+  let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
+  let mutate: (t 'a) => (TransientHashSet.t 'a);
+  /** [mutate set] returns a TransientHashSet containing the same elements as [set].
+   *
+   *  Complexity: O(_1)
+   */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+}
+
+and TransientHashSet: {
+  /** A temporarily mutable HashSet. Once persisted, any further operations on a
+   *  TransientHashSet instance will throw. Intended for implementing bulk mutation
+   *  operations efficiently.
+   */
+
+  type t 'a;
+  /** The TransientHashSet type. */
+
+  include TransientSet_1 with type t 'a := t 'a;
+
+  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
+  let persist: (t 'a) => (HashSet.t 'a);
+  /** [persist transient] returns a persisted HashSet. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
+};
+
 let module rec IntMap: {
   /** A Map optimized for integer keys. */
 
@@ -1409,20 +1386,58 @@ and TransientIntMap: {
    */
 };
 
-let module SortedMap: {
-  /** AVL tree based Map. */
-  module type S = {
-    type k;
+let module IntRange: {
+  /** Represents a contiguous Set of discrete integers */
 
-    type t +'v;
-    /** The SortedMap type. */
+  type a = int;
+  type t;
+  /** The IntRange type.*/
 
-    include PersistentNavigableMap_1 with type k := k and type t 'v := t 'v;
+  include NavigableSet with type a := a and type t := t;
+  include Comparable with type t := t;
+  include Hashable with type t := t;
 
-    let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
-  };
+  let create: start::int => count::int => t;
 
-  let module Make: (Comparable: Comparable) => S with type k = Comparable.t;
+  let module Reducer: Reducer.S with type a := a and type t := t;
+};
+
+let module rec IntSet: {
+  /** A set implementation optimized for storing sparse ints. */
+
+  type a = int;
+  type t;
+  /** The IntSet type. */
+
+  include PersistentSet with type a := a and type t := t;
+
+  let mutate: t => TransientIntSet.t;
+  /** [mutate set] returns a TransientIntSet containing the same elements as [set].
+   *
+   *  Complexity: O(_1)
+   */
+
+  let module Reducer: Reducer.S with type a = a and type t := t;
+}
+
+and TransientIntSet: {
+  /** A temporarily mutable IntSet. Once persisted, any further operations on a
+   *  TransientIntSet instance will throw. Intended for implementing bulk mutation
+   *  operations efficiently.
+   */
+  type a = int;
+  type t;
+  /** The TransientIntSet type. */
+
+  include TransientSet with type a := a and type t := t;
+
+  let empty: unit => t;
+  /** [empty ()] return a new empty TransientIntSet. */
+
+  let persist: t => IntSet.t;
+  /** [persist transient] returns a persisted IntSet. Further attempts to access or mutate [transient]
+   *  will throw.
+   */
 };
 
 let module List: {
@@ -1492,6 +1507,27 @@ let module Option: {
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
+let module ReadOnlyArray: {
+  /** Opaque wrapper around an underlying array instance that provides read only semantics */
+
+  type t 'a;
+  /** The CopyOnWriteArray type. */
+
+  include IndexedCollection_1 with type t 'a := t 'a;
+  include IndexedMappable_1 with type t 'a := t 'a;
+
+  let empty: unit => t 'a;
+  let init: int => (int => 'a) => (t 'a);
+  let ofUnsafe: (array 'a) => (t 'a);
+  /** [unsafe arr] returns a ReadOnlyArray backed by [arr]. Note, it is the caller's
+   *  responsibility to ensure that [arr] is not subsequently mutated.
+   *
+   *  Complexity: O(1)
+   */
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+};
+
 let module Stack: {
   /** A singly-linked stack with an O(_1) count operation. */
 
@@ -1512,51 +1548,36 @@ let module Stack: {
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
-let module rec Deque: {
-  /** A double-ended queue with efficient appends [addLast], prepends [addFirst]
-   *  and removals from either end of the queue [removeFirstOrRaise] [removeLastOrRaise].
-   */
+let module SortedMap: {
+  /** AVL tree based Map. */
+  module type S = {
+    type k;
 
-  type t 'a;
-  /** The Deque type. */
+    type t +'v;
+    /** The SortedMap type. */
 
-  include Deque_1 with type t 'a := t 'a;
+    include PersistentNavigableMap_1 with type k := k and type t 'v := t 'v;
 
-  let mutate: (t 'a) => (TransientDeque.t 'a);
-  /** [mutate deque] returns a TransientDeque containing the same elements as [deque].
-   *
-   *  Complexity: O(_1)
-   */
+    let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+  };
 
-  let reverse: (t 'a) => (t 'a);
-  /** [reverse deque] returns a new Deque with [deque]'s elements reversed.
-   *
-   *  Complexity: O(_1)
-   */
+  let module Make: (Comparable: Comparable) => S with type k = Comparable.t;
+};
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
-}
+let module SortedSet: {
+  /** AVL tree based Set implementation. */
+  module type S = {
+    type a;
+    type t;
+    /** The SortedSet type */
 
-and TransientDeque: {
-  /** A temporarily mutable Deque. Once persisted, any further operations on a
-   *  TransientDeque instance will throw. Intended for implementing bulk mutation operations efficiently.
-   */
+    include Comparable with type t := t;
+    include PersistentNavigableSet with type a := a and type t := t;
 
-  type t 'a;
+    let module Reducer: Reducer.S with type a := a and type t := t;
+  };
 
-  include TransientDeque_1 with type t 'a := t 'a;
-  /** The TransientDeque type. */
-
-  let persist: (t 'a) => (Deque.t 'a);
-  /** [persist transient] returns a persisted Deque. Further attempts to access or mutate [transient]
-   *  will throw.
-   */
-
-  let reverse: (t 'a) => (t 'a);
-  /** [reverse transient] reverse [transient]'s elements.
-   *
-   *  Complexity: O(_1)
-   */
+  let module Make: (Comparable: Comparable) => S with type a = Comparable.t;
 };
 
 let module rec Vector: {
@@ -1640,25 +1661,4 @@ and TransientVector: {
   /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
   *  will throw.
   */
-};
-
-let module ReadOnlyArray: {
-  /** Opaque wrapper around an underlying array instance that provides read only semantics */
-
-  type t 'a;
-  /** The CopyOnWriteArray type. */
-
-  include IndexedCollection_1 with type t 'a := t 'a;
-  include IndexedMappable_1 with type t 'a := t 'a;
-
-  let empty: unit => t 'a;
-  let init: int => (int => 'a) => (t 'a);
-  let ofUnsafe: (array 'a) => (t 'a);
-  /** [unsafe arr] returns a ReadOnlyArray backed by [arr]. Note, it is the caller's
-   *  responsibility to ensure that [arr] is not subsequently mutated.
-   *
-   *  Complexity: O(1)
-   */
-
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };

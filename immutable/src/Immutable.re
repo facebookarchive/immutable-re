@@ -750,27 +750,27 @@ module type IndexedMappable_1 = {
   let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
 };
 
-let module IntRange = IntRange;
+let module Deque = Deque;
 
-let module HashSet = HashSet;
-
-let module TransientHashSet = HashSet.TransientHashSet;
-
-let module IntSet = IntSet;
-
-let module TransientIntSet = IntSet.TransientIntSet;
-
-let module SortedSet = SortedSet;
+let module TransientDeque = Deque.TransientDeque;
 
 let module HashMap = HashMap;
 
 let module TransientHashMap = HashMap.TransientHashMap;
 
+let module HashSet = HashSet;
+
+let module TransientHashSet = HashSet.TransientHashSet;
+
 let module IntMap = IntMap;
 
 let module TransientIntMap = IntMap.TransientIntMap;
 
-let module SortedMap = SortedMap;
+let module IntRange = IntRange;
+
+let module IntSet = IntSet;
+
+let module TransientIntSet = IntSet.TransientIntSet;
 
 let module List = {
   include ImmList;
@@ -793,14 +793,14 @@ let module Option = {
   };
 };
 
+let module ReadOnlyArray = CopyOnWriteArray;
+
+let module SortedMap = SortedMap;
+
+let module SortedSet = SortedSet;
+
 let module Stack = ImmStack;
-
-let module Deque = Deque;
-
-let module TransientDeque = Deque.TransientDeque;
 
 let module Vector = Vector;
 
 let module TransientVector = Vector.TransientVector;
-
-let module ReadOnlyArray = CopyOnWriteArray;
