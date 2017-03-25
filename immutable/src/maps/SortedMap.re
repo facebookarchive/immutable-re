@@ -71,13 +71,13 @@ let module Make = fun (Comparable: Comparable.S) => {
       (key: k)
       (f: option 'v => option 'v)
       ({ count, tree } as map: t 'v): (t 'v) => {
-    let alterResult = ref AVLTreeMap.NoChange;
+    let alterResult = ref AlterResult.NoChange;
     let newTree = tree |> AVLTreeMap.alter comparator alterResult key f;
     switch !alterResult {
-      | AVLTreeMap.Added => { count: count + 1, tree: newTree }
-      | AVLTreeMap.NoChange => map
-      | AVLTreeMap.Replace => { count, tree: newTree }
-      | AVLTreeMap.Removed => { count: count - 1, tree: newTree }
+      | AlterResult.Added => { count: count + 1, tree: newTree }
+      | AlterResult.NoChange => map
+      | AlterResult.Replace => { count, tree: newTree }
+      | AlterResult.Removed => { count: count - 1, tree: newTree }
     };
   };
 
@@ -111,13 +111,13 @@ let module Make = fun (Comparable: Comparable.S) => {
     tree |> AVLTreeMap.lastOrRaise;
 
   let put (key: k) (value: 'v) ({ count, tree } as map: t 'v): (t 'v) => {
-    let alterResult = ref AVLTreeMap.NoChange;
+    let alterResult = ref AlterResult.NoChange;
     let newTree = tree |> AVLTreeMap.putWithResult comparator alterResult key value;
     switch !alterResult {
-      | AVLTreeMap.Added => { count: count + 1, tree: newTree }
-      | AVLTreeMap.NoChange => map
-      | AVLTreeMap.Replace => { count, tree: newTree }
-      | AVLTreeMap.Removed => failwith "invalid state"
+      | AlterResult.Added => { count: count + 1, tree: newTree }
+      | AlterResult.NoChange => map
+      | AlterResult.Replace => { count, tree: newTree }
+      | AlterResult.Removed => failwith "invalid state"
     };
   };
 

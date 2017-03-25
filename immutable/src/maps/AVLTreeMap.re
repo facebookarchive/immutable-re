@@ -291,50 +291,44 @@ let rec removeLastOrRaise (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Node _ left k v right => rebalance left k v (removeLastOrRaise right);
 };
 
-type alterResult =
-  | Added
-  | NoChange
-  | Removed
-  | Replace;
-
 let rec alter
     (comparator: Comparator.t 'k)
-    (result: ref alterResult)
+    (result: ref AlterResult.t)
     (xK: 'k)
     (f: (option 'v) => (option 'v))
     (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty => switch (f None) {
       | None =>
-          result := NoChange;
+          result := AlterResult.NoChange;
           tree;
       | Some v =>
-          result := Added;
+          result := AlterResult.Added;
           Leaf xK v;
     }
   | Leaf k v =>
       let cmp = comparator xK k;
       if (cmp === Ordering.lessThan) (switch (f None) {
         | None =>
-            result := NoChange;
+            result := AlterResult.NoChange;
             tree;
         | Some xV =>
-            result := Added;
+            result := AlterResult.Added;
             Node 2 Empty xK xV tree
       })
       else if (cmp === Ordering.greaterThan) (switch (f None) {
         | None =>
-            result := NoChange;
+            result := AlterResult.NoChange;
             tree;
         | Some xV =>
-            result := Added;
+            result := AlterResult.Added;
             Node 2 tree xK xV Empty
       })
       else (switch (f @@ Option.return @@ v) {
         | None =>
-            result := Removed;
+            result := AlterResult.Removed;
             Empty;
         | Some xV =>
-            result := Replace;
+            result := AlterResult.Replace;
             Leaf xK xV;
       })
   | Node height left k v right =>
@@ -342,35 +336,35 @@ let rec alter
       if (cmp === Ordering.lessThan) {
         let newLeft = alter comparator result xK f left;
         switch !result {
-          | Added => rebalance newLeft k v right
-          | NoChange => tree
-          | Removed => rebalance newLeft k v right
-          | Replace => Node height newLeft k v right
+          | AlterResult.Added => rebalance newLeft k v right
+          | AlterResult.NoChange => tree
+          | AlterResult.Removed => rebalance newLeft k v right
+          | AlterResult.Replace => Node height newLeft k v right
         }
       }
       else if (cmp === Ordering.greaterThan) {
         let newRight = alter comparator result xK f right;
         switch !result {
-        | Added => rebalance left k v newRight
-        | NoChange => tree
-        | Removed => Node height left k v newRight
-        | Replace => Node height left k v newRight
+        | AlterResult.Added => rebalance left k v newRight
+        | AlterResult.NoChange => tree
+        | AlterResult.Removed => Node height left k v newRight
+        | AlterResult.Replace => Node height left k v newRight
       }}
       else (switch (f @@ Option.return @@ v) {
         | None => switch (left, right) {
             | (Empty, _) =>
-                result := Removed;
+                result := AlterResult.Removed;
                 right
             | (_, Empty) =>
-                result := Removed;
+                result := AlterResult.Removed;
                 left
             | _ =>
-              result := Removed;
+              result := AlterResult.Removed;
               let (k, v) = firstOrRaise right;
               rebalance left k v (removeFirstOrRaise right);
           }
         | Some xV =>
-            result := Replace;
+            result := AlterResult.Replace;
             Node height left xK xV right;
       })
 };
@@ -403,27 +397,27 @@ let rec put
 
 let rec putWithResult
     (comparator: Comparator.t 'k)
-    (result: ref alterResult)
+    (result: ref AlterResult.t)
     (xK: 'k)
     (xV: 'v)
     (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Empty =>
-      result := Added;
+      result := AlterResult.Added;
       Leaf xK xV
   | Leaf k v =>
       let cmp = comparator xK k;
 
       if (cmp === Ordering.lessThan) {
-        result := Added;
+        result := AlterResult.Added;
         Node 2 Empty xK xV tree
       }
       else if (cmp === Ordering.greaterThan) {
-        result := Added;
+        result := AlterResult.Added;
         Node 2 tree xK xV Empty
       }
       else if (xV === v) tree
       else {
-        result := Replace;
+        result := AlterResult.Replace;
         Leaf xK xV
       }
   | Node height left k v right =>
@@ -437,7 +431,7 @@ let rec putWithResult
         if (newRight === right) tree else rebalance left k v newRight
       } else if (xV === v) tree
       else {
-        result := Replace;
+        result := AlterResult.Replace;
         Node height left xK xV right
       }
 };
