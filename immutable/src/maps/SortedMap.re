@@ -11,45 +11,48 @@
 module type S = {
   type k;
   type t +'v;
-  let reduceRight :
+  
+  let reduceRight:
     while_::('acc => k => 'v => bool)? =>
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let first : t 'v => option (k, 'v);
-  let firstOrRaise : t 'v => (k, 'v);
-  let last : t 'v => option (k, 'v);
-  let lastOrRaise : t 'v => (k, 'v);
-  let toIteratorRight : t 'v => Iterator.t (k, 'v);
-  let toKeyedIteratorRight : t 'v => KeyedIterator.t k 'v;
-  let toSequenceRight : t 'v => Sequence.t (k, 'v);
-  let remove : k => t 'v => t 'v;
-  let removeAll : t 'v => t 'v;
-  let reduce :
+  let first: t 'v => option (k, 'v);
+  let firstOrRaise: t 'v => (k, 'v);
+  let last: t 'v => option (k, 'v);
+  let lastOrRaise: t 'v => (k, 'v);
+  let toIteratorRight: t 'v => Iterator.t (k, 'v);
+  let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
+  let toSequenceRight: t 'v => Sequence.t (k, 'v);
+  let remove: k => t 'v => t 'v;
+  let removeAll: t 'v => t 'v;
+  let reduce:
     while_::('acc => k => 'v => bool)? =>
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let toIterator : t 'v => Iterator.t (k, 'v);
-  let toKeyedIterator : t 'v => KeyedIterator.t k 'v;
-  let containsKey : k => t 'v => bool;
-  let count : t 'v => int;
-  let isEmpty : t 'v => bool;
-  let isNotEmpty : t 'v => bool;
-  let toSequence : t 'v => Sequence.t (k, 'v);
-  let get : k => t 'v => option 'v;
-  let getOrRaise : k => t 'v => 'v;
-  let keys : t 'v => ImmSet.t k;
-  let map : (k => 'a => 'b) => t 'a => t 'b;
-  let values : t 'v => Iterator.t 'v;
-  let toMap : t 'v => ImmMap.t k 'v;
-  let alter : k => (option 'v => option 'v) => t 'v => t 'v;
-  let empty : unit => t 'v;
-  let from : KeyedIterator.t k 'v => t 'v;
-  let merge :
+  let toIterator: t 'v => Iterator.t (k, 'v);
+  let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
+  let containsKey: k => t 'v => bool;
+  let count: t 'v => int;
+  let isEmpty: t 'v => bool;
+  let isNotEmpty: t 'v => bool;
+  let toSequence: t 'v => Sequence.t (k, 'v);
+  let get: k => t 'v => option 'v;
+  let getOrRaise: k => t 'v => 'v;
+  let keys: t 'v => ImmSet.t k;
+  let map: (k => 'a => 'b) => t 'a => t 'b;
+  let values: t 'v => Iterator.t 'v;
+  let toMap: t 'v => ImmMap.t k 'v;
+  let alter: k => (option 'v => option 'v) => t 'v => t 'v;
+  let empty: unit => t 'v;
+  let from: KeyedIterator.t k 'v => t 'v;
+  let merge:
     (k => option 'vAcc => option 'v => option 'vAcc) =>
-    t 'v => t 'vAcc => t 'vAcc;
-  let put : k => 'v => t 'v => t 'v;
-  let putAll : KeyedIterator.t k 'v => t 'v => t 'v;
-  let removeFirstOrRaise : t 'v => t 'v;
-  let removeLastOrRaise : t 'v => t 'v;
-  let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+    t 'vAcc =>
+    t 'v =>
+    t 'vAcc;
+  let put: k => 'v => t 'v => t 'v;
+  let putAll: KeyedIterator.t k 'v => t 'v => t 'v;
+  let removeFirstOrRaise: t 'v => t 'v;
+  let removeLastOrRaise: t 'v => t 'v;
+  let module KeyedReducer: KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -215,18 +218,17 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let merge
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
-      (next: t 'v)
-      (map: t 'vAcc): (t 'vAcc) =>
-    ImmSet.union (keys map) (keys next) |> Iterator.reduce (
-      fun acc key => {
-        let result = f key (map |> get key) (next |> get key);
-        switch result {
-          | None => acc |> remove key
-          | Some value => acc |> put key value
+      (acc: t 'vAcc)
+      (next: t 'v): (t 'vAcc) =>  ImmSet.union (keys next) (keys acc)
+    |> Iterator.reduce (
+        fun acc key => {
+          let result = f key (acc |> get key) (next |> get key);
+          switch result {
+            | None => acc |> remove key
+            | Some value => acc |> put key value
+          }
         }
-      }
-    )
-    map;
+      ) acc;
 
   let module KeyedReducer = KeyedReducer.Make1 {
     type nonrec k = k;

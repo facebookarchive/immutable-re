@@ -231,20 +231,18 @@ let fromWith
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (next: t 'k 'v)
-    (map: t 'k 'vAcc): (t 'k 'vAcc) =>
-  ImmSet.union (keys map) (keys next)
-    |> Iterator.reduce (
-        fun acc key => {
-          let result = f key (map |> get key) (next |> get key);
-          switch result {
-            | None => acc |> TransientHashMap.remove key
-            | Some value => acc |> TransientHashMap.put key value
-          }
+    (initialValue: t 'k 'vAcc)
+    (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keys next) (keys initialValue)
+  |> Iterator.reduce (
+      fun acc key => {
+        let result = f key (initialValue |> get key) (next |> get key);
+        switch result {
+          | None => acc |> TransientHashMap.remove key
+          | Some value => acc |> TransientHashMap.put key value
         }
-      )
-      (mutate map)
-    |> TransientHashMap.persist;
+      }
+    ) (mutate initialValue)
+  |> TransientHashMap.persist;
 
 let module KeyedReducer = KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;

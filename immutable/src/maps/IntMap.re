@@ -193,21 +193,19 @@ let map (f: int => 'v => 'b) (map: t 'v): (t 'b) => map
 let from (iter: KeyedIterator.t int 'v): (t 'v) => putAll iter (empty ());
 
 let merge
-    (f: int => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (next: t 'v)
-    (map: t 'vAcc): (t 'vAcc) =>
-  ImmSet.union (keys map) (keys next)
-    |> Iterator.reduce (
-        fun acc key => {
-          let result = f key (map |> get key) (next |> get key);
-          switch result {
-            | None => acc |> TransientIntMap.remove key
-            | Some value => acc |> TransientIntMap.put key value
-          }
+    (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
+    (initialValue: t 'vAcc)
+    (next: t 'v): (t 'vAcc) => ImmSet.union (keys next) (keys initialValue)
+  |> Iterator.reduce (
+      fun acc key => {
+        let result = f key (initialValue |> get key) (next |> get key);
+        switch result {
+          | None => acc |> TransientIntMap.remove key
+          | Some value => acc |> TransientIntMap.put key value
         }
-      )
-      (mutate map)
-    |> TransientIntMap.persist;
+      }
+    ) (mutate initialValue)
+  |> TransientIntMap.persist;
 
 let module KeyedReducer = KeyedReducer.Make1 {
   type nonrec k = k;

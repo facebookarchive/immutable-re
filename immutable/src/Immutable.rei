@@ -1519,7 +1519,7 @@ let module PersistentMap: {
      *  using the structural comparison.
      */
 
-    let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'v) => (t 'vAcc) => (t 'vAcc);
+    let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
 
     let put: k => 'v => (t 'v) => (t 'v);
 
@@ -1534,7 +1534,7 @@ let module PersistentMap: {
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
 
-    let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'v) => (t 'k 'vAcc) => (t 'k 'vAcc);
+    let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
 
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
 

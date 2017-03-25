@@ -46,7 +46,7 @@ let navigationTests (count: int) => {
         |> IntRange.toIterator
         |> SortedIntSet.from
         |> SortedIntSet.last
-        |> Expect.toBeEqualToSomeOfInt countDiv2;
+        |> Expect.toBeEqualToSomeOfInt (countDiv2 - 1);
     }),
     it "lastOrRaise" (fun () => {
       (fun () => SortedIntSet.empty () |> SortedIntSet.lastOrRaise) |> Expect.shouldRaise;
@@ -54,7 +54,7 @@ let navigationTests (count: int) => {
         |> IntRange.toIterator
         |> SortedIntSet.from
         |> SortedIntSet.lastOrRaise
-        |> Expect.toBeEqualToInt countDiv2;
+        |> Expect.toBeEqualToInt (countDiv2 - 1);
     }),
     it "reduceRight" (fun () => {
       IntRange.create start::0 count::count
@@ -111,4 +111,5 @@ let navigationTests (count: int) => {
 let test = describe "SortedSet" [
   PersistentSetTester.test (module SortedIntSet: PersistentSet.S with type a = IntSet.a) 100,
   PersistentSetTester.test (module SortedIntSet: PersistentSet.S with type a = IntSet.a) 10000,
+  navigationTests 10000,
 ];
