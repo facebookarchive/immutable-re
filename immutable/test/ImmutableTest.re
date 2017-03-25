@@ -10,7 +10,6 @@
 open ReUnit.Test;
 
 ReUnit.run (describe "Immutable.re" [
-  CopyOnWriteArrayTest.test,
   DequeTest.test,
   HashMapTest.test,
   HashSetTest.test,
@@ -23,6 +22,7 @@ ReUnit.run (describe "Immutable.re" [
   ListTest.test,
   MapTest.test,
   OptionTest.test,
+  ReadOnlyArrayTest.test,
   ReducerTest.test,
   SequenceTest.test,
   SetTest.test,

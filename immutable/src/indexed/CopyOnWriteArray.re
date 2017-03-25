@@ -21,12 +21,6 @@ let addFirst (item: 'a) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let addFirstAll (iter: Iterator.t 'a) (arr: t 'a): (t 'a) =>
-  /* FIXME: This implemenation is particularly bad. We can improve it
-   * by using dynamic array allocations.
-   */
-  iter |> Iterator.reduce (fun acc next => acc |> addFirst next) arr;
-
 let addLast (item: 'a) (arr: t 'a): (t 'a) => {
   let count = count arr;
 
@@ -35,19 +29,7 @@ let addLast (item: 'a) (arr: t 'a): (t 'a) => {
   retval
 };
 
-let addLastAll (iter: Iterator.t 'a) (arr: t 'a): (t 'a) =>
-  /* FIXME: This implemenation is particularly bad. We can improve it
-   * by using dynamic array allocations.
-   */
-  iter |> Iterator.reduce (fun acc next => acc |> addLast next) arr;
-
 let empty (): (t 'a) => [||];
-
-let from (iter: Iterator.t 'a): (t 'a) =>
-  [||] |> addLastAll iter;
-
-let fromReverse (iter: Iterator.t 'a): (t 'a) =>
-  [||] |> addFirstAll iter;
 
 let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
   arr.(index);
@@ -95,23 +77,6 @@ let insertAt (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
 let isEmpty (arr: t 'a): bool => (count arr) == 0;
 
 let isNotEmpty (arr: t 'a): bool => (count arr) != 0;
-
-let concat (arrays: list (array 'a)): (array 'a) => {
-  let newCount = arrays |> ImmList.reduce (fun acc i => acc + count i) 0;
-
-  if (newCount == 0) [||]
-  else {
-    let retval = Array.make newCount (ImmList.findOrRaise isNotEmpty arrays).(0);
-
-    ImmList.reduce (fun index next => {
-      let countNext = count next;
-      Array.blit next 0 retval index countNext;
-      index + countNext;
-    }) 0 arrays |> ignore;
-
-    retval;
-  };
-};
 
 let ofUnsafe (arr: array 'a): (t 'a) => arr;
 
@@ -236,8 +201,6 @@ let mapReverseWithIndex (f: int => 'a => 'b) (arr: t 'a): (t 'b) =>
   }
   else [||];
 
-let removeAll (_: t 'a): (t 'a) => empty ();
-
 let removeLastOrRaise (arr: t 'a): (t 'a) => {
   let count = count arr;
 
@@ -264,8 +227,6 @@ let removeAt (index: int) (arr: t 'a): (t 'a) => {
 let removeFirstOrRaise (arr: t 'a): (t 'a) =>
   removeAt 0 arr;
 
-let return (value: 'a): (t 'a) => [| value |];
-
 let skip (startIndex: int) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
 
@@ -285,27 +246,6 @@ let take (newCount: int) (arr: t 'a): (t 'a) => {
   else if (newCount >= arrCount) arr
   else if (newCount === 0) [||]
   else Array.sub arr 0 newCount;
-};
-
-let slice start::(start: int)=0 end_::(end_: option int)=? (arr: t 'a): (t 'a) => {
-  let arrayLength = count arr;
-
-  let end_ = switch end_ {
-    | Some end_ => end_
-    | None => arrayLength
-  };
-
-  let skipCount =
-    if (start >= 0) start
-    else (arrayLength + start);
-
-  let takeCount =
-    if (end_ >= 0) end_
-    else (arrayLength + end_ - skipCount);
-
-  if (skipCount === 0 && takeCount === arrayLength) arr
-  /** FIXME: Intentionally bad for now */
-  else arr |> skip skipCount |> take takeCount;
 };
 
 let toIterator (arr: t 'a): (Iterator.t 'a) =>
@@ -359,19 +299,6 @@ let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let clone = Array.copy arr;
   clone.(index) = item;
   clone
-};
-
-let updateAll (f: int => 'a => 'a) (arr: t 'a): (t 'a) => {
-  let arrCount = count arr;
-  let clone = Array.copy arr;
-  let rec loop index =>
-    if (index < arrCount) {
-      clone.(index) = f index arr.(index);
-      loop (index + 1);
-    }
-    else clone;
-
-  loop 0;
 };
 
 let updateWith (index: int) (f: 'a => 'a) (arr: t 'a): (t 'a) => {

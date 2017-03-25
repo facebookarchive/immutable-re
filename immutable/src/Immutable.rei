@@ -1237,72 +1237,6 @@ module type IndexedMappable_1 = {
    */
 };
 
-module type Vector_1 = {
-  type t 'a;
-
-  include Concatable_1 with type t 'a := t 'a;
-  include Deque_1 with type t 'a := t 'a;
-  include IndexedCollection_1 with type t 'a := t 'a;
-  include IndexedMappable_1 with type t 'a := t 'a;
-  include Skippable_1 with type t 'a := t 'a;
-  include Takeable_1 with type t 'a := t 'a;
-
-  let init: int => (int => 'a) => (t 'a);
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  let removeAt: int => (t 'a) => (t 'a);
-  let slice: start::int? => end_::int? => (t 'a) => (t 'a);
-  let update: int => 'a => (t 'a) => (t 'a);
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-};
-
-module type TransientVector_1 = {
-  type t 'a;
-  /** The TransientVector type. */
-
-  include TransientDeque_1 with type t 'a := t 'a;
-
-  let get: int => (t 'a) => (option 'a);
-
-  let getOrRaise: int => (t 'a) => 'a;
-
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  /** [insertAt index value transient] inserts value into [transient] at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log3_2 N)
-   */
-
-  let removeAt: int => (t 'a) => (t 'a);
-  /** [removeAt index transient] removes the element at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log3_2 N)
-   */
-
-  let update: int => 'a => (t 'a) => (t 'a);
-  /** [update index value transient] replaces the element at [index] with [value].
-   *
-   *  Complexity: O(log3_2 N)
-   */
-
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  /** [updateAll f transient] updates each element in [transient] with result of applying
-   *  the function [f] to each index/element pair.
-   *
-   *  Complexity: O(N)
-   */
-
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-  /** [updateWith index f transient] updates the element at [index] with the result
-   *  of applying the function [f] to the element.
-   *
-   *  Complexity: O(log3_2 N)
-   */
-};
-
 let module IntRange: {
   /** Represents a contiguous Set of discrete integers */
 
@@ -1648,7 +1582,20 @@ let module rec Vector: {
   type t 'a;
   /** The vector type */
 
-  include Vector_1 with type t 'a := t 'a;
+  include Concatable_1 with type t 'a := t 'a;
+  include Deque_1 with type t 'a := t 'a;
+  include IndexedCollection_1 with type t 'a := t 'a;
+  include IndexedMappable_1 with type t 'a := t 'a;
+  include Skippable_1 with type t 'a := t 'a;
+  include Takeable_1 with type t 'a := t 'a;
+
+  let init: int => (int => 'a) => (t 'a);
+  let insertAt: int => 'a => (t 'a) => (t 'a);
+  let removeAt: int => (t 'a) => (t 'a);
+  let slice: start::int? => end_::int? => (t 'a) => (t 'a);
+  let update: int => 'a => (t 'a) => (t 'a);
+  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
 
   let mutate: (t 'a) => (TransientVector.t 'a);
 
@@ -1659,10 +1606,50 @@ and TransientVector: {
   /** A temporarily mutable Vector. Once persisted, any further operations on a
    *  TransientVector instance will throw. Intended for implementing bulk mutation operations efficiently.
    */
-
   type t 'a;
+  /** The TransientVector type. */
 
-  include TransientVector_1 with type t 'a := t 'a;
+  include TransientDeque_1 with type t 'a := t 'a;
+
+  let get: int => (t 'a) => (option 'a);
+
+  let getOrRaise: int => (t 'a) => 'a;
+
+  let insertAt: int => 'a => (t 'a) => (t 'a);
+  /** [insertAt index value transient] inserts value into [transient] at [index].
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log3_2 N)
+   */
+
+  let removeAt: int => (t 'a) => (t 'a);
+  /** [removeAt index transient] removes the element at [index].
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log3_2 N)
+   */
+
+  let update: int => 'a => (t 'a) => (t 'a);
+  /** [update index value transient] replaces the element at [index] with [value].
+   *
+   *  Complexity: O(log3_2 N)
+   */
+
+  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+  /** [updateAll f transient] updates each element in [transient] with result of applying
+   *  the function [f] to each index/element pair.
+   *
+   *  Complexity: O(N)
+   */
+
+  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+  /** [updateWith index f transient] updates the element at [index] with the result
+   *  of applying the function [f] to the element.
+   *
+   *  Complexity: O(log3_2 N)
+   */
 
   let persist: (t 'a) => (Vector.t 'a);
   /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
@@ -1670,19 +1657,22 @@ and TransientVector: {
   */
 };
 
-let module CopyOnWriteArray: {
-  /** Opaque wrapper around an underlying array instance that provides copy on write semantics */
+let module ReadOnlyArray: {
+  /** Opaque wrapper around an underlying array instance that provides read only semantics */
 
   type t 'a;
   /** The CopyOnWriteArray type. */
 
-  include Vector_1 with type t 'a := t 'a;
+  include IndexedCollection_1 with type t 'a := t 'a;
+  include IndexedMappable_1 with type t 'a := t 'a;
 
+  let empty: unit => t 'a;
+  let init: int => (int => 'a) => (t 'a);
   let ofUnsafe: (array 'a) => (t 'a);
-  /** [unsafe arr] returns a CopyOnWriteArray backed by [arr]. Note, it is the caller's
+  /** [unsafe arr] returns a ReadOnlyArray backed by [arr]. Note, it is the caller's
    *  responsibility to ensure that [arr] is not subsequently mutated.
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;

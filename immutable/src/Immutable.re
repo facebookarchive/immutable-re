@@ -762,39 +762,6 @@ module type IndexedMappable_1 = {
   let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
 };
 
-module type Vector_1 = {
-  type t 'a;
-
-  include Concatable_1 with type t 'a := t 'a;
-  include Deque_1 with type t 'a := t 'a;
-  include IndexedCollection_1 with type t 'a := t 'a;
-  include IndexedMappable_1 with type t 'a := t 'a;
-  include Skippable_1 with type t 'a := t 'a;
-  include Takeable_1 with type t 'a := t 'a;
-
-  let init: int => (int => 'a) => (t 'a);
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  let removeAt: int => (t 'a) => (t 'a);
-  let slice: start::int? => end_::int? => (t 'a) => (t 'a);
-  let update: int => 'a => (t 'a) => (t 'a);
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-};
-
-module type TransientVector_1 = {
-  type t 'a;
-
-  include TransientDeque_1 with type t 'a := t 'a;
-
-  let get: int => (t 'a) => (option 'a);
-  let getOrRaise: int => (t 'a) => 'a;
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  let removeAt: int => (t 'a) => (t 'a);
-  let update: int => 'a => (t 'a) => (t 'a);
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-};
-
 let module IntRange = IntRange;
 
 let module HashSet = HashSet;
@@ -848,4 +815,4 @@ let module Vector = Vector;
 
 let module TransientVector = Vector.TransientVector;
 
-let module CopyOnWriteArray = CopyOnWriteArray;
+let module ReadOnlyArray = CopyOnWriteArray;
