@@ -426,27 +426,13 @@ module type TransientCollection_1 = {
    */
 };
 
-module type SequentialCollection = {
-  type a;
-  type t;
-
-  include Collection with type a := a and type t := t;
-  include Sequential with type a := a and type t := t;
-};
-
-module type SequentialCollection_1 = {
-  type t 'a;
-
-  include Collection_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
-};
-
 module type NavigableCollection = {
   type a;
   type t;
 
-  include SequentialCollection with type a := a and type t := t;
+  include Collection with type a := a and type t := t;
   include ReduceableRight with type a := a and type t := t;
+  include Sequential with type a := a and type t := t;
 
   let last: t => (option a);
   let lastOrRaise: t => a;
@@ -457,8 +443,9 @@ module type NavigableCollection = {
 module type NavigableCollection_1 = {
   type t 'a;
 
-  include SequentialCollection_1 with type t 'a := t 'a;
+  include Collection_1 with type t 'a := t 'a;
   include ReduceableRight_1 with type t 'a := t 'a;
+  include Sequential_1 with type t 'a := t 'a;
 
   let last: (t 'a) => (option 'a);
   let lastOrRaise: (t 'a) => 'a;
@@ -1077,9 +1064,10 @@ module type PersistentNavigableMap_1 = {
 module type Stack_1 = {
   type t 'a;
 
-  include ReverseMappable_1 with type t 'a := t 'a;
-  include SequentialCollection_1 with type t 'a := t 'a;
+  include Collection_1 with type t 'a := t 'a;
   include PersistentCollection_1 with type t 'a := t 'a;
+  include ReverseMappable_1 with type t 'a := t 'a;
+  include Sequential_1 with type t 'a := t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
   /** [addFirst value stack] returns a new Stack with [value] prepended.
@@ -1494,9 +1482,10 @@ let module Option: {
   type t 'a = option 'a;
   /** The Option type. */
 
+  include Collection_1 with type t 'a := t 'a;
   include FlatMappable_1 with type t 'a := t 'a;
   include Mappable_1 with type t 'a := t 'a;
-  include SequentialCollection_1 with type t 'a := t 'a;
+  include Sequential_1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
   /** The empty Option, None. */

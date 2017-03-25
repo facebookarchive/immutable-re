@@ -12,10 +12,10 @@ module type S = {
   type t;
 
   let compare: Comparator.t t;
-  let first: t => option a;
-  let firstOrRaise: t => a;
   let reduceRight:
     while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let first: t => option a;
+  let firstOrRaise: t => a;
   let last: t => option a;
   let lastOrRaise: t => a;
   let toIteratorRight: t => Iterator.t a;
