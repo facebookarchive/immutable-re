@@ -23,7 +23,7 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
         |> Iterator.map Hashtbl.hash;
 
       let set = values
-        |> Iterator.reduce (fun acc i => acc |> PersistentSet.add i) (PersistentSet.empty ());
+        |> Iterator.reduce (fun acc i => acc |> PersistentSet.add i) PersistentSet.empty;
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
       values |> Iterator.Reducer.forEach (fun i => {
@@ -35,7 +35,7 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
         |> IntRange.toIterator
         |> Iterator.map Hashtbl.hash;
 
-      let set = PersistentSet.empty () |> PersistentSet.addAll values;
+      let set = PersistentSet.empty |> PersistentSet.addAll values;
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
       values |> Iterator.Reducer.forEach (fun i => {
@@ -52,7 +52,7 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
       range |> PersistentSet.contains count |> Expect.toBeEqualToFalse;
     }),
     it "count" (fun () => {
-      PersistentSet.empty () |> PersistentSet.count |> Expect.toBeEqualToInt 0;
+      PersistentSet.empty |> PersistentSet.count |> Expect.toBeEqualToInt 0;
     }),
     it "equals" (fun () => {
       let set1 = IntRange.create start::0 count::count
@@ -105,7 +105,7 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
         |> Expect.toBeEqualToTrue;
     }),
     it "isEmpty" (fun () => {
-      PersistentSet.empty () |> PersistentSet.isEmpty |> Expect.toBeEqualToTrue;
+      PersistentSet.empty |> PersistentSet.isEmpty |> Expect.toBeEqualToTrue;
 
       IntRange.create start::(-countDiv2) count::count
        |> IntRange.toIterator
@@ -115,7 +115,7 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
        |> Expect.toBeEqualToFalse;
     }),
     it "isNotEmpty" (fun () => {
-      PersistentSet.empty () |> PersistentSet.isNotEmpty |> Expect.toBeEqualToFalse;
+      PersistentSet.empty |> PersistentSet.isNotEmpty |> Expect.toBeEqualToFalse;
 
       IntRange.create start::(-countDiv2) count::count
        |> IntRange.toIterator

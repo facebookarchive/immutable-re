@@ -20,8 +20,7 @@ let module HashIntMap: PersistentMap.S1 with type k = int = {
   let count = HashMap.count;
   let empty () => HashMap.emptyWith
     hash::(fun i => i)
-    comparator::Comparator.int
-    ();
+    comparator::Comparator.int;
 
   let from iter => HashMap.fromWith
     hash::(fun i => i)

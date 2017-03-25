@@ -9,8 +9,6 @@
 
 open ReUnit.Test;
 
-open Immutable;
-
 ReUnit.run (describe "Immutable.re" [
   CopyOnWriteArrayTest.test,
   DequeTest.test,

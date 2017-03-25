@@ -37,8 +37,7 @@ let count ({ count }: t 'a): int => count;
 
 let emptyWith
     hash::(hash: Hash.t 'a)
-    comparator::(comparator: Comparator.t 'a)
-    (): (t 'a) => {
+    comparator::(comparator: Comparator.t 'a): (t 'a) => {
   count: 0,
   root: BitmapTrieSet.Empty,
   comparator,
@@ -64,7 +63,7 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 };
 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
-  emptyWith hash::hash comparator::comparator ();
+  emptyWith hash::hash comparator::comparator;
 
 /* FIXME: Shouldn't use sequences to implement all these.
  * They're way slow.
@@ -177,7 +176,7 @@ let module TransientHashSet = {
       hash::(hash: Hash.t 'a)
       comparator::(comparator: Comparator.t 'a)
       (): (t 'a) =>
-    persistentEmptyWith hash::hash comparator::comparator () |>  mutate;
+    persistentEmptyWith hash::hash comparator::comparator |>  mutate;
 
   let isEmpty (transient: t 'a): bool =>
     transient |> Transient.get |> isEmpty;
@@ -211,7 +210,7 @@ let module TransientHashSet = {
   let removeAllImpl
       (_: Transient.Owner.t)
       ({ hash, comparator }: hashSet 'a): (hashSet 'a) =>
-    persistentEmptyWith hash::hash comparator::comparator ();
+    persistentEmptyWith hash::hash comparator::comparator;
 
   let removeAll (transient: t 'a): (t 'a) =>
     transient |> Transient.update removeAllImpl;
@@ -226,21 +225,21 @@ let fromWith
     hash::(hash: Hash.t 'a)
     comparator::(comparator: Comparator.t 'a)
     (iterator: Iterator.t 'a): (t 'a) =>
-  emptyWith hash::hash comparator::comparator () |> addAll iterator;
+  emptyWith hash::hash comparator::comparator |> addAll iterator;
 
 let intersect ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator ()
+  emptyWith hash::hash comparator::comparator
     |> addAll (ImmSet.intersect (toSet this) (toSet that));
 
 let subtract ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator ()
+  emptyWith hash::hash comparator::comparator
     |> addAll (ImmSet.subtract (toSet this) (toSet that));
 
 let union ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator ()
+  emptyWith hash::hash comparator::comparator
     |> addAll (ImmSet.union (toSet this) (toSet that));
 
 let module Reducer = Reducer.Make1 {

@@ -88,7 +88,7 @@ let test (n: int) (count: int): Test.t => {
     |> IntSet.toMap
     |> Map.toKeyedIterator
     |> HashMap.putAll
-    <| hashMapEmpty ();
+    <| hashMapEmpty;
 
   let intMap = keys
     |> IntSet.from
@@ -133,7 +133,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => hashMap)
         (fun () => keys)
-        (fun () => hashMapEmpty ())
+        (fun () => hashMapEmpty)
         HashMap.put
         HashMap.remove
         HashMap.get
@@ -144,7 +144,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => hashMap |> HashMap.mutate)
         (fun () => keys)
-        (fun () => hashMapEmpty () |> HashMap.mutate)
+        (fun () => hashMapEmpty |> HashMap.mutate)
         TransientHashMap.put
         TransientHashMap.remove
         TransientHashMap.get

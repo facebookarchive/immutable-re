@@ -30,7 +30,7 @@ let contains (value: int) ({ root }: t): bool =>
 
 let count ({ count }: t): int => count;
 
-let empty (): t => { count: 0, root: BitmapTrieIntSet.Empty };
+let empty: t = { count: 0, root: BitmapTrieIntSet.Empty };
 
 let isEmpty ({ count }: t): bool => count == 0;
 
@@ -48,7 +48,7 @@ let remove (value: int) ({ count, root } as set: t): t => {
 };
 
 let removeAll (_: t): t =>
-  empty ();
+  empty;
 
 let toSequence ({ root }: t): (Sequence.t int) =>
   root |> BitmapTrieIntSet.toSequence;
@@ -148,7 +148,7 @@ let module TransientIntSet = {
   let persistentEmpty = empty;
 
   let empty (): t =>
-    empty () |> mutate;
+    empty |> mutate;
 
   let isEmpty (transient: t): bool =>
     transient |> Transient.get |> isEmpty;
@@ -178,7 +178,7 @@ let module TransientIntSet = {
 
   let removeAllImpl
       (_: Transient.Owner.t)
-      (_: intSet): intSet => persistentEmpty ();
+      (_: intSet): intSet => persistentEmpty;
 
   let removeAll (transient: t): t =>
     transient |> Transient.update removeAllImpl;
@@ -190,7 +190,7 @@ let addAll (iter: Iterator.t int) (set: t): t =>
   set |> mutate |> TransientIntSet.addAll iter |> TransientIntSet.persist;
 
 let from (iter: Iterator.t int): t =>
-  empty () |> addAll iter;
+  empty |> addAll iter;
 
 let intersect (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */

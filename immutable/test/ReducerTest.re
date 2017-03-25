@@ -14,7 +14,7 @@ open ReUnit.Test;
 let test = describe "Reducer" [
   describe "S" [
     it "every" (fun () => {
-      IntRange.Reducer.every (fun _ => false) (IntRange.empty ()) |> Expect.toBeEqualToTrue;
+      IntRange.Reducer.every (fun _ => false) IntRange.empty |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.Reducer.every (fun i => i >= 0)
@@ -29,7 +29,7 @@ let test = describe "Reducer" [
         |> IntRange.Reducer.find (fun i => i == 2)
         |> Expect.toBeEqualToSomeOfInt 2;
 
-      (IntRange.empty ())
+      IntRange.empty
         |> IntRange.Reducer.find (fun i => i == 2)
         |> Expect.toBeEqualToNoneOfInt;
 
@@ -42,7 +42,7 @@ let test = describe "Reducer" [
         |> IntRange.Reducer.findOrRaise (fun i => i == 2)
         |> Expect.toBeEqualToInt 2;
 
-      (fun () => (IntRange.empty ()) |> IntRange.Reducer.findOrRaise (fun i => i == 2))
+      (fun () => IntRange.empty |> IntRange.Reducer.findOrRaise (fun i => i == 2))
         |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {
@@ -52,7 +52,7 @@ let test = describe "Reducer" [
       !last |> Expect.toBeEqualToInt 2;
     }),
     it "none" (fun () => {
-      IntRange.Reducer.none (fun _ => false) (IntRange.empty ()) |> Expect.toBeEqualToTrue;
+      IntRange.Reducer.none (fun _ => false) IntRange.empty |> Expect.toBeEqualToTrue;
 
       IntRange.create start::0 count::5
         |> IntRange.Reducer.none (fun i => i >= 2)
@@ -63,7 +63,7 @@ let test = describe "Reducer" [
         |> Expect.toBeEqualToTrue;
     }),
     it "some" (fun () => {
-      IntRange.Reducer.some (fun _ => false) (IntRange.empty ()) |> Expect.toBeEqualToFalse;
+      IntRange.Reducer.some (fun _ => false) IntRange.empty |> Expect.toBeEqualToFalse;
 
       IntRange.create start::0 count::5
         |> IntRange.Reducer.some (fun i => i >= 2)

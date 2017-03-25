@@ -446,6 +446,7 @@ let module Collection: {
     include Iterable.S with type a := a and type t := t;
 
     let count: t => int;
+    let empty: t;
     let isEmpty: t => bool;
     let isNotEmpty: t => bool;
     let toSequence: t => (Sequence.t a);
@@ -1309,8 +1310,6 @@ let module IntRange: {
 
   let create: start::int => count::int => t;
 
-  let empty: unit => t;
-
   let module Reducer: Reducer.S with type a = a and type t := t;
 };
 
@@ -1324,7 +1323,6 @@ let module PersistentSet: {
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
-    let empty: unit => t;
     let from: (Iterator.t a) => t;
     let intersect: t => t => t;
     let remove: a => t => t;
@@ -1408,7 +1406,7 @@ let module rec HashSet: {
   include PersistentSet.S1 with type t 'a := t 'a;
   include Hashable.S1 with type t 'a := t 'a;
 
-  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (HashSet.t 'a);
+  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
   let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same elements as [set].
@@ -1647,7 +1645,7 @@ let module rec HashMap: {
 
   include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
-  let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (HashMap.t 'k 'v);
+  let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
   let fromWith:
       hash::(Hash.t 'k) =>
       comparator::(Comparator.t 'k) =>

@@ -14,14 +14,14 @@ type t = {
   start: int,
 };
 
-let empty (): t => {
+let empty: t = {
   start: 0,
   count: 0,
 };
 
 let create start::(start: int) count::(count: int): t => {
   Preconditions.failIf "count must be >= 0" (count < 0);
-  if (count == 0) (empty ())
+  if (count == 0) empty
   else { start, count };
 };
 

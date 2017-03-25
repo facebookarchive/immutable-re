@@ -28,13 +28,13 @@ module type S = {
     while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toIterator: t => Iterator.t a;
   let count: t => int;
+  let empty: t;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
   let toSequence: t => Sequence.t a;
   let removeAll: t => t;
   let add: a => t => t;
   let addAll: Iterator.t a => t => t;
-  let empty: unit => t;
   let from: (Iterator.t a) => t;
   let intersect: t => t => t;
   let remove: a => t => t;
@@ -68,14 +68,14 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let count ({ count }: t): int => count;
 
-  let empty (): t => { count: 0, tree: AVLTreeSet.Empty };
+  let empty: t = { count: 0, tree: AVLTreeSet.Empty };
 
   let isEmpty ({ count }: t): bool => count == 0;
 
   let isNotEmpty ({ count }: t): bool => count != 0;
 
   let from (iter: Iterator.t a): t =>
-    empty () |> addAll iter;
+    empty |> addAll iter;
 
   let reduce
       while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
@@ -99,7 +99,7 @@ let module Make = fun (Comparable: Comparable.S) => {
   };
 
   let removeAll (_: t): t =>
-    empty ();
+    empty;
 
   let removeFirstOrRaise ({ count, tree }: t): t => {
     let newTree = AVLTreeSet.removeFirstOrRaise tree;

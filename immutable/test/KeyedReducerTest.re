@@ -19,8 +19,7 @@ let module SortedIntMap = SortedMap.Make {
 
 let emptyHashIntMap () => HashMap.emptyWith
   hash::(fun i => i)
-  comparator::Comparator.int
-  ();
+  comparator::Comparator.int;
 
 let expectToBeEqualToIntPair = Expect.toBeEqualToWith
   equals::(fun (a, b) (c, d) => a === c && b === c)

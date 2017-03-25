@@ -88,7 +88,7 @@ let test (n: int) (count: int): Test.t => {
 
   let hashSet = keys
     |> HashSet.addAll
-    <| hashSetEmpty ();
+    <| hashSetEmpty;
 
   let intSet = keys
     |> Iterator.reduce
@@ -99,7 +99,7 @@ let test (n: int) (count: int): Test.t => {
   let sortedSet = keys
     |> Iterator.reduce
       (fun acc i => acc |> SortedIntSet.add i)
-      (SortedIntSet.empty ());
+      SortedIntSet.empty;
 
   let testGroup = [
     describe "CamlIntSet" (
@@ -117,7 +117,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => sortedSet)
         (fun () => keys)
-        (fun () => SortedIntSet.empty ())
+        (fun () => SortedIntSet.empty)
         SortedIntSet.add
         SortedIntSet.remove
         SortedIntSet.contains
@@ -128,7 +128,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => hashSet)
         (fun () => keys)
-        hashSetEmpty
+        (fun () => hashSetEmpty)
         HashSet.add
         HashSet.remove
         HashSet.contains
@@ -139,7 +139,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => hashSet |> HashSet.mutate)
         (fun () => keys)
-        (fun () => hashSetEmpty () |> HashSet.mutate)
+        (fun () => hashSetEmpty |> HashSet.mutate)
         TransientHashSet.add
         TransientHashSet.remove
         TransientHashSet.contains
@@ -150,7 +150,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => intSet)
         (fun () => keys)
-        IntSet.empty
+        (fun () => IntSet.empty)
         IntSet.add
         IntSet.remove
         IntSet.contains
@@ -161,7 +161,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => intSet |> IntSet.mutate)
         (fun () => keys)
-        (fun () => IntSet.empty () |> IntSet.mutate)
+        (fun () => IntSet.empty |> IntSet.mutate)
         TransientIntSet.add
         TransientIntSet.remove
         TransientIntSet.contains

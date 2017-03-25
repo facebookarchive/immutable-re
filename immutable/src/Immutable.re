@@ -214,6 +214,7 @@ let module Collection = {
     include Iterable.S with type a := a and type t := t;
 
     let count: t => int;
+    let empty: t;
     let isEmpty: t => bool;
     let isNotEmpty: t => bool;
     let toSequence: t => (Sequence.t a);
@@ -702,7 +703,6 @@ let module PersistentSet = {
 
     let add: a => t => t;
     let addAll: (Iterator.t a) => t => t;
-    let empty: unit => t;
     let from: (Iterator.t a) => t;
     let intersect: t => t => t;
     let remove: a => t => t;

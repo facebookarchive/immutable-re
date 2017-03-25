@@ -16,8 +16,7 @@ type t 'k 'v = {
 
 let emptyWith
     hash::(hash: Hash.t 'k)
-    comparator::(comparator: Comparator.t 'k)
-    (): (t 'k 'v) => {
+    comparator::(comparator: Comparator.t 'k): (t 'k 'v) => {
   count: 0,
   root: BitmapTrieMap.Empty,
   comparator,
@@ -89,7 +88,7 @@ let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;
 
 let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
-  emptyWith hash::hash comparator::comparator ();
+  emptyWith hash::hash comparator::comparator;
 
 let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
   if (isEmpty map) (Iterator.empty ())
@@ -177,7 +176,7 @@ let module TransientHashMap = {
       hash::(hash: Hash.t 'k)
       comparator::(comparator: Comparator.t 'k)
       (): (t 'k 'v) =>
-    persistentEmptyWith hash::hash comparator::comparator () |> mutate;
+    persistentEmptyWith hash::hash comparator::comparator |> mutate;
 
   let get (key: 'k) (transient: t 'k 'v): (option 'v) =>
    transient |> Transient.get |> get key;
@@ -206,7 +205,7 @@ let module TransientHashMap = {
   let removeAllImpl
       (_: Transient.Owner.t)
       ({ comparator, hash }: hashMap 'k 'v): (hashMap 'k 'v) =>
-    persistentEmptyWith comparator::comparator hash::hash ();
+    persistentEmptyWith comparator::comparator hash::hash;
 
   let removeAll (transient: t 'k 'v): (t 'k 'v) =>
     transient |> Transient.update removeAllImpl;
@@ -217,7 +216,7 @@ let mutate = TransientHashMap.mutate;
 let map (f: 'k => 'a => 'b) ({ comparator, hash } as map: t 'k 'a): (t 'k 'b) => map
   |> reduce (fun acc k v => acc
       |> TransientHashMap.put k (f k v)
-    ) (emptyWith comparator::comparator hash::hash () |> mutate)
+    ) (emptyWith comparator::comparator hash::hash |> mutate)
   |> TransientHashMap.persist;
 
 let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
@@ -227,7 +226,7 @@ let fromWith
     hash::(hash: Hash.t 'k)
     comparator::(comparator: Comparator.t 'k)
     (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
-  emptyWith hash::hash comparator::comparator () |> putAll iter;
+  emptyWith hash::hash comparator::comparator |> putAll iter;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
