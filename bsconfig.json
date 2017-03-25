@@ -6,7 +6,7 @@
       "subdirs": [
         {
           "dir": "src",
-          "subdirs": ["set", "core", "queues", "indexed", "map", "utils"],
+          "subdirs": ["sets", "core", "queues", "indexed", "maps", "utils"],
         },
         {
           "dir": "test",

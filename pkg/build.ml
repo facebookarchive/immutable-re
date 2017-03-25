@@ -11,8 +11,8 @@ let () =
                                   %% (v "-I" % "immutable/src/queues")
                                   %% (v "-I" % "immutable/src/indexed")
                                   %% (v "-I" % "immutable/src/utils")
-                                  %% (v "-I" % "immutable/src/map")
-                                  %% (v "-I" % "immutable/src/set")
+                                  %% (v "-I" % "immutable/src/maps")
+                                  %% (v "-I" % "immutable/src/sets")
                                   %% of_list files)
   in
   let build = Pkg.build ~cmd () in
