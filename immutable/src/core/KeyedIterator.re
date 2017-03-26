@@ -269,7 +269,7 @@ let scan
 
 let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>
   if (iter.reduce === emptyReducer) iter
-  else if (count == 0) iter
+  else if (count === 0) iter
   else {
     reduce: fun predicate f acc => {
       let count = ref count;

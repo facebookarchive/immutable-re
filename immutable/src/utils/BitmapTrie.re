@@ -15,7 +15,7 @@ let bitCountTable = {
   let position1 = ref (-1);
   let position2 = ref (-1);
   for i in 1 to 65535 {
-    if (!position1 == !position2) {
+    if (!position1 === !position2) {
       position1 := 0;
       position2 := i;
     };
@@ -58,4 +58,5 @@ let index (bitmap: int32) (bit: int32): int  =>
   Int32.logand bitmap (Int32.sub bit 1l) |> countBits;
 
 let containsNode (bitmap: int32) (bit: int32): bool =>
+  /* FIXME: Should avoid structural equality at all costs */
   (Int32.logand bitmap bit) != 0l;

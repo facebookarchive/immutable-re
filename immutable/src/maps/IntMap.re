@@ -45,9 +45,9 @@ let get (key: int) ({ root }: t 'v): (option 'v) =>
 let getOrRaise (key: int) ({ root }: t 'v): 'v =>
   root |> BitmapTrieIntMap.get 0 key |> Option.firstOrRaise;
 
-let isEmpty ({ count }: t 'v): bool => count == 0;
+let isEmpty ({ count }: t 'v): bool => count === 0;
 
-let isNotEmpty ({ count }: t 'v): bool => count != 0;
+let isNotEmpty ({ count }: t 'v): bool => count !== 0;
 
 let put (key: int) (value: 'v) (map: t 'v): (t 'v) =>
   map |> alter key (Functions.return @@ Option.return @@ value);

@@ -40,10 +40,10 @@ let getOrRaise (key: 'k) ({ getOrRaise }: t 'k 'v): 'v =>
   getOrRaise key;
 
 let isEmpty ({ count }: t 'k 'v): bool =>
-  count == 0;
+  count === 0;
 
 let isNotEmpty ({ count }: t 'k 'v): bool =>
-  count != 0;
+  count !== 0;
 
 let keys (map: t 'k 'v): (ImmSet.t 'k) => {
   contains: fun k => map |> containsKey k,

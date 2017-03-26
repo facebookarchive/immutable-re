@@ -98,7 +98,7 @@ let childCapacity (trie: t 'a): int =>
 let empty = Empty;
 
 let isEmpty (trie: t 'a) =>
-  (count trie) == 0;
+  (count trie) === 0;
 
 type levelMutator 'a = Transient.Owner.t => int => int => (t 'a) => (t 'a) => (t 'a);
 type leafMutator 'a = Transient.Owner.t => int => 'a => (t 'a) => (t 'a);
@@ -299,7 +299,7 @@ let canRadixSearch (trie: t 'a): bool => switch trie {
   | Level depth count _ tries =>
       let childCapacity = depthCapacity (depth - 1);
       let triesCount = CopyOnWriteArray.count tries;
-      !count == (triesCount * childCapacity)
+      !count === (triesCount * childCapacity)
 };
 
 type leveIndexContinuation 'a 'b =
@@ -387,8 +387,8 @@ let skipImpl
       let (tail, newChildNode) as childResult = childNode |> skip owner skipCount;
 
       switch newChildNode {
-        | Empty when childIndex == triesLastIndex => childResult
-        | Empty when childIndex == (triesLastIndex - 1) =>
+        | Empty when childIndex === triesLastIndex => childResult
+        | Empty when childIndex === (triesLastIndex - 1) =>
           (tail, tries |> CopyOnWriteArray.lastOrRaise)
         | Empty =>
           let newTries = tries |> CopyOnWriteArray.skip (childIndex + 1);
@@ -448,8 +448,8 @@ let takeImpl
       let (newChildNode, tail) as childResult = childNode |> take owner (effectiveIndex + 1);
 
       switch newChildNode {
-        | Empty when childIndex == 0 => childResult
-        | Empty when childIndex == 1 => (tries.(0), tail)
+        | Empty when childIndex === 0 => childResult
+        | Empty when childIndex === 1 => (tries.(0), tail)
         | Empty =>
           let newTries = tries |> CopyOnWriteArray.take childIndex;
           let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
@@ -715,15 +715,15 @@ let updateLeafTransient
 
 let rec validate (trie: t 'a) => switch trie {
   | Empty => ()
-  | Leaf _ v => if ((CopyOnWriteArray.count v) != width) (failwith "arr too small")
+  | Leaf _ v => if ((CopyOnWriteArray.count v) !== width) (failwith "arr too small")
   | Level levelDepth levelCount _ tries =>
       print_string "depth: "; print_int levelDepth; print_newline ();
       print_string "count: "; print_int !levelCount; print_newline ();
       print_string "triesWidth: "; print_int (CopyOnWriteArray.count tries); print_newline ();
       print_newline ();
       let firstTrie = tries |> CopyOnWriteArray.firstOrRaise;
-      if (levelDepth != ((depth firstTrie) + 1)) (failwith "parent level higher than child");
-      if ((count firstTrie) != (capacity firstTrie)) {
+      if (levelDepth !== ((depth firstTrie) + 1)) (failwith "parent level higher than child");
+      if ((count firstTrie) !== (capacity firstTrie)) {
         print_string "firstTrie count: "; print_int (count firstTrie); print_newline ();
         print_string "firstTrie capacity: "; print_int (capacity firstTrie); print_newline ();
         failwith " first Trie isn't full";

@@ -139,7 +139,7 @@ let test (module PersistentSet: PersistentSet with type a = int) (count: int) =>
       IntRange.create start::0 count::count
         |> IntRange.toIterator
         |> Iterator.reduce (fun acc i =>
-            if (i mod 2 == 0) (acc |> PersistentSet.remove i)
+            if (i mod 2 ===0) (acc |> PersistentSet.remove i)
             else acc
           ) set
         |> PersistentSet.toIterator

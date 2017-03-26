@@ -38,7 +38,7 @@ let rec add
         Level (Int32.logor bitmap bit) nodes owner;
       }
   | Entry entryValue =>
-    if (value == entryValue) set
+    if (value === entryValue) set
     else {
       let bitmap = BitmapTrie.bitPos entryValue depth;
       Level bitmap [| set |] owner |> add updateLevelNode owner depth value;
@@ -56,7 +56,7 @@ let rec contains
 
       (BitmapTrie.containsNode bitmap bit) &&
       (contains (depth + 1) value nodes.(index));
-  | Entry entryValue => value == entryValue
+  | Entry entryValue => value === entryValue
   | Empty => false;
 };
 
@@ -123,7 +123,7 @@ let rec remove
           else Empty;
         } else (updateLevelNode owner index newChildNode set);
       } else set;
-  | Entry entryValue when value == entryValue =>
+  | Entry entryValue when value === entryValue =>
       Empty;
   | _ => set
 };

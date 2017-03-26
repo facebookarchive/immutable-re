@@ -30,14 +30,14 @@ let empty (): (t 'a) => {
 
 let equals (this: t 'a) (that: t 'a): bool =>
   if (this === that) true
-  else if (this.count != that.count) false
+  else if (this.count !== that.count) false
   else this.iterator () |> Iterator.Reducer.every that.contains;
 
 let isEmpty ({ count }: t 'a): bool =>
-  count == 0;
+  count === 0;
 
 let isNotEmpty ({ count }: t 'a): bool =>
-  count != 0;
+  count !== 0;
 
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2

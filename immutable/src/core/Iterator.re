@@ -244,7 +244,7 @@ let scan
 
 let skip (count: int) (iter: t 'a): (t 'a) =>
   if (iter.reduce === emptyReducer) iter
-  else if (count == 0) iter
+  else if (count === 0) iter
   else {
     reduce: fun predicate f acc => {
       let count = ref count;
@@ -337,7 +337,7 @@ let buffer
         else if (skip < count) ([next, ...(ImmList.take (count - skip) lst)], counted, skipped)
         else ([next], 1, 1)
       ) ([], 0, 0)
-    |> filter (fun (_, counted, skipped) => counted == count && skipped == skip)
+    |> filter (fun (_, counted, skipped) => counted === count && skipped === skip)
     |> map (fun (lst, _, _) => lst);
 
 let module Reducer = Reducer.Make1 {

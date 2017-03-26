@@ -71,7 +71,7 @@ let test = describe "Sequence" [
   it "filter" (fun () => {
     IntRange.create start::0 count::5
       |> IntRange.toSequence
-      |> Sequence.filter (fun i => i mod 2 == 0)
+      |> Sequence.filter (fun i => i mod 2 ===0)
       |> Sequence.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 2, 0];

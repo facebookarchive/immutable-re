@@ -8,10 +8,3 @@
  */
 
 type t 'a = 'a => int;
-
-let prng = lazy (Random.State.make_self_init ());
-
-let initialValue = 17;
-
-let reducer (hash: t 'a) (acc: int) (next: 'a): int =>
-  (31 * acc) + (hash next);

@@ -22,7 +22,7 @@ let rec alter
     (key: int)
     (f: option 'v => option 'v)
     (map: t 'v): (t 'v) => switch map {
-  | Entry entryKey entryValue when key == entryKey => switch (f @@ Option.return @@ entryValue) {
+  | Entry entryKey entryValue when key === entryKey => switch (f @@ Option.return @@ entryValue) {
       | Some newEntryValue when newEntryValue === entryValue =>
           alterResult := AlterResult.NoChange;
           map;
@@ -99,7 +99,7 @@ let rec containsKey
 
       (BitmapTrie.containsNode bitmap bit) &&
       (containsKey (depth + 1) key nodes.(index));
-  | Entry entryKey _ => key == entryKey;
+  | Entry entryKey _ => key === entryKey;
   | Empty => false;
 };
 
@@ -168,7 +168,7 @@ let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
 
       if (BitmapTrie.containsNode bitmap bit) (get (depth + 1) key nodes.(index))
       else None;
-  | Entry entryKey entryValue when key == entryKey => Some entryValue
+  | Entry entryKey entryValue when key === entryKey => Some entryValue
   | _ => None
 };
 

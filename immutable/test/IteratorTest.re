@@ -69,7 +69,7 @@ let test = describe "Iterator" [
   it "filter" (fun () => {
     IntRange.create start::0 count::5
       |> IntRange.toIterator
-      |> Iterator.filter (fun i => i mod 2 == 0)
+      |> Iterator.filter (fun i => i mod 2 === 0)
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 2, 0];
 

@@ -44,9 +44,9 @@ let emptyWith
   hash,
 };
 
-let isEmpty ({ count }: t 'a): bool => count == 0;
+let isEmpty ({ count }: t 'a): bool => count === 0;
 
-let isNotEmpty ({ count }: t 'a): bool => count != 0;
+let isNotEmpty ({ count }: t 'a): bool => count !== 0;
 
 let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
   let keyHash = hash value;
@@ -154,7 +154,7 @@ let module TransientHashSet = {
       }
     }) root;
 
-    if (!newCount == count) set
+    if (!newCount === count) set
     else { count: !newCount, root: newRoot, hash, comparator };
   };
 

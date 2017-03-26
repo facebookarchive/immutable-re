@@ -9,5 +9,5 @@
 
 type t 'a = 'a => 'a => bool;
 
-let int (this: int) (that: int) =>  this == that;
+let int (this: int) (that: int) => this === that;
 let reference (that: 'a) (this: 'a): bool => that === this;

@@ -21,7 +21,7 @@ let empty: t = {
 
 let create start::(start: int) count::(count: int): t => {
   Preconditions.failIf "count must be >= 0" (count < 0);
-  if (count == 0) empty
+  if (count === 0) empty
   else { start, count };
 };
 
@@ -40,26 +40,26 @@ let contains (value: int) ({ count, start }: t): bool =>
 let count ({ count }: t): int => count;
 
 let equals (this: t) (that: t): bool =>
-  this.start == that.start && this.count == that.count;
+  this.start === that.start && this.count === that.count;
 
 let first ({ count, start }: t): (option int) =>
-  if (count == 0) None
+  if (count === 0) None
   else (Some start);
 
 let firstOrRaise ({ count, start }: t): int =>
-  if (count == 0) (failwith "empty")
+  if (count === 0) (failwith "empty")
   else start;
 
-let isEmpty ({ count }: t): bool => count == 0;
+let isEmpty ({ count }: t): bool => count === 0;
 
-let isNotEmpty ({ count }: t): bool => count != 0;
+let isNotEmpty ({ count }: t): bool => count !== 0;
 
 let last ({ count, start }: t): (option int) =>
-  if (count == 0) None
+  if (count === 0) None
   else (start + count - 1) |> Option.return;
 
 let lastOrRaise ({ count, start }: t): int =>
-  if (count == 0) (failwith "empty")
+  if (count === 0) (failwith "empty")
   else start + count - 1;
 
 let reduce
@@ -68,7 +68,7 @@ let reduce
     (acc: 'acc)
     ({ count, start }: t): 'acc => {
   let rec recurse predicate f start count acc =>
-    if (count == 0) acc
+    if (count === 0) acc
     else if (predicate acc start |> not) acc
     else {
       let acc = f acc start;
@@ -83,7 +83,7 @@ let reduceRight
     (acc: 'acc)
     ({ count, start }: t): 'acc => {
   let rec recurse predicate f start count acc =>
-    if (count == 0) acc
+    if (count === 0) acc
     else if (predicate acc start |> not) acc
     else {
       let acc = f acc start;
@@ -97,14 +97,14 @@ let hash ({ start, count }: t): int =>
 
 let toSequence ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
-    if (count == 0) Sequence.Completed
+    if (count === 0) Sequence.Completed
     else Sequence.Next start (recurse (start + 1) (count - 1));
   recurse start count
 };
 
 let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
-    if (count == 0) Sequence.Completed
+    if (count === 0) Sequence.Completed
     else Sequence.Next start (recurse (start - 1) (count - 1));
   recurse (start + count - 1) count
 };

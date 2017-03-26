@@ -26,23 +26,23 @@ let test = describe "Reducer" [
     }),
     it "find" (fun () => {
       IntRange.create start::0 count::5
-        |> IntRange.Reducer.find (fun i => i == 2)
+        |> IntRange.Reducer.find (fun i => i ===2)
         |> Expect.toBeEqualToSomeOfInt 2;
 
       IntRange.empty
-        |> IntRange.Reducer.find (fun i => i == 2)
+        |> IntRange.Reducer.find (fun i => i ===2)
         |> Expect.toBeEqualToNoneOfInt;
 
       IntRange.create start::0 count::5
-        |> IntRange.Reducer.find (fun i => i == 5)
+        |> IntRange.Reducer.find (fun i => i ===5)
         |> Expect.toBeEqualToNoneOfInt;
     }),
     it "findOrRaise" (fun () => {
       IntRange.create start::0 count::5
-        |> IntRange.Reducer.findOrRaise (fun i => i == 2)
+        |> IntRange.Reducer.findOrRaise (fun i => i ===2)
         |> Expect.toBeEqualToInt 2;
 
-      (fun () => IntRange.empty |> IntRange.Reducer.findOrRaise (fun i => i == 2))
+      (fun () => IntRange.empty |> IntRange.Reducer.findOrRaise (fun i => i ===2))
         |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {
@@ -91,25 +91,25 @@ let test = describe "Reducer" [
     it "find" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.toIterator
-        |> Iterator.Reducer.find (fun i => i == 2)
+        |> Iterator.Reducer.find (fun i => i ===2)
         |> Expect.toBeEqualToSomeOfInt 2;
 
       (Iterator.empty ())
-        |> Iterator.Reducer.find (fun i => i == 2)
+        |> Iterator.Reducer.find (fun i => i ===2)
         |> Expect.toBeEqualToNoneOfInt;
 
       IntRange.create start::0 count::5
         |> IntRange.toIterator
-        |> Iterator.Reducer.find (fun i => i == 5)
+        |> Iterator.Reducer.find (fun i => i ===5)
         |> Expect.toBeEqualToNoneOfInt;
     }),
     it "findOrRaise" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.toIterator
-        |> Iterator.Reducer.findOrRaise (fun i => i == 2)
+        |> Iterator.Reducer.findOrRaise (fun i => i ===2)
         |> Expect.toBeEqualToInt 2;
 
-      (fun () => (Iterator.empty ()) |> Iterator.Reducer.findOrRaise (fun i => i == 2))
+      (fun () => (Iterator.empty ()) |> Iterator.Reducer.findOrRaise (fun i => i ===2))
         |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {

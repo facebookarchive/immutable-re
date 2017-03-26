@@ -32,9 +32,9 @@ let count ({ count }: t): int => count;
 
 let empty: t = { count: 0, root: BitmapTrieIntSet.Empty };
 
-let isEmpty ({ count }: t): bool => count == 0;
+let isEmpty ({ count }: t): bool => count === 0;
 
-let isNotEmpty ({ count }: t): bool => count != 0;
+let isNotEmpty ({ count }: t): bool => count !== 0;
 
 let remove (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.remove
@@ -129,7 +129,7 @@ let module TransientIntSet = {
       }
     }) root;
 
-    if (!newCount == count) set
+    if (!newCount === count) set
     else { count: !newCount, root: newRoot };
   };
 

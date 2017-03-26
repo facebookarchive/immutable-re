@@ -58,9 +58,9 @@ let generateTests
 let module CamlIntMap = CamlMap.Make {
   type t = int;
   let compare (this: int) (that: int): int =>
-    if (this == that) 0
+    if (this < that) (-1)
     else if (this > that) 1
-    else (-1);
+    else 0;
 };
 
 let module SortedIntMap = SortedMap.Make {

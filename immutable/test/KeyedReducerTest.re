@@ -51,31 +51,31 @@ let test = describe "KeyedReducer" [
     it "find" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) (SortedIntMap.empty ())
-        |> SortedIntMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
+        |> SortedIntMap.KeyedReducer.find (fun k v => k === 2 && v === 2)
         |> expectToBeEqualToSomeOfIntPair (2, 2);
 
       (SortedIntMap.empty ())
-        |> SortedIntMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
+        |> SortedIntMap.KeyedReducer.find (fun k v => k === 2 && v === 2)
         |> expectToBeEqualToNoneOfIntPair;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) (SortedIntMap.empty ())
-        |> SortedIntMap.KeyedReducer.find (fun k v => k == 5 && v == 5)
+        |> SortedIntMap.KeyedReducer.find (fun k v => k === 5 && v === 5)
         |> expectToBeEqualToNoneOfIntPair;
     }),
     it "findOrRaise" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) (SortedIntMap.empty ())
-        |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
+        |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k === 2 && v === 2)
         |> expectToBeEqualToIntPair (2, 2);
 
       (fun () => (SortedIntMap.empty ())
-        |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
+        |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k === 2 && v === 2)
       ) |> Expect.shouldRaise;
 
       (fun () => IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) (SortedIntMap.empty ())
-        |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k == 5 && v == 5)
+        |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k === 5 && v === 5)
       ) |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {
@@ -129,31 +129,31 @@ let test = describe "KeyedReducer" [
     it "find" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
-        |> HashMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
+        |> HashMap.KeyedReducer.find (fun k v => k ===2 && v ===2)
         |> expectToBeEqualToSomeOfIntPair (2, 2);
 
       (emptyHashIntMap ())
-        |> HashMap.KeyedReducer.find (fun k v => k == 2 && v == 2)
+        |> HashMap.KeyedReducer.find (fun k v => k ===2 && v ===2)
         |> expectToBeEqualToNoneOfIntPair;
 
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
-        |> HashMap.KeyedReducer.find (fun k v => k == 5 && v == 5)
+        |> HashMap.KeyedReducer.find (fun k v => k ===5 && v ===5)
         |> expectToBeEqualToNoneOfIntPair;
     }),
     it "findOrRaise" (fun () => {
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
-        |> HashMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
+        |> HashMap.KeyedReducer.findOrRaise (fun k v => k ===2 && v ===2)
         |> expectToBeEqualToIntPair (2, 2);
 
       (fun () => (emptyHashIntMap ())
-        |> HashMap.KeyedReducer.findOrRaise (fun k v => k == 2 && v == 2)
+        |> HashMap.KeyedReducer.findOrRaise (fun k v => k ===2 && v ===2)
       ) |> Expect.shouldRaise;
 
       (fun () => IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
-        |> HashMap.KeyedReducer.findOrRaise (fun k v => k == 5 && v == 5)
+        |> HashMap.KeyedReducer.findOrRaise (fun k v => k ===5 && v ===5)
       ) |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {

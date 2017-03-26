@@ -74,9 +74,9 @@ let insertAt (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   retval;
 };
 
-let isEmpty (arr: t 'a): bool => (count arr) == 0;
+let isEmpty (arr: t 'a): bool => (count arr) === 0;
 
-let isNotEmpty (arr: t 'a): bool => (count arr) != 0;
+let isNotEmpty (arr: t 'a): bool => (count arr) !== 0;
 
 let ofUnsafe (arr: array 'a): (t 'a) => arr;
 
@@ -204,8 +204,8 @@ let mapReverseWithIndex (f: int => 'a => 'b) (arr: t 'a): (t 'b) =>
 let removeLastOrRaise (arr: t 'a): (t 'a) => {
   let count = count arr;
 
-  if (count == 0) (failwith "Array is empty")
-  else if (count == 1) [||]
+  if (count === 0) (failwith "Array is empty")
+  else if (count === 1) [||]
   else Array.sub arr 0 (count - 1);
 };
 

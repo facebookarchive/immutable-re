@@ -102,10 +102,10 @@ let module Make = fun (Comparable: Comparable.S) => {
     tree |> AVLTreeMap.getOrRaise comparator key;
 
   let isEmpty ({ count }: t 'v): bool =>
-    count == 0;
+    count === 0;
 
   let isNotEmpty ({ count }: t 'v): bool =>
-    count != 0;
+    count !== 0;
 
   let last ({ tree }: t 'v): (option (k, 'v)) =>
     tree |> AVLTreeMap.last;

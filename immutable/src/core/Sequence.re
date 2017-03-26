@@ -141,10 +141,10 @@ let buffer
           else if (skip < count) (recurse [value, ...(ImmList.take (count - skip) lst)] counted skipped next)
           else (recurse [value] 1 1 next);
 
-        if (counted == count && skipped == skip) (Next lst nextSequence)
+        if (counted === count && skipped === skip) (Next lst nextSequence)
         else (nextSequence ())
     | Completed =>
-        if (counted == count && skipped == skip) (Next lst (empty ()))
+        if (counted === count && skipped === skip) (Next lst (empty ()))
         else Completed
   };
 
@@ -208,7 +208,7 @@ let rec take (count: int) (seq: t 'a): (t 'a) => fun () =>
         Next value (take (count - 1) next)
     | Completed => Completed
   })
-  else if (count == 0) Completed
+  else if (count === 0) Completed
   else failwith "count must be greater or equal to 0";
 
 let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {

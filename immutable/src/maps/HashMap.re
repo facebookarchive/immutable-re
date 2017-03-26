@@ -65,10 +65,10 @@ let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
 };
 
 let isEmpty ({ count }: t 'k 'v): bool =>
-  count == 0;
+  count === 0;
 
 let isNotEmpty ({ count }: t 'k 'v): bool =>
-  count != 0;
+  count !== 0;
 
 let put (key: 'k) (value: 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key (Functions.return @@ Option.return @@ value);

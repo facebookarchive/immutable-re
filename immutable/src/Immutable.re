@@ -422,7 +422,6 @@ module type KeyedIterable_2 = {
   include KeyedReduceable_2 with type t 'k 'v := t 'k 'v;
 
   let toIterator: t 'k 'v => Iterator.t ('k, 'v);
-
   let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
 };
 
@@ -460,7 +459,6 @@ module type PersistentKeyedCollection_1 = {
   include KeyedCollection_1 with type k := k and type t 'v := t 'v;
 
   let remove: k => (t 'v) => (t 'v);
-
   let removeAll: (t 'v) => (t 'v);
 };
 
@@ -470,7 +468,6 @@ module type PersistentKeyedCollection_2 = {
   include KeyedCollection_2 with  type t 'k 'v := t 'k 'v;
 
   let remove: 'k => (t 'k 'v) => (t 'k 'v);
-
   let removeAll: (t 'k 'v) => (t 'k 'v);
 };
 
@@ -479,7 +476,6 @@ module type TransientKeyedCollection_1 = {
   type t 'v;
 
   let containsKey: k => (t 'v) => bool;
-
   let count: (t 'v) => int;
   let isEmpty: (t 'v) => bool;
   let isNotEmpty: (t 'v) => bool;
@@ -692,14 +688,9 @@ module type IndexedCollection_1 = {
   include NavigableCollection_1 with type t 'a := t 'a;
 
   let get: int => (t 'a) => (option 'a);
-  /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
-
   let getOrRaise: int => (t 'a) => 'a;
-
   let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
-
   let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
-
   let toMap: (t 'a) => (Map.t int 'a);
 };
 

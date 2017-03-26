@@ -25,7 +25,7 @@ let rec alter
     (key: 'k)
     (f: option 'v => option 'v)
     (map: t 'k 'v): (t 'k 'v) => switch map {
-  | Entry entryHash entryKey entryValue when (hash == entryHash) =>
+  | Entry entryHash entryKey entryValue when (hash === entryHash) =>
       if (Comparator.toEquality comparator key entryKey) (
         switch (f @@ Option.return @@ entryValue) {
           | Some newEntryValue when newEntryValue === entryValue =>
@@ -151,9 +151,9 @@ let rec containsKey
       (BitmapTrie.containsNode bitmap bit) &&
       (containsKey comparator (depth + 1) hash key nodes.(index));
   | Collision entryHash entryMap =>
-      (hash == entryHash) && (AVLTreeMap.containsKey comparator key entryMap);
+      (hash === entryHash) && (AVLTreeMap.containsKey comparator key entryMap);
   | Entry entryHash entryKey _ =>
-      (hash == entryHash) && (Comparator.toEquality comparator entryKey key);
+      (hash === entryHash) && (Comparator.toEquality comparator entryKey key);
   | Empty => false;
 };
 
@@ -170,10 +170,10 @@ let rec get
       if (BitmapTrie.containsNode bitmap bit) (get comparator (depth + 1) hash key nodes.(index))
       else None
   | Collision entryHash entryMap =>
-      if (hash == entryHash) (AVLTreeMap.get comparator key entryMap)
+      if (hash === entryHash) (AVLTreeMap.get comparator key entryMap)
       else None
   | Entry entryHash entryKey entryValue =>
-      if ((hash == entryHash) && (Comparator.toEquality comparator entryKey key)) {
+      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
         Some entryValue
       } else None
   | Empty => None;
@@ -192,10 +192,10 @@ let rec getOrRaise
       if (BitmapTrie.containsNode bitmap bit) (getOrRaise comparator (depth + 1) hash key nodes.(index))
       else (failwith "NotFound")
   | Collision entryHash entryMap =>
-      if (hash == entryHash) (AVLTreeMap.getOrRaise comparator key entryMap)
+      if (hash === entryHash) (AVLTreeMap.getOrRaise comparator key entryMap)
       else (failwith "NotFound")
   | Entry entryHash entryKey entryValue =>
-      if ((hash == entryHash) && (Comparator.toEquality comparator entryKey key)) {
+      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
         entryValue
       } else (failwith "NotFound")
   | Empty => failwith "NotFound";

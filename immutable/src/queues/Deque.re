@@ -43,10 +43,10 @@ let firstOrRaise (deque: t 'a): 'a => switch deque {
 };
 
 let isEmpty (deque: t 'a): bool =>
-  deque |> count == 0;
+  deque |> count === 0;
 
 let isNotEmpty (deque: t 'a): bool =>
-  deque |> count != 0;
+  deque |> count !== 0;
 
 let last (deque: t 'a): (option 'a) => switch deque {
   | Ascending vector => vector |> Vector.last
@@ -199,10 +199,10 @@ let module TransientDeque = {
   };
 
   let isEmpty (transient: t 'a): bool =>
-    transient |> count == 0;
+    transient |> count === 0;
 
   let isNotEmpty (transient: t 'a): bool =>
-    transient |> count != 0;
+    transient |> count !== 0;
 
   let last (transient: t 'a): (option 'a) => switch (Transient.get transient) {
     | Ascending vector => vector |> TransientVector.last

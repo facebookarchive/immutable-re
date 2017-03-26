@@ -480,7 +480,7 @@ describe (sprintf "count: %i" count) [
 
     IntRange.create start::0 count::count
       |> IntRange.reduce (fun acc i =>
-          acc |> Vector.updateWith i (fun v => if (v == 0) 1 else 0)
+          acc |> Vector.updateWith i (fun v => if (v ===0) 1 else 0)
         ) vector
       |> Vector.toIterator
       |> List.fromReverse

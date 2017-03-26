@@ -69,9 +69,9 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let empty: t = { count: 0, tree: AVLTreeSet.Empty };
 
-  let isEmpty ({ count }: t): bool => count == 0;
+  let isEmpty ({ count }: t): bool => count === 0;
 
-  let isNotEmpty ({ count }: t): bool => count != 0;
+  let isNotEmpty ({ count }: t): bool => count !== 0;
 
   let from (iter: Iterator.t a): t =>
     empty |> addAll iter;

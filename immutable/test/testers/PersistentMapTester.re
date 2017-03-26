@@ -94,7 +94,7 @@ let test (module PersistentMap: PersistentMap_1 with type k = int) (count: int) 
     it "map" (fun () => {
       let mapped = mapHashed |> PersistentMap.map (fun k _ => k);
       mapped |> PersistentMap.toKeyedIterator |> KeyedIterator.KeyedReducer.forEach (fun k v => {
-        k == v |> Expect.toBeEqualToTrue
+        k ===v |> Expect.toBeEqualToTrue
       });
     }),
     it "merge" (fun () => {

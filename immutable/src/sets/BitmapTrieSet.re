@@ -38,13 +38,13 @@ let rec add
         let nodes = nodes |> CopyOnWriteArray.insertAt index entry;
         Level (Int32.logor bitmap bit) nodes owner;
       }
-  | Collision entryHash entrySet when hash == entryHash =>
+  | Collision entryHash entrySet when hash === entryHash =>
       let newEntrySet = entrySet |> AVLTreeSet.add comparator value;
       if (newEntrySet === entrySet) set else (Collision entryHash newEntrySet);
   | Collision entryHash _ =>
       let bitmap = BitmapTrie.bitPos entryHash depth;
       Level bitmap [| set |] owner |> add comparator updateLevelNode owner depth hash value;
-  | Entry entryHash entryValue when hash == entryHash =>
+  | Entry entryHash entryValue when hash === entryHash =>
       if (Comparator.toEquality comparator value entryValue) set
       else {
         let set = AVLTreeSet.Empty
@@ -71,9 +71,9 @@ let rec contains
       (BitmapTrie.containsNode bitmap bit) &&
       (contains comparator (depth + 1) hash value nodes.(index));
   | Collision entryHash entrySet =>
-      (hash == entryHash) && (AVLTreeSet.contains comparator value entrySet);
+      (hash === entryHash) && (AVLTreeSet.contains comparator value entrySet);
   | Entry entryHash entryValue =>
-      (hash == entryHash) && (Comparator.toEquality comparator entryValue value);
+      (hash === entryHash) && (Comparator.toEquality comparator entryValue value);
   | Empty => false;
 };
 
@@ -101,14 +101,14 @@ let rec remove
           else Empty;
         } else (updateLevelNode owner index newChildNode set);
       } else set;
-  | Collision entryHash entrySet when hash == entryHash =>
+  | Collision entryHash entrySet when hash === entryHash =>
       let newEntrySet = entrySet |> AVLTreeSet.remove comparator value;
 
       if (newEntrySet === entrySet) set else (switch newEntrySet {
         | AVLTreeSet.Leaf entryValue => (Entry entryHash entryValue)
         | _ => (Collision entryHash newEntrySet)
       });
-  | Entry entryHash entryValue when (hash == entryHash) && (Comparator.toEquality comparator entryValue value) =>
+  | Entry entryHash entryValue when (hash === entryHash) && (Comparator.toEquality comparator entryValue value) =>
       Empty;
   | _ => set
 };

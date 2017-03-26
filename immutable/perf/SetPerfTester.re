@@ -60,7 +60,7 @@ let generateTests
 let module CamlIntSet = CamlSet.Make {
   type t = int;
   let compare (this: int) (that: int): int =>
-    if (this == that) 0
+    if (this === that) 0
     else if (this > that) 1
     else (-1);
 };

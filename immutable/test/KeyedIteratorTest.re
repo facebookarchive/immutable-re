@@ -85,7 +85,7 @@ let test = describe "KeyedIterator" [
       KeyedIterator.return 3 3,
       KeyedIterator.return 4 4,
     ]
-      |> KeyedIterator.filter (fun k v => k mod 2 == 0)
+      |> KeyedIterator.filter (fun k v => k mod 2 === 0)
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 2, 0];

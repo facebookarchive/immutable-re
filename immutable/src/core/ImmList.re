@@ -92,7 +92,7 @@ let rec some (f: 'a => bool) (list: t 'a): bool => switch list {
 };
 
 let rec take (count: int) (list: t 'a): (t 'a) =>
-  if (count == 0) []
+  if (count === 0) []
   else switch list {
     | [head, ...tail] => [head, ...(tail |> take (count - 1))]
     | _ => failwith "list too short"
