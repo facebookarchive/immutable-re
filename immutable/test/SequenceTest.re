@@ -155,7 +155,25 @@ let test = describe "Sequence" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [10, 6, 3, 1, 0, 0];
   }),
+  it "seek" (fun () => {
+    (fun () => Sequence.empty () |> Sequence.seek (-5)) |> Expect.shouldRaise;
+
+    let seeked = IntRange.create start::0 count::5
+      |> IntRange.toSequence
+      |> Sequence.seek 2;
+
+    seeked |> Sequence.firstOrRaise |> Expect.toBeEqualToInt 2;
+  }),
+  it "seekWhile" (fun () => {
+    let seeked = IntRange.create start::0 count::5
+      |> IntRange.toSequence
+      |> Sequence.seekWhile (fun i => i < 2);
+
+    seeked |> Sequence.firstOrRaise |> Expect.toBeEqualToInt 2;
+  }),
   it "skip" (fun () => {
+    (fun () => Sequence.empty () |> Sequence.skip (-5)) |> Expect.shouldRaise;
+
     IntRange.create start::0 count::5
       |> IntRange.toSequence
       |> Sequence.skip 3
@@ -180,6 +198,8 @@ let test = describe "Sequence" [
       |> Expect.toBeEqualToListOfInt [4, 3, 2, 1, 0, (-1)];
   }),
   it "take" (fun () => {
+    (fun () => Sequence.empty () |> Sequence.take (-5)) |> Expect.shouldRaise;
+
     IntRange.create start::0 count::5
       |> IntRange.toSequence
       |> Sequence.take 3

@@ -13,10 +13,29 @@ let module Equality: {
   type t 'a = 'a => 'a => bool;
   /** The Equality function type. */
 
-  let int: (t int);
+  let bytes: t bytes;
+  /** Compares bytes. */
 
-  let reference: (t 'a);
+  let char: t char;
+  /** Compares chars. */
+
+  let int: t int;
+  /** Compares ints. */
+
+  let int32: t int32;
+  /** Compares int32s. */
+
+  let int64: t int64;
+  /** Compares int64s. */
+
+  let nativeInt: t nativeint;
+  /** Compares nativeInts. */
+
+  let reference: t 'a;
   /** The reference equality function, analogous to === */
+
+  let string: t string;
+  /** Compares strings. */
 };
 
 let module Ordering: {
@@ -42,6 +61,7 @@ let module Comparator: {
   /** Compares chars. */
 
   let int: t int;
+  /** Compares ints. */
 
   let int32: t int32;
   /** Compares int32s. */
@@ -56,6 +76,7 @@ let module Comparator: {
   /** Compares strings. */
 
   let toEquality: (t 'a) => (Equality.t 'a);
+  /** Converts a Comparator function to an Equality function. */
 };
 
 let module Hash: {
@@ -69,53 +90,78 @@ module type Equatable = {
   type t;
 
   let equals: Equality.t t;
+  /** [equals this that] returns [true] if [this] and [that] are equal, otherwise [false] */
 };
 
 module type Equatable_1 = {
   type t 'a;
 
-  let equals: (Equality.t (t 'a));
+  let equals: Equality.t (t 'a);
+  /** [equals this that] returns [true] if [this] and [that] are equal, otherwise [false] */
 };
 
 module type Comparable = {
   type t;
-  /** The type that is compared by the Comparable module. */
 
   include Equatable with type t := t;
 
   let compare: Comparator.t t;
+  /** [compare this that] returns:
+   *    [Ordering.greaterThan] if [this] is greater than [that],
+   *    [Ordering.lessThan] if [this] is less than [that],
+   *    otherwise [Ordering.equals].
+   */
 };
 
 module type Hashable = {
   type t;
 
   let hash: Hash.t t;
+  /** Hashing function.
+   *  1) Guaranteed to return the same hash for the same value if invoked multiple times.
+   *  2) Equals objects will always return the same hash value.
+   *  3) Unequal object may return the same hash.
+   */
 };
 
 module type Hashable_1 = {
   type t 'a;
 
   let hash: Hash.t (t 'a);
+  /** Hashing function.
+   *  1) Guaranteed to return the same hash for the same value if invoked multiple times.
+   *  2) Equals objects will always return the same hash value.
+   *  3) Unequal object may return the same hash.
+   */
 };
 
 module type Concatable_1 = {
   type t 'a;
 
   let concat: (list (t 'a)) => (t 'a);
-  /* [concat concatables] concantenates */
+  /** [concat concatables] concantenates the concatables in order.
+   *  Implementations guarantee support for efficient concatenation,
+   *  i.e. in better than O(N) time.
+   */
 };
 
 module type Mappable_1 = {
   type t 'a;
 
   let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map mapper mappable] Returns a new Mappable with values passed through a mapper function.
+   *  Complexity is implementation dependent, based upon whether the result is eagerly or lazily evaluated.
+   */
 };
 
 module type FlatMappable_1 = {
   type t 'a;
 
   let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
+  /** [flatMap mapper flatMappable] */
+
   let flatten: (t (t 'a)) => (t 'a);
+  /** [flatten flatMappable] */
 };
 
 module type Reduceable = {
@@ -340,6 +386,9 @@ let module Sequence: {
   include Sequential_1 with type t 'a := t 'a;
   include Streamable_1 with type t 'a := t 'a;
   include Zippable_1 with type t 'a := t 'a;
+
+  let seek: int => (t 'a) => (t 'a);
+  let seekWhile: ('a => bool) => (t 'a) => (t 'a);
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };

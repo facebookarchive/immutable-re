@@ -170,15 +170,36 @@ let distinctUntilChangedWith
   }
 };
 
-let skip (count: int) (seq: t 'a): (t 'a) => fun () => {
-  let rec skipIter (count: int) (iter: iterator 'a): (iterator 'a) => switch iter {
-    | Next _ next =>
-        if (count > 0) { skipIter (count - 1) (next ()) }
-        else iter
-    | Completed => Completed
-  };
+let rec seek (count: int) (seq: t 'a): (t 'a) => {
+  Preconditions.failIf "count must be >= 0" (count < 0);
 
-  skipIter count (seq ())
+  if (count === 0) seq
+  else switch (seq ()) {
+    | Next _ next => seek (count - 1) next
+    | Completed => seq
+  };
+};
+
+let rec seekWhile (f: 'a => bool) (seq: t 'a): (t 'a) => switch (seq ()) {
+  | Next value next =>
+      if (f value) (seekWhile f next)
+      else seq
+  | Completed => seq
+};
+
+let skip (count: int) (seq: t 'a): (t 'a) => {
+  Preconditions.failIf "count must be >= 0" (count < 0);
+
+  fun () => {
+    let rec skipIter (count: int) (iter: iterator 'a): (iterator 'a) => switch iter {
+      | Next _ next =>
+          if (count > 0) { skipIter (count - 1) (next ()) }
+          else iter
+      | Completed => Completed
+    };
+
+    skipIter count (seq ())
+  };
 };
 
 let skipWhile (f: 'a => bool) (seq: t 'a): (t 'a) => fun () => {
@@ -202,14 +223,16 @@ let rec takeWhile (f: 'a => bool) (seq: t 'a): (t 'a) => fun () => switch (seq (
   | Completed => Completed
 };
 
-let rec take (count: int) (seq: t 'a): (t 'a) => fun () =>
-  if (count > 0) (switch (seq ()) {
+let rec take (count: int) (seq: t 'a): (t 'a) => {
+  Preconditions.failIf "count must be >= 0" (count < 0);
+
+  fun () => if (count > 0) (switch (seq ()) {
     | Next value next =>
         Next value (take (count - 1) next)
     | Completed => Completed
   })
-  else if (count === 0) Completed
-  else failwith "count must be greater or equal to 0";
+  else Completed;
+};
 
 let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {
   let iters = seqs |> ImmList.mapReverse Functions.call;
