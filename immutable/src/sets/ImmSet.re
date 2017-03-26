@@ -46,7 +46,7 @@ let reduce
     ({ iterator }: t 'a): 'acc =>
   iterator () |> Iterator.reduce while_::predicate f acc;
 
-let toIterator ({ iterator } as set: t 'a): (Iterator.t 'a) =>
+let toIterator ({ iterator }: t 'a): (Iterator.t 'a) =>
   iterator ();
 
 let toSequence ({ sequence }: t 'a): (Sequence.t 'a) =>

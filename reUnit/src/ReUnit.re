@@ -15,7 +15,7 @@ let module Equality = {
       (this: list 'a)
       (that: list 'a): bool => switch (this, that) {
     | ([thisHead, ...thisTail], [thatHead, ...thatTail]) =>
-      if (equals thisHead thatHead) (listWith equals thisTail thatTail)
+      if (equals thisHead thatHead) (listWith equals::equals thisTail thatTail)
       else false
     | ([], []) => true
     | _ => false
@@ -124,10 +124,10 @@ let module Expect = {
       None;
 
   let toBeEqualToNoneOfInt (expect: (option int)) =>
-    toBeEqualToNoneWith string_of_int expect;
+    toBeEqualToNoneWith toString::string_of_int expect;
 
   let toBeEqualToNoneOfString (expect: (option 'a)) =>
-    toBeEqualToNoneWith identity expect;
+    toBeEqualToNoneWith toString::identity expect;
 
   let toBeEqualToSomeWith
       equals::(equals: 'a => 'a => bool)
@@ -168,7 +168,7 @@ let module Expect = {
   }{
     | DidNotRaise =>
         failwith "expected exception to be raised"
-    | exn => ()
+    | _ => ()
   };
 };
 

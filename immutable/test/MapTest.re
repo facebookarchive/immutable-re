@@ -96,7 +96,7 @@ let test = describe "Map" [
       |> Iterator.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
-      |> Map.reduce while_::(fun acc k v => k < 5) (fun acc k v => k + acc) 0
+      |> Map.reduce while_::(fun _ k _ => k < 5) (fun acc k _ => k + acc) 0
       |> Expect.toBeEqualToInt 10;
 
     IntRange.create start::0 count::200
@@ -104,7 +104,7 @@ let test = describe "Map" [
       |> Iterator.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
-      |> Map.reduce while_::(fun acc k v => v < 5) (fun acc k v => v + acc) 0
+      |> Map.reduce while_::(fun _ _ v => v < 5) (fun acc _ v => v + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "toIterator" (fun () => ()),

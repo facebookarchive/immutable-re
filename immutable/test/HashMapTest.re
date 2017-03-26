@@ -8,7 +8,6 @@
  */
 
 open Immutable;
-open ReUnit.Expect;
 open ReUnit.Test;
 
 let module HashIntMap: PersistentMap_1 with type k = int = {

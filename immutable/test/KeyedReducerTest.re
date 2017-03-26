@@ -22,11 +22,11 @@ let emptyHashIntMap () => HashMap.emptyWith
   comparator::Comparator.int;
 
 let expectToBeEqualToIntPair = Expect.toBeEqualToWith
-  equals::(fun (a, b) (c, d) => a === c && b === c)
+  equals::(fun (a, b) (c, d) => a === c && b === d)
   toString::(fun (a, b) => "(" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ ")");
 
 let expectToBeEqualToSomeOfIntPair = Expect.toBeEqualToSomeWith
-  equals::(fun (a, b) (c, d) => a === c && b === c)
+  equals::(fun (a, b) (c, d) => a === c && b === d)
   toString::(fun (a, b) => "(" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ ")");
 
 let expectToBeEqualToNoneOfIntPair = Expect.toBeEqualToNoneWith
@@ -82,7 +82,7 @@ let test = describe "KeyedReducer" [
       let last = ref 0;
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) (SortedIntMap.empty ())
-        |> SortedIntMap.KeyedReducer.forEach while_::(fun k v => k < 3) (fun k v => { last := k });
+        |> SortedIntMap.KeyedReducer.forEach while_::(fun k _ => k < 3) (fun k _ => { last := k });
       !last |> Expect.toBeEqualToInt 2;
     }),
     it "none" (fun () => {
@@ -160,7 +160,7 @@ let test = describe "KeyedReducer" [
       let last = ref 0;
       IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
-        |> HashMap.KeyedReducer.forEach while_::(fun k v => k < 3) (fun k v => { last := k });
+        |> HashMap.KeyedReducer.forEach while_::(fun k _ => k < 3) (fun k _ => { last := k });
       !last |> Expect.toBeEqualToInt 2;
     }),
     it "none" (fun () => {

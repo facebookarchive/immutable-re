@@ -58,21 +58,21 @@ let test = describe "Set" [
   it "reduce" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
-      |> Set.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> Set.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "toIterator" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.toIterator
-      |> Iterator.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> Iterator.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "toSequence" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
       |> Set.toSequence
-      |> Sequence.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> Sequence.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "intersect" (fun () => {

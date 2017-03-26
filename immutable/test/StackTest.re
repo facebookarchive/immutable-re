@@ -8,7 +8,6 @@
  */
 
 open Immutable;
-open ReUnit.Expect;
 open ReUnit.Test;
 
 let module Tester = StackTester.Make (Stack: Stack_1) ({

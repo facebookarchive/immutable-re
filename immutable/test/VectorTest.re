@@ -149,7 +149,7 @@ describe (sprintf "count: %i" count) [
     Iterator.repeat 0
       |> Iterator.take count
       |> Vector.from
-      |> Vector.mapWithIndex (fun i v => if (i mod 2 === 0) 0 else 1)
+      |> Vector.mapWithIndex (fun i _ => if (i mod 2 === 0) 0 else 1)
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
@@ -163,7 +163,7 @@ describe (sprintf "count: %i" count) [
     Iterator.repeat 0
       |> Iterator.take count
       |> Vector.from
-      |> Vector.mapReverseWithIndex (fun i v => if (i mod 2 === 0) 0 else 1)
+      |> Vector.mapReverseWithIndex (fun i _ => if (i mod 2 === 0) 0 else 1)
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
@@ -435,7 +435,7 @@ describe (sprintf "count: %i" count) [
     (fun () => map |> Map.getOrRaise count) |> Expect.shouldRaise;
 
     map
-      |> Map.reduce while_::(fun acc k v => k < countDiv4 ) (fun acc k v => 1 + acc) 0
+      |> Map.reduce while_::(fun _ k _ => k < countDiv4 ) (fun acc _ _  => 1 + acc) 0
       |> Expect.toBeEqualToInt countDiv4;
   }),
   it "update" (fun () => {
@@ -462,7 +462,7 @@ describe (sprintf "count: %i" count) [
       |> Vector.from;
 
     vector
-      |> Vector.updateAll (fun i v => if (i mod 2 === 0) 0 else 1)
+      |> Vector.updateAll (fun i _ => if (i mod 2 === 0) 0 else 1)
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (

@@ -128,7 +128,7 @@ let test (module PersistentSet: PersistentSet with type a = int) (count: int) =>
       IntRange.create start::0 count::count
         |> IntRange.toIterator
         |> PersistentSet.from
-        |> PersistentSet.reduce while_::(fun acc i => acc < countDiv2) (fun acc i => 1 + acc) 0
+        |> PersistentSet.reduce while_::(fun acc _ => acc < countDiv2) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv2;
     }),
     it "remove" (fun () => {
@@ -178,7 +178,7 @@ let test (module PersistentSet: PersistentSet with type a = int) (count: int) =>
         |> IntRange.toIterator
         |> PersistentSet.from
         |> PersistentSet.toIterator
-        |> Iterator.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Iterator.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toMap" (fun () => ()),
@@ -187,7 +187,7 @@ let test (module PersistentSet: PersistentSet with type a = int) (count: int) =>
         |> IntRange.toIterator
         |> PersistentSet.from
         |> PersistentSet.toSequence
-        |> Sequence.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toSet" (fun () => {
@@ -202,12 +202,12 @@ let test (module PersistentSet: PersistentSet with type a = int) (count: int) =>
       set |> Set.count |> Expect.toBeEqualToInt count;
 
       set
-        |> Set.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Set.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
 
       set
         |> Set.toSequence
-        |> Sequence.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "union" (fun () => {

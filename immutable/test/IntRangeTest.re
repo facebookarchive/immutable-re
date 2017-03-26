@@ -124,37 +124,37 @@ let test = describe "IntRange" [
   }),
   it "reduce"  (fun () => {
     IntRange.create start::1 count::20
-      |> IntRange.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> IntRange.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "reduceRight"  (fun () => {
     IntRange.create start::1 count::20
-      |> IntRange.reduceRight while_::(fun acc i => i > 15) (fun acc i => i + acc) 0
+      |> IntRange.reduceRight while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),
   it "toIterator"  (fun () => {
     IntRange.create start::1 count::20
       |> IntRange.toIterator
-      |> Iterator.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> Iterator.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "toIteratorRight"  (fun () => {
     IntRange.create start::1 count::20
       |> IntRange.toIteratorRight
-      |> Iterator.reduce while_::(fun acc i => i > 15) (fun acc i => i + acc) 0
+      |> Iterator.reduce while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),
   it "toMap"  (fun () => ()),
   it "toSequence"  (fun () => {
     IntRange.create start::1 count::20
       |> IntRange.toSequence
-      |> Sequence.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> Sequence.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "toSequenceRight"  (fun () => {
     IntRange.create start::1 count::20
       |> IntRange.toSequenceRight
-      |> Sequence.reduce while_::(fun acc i => i > 15) (fun acc i => i + acc) 0
+      |> Sequence.reduce while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),
   it "toSet"  (fun () => {
@@ -166,12 +166,12 @@ let test = describe "IntRange" [
     set |> Set.count |> Expect.toBeEqualToInt 200;
 
     set
-      |> Set.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> Set.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
 
     set
       |> Set.toSequence
-      |> Sequence.reduce while_::(fun acc i => i < 5) (fun acc i => i + acc) 0
+      |> Sequence.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
 ];

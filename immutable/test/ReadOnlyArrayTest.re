@@ -108,7 +108,7 @@ let test = describe "ReadOnlyArray" [
     (fun () => map |> Map.getOrRaise count) |> Expect.shouldRaise;
 
     map
-      |> Map.reduce while_::(fun acc k v => k < countDiv4) (fun acc k v => 1 + acc) 0
+      |> Map.reduce while_::(fun _ k _ => k < countDiv4) (fun acc _ _ => 1 + acc) 0
       |> Expect.toBeEqualToInt countDiv4;
   }),
   it "toSequence" (fun () => ()),

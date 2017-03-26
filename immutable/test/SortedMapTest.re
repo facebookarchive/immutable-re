@@ -109,7 +109,7 @@ let navigationTests (count: int) => {
         |> Iterator.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
         |> SortedIntMap.toIteratorRight
-        |> Iterator.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Iterator.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toSequenceRight" (fun () => {
@@ -118,7 +118,7 @@ let navigationTests (count: int) => {
         |> Iterator.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
         |> SortedIntMap.toSequenceRight
-        |> Sequence.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
   ]

@@ -95,7 +95,7 @@ let test = describe "Sequence" [
   it "flatMap" (fun () => {
     IntRange.create start::0 count::3
       |> IntRange.toSequence
-      |> Sequence.flatMap (fun i => List.toSequence [1, 1, 1])
+      |> Sequence.flatMap (fun _ => List.toSequence [1, 1, 1])
       |> Sequence.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [1, 1, 1, 1, 1, 1, 1, 1, 1];

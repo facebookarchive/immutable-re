@@ -8,7 +8,6 @@
  */
 
 open Immutable;
-open ReUnit.Expect;
 open ReUnit.Test;
 
 let module HashIntSet: PersistentSet with type a = int = {

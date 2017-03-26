@@ -60,7 +60,7 @@ let navigationTests (count: int) => {
       IntRange.create start::0 count::count
         |> IntRange.toIterator
         |> SortedIntSet.from
-        |> SortedIntSet.reduceRight while_::(fun acc i => acc < countDiv2) (fun acc i => 1 + acc) 0
+        |> SortedIntSet.reduceRight while_::(fun acc _ => acc < countDiv2) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv2;
     }),
     it "removeFirstOrRaise" (fun () => {
@@ -72,7 +72,8 @@ let navigationTests (count: int) => {
         |> IntRange.reduce (fun acc i => {
             acc |> SortedIntSet.firstOrRaise |> Expect.toBeEqualToInt i;
             acc |> SortedIntSet.removeFirstOrRaise;
-          }) set;
+          }) set
+        |> ignore;
 
       (fun () => SortedIntSet.empty |> SortedIntSet.removeFirstOrRaise) |> Expect.shouldRaise;
     }),
@@ -85,7 +86,8 @@ let navigationTests (count: int) => {
         |> IntRange.reduceRight (fun acc i => {
             acc |> SortedIntSet.lastOrRaise |> Expect.toBeEqualToInt i;
             acc |> SortedIntSet.removeLastOrRaise;
-          }) set;
+          }) set
+        |> ignore;
 
       (fun () => SortedIntSet.empty |> SortedIntSet.removeLastOrRaise) |> Expect.shouldRaise;
     }),
@@ -94,7 +96,7 @@ let navigationTests (count: int) => {
         |> IntRange.toIterator
         |> SortedIntSet.from
         |> SortedIntSet.toIteratorRight
-        |> Iterator.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Iterator.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toSequenceRight" (fun () => {
@@ -102,7 +104,7 @@ let navigationTests (count: int) => {
         |> IntRange.toIterator
         |> SortedIntSet.from
         |> SortedIntSet.toSequenceRight
-        |> Sequence.reduce while_::(fun acc i => acc < countDiv4) (fun acc i => 1 + acc) 0
+        |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
   ]

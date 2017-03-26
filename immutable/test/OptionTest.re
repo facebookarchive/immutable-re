@@ -26,7 +26,7 @@ let test = describe "Option" [
   }),
   it "flatMap" (fun () => {
     Option.return 1 |> Option.flatMap (fun i => Option.return (i + 2)) |> Expect.toBeEqualToSomeOfInt 3;
-    Option.return 1 |> Option.flatMap (fun i => (Option.empty ())) |> Expect.toBeEqualToNoneOfInt;
+    Option.return 1 |> Option.flatMap (fun _ => (Option.empty ())) |> Expect.toBeEqualToNoneOfInt;
     (Option.empty ()) |> Option.flatMap (fun i => Option.return (i + 2)) |> Expect.toBeEqualToNoneOfInt;
   }),
   it "flatten" (fun () => {

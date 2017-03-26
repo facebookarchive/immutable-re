@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Option.Operators;
-
 type t 'a = array 'a;
 
 let count (arr: t 'a): int => Array.length arr;

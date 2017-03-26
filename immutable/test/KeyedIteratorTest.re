@@ -69,8 +69,8 @@ let test = describe "KeyedIterator" [
       KeyedIterator.return 3 3,
       KeyedIterator.return 4 4,
     ]
-      |> KeyedIterator.doOnNext (fun k v => { last := k })
-      |> KeyedIterator.KeyedReducer.forEach (fun k v => ());
+      |> KeyedIterator.doOnNext (fun k _ => { last := k })
+      |> KeyedIterator.KeyedReducer.forEach (fun _ _ => ());
     !last |> Expect.toBeEqualToInt 4;
 
     let empty = KeyedIterator.empty ();
@@ -85,7 +85,7 @@ let test = describe "KeyedIterator" [
       KeyedIterator.return 3 3,
       KeyedIterator.return 4 4,
     ]
-      |> KeyedIterator.filter (fun k v => k mod 2 === 0)
+      |> KeyedIterator.filter (fun k _ => k mod 2 === 0)
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 2, 0];
@@ -98,7 +98,7 @@ let test = describe "KeyedIterator" [
     let flatMapped = KeyedIterator.concat [
       KeyedIterator.return 0 0,
       KeyedIterator.return 1 1,
-    ] |> KeyedIterator.flatMap (fun k v => KeyedIterator.concat [
+    ] |> KeyedIterator.flatMap (fun k _ => KeyedIterator.concat [
           KeyedIterator.return k 0,
           KeyedIterator.return k 1,
           KeyedIterator.return k 2,
@@ -119,8 +119,8 @@ let test = describe "KeyedIterator" [
     let mapped = KeyedIterator.repeat 2 3
       |> KeyedIterator.take 5
       |> KeyedIterator.map
-          keyMapper::(fun k v => v)
-          valueMapper::(fun k v => k);
+          keyMapper::(fun _ v => v)
+          valueMapper::(fun k _ => k);
 
     KeyedIterator.keys mapped
       |> List.fromReverse
@@ -133,14 +133,14 @@ let test = describe "KeyedIterator" [
   it "mapKeys" (fun () => {
     KeyedIterator.repeat 2 3
       |> KeyedIterator.take 5
-      |> KeyedIterator.mapKeys (fun k v => 4)
+      |> KeyedIterator.mapKeys (fun _ _ => 4)
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 4, 4, 4, 4];
 
     KeyedIterator.repeat 2 3
       |> KeyedIterator.take 5
-      |> KeyedIterator.mapKeys (fun k v => 4)
+      |> KeyedIterator.mapKeys (fun _ _ => 4)
       |> KeyedIterator.values
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [3, 3, 3, 3, 3];
@@ -148,14 +148,14 @@ let test = describe "KeyedIterator" [
   it "mapValues" (fun () => {
     KeyedIterator.repeat 2 3
       |> KeyedIterator.take 5
-      |> KeyedIterator.mapValues (fun k v => 4)
+      |> KeyedIterator.mapValues (fun _ _ => 4)
       |> KeyedIterator.values
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 4, 4, 4, 4];
 
     KeyedIterator.repeat 2 3
       |> KeyedIterator.take 5
-      |> KeyedIterator.mapKeys (fun k v => 4)
+      |> KeyedIterator.mapKeys (fun _ _ => 4)
       |> KeyedIterator.values
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [3, 3, 3, 3, 3];
@@ -167,7 +167,7 @@ let test = describe "KeyedIterator" [
           k |> Expect.toBeEqualToInt 2;
           v |> Expect.toBeEqualToInt 3;
         })
-      |> KeyedIterator.reduce (fun acc k v => acc + 5) 0
+      |> KeyedIterator.reduce (fun acc _ _ => acc + 5) 0
       |> Expect.toBeEqualToInt 50;
   }),
   it "return" (fun () => {
@@ -176,12 +176,12 @@ let test = describe "KeyedIterator" [
       |> Expect.toBeEqualToInt 3;
 
     KeyedIterator.return 1 2
-      |> KeyedIterator.reduce while_::(fun _  k v => k < 0) (fun acc k v => acc + k + v) 0
+      |> KeyedIterator.reduce while_::(fun _  k _ => k < 0) (fun acc k v => acc + k + v) 0
       |> Expect.toBeEqualToInt 0;
   }),
   it "scan" (fun () => {
     KeyedIterator.repeat 2 3
-      |> KeyedIterator.scan (fun acc k v => k + v) 0
+      |> KeyedIterator.scan (fun _ k v => k + v) 0
       |> Iterator.take 5
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [5, 5, 5, 5, 0];
@@ -203,7 +203,7 @@ let test = describe "KeyedIterator" [
     KeyedIterator.concat [
       KeyedIterator.repeat 2 2 |> KeyedIterator.take 5,
       KeyedIterator.repeat 3 3 |> KeyedIterator.take 5,
-    ] |> KeyedIterator.skipWhile (fun k v => k < 3)
+    ] |> KeyedIterator.skipWhile (fun k _ => k < 3)
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [3, 3, 3, 3, 3];
@@ -237,7 +237,7 @@ let test = describe "KeyedIterator" [
     KeyedIterator.concat [
       KeyedIterator.repeat 2 2 |> KeyedIterator.take 2,
       KeyedIterator.repeat 3 3 |> KeyedIterator.take 5,
-    ] |> KeyedIterator.takeWhile (fun k v => k < 3)
+    ] |> KeyedIterator.takeWhile (fun k _ => k < 3)
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [2, 2];

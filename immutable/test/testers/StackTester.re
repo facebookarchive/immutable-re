@@ -82,8 +82,8 @@ let module Make = fun (Stack: Stack_1) (Config: TesterConfig.S) => {
         |> IntRange.toIteratorRight
         |> Stack.fromReverse
         |> Stack.reduce
-            while_::(fun acc i => i < (Config.count / 2))
-            (fun acc i => acc + 1)
+            while_::(fun _ i => i < (Config.count / 2))
+            (fun acc _ => acc + 1)
             0
         |> Expect.toBeEqualToInt (Config.count / 2);
     }),
@@ -123,8 +123,8 @@ let module Make = fun (Stack: Stack_1) (Config: TesterConfig.S) => {
         |> Stack.fromReverse
         |> Stack.toIterator
         |> Iterator.reduce
-            while_::(fun acc i => i < (Config.count / 2))
-            (fun acc i => acc + 1)
+            while_::(fun _ i => i < (Config.count / 2))
+            (fun acc _ => acc + 1)
             0
         |> Expect.toBeEqualToInt (Config.count / 2);
     }),
@@ -134,8 +134,8 @@ let module Make = fun (Stack: Stack_1) (Config: TesterConfig.S) => {
         |> Stack.fromReverse
         |> Stack.toSequence
         |> Sequence.reduce
-            while_::(fun acc i => i < (Config.count / 2))
-            (fun acc i => acc + 1)
+            while_::(fun _ i => i < (Config.count / 2))
+            (fun acc _ => acc + 1)
             0
         |> Expect.toBeEqualToInt (Config.count / 2);
     }),

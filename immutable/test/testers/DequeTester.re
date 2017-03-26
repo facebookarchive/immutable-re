@@ -76,8 +76,8 @@ let module Make = fun (Deque: Deque_1) (Config: TesterConfig.S) => {
           |> IntRange.toIterator
           |> Deque.from
           |> Deque.reduceRight
-              while_::(fun acc i => i >= (Config.count / 2))
-              (fun acc i => i)
+              while_::(fun _ i => i >= (Config.count / 2))
+              (fun _ i => i)
               0
           |> Expect.toBeEqualToInt (Config.count / 2);
       }),
@@ -104,8 +104,8 @@ let module Make = fun (Deque: Deque_1) (Config: TesterConfig.S) => {
           |> Deque.from
           |> Deque.toIteratorRight
           |> Iterator.reduce
-              while_::(fun acc i => i >= (Config.count / 2))
-              (fun acc i => acc - 1)
+              while_::(fun _ i => i >= (Config.count / 2))
+              (fun acc _ => acc - 1)
               Config.count
           |> Expect.toBeEqualToInt (Config.count / 2);
       }),
@@ -115,8 +115,8 @@ let module Make = fun (Deque: Deque_1) (Config: TesterConfig.S) => {
           |> Deque.from
           |> Deque.toSequenceRight
           |> Sequence.reduce
-              while_::(fun acc i => i >= (Config.count / 2))
-              (fun acc i => acc - 1)
+              while_::(fun _ i => i >= (Config.count / 2))
+              (fun acc _ => acc - 1)
               Config.count
           |> Expect.toBeEqualToInt (Config.count / 2);
       }),

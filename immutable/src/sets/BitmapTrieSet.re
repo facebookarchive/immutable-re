@@ -81,8 +81,8 @@ let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (map: t 'a): 'acc => switch m
   | Level _ nodes _ =>
       let reducer acc map => reduce f acc map;
       nodes |> CopyOnWriteArray.reduce reducer acc;
-  | Collision entryHash entrySet => entrySet |> AVLTreeSet.reduce f acc;
-  | Entry entryHash entryValue => f acc entryValue;
+  | Collision _ entrySet => entrySet |> AVLTreeSet.reduce f acc;
+  | Entry _ entryValue => f acc entryValue;
   | Empty => acc;
 };
 
@@ -98,9 +98,9 @@ let rec reduceWhileWithResult
       let predicate _ _ => !shouldContinue;
 
       nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
-  | Collision entryHash entrySet => entrySet
+  | Collision _ entrySet => entrySet
       |> AVLTreeSet.reduceWhileWithResult shouldContinue predicate f acc
-  | Entry entryHash entryValue =>
+  | Entry _ entryValue =>
       if (!shouldContinue && (predicate acc entryValue)) (f acc entryValue)
       else acc
   | Empty => acc
