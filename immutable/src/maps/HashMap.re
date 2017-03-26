@@ -70,8 +70,26 @@ let isEmpty ({ count }: t 'k 'v): bool =>
 let isNotEmpty ({ count }: t 'k 'v): bool =>
   count !== 0;
 
-let put (key: 'k) (value: 'v) (map: t 'k 'v): (t 'k 'v) =>
-  map |> alter key (Functions.return @@ Option.return @@ value);
+let put (key: 'k) (value: 'v) ({ count, root, comparator, hash } as map: t 'k 'v): (t 'k 'v) => {
+  let hashKey = hash key;
+  let alterResult = ref AlterResult.NoChange;
+  let newRoot = root |> BitmapTrieMap.putWithResult
+    comparator
+    BitmapTrieMap.updateLevelNodePersistent
+    Transient.Owner.none
+    alterResult
+    0
+    hashKey
+    key
+    value;
+
+  switch !alterResult {
+  | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
+  | AlterResult.NoChange => map
+  | AlterResult.Replace => { count, root: newRoot, comparator, hash }
+  | AlterResult.Removed => failwith "invalid state"
+  };
+};
 
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
@@ -193,8 +211,35 @@ let module TransientHashMap = {
   let persist (transient: t 'k 'v): (hashMap 'k 'v) =>
     transient |> Transient.persist;
 
+  let putImpl
+      (owner: Transient.Owner.t)
+      (key: 'k)
+      (value: 'v)
+      ({ count, root, comparator, hash } as map: hashMap 'k 'v): (hashMap 'k 'v) => {
+    let hashKey = hash key;
+    let alterResult = ref AlterResult.NoChange;
+    let newRoot = root |> BitmapTrieMap.putWithResult
+      comparator
+      BitmapTrieMap.updateLevelNodeTransient
+      owner
+      alterResult
+      0
+      hashKey
+      key
+      value;
+
+    switch !alterResult {
+      | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
+      | AlterResult.NoChange => map
+      | AlterResult.Replace =>
+          if (newRoot === root) map
+          else { count, root: newRoot, comparator, hash }
+      | AlterResult.Removed => failwith "invalid state"
+    };
+  };
+
   let put (key: 'k) (value: 'v) (transient: t 'k 'v): (t 'k 'v) =>
-    transient |> alter key (Functions.return @@ Option.return @@ value);
+    transient |> Transient.update2 putImpl key value;
 
   let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
     iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) map;

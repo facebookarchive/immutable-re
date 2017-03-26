@@ -49,8 +49,23 @@ let isEmpty ({ count }: t 'v): bool => count === 0;
 
 let isNotEmpty ({ count }: t 'v): bool => count !== 0;
 
-let put (key: int) (value: 'v) (map: t 'v): (t 'v) =>
-  map |> alter key (Functions.return @@ Option.return @@ value);
+let put (key: int) (value: 'v) ({ count, root } as map: t 'v): (t 'v) => {
+  let alterResult = ref AlterResult.NoChange;
+  let newRoot = root |> BitmapTrieIntMap.putWithResult
+    BitmapTrieIntMap.updateLevelNodePersistent
+    Transient.Owner.none
+    alterResult
+    0
+    key
+    value;
+
+  switch !alterResult {
+    | AlterResult.Added => { count: count + 1, root: newRoot }
+    | AlterResult.NoChange => map
+    | AlterResult.Replace => { count, root: newRoot }
+    | AlterResult.Removed => failwith "invalid state"
+  }
+};
 
 let reduce
     while_::(predicate: 'acc => int => 'v => bool)=Functions.alwaysTrue3
@@ -113,11 +128,11 @@ let module TransientIntMap = {
     let alterResult = ref AlterResult.NoChange;
     let newRoot = root |> BitmapTrieIntMap.alter
       BitmapTrieIntMap.updateLevelNodeTransient
-        owner
-        alterResult
-        0
-        key
-        f;
+      owner
+      alterResult
+      0
+      key
+      f;
 
     switch !alterResult {
       | AlterResult.Added => { count: count + 1, root: newRoot }
@@ -158,8 +173,30 @@ let module TransientIntMap = {
   let persist (transient: t 'v): (intMap 'v) =>
     transient |> Transient.persist;
 
+  let putImpl
+      (owner: Transient.Owner.t)
+      (key: int)
+      (value: 'v)
+      ({ count, root } as map: intMap 'v): (intMap 'v) => {
+    let alterResult = ref AlterResult.NoChange;
+    let newRoot = root |> BitmapTrieIntMap.putWithResult
+      BitmapTrieIntMap.updateLevelNodeTransient
+      owner
+      alterResult
+      0
+      key
+      value;
+
+    switch !alterResult {
+      | AlterResult.Added => { count: count + 1, root: newRoot }
+      | AlterResult.NoChange => map
+      | AlterResult.Replace => if (root === newRoot) map else { count, root: newRoot }
+      | AlterResult.Removed => failwith "invalid state"
+    }
+  };
+
   let put (key: int) (value: 'v) (transient: t 'v): (t 'v) =>
-    transient |> alter key (Functions.return @@ Option.return @@ value);
+    transient |> Transient.update2 putImpl key value;
 
   let putAll
       (iter: KeyedIterator.t int 'v)

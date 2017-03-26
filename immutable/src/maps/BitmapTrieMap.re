@@ -48,21 +48,21 @@ let rec alter
         | None =>
             alterResult := AlterResult.NoChange;
             map;
-      });
+      }
+    );
   | Entry entryHash _ _ => switch (f None) {
       | Some newEntryValue =>
           let bitmap = BitmapTrie.bitPos entryHash depth;
           Level bitmap [| map |] owner
-            |> alter comparator updateLevelNode owner alterResult depth hash key (Functions.return @@ Option.return @@ newEntryValue)
+            |> alter comparator updateLevelNode owner alterResult depth hash key (Functions.returnSome newEntryValue)
       | _ =>
           alterResult := AlterResult.NoChange;
           map
     }
   | Collision entryHash entryMap =>
-      let collisionResult = ref AlterResult.NoChange;
-      let newEntryMap = entryMap |> AVLTreeMap.alter comparator collisionResult key f;
+      let newEntryMap = entryMap |> AVLTreeMap.alter comparator alterResult key f;
 
-      switch !collisionResult {
+      switch !alterResult {
         | AlterResult.Added =>
             alterResult := AlterResult.Added;
             Collision entryHash newEntryMap;
@@ -118,6 +118,79 @@ let rec alter
           alterResult := AlterResult.Added;
           Entry hash key v;
     }
+};
+
+let rec putWithResult
+    (comparator: Comparator.t 'k)
+    (updateLevelNode: updateLevelNode 'k 'v)
+    (owner: Transient.Owner.t)
+    (alterResult: ref AlterResult.t)
+    (depth: int)
+    (hash: int)
+    (key: 'k)
+    (newEntryValue: 'v)
+    (map: t 'k 'v): (t 'k 'v) => switch map {
+  | Entry entryHash entryKey entryValue when (hash === entryHash) =>
+      if (Comparator.toEquality comparator key entryKey) (
+        if (newEntryValue === entryValue) {
+          alterResult := AlterResult.NoChange;
+          map
+        }
+        else {
+          alterResult := AlterResult.Replace;
+          Entry entryHash key newEntryValue;
+        }
+      )
+      else {
+        let map = AVLTreeMap.Empty
+          |> AVLTreeMap.put comparator entryKey entryValue
+          |> AVLTreeMap.put comparator key newEntryValue;
+        alterResult := AlterResult.Added;
+        Collision entryHash map;
+      };
+  | Entry entryHash _ _ =>
+      let bitmap = BitmapTrie.bitPos entryHash depth;
+      Level bitmap [| map |] owner
+        |> alter comparator updateLevelNode owner alterResult depth hash key (Functions.returnSome newEntryValue)
+  | Collision entryHash entryMap =>
+      let newEntryMap = entryMap |> AVLTreeMap.putWithResult comparator alterResult key newEntryValue;
+
+      switch !alterResult {
+        | AlterResult.Added =>
+            alterResult := AlterResult.Added;
+            Collision entryHash newEntryMap;
+        | AlterResult.NoChange =>
+            alterResult := AlterResult.NoChange;
+            map
+        | AlterResult.Replace =>
+            alterResult := Replace;
+            Collision entryHash newEntryMap;
+        | AlterResult.Removed => failwith "Invalid State"
+      };
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos hash depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) {
+        let childNode = nodes.(index);
+        let newChildNode = childNode
+          |> putWithResult comparator updateLevelNode owner alterResult (depth + 1) hash key newEntryValue;
+
+        switch !alterResult {
+          | AlterResult.Added => map |> updateLevelNode owner index newChildNode
+          | AlterResult.NoChange => map
+          | AlterResult.Replace => map |> updateLevelNode owner index newChildNode
+          | AlterResult.Removed => failwith "invalid state"
+        }
+      } else {
+        alterResult := AlterResult.Added;
+        let node = Entry hash key newEntryValue;
+        let nodes = nodes |> CopyOnWriteArray.insertAt index node;
+        Level (Int32.logor bitmap bit) nodes owner
+      }
+  | Empty =>
+      alterResult := AlterResult.Added;
+      Entry hash key newEntryValue;
 };
 
 let updateLevelNodePersistent
