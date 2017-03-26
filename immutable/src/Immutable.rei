@@ -340,34 +340,96 @@ module type Streamable_1 = {
 };
 
 let module Reducer: {
+  /** Module functions for generating modules which provide common reduction functions for [Reduceable]s.
+   *  All functions are O(N), unless otherwise noted.
+   */
+
   module type S = {
     type a;
     type t;
 
+    let count: t => int;
+    /** [count reduceable] returns the total number values produced by [reduceable] */
+
     let every: (a => bool) => t => bool;
+    /** [every f reduceable] returns true if the predicate [f] returns true for all values in [reduceable].
+     *  If [reduceable] is empty, returns [true].
+     */
+
     let find: (a => bool) => t => (option a);
+    /** [find f reduceable] return the Some of the first value in [reduceable] for which the
+     *  the predicate f returns [true]. Otherwise None.
+     */
+
     let findOrRaise: (a => bool) => t => a;
+    /** [findOrRaise f reduceable] return the the first value in [reduceable] for which the
+     *  the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let forEach: while_::(a => bool)? => (a => unit) => t => unit;
+    /** [forEach while_::predicate f reduceable] iterates through [reduceable] applying the
+     *  side effect function [f] to each value, while [predicate] returns true
+     */
+
     let none: (a => bool) => t => bool;
+    /** [none f reduceable] returns true if the predicate [f] returns false for all values in [reduceable].
+     *  If [reduceable] is empty, returns [true].
+     */
+
     let some: (a => bool) => t => bool;
+    /** [some f reduceable] returns true if the predicate [f] returns true for at
+     *  least one value in [reduceable]. If [reduceable] is empty, returns [false].
+     */
   };
 
   module type S1 = {
     type t 'a;
 
+    let count: t 'a => int;
+    /** [count reduceable] returns the total number values produced by [reduceable] */
+
     let every: ('a => bool) => (t 'a) => bool;
+    /** [every f reduceable] returns true if the predicate [f] returns true for all values in [reduceable].
+     *  If [reduceable] is empty, returns [true].
+     */
+
     let find: ('a => bool) => (t 'a) => (option 'a);
+    /** [find f reduceable] return the Some of the first value in [reduceable] for which the
+     *  the predicate f returns [true]. Otherwise None.
+     */
+
     let findOrRaise: ('a => bool) => (t 'a) => 'a;
+    /** [findOrRaise f reduceable] return the the first value in [reduceable] for which the
+     *  the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
+    /** [forEach while_::predicate f reduceable] iterates through [reduceable] applying the
+     *  side effect function [f] to each value, while [predicate] returns true
+     */
+
     let none: ('a => bool) => (t 'a) => bool;
+    /** [none f reduceable] returns true if the predicate [f] returns false for all values in [reduceable].
+     *  If [reduceable] is empty, returns [true].
+     */
+
     let some: ('a => bool) => (t 'a) => bool;
+    /** [some f reduceable] returns true if the predicate [f] returns true for at
+     *  least one value in [reduceable]. If [reduceable] is empty, returns [false].
+     */
   };
 
   let module Make: (Reduceable: Reduceable) => S with type a = Reduceable.a and type t = Reduceable.t;
+  /** Module function to create a [Reducer] for a specific [Reduceable] type. */
+
   let module Make1: (Reduceable: Reduceable_1) => S1 with type t 'a = Reduceable.t 'a;
+  /** Module function to create a [Reducer] for a specific [Reduceable] type
+   *  with a parametric type arity of 1.
+   */
 };
 
 let module Iterator: {
+  /** Functional iterator over a collection of values. Iterators are stateless and can be reused. */
   type t 'a;
 
   include Reduceable_1 with type t 'a := t 'a;
@@ -377,20 +439,30 @@ let module Iterator: {
 };
 
 module type Iterable = {
+  /** Module type implemented by modules that supporting iterating over their values. */
+
   type a;
   type t;
 
   include Reduceable with type a := a and type t := t;
 
   let toIterator: t => (Iterator.t a);
+  /* [toIterator iterable] returns an [Iterator] that can be used to iterate over
+   * the values in [iterable].
+   */
 };
 
 module type Iterable_1 = {
+  /** Module type implemented by modules that supporting iterating over their values. */
+
   type t 'a;
 
   include Reduceable_1 with type t 'a := t 'a;
 
   let toIterator: t 'a => (Iterator.t 'a);
+  /* [toIterator iterable] returns an [Iterator] that can be used to iterate over
+   * the values in [iterable].
+   */
 };
 
 module type Sequential = {
@@ -913,6 +985,7 @@ let module KeyedReducer: {
     type k;
     type t 'v;
 
+    let count: (t 'v) => int;
     let every: (k => 'v => bool) => (t 'v) => bool;
     let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
     let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
@@ -928,6 +1001,7 @@ let module KeyedReducer: {
   module type S2 = {
     type t 'k 'v;
 
+    let count: (t 'k 'v) => int;
     let every: ('k => 'v => bool) => (t 'k 'v) => bool;
     let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
     let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);

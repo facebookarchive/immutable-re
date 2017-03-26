@@ -13,6 +13,11 @@ open ReUnit.Test;
 
 let test = describe "Reducer" [
   describe "S" [
+    it "count" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.Reducer.count
+        |> Expect.toBeEqualToInt 5;
+    }),
     it "every" (fun () => {
       IntRange.Reducer.every (fun _ => false) IntRange.empty |> Expect.toBeEqualToTrue;
 
@@ -75,6 +80,12 @@ let test = describe "Reducer" [
     }),
   ],
   describe "S1" [
+    it "count" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.toIterator
+        |> Iterator.Reducer.count
+        |> Expect.toBeEqualToInt 5;
+    }),
     it "every" (fun () => {
       Iterator.Reducer.every (fun _ => false) (Iterator.empty ()) |> Expect.toBeEqualToTrue;
 

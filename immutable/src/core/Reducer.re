@@ -13,6 +13,7 @@ module type S = {
   type a;
   type t;
 
+  let count: t => int;
   let every: (a => bool) => t => bool;
   let find: (a => bool) => t => (option a);
   let findOrRaise: (a => bool) => t => a;
@@ -24,6 +25,7 @@ module type S = {
 module type S1 = {
   type t 'a;
 
+  let count: t 'a => int;
   let every: ('a => bool) => (t 'a) => bool;
   let find: ('a => bool) => (t 'a) => (option 'a);
   let findOrRaise: ('a => bool) => (t 'a) => 'a;
@@ -35,6 +37,10 @@ module type S1 = {
 let module Make = fun (Reduceable: Reduceable.S) => {
   type a = Reduceable.a;
   type t = Reduceable.t;
+
+  let increment acc _ => acc + 1;
+  let count (reducer: t): int =>
+    reducer |> Reduceable.reduce increment 0;
 
   let every (f: a => bool) (reducer: t): bool =>
     reducer |> Reduceable.reduce while_::(fun acc _ => acc) (fun _ => f) true;
@@ -62,6 +68,10 @@ let module Make = fun (Reduceable: Reduceable.S) => {
 
 let module Make1 = fun (Reduceable: Reduceable.S1) => {
   type t 'a = Reduceable.t 'a;
+
+  let increment acc _ => acc + 1;
+  let count (reducer: t 'a): int =>
+    reducer |> Reduceable.reduce increment 0;
 
   let every (f: 'a => bool) (reducer: t 'a): bool =>
     reducer |> Reduceable.reduce while_::(fun acc _ => acc) (fun _ => f) true;

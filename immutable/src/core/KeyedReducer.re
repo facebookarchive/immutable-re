@@ -11,6 +11,7 @@ module type S1 = {
   type k;
   type t 'v;
 
+  let count: (t 'v) => int;
   let every: (k => 'v => bool) => (t 'v) => bool;
   let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
   let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
@@ -26,6 +27,7 @@ module type S1 = {
 module type S2 = {
   type t 'k 'v;
 
+  let count: (t 'k 'v) => int;
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
   let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
   let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
@@ -41,6 +43,10 @@ module type S2 = {
 let module Make1 = fun (KeyedReduceable: KeyedReduceable.S1) => {
   type k = KeyedReduceable.k;
   type t 'v = KeyedReduceable.t 'v;
+
+  let increment acc _ _ => acc + 1;
+  let count (reducer: t 'v): int =>
+    reducer |> KeyedReduceable.reduce increment 0;
 
   let every (f: k => 'v => bool) (keyedReduceable: t 'v): bool =>
     keyedReduceable |> KeyedReduceable.reduce
@@ -96,6 +102,10 @@ let module Make1 = fun (KeyedReduceable: KeyedReduceable.S1) => {
 
 let module Make2 = fun (KeyedReduceable: KeyedReduceable.S2) => {
   type t 'k 'v = KeyedReduceable.t 'k 'v;
+
+  let increment acc _ _ => acc + 1;
+  let count (reducer: t 'k 'v): int =>
+    reducer |> KeyedReduceable.reduce increment 0;
 
   let every (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): bool =>
     keyedReduceable |> KeyedReduceable.reduce

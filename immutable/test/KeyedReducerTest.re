@@ -34,6 +34,14 @@ let expectToBeEqualToNoneOfIntPair = Expect.toBeEqualToNoneWith
 
 let test = describe "KeyedReducer" [
   describe "S1" [
+    it "count" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.toIterator
+          |> Iterator.map (fun i => (i, i))
+          |> SortedIntMap.fromEntries
+          |> SortedIntMap.KeyedReducer.count
+          |> Expect.toBeEqualToInt 5;
+    }),
     it "every" (fun () => {
       SortedIntMap.KeyedReducer.every (fun _ _ => false) (SortedIntMap.empty ())
         |> Expect.toBeEqualToTrue;
@@ -113,6 +121,14 @@ let test = describe "KeyedReducer" [
     }),
   ],
   describe "S2" [
+    it "count" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.toIterator
+          |> Iterator.map (fun i => (i, i))
+          |> KeyedIterator.fromEntries
+          |> KeyedIterator.KeyedReducer.count
+          |> Expect.toBeEqualToInt 5;
+    }),
     it "every" (fun () => {
       HashMap.KeyedReducer.every (fun _ _ => false) (emptyHashIntMap ()) |> Expect.toBeEqualToTrue;
 
