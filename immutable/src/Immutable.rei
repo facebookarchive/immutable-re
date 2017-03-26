@@ -475,13 +475,88 @@ module type TransientCollection_1 = {
    */
 };
 
-module type NavigableCollection = {
+module type SequentialCollection = {
   type a;
   type t;
 
   include Collection with type a := a and type t := t;
-  include ReduceableRight with type a := a and type t := t;
   include Sequential with type a := a and type t := t;
+};
+
+module type SequentialCollection_1 = {
+  type t 'a;
+
+  include Collection_1 with type t 'a := t 'a;
+  include Sequential_1 with type t 'a := t 'a;
+};
+
+module type PersistentSequentialCollection_1 = {
+  type t 'a;
+
+  include PersistentCollection_1 with type t 'a := t 'a;
+  include ReverseMappable_1 with type t 'a := t 'a;
+  include SequentialCollection_1 with type t 'a := t 'a;
+
+  let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value stack] returns a new Stack with [value] prepended.
+   *
+   *  Complexity: O(_1)
+   */
+
+  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+  /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
+
+  let empty: unit => (t 'a);
+  /** The empty Vector. */
+
+  let fromReverse: (Iterator.t 'a) => (t 'a);
+  /** [fromReverse iter] returns a new Stack containing the values in [iter]
+   *  in reverse order.
+   */
+
+  let return: 'a => (t 'a);
+  /** [return value] returns a new Stack containing a single element, [value]. */
+
+  let removeFirstOrRaise: (t 'a) => (t 'a);
+  /** [removeFirstOrRaise stack] returns a new Stack without the first element.
+   *
+   *  Complexity: O(_1)
+   */
+};
+
+module type TransientSequentialCollection_1 = {
+  type t 'a;
+
+  include TransientCollection_1 with type t 'a := t 'a;
+
+  let addFirst: 'a => (t 'a) => (t 'a);
+  /** [addFirst value transient] prepends [value] to [transient].
+   *
+   *  Complexity: O(_1)
+   */
+
+  let empty: unit => (t 'a);
+  /** [empty ()] returns a new empty TransientDeque. */
+
+  let first: (t 'a) => option 'a;
+  /** [tryFirst transient] returns first element in [transient] or None. */
+
+  let firstOrRaise: (t 'a) => 'a;
+  /** [first transient] returns the first element in [transient] or throws. */
+
+  let removeFirstOrRaise: (t 'a) => (t 'a);
+  /** [removeFirstOrRaise transient] removes the first element from [transient].
+   *
+   *  Complexity: O(_1)
+   */
+};
+
+module type NavigableCollection = {
+  type a;
+  type t;
+
+  include ReduceableRight with type a := a and type t := t;
+  include SequentialCollection with type a := a and type t := t;
 
   let last: t => (option a);
   let lastOrRaise: t => a;
@@ -492,14 +567,66 @@ module type NavigableCollection = {
 module type NavigableCollection_1 = {
   type t 'a;
 
-  include Collection_1 with type t 'a := t 'a;
   include ReduceableRight_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
+  include SequentialCollection_1 with type t 'a := t 'a;
 
   let last: (t 'a) => (option 'a);
   let lastOrRaise: (t 'a) => 'a;
   let toIteratorRight: (t 'a) => (Iterator.t 'a);
   let toSequenceRight: (t 'a) => (Sequence.t 'a);
+};
+
+module type PersistentNavigableCollection_1 = {
+  type t 'a;
+
+  include Mappable_1 with type t 'a := t 'a;
+  include NavigableCollection_1 with type t 'a := t 'a;
+  include PersistentSequentialCollection_1 with type t 'a := t 'a;
+
+  let addLast: 'a => (t 'a) => (t 'a);
+  /** [addLast value deque] returns a new Deque with [value] appended.
+   *
+   *  Complexity: O(_1)
+   */
+
+  let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+  /** [addLastAll iter deque] returns a new Deque with the values in [iter] appended. */
+
+  let from: (Iterator.t 'a) => (t 'a);
+  /** [from iter] returns a new Deque containing the values in [iter].
+   *
+   * Complexity: O(N) the number of elements in [iter].
+   */
+
+  let removeLastOrRaise: (t 'a) => (t 'a);
+  /** [removeLastOrRaise deque] returns a new Deque without the last element.
+   *
+   *  Complexity: O(_1)
+   */
+};
+
+module type TransientNavigableCollection_1 = {
+  type t 'a;
+
+  include TransientSequentialCollection_1 with type t 'a := t 'a;
+
+  let addLast: 'a => (t 'a) => (t 'a);
+  /** [addLast value transient] appends [value] to [transient].
+   *
+   *  Complexity: O(_1)
+   */
+
+  let last: (t 'a) => option 'a;
+  /** [tryLast transient] returns the last element in [transient] or None. */
+
+  let lastOrRaise: (t 'a) => 'a;
+  /** [last transient] returns the last element in [transient] or throws. */
+
+  let removeLastOrRaise: (t 'a) => (t 'a);
+  /** [removeLastOrRaise transient] removes the last element from [transient].
+   *
+   *  Complexity: O(_1)
+   */
 };
 
 let module rec Set: {
@@ -1083,127 +1210,6 @@ module type PersistentNavigableMap_1 = {
   /** [removeLastOrRaise map] returns a new SortedMap without the last element.
    *
    *  Complexity: O(log N)
-   */
-};
-
-module type SequentialCollection_1 = {
-  type t 'a;
-
-  include Collection_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
-};
-
-module type PersistentSequentialCollection_1 = {
-  type t 'a;
-
-  include PersistentCollection_1 with type t 'a := t 'a;
-  include ReverseMappable_1 with type t 'a := t 'a;
-  include SequentialCollection_1 with type t 'a := t 'a;
-
-  let addFirst: 'a => (t 'a) => (t 'a);
-  /** [addFirst value stack] returns a new Stack with [value] prepended.
-   *
-   *  Complexity: O(_1)
-   */
-
-  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
-
-  let empty: unit => (t 'a);
-  /** The empty Vector. */
-
-  let fromReverse: (Iterator.t 'a) => (t 'a);
-  /** [fromReverse iter] returns a new Stack containing the values in [iter]
-   *  in reverse order.
-   */
-
-  let return: 'a => (t 'a);
-  /** [return value] returns a new Stack containing a single element, [value]. */
-
-  let removeFirstOrRaise: (t 'a) => (t 'a);
-  /** [removeFirstOrRaise stack] returns a new Stack without the first element.
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type TransientSequentialCollection_1 = {
-  type t 'a;
-
-  include TransientCollection_1 with type t 'a := t 'a;
-
-  let addFirst: 'a => (t 'a) => (t 'a);
-  /** [addFirst value transient] prepends [value] to [transient].
-   *
-   *  Complexity: O(_1)
-   */
-
-  let empty: unit => (t 'a);
-  /** [empty ()] returns a new empty TransientDeque. */
-
-  let first: (t 'a) => option 'a;
-  /** [tryFirst transient] returns first element in [transient] or None. */
-
-  let firstOrRaise: (t 'a) => 'a;
-  /** [first transient] returns the first element in [transient] or throws. */
-
-  let removeFirstOrRaise: (t 'a) => (t 'a);
-  /** [removeFirstOrRaise transient] removes the first element from [transient].
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type PersistentNavigableCollection_1 = {
-  type t 'a;
-
-  include Mappable_1 with type t 'a := t 'a;
-  include NavigableCollection_1 with type t 'a := t 'a;
-  include PersistentSequentialCollection_1 with type t 'a := t 'a;
-
-  let addLast: 'a => (t 'a) => (t 'a);
-  /** [addLast value deque] returns a new Deque with [value] appended.
-   *
-   *  Complexity: O(_1)
-   */
-
-  let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  /** [addLastAll iter deque] returns a new Deque with the values in [iter] appended. */
-
-  let from: (Iterator.t 'a) => (t 'a);
-  /** [from iter] returns a new Deque containing the values in [iter].
-   *
-   * Complexity: O(N) the number of elements in [iter].
-   */
-
-  let removeLastOrRaise: (t 'a) => (t 'a);
-  /** [removeLastOrRaise deque] returns a new Deque without the last element.
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type TransientNavigableCollection_1 = {
-  type t 'a;
-
-  include TransientSequentialCollection_1 with type t 'a := t 'a;
-
-  let addLast: 'a => (t 'a) => (t 'a);
-  /** [addLast value transient] appends [value] to [transient].
-   *
-   *  Complexity: O(_1)
-   */
-
-  let last: (t 'a) => option 'a;
-  /** [tryLast transient] returns the last element in [transient] or None. */
-
-  let lastOrRaise: (t 'a) => 'a;
-  /** [last transient] returns the last element in [transient] or throws. */
-
-  let removeLastOrRaise: (t 'a) => (t 'a);
-  /** [removeLastOrRaise transient] removes the last element from [transient].
-   *
-   *  Complexity: O(_1)
    */
 };
 
