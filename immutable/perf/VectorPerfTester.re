@@ -110,7 +110,7 @@ let test (n: int) (count: int): Test.t => {
     ),
   ];
 
-  let tests = Sequence.repeat testGroup
+  let tests = Sequence.generate (fun i => i) testGroup
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
     |> Sequence.toIterator

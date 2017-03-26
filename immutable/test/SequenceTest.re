@@ -129,13 +129,6 @@ let test = describe "Sequence" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [6, 3, 0];
   }),
-  it "repeat" (fun () => {
-    Sequence.repeat 5
-      |> Sequence.take 10
-      |> Sequence.toIterator
-      |> Iterator.reduce (fun acc _ => acc + 5) 0
-      |> Expect.toBeEqualToInt 50;
-  }),
   it "return" (fun () => {
     Sequence.return 1
       |> Sequence.toIterator

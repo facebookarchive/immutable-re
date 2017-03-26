@@ -96,7 +96,6 @@ module type Streamable_1 = {
   let empty: unit => (t 'a);
   let filter: ('a => bool) => (t 'a) => (t 'a);
   let generate: ('a => 'a) => 'a => (t 'a);
-  let repeat: 'a => (t 'a);
   let return: 'a => (t 'a);
   let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
   let skip: int => (t 'a) => (t 'a);
@@ -104,26 +103,6 @@ module type Streamable_1 = {
   let startWith: 'a => (t 'a) => (t 'a);
   let take: int => (t 'a) => (t 'a);
   let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-};
-
-module type Zippable_1 = {
-  type t 'a;
-
-  let zip: (list (t 'a)) => (t (list 'a));
-  let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
-  let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
-  let zipLongest: (list (t 'a)) => (t (list (option 'a)));
-  let zipLongest2With:
-    (option 'a => option 'b => 'c) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c);
-  let zipLongest3With:
-    (option 'a => option 'b => option 'c => 'd) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c) =>
-    (t 'd);
 };
 
 let module Reducer = Reducer;

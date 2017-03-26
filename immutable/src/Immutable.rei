@@ -142,7 +142,7 @@ module type Hashable_1 = {
 
 module type FlatMappable_1 = {
   /** Module type implemented by modules that support the flatmap operation.
-   *  Computational complexity is dependent on whether the underlying type
+   *  Computational complexity is dependent upon whether the underlying type
    *  is evaluated eagerly, in which case the operation is O(N), or lazily,
    *  in which case the operation is O(1).
    */
@@ -162,7 +162,7 @@ module type FlatMappable_1 = {
 
 module type Mappable_1 = {
   /** Module type implemented by modules that support the map operation.
-   *  Computational complexity is dependent on whether the underlying type
+   *  Computational complexity is dependent upon whether the underlying type
    *  is evaluated eagerly, in which case the operation is O(N), or lazily,
    *  in which case the operation is O(1).
    */
@@ -241,7 +241,7 @@ module type ReduceableRight_1 = {
 
 module type ReverseMappable_1 = {
   /** Module type implemented by modules that support the mapReverse operation.
-   *  Computation complexity is dependent on whether the underlying type
+   *  Computation complexity is dependent upon whether the underlying type
    *  is evaluated eagerly, in which case the operation is O(N), or lazily,
    *  in which case the operation is O(1).
    */
@@ -303,9 +303,6 @@ module type Streamable_1 = {
   let generate: ('a => 'a) => 'a => (t 'a);
   /** [generate f initialValue] generates the infinite [Streamable_1] [x, f(x), f(f(x)), ...] */
 
-  let repeat: 'a => (t 'a);
-  /** [repeat value] returns a [Streamable_1] that repeats [value] indefinitely. */
-
   let return: 'a => (t 'a);
   /** [return value] returns a single value [Streamable_1] containing [value]. */
 
@@ -339,49 +336,6 @@ module type Streamable_1 = {
   let takeWhile: ('a => bool) => (t 'a) => (t 'a);
   /** [takeWhile f stream] returns a [Streamable_1] including all values in [stream]
    *  while application of the predicate function [f] returns true, then completes.
-   */
-};
-
-module type Zippable_1 = {
-  type t 'a;
-
-  let zip: (list (t 'a)) => (t (list 'a));
-  /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
-   *  Elements are produce until any Sequence in [seq] completes.
-   */
-
-  let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
-  /** [zip_2With f first second] merges two Sequences into a Sequence of tuples.
-   *  Elements are produce until either first or second complete.
-   */
-
-  let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
-  /** [zip3With f first second third] merges two Sequences into a Sequence of triples.
-   *  Elements are produce until either first, second, or third complete.
-   */
-
-  let zipLongest: (list (t 'a)) => (t (list (option 'a)));
-  /** [zip seqs] merges a list of n Sequences into a Sequence of lists with n values.
-   *  Elements are produce until all Sequences in [seq] complete.
-   */
-
-  let zipLongest2With:
-    (option 'a => option 'b => 'c) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c);
-  /** [zipLongest_2With f first second] merges two Sequences into a Sequence of tuples.
-   *  Elements are produce until both first and second complete.
-   */
-
-  let zipLongest3With:
-    (option 'a => option 'b => option 'c => 'd) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c) =>
-    (t 'd);
-  /** [zipLongest3With f first second third] merges two Sequence into a Sequence of triples.
-   *  Elements are produce until first, second, and third all complete.
    */
 };
 
@@ -477,17 +431,69 @@ module type Sequential_1 = {
 };
 
 let module Sequence: {
-  /** Functional sequences. */
+  /** Functional pull based sequences. */
 
   type t 'a;
   /** The Sequence type. */
 
   include Sequential_1 with type t 'a := t 'a;
   include Streamable_1 with type t 'a := t 'a;
-  include Zippable_1 with type t 'a := t 'a;
 
   let seek: int => (t 'a) => (t 'a);
+  /** [seek count seq] scans forward [count] times through [seq]. It is the eagerly
+   *  evaluated equivalent of [skip count seq]. Computational complexity is O(count).
+   */
+
   let seekWhile: ('a => bool) => (t 'a) => (t 'a);
+  /** [seekWhile f seq] scans forward through [seq] while application of
+   *  the predicate function [f] returns true. It is the eagerly evaluated
+   *  equivalent of [skipWhile f seq]. Computational complexity is O(N).
+   */
+
+  let zip: (list (t 'a)) => (t (list 'a));
+  /** [zip seq] returns a [Sequence] which zips a list of [Sequence]s
+   *  into a single [Sequence.t (list 'a)]. Values are produce until any [Sequence]
+   *  in [seq] completes.
+   */
+
+  let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
+  /** [zip2With zipper first second] returns a [Sequence] which zips two [Sequence]s,
+   *  combining values using [zipper]. Values are produce until either [first]
+   *  or [second] complete.
+   */
+
+  let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
+  /** [zip3With zipper first second third] returns a [Sequence] which zips three [Sequence]s,
+   *  combining values using [zipper]. Values are produce until either [first], [second]
+   *  or [third] complete.
+   */
+
+  let zipLongest: (list (t 'a)) => (t (list (option 'a)));
+  /** [zipLongest seq] returns a [Sequence] which zips a list of [Sequence]s
+   *  into a single of [Sequence.t (list (option 'a))]. Values are produce until all [Sequence]s
+   *  in [seq] complete.
+   */
+
+  let zipLongest2With:
+    (option 'a => option 'b => 'c) =>
+    (t 'a) =>
+    (t 'b) =>
+    (t 'c);
+  /** [zipLongest2With zipper first second] returns a [Sequence] which zips two [Sequence]s,
+   *  combining values using [zipper]. Values are produce until both [first]
+   *  and [second] complete.
+   */
+
+  let zipLongest3With:
+    (option 'a => option 'b => option 'c => 'd) =>
+    (t 'a) =>
+    (t 'b) =>
+    (t 'c) =>
+    (t 'd);
+  /** [zipLongest3With zipper first second third] returns a [Sequence] which
+   *  zips three [Sequence]s, combining values using [zipper]. Values are produce
+   *  until [first], [second] and [third] all complete.
+   */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };

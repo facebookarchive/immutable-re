@@ -126,7 +126,7 @@ describe (sprintf "count: %i" count) [
     });
   }),
   it "insertAt" (fun () => {
-    let zeroedVectorOfSizeCount = Iterator.repeat 0
+    let zeroedVectorOfSizeCount = Iterator.generate (fun i => i) 0
       |> Iterator.take count
       |> Vector.from;
 
@@ -139,42 +139,42 @@ describe (sprintf "count: %i" count) [
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.repeat [1, 0]
+          Iterator.generate (fun i => i) [1, 0]
             |> Iterator.take count
             |> Iterator.flatMap List.toIterator
             |> List.fromReverse
         );
   }),
   it "mapWithIndex" (fun () => {
-    Iterator.repeat 0
+    Iterator.generate (fun i => i) 0
       |> Iterator.take count
       |> Vector.from
       |> Vector.mapWithIndex (fun i _ => if (i mod 2 === 0) 0 else 1)
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.repeat [0, 1]
+          Iterator.generate (fun i => i) [0, 1]
             |> Iterator.take (count / 2)
             |> Iterator.flatMap List.toIterator
             |> List.fromReverse
         );
   }),
   it "mapReverseWithIndex" (fun () => {
-    Iterator.repeat 0
+    Iterator.generate (fun i => i) 0
       |> Iterator.take count
       |> Vector.from
       |> Vector.mapReverseWithIndex (fun i _ => if (i mod 2 === 0) 0 else 1)
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.repeat [1, 0]
+          Iterator.generate (fun i => i) [1, 0]
             |> Iterator.take (count / 2)
             |> Iterator.flatMap List.toIterator
             |> List.fromReverse
         );
   }),
   it "removeAt" (fun () => {
-    let vector = Iterator.repeat [0, 1]
+    let vector = Iterator.generate (fun i => i) [0, 1]
       |> Iterator.take (count / 2)
       |> Iterator.flatMap List.toIterator
       |> Vector.from;
@@ -184,7 +184,7 @@ describe (sprintf "count: %i" count) [
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.repeat 1 |> Iterator.take (count / 2) |> List.fromReverse
+          Iterator.generate (fun i => i) 1 |> Iterator.take (count / 2) |> List.fromReverse
         );
   }),
   it "slice" (fun () => {
@@ -439,7 +439,7 @@ describe (sprintf "count: %i" count) [
       |> Expect.toBeEqualToInt countDiv4;
   }),
   it "update" (fun () => {
-    let vector = Iterator.repeat 0
+    let vector = Iterator.generate (fun i => i) 0
       |> Iterator.take count
       |> Vector.from;
 
@@ -450,14 +450,14 @@ describe (sprintf "count: %i" count) [
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.repeat [0, 1]
+          Iterator.generate (fun i => i) [0, 1]
             |> Iterator.take (count / 2)
             |> Iterator.flatMap List.toIterator
             |> List.fromReverse
         );
   }),
   it "updateAll" (fun () => {
-    let vector = Iterator.repeat 0
+    let vector = Iterator.generate (fun i => i) 0
       |> Iterator.take count
       |> Vector.from;
 
@@ -466,14 +466,14 @@ describe (sprintf "count: %i" count) [
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.repeat [0, 1]
+          Iterator.generate (fun i => i) [0, 1]
             |> Iterator.take (count / 2)
             |> Iterator.flatMap List.toIterator
             |> List.fromReverse
         );
   }),
   it "updateWith" (fun () => {
-    let vector = Iterator.repeat [0, 1]
+    let vector = Iterator.generate (fun i => i) [0, 1]
       |> Iterator.take (count / 2)
       |> Iterator.flatMap List.toIterator
       |> Vector.from;
@@ -485,7 +485,7 @@ describe (sprintf "count: %i" count) [
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.repeat [1, 0]
+          Iterator.generate (fun i => i) [1, 0]
             |> Iterator.take (count / 2)
             |> Iterator.flatMap List.toIterator
             |> List.fromReverse

@@ -111,7 +111,7 @@ let test = describe "Iterator" [
       |> Expect.toBeEqualToListOfInt [6, 3, 0];
   }),
   it "repeat" (fun () => {
-    Iterator.repeat 5
+    Iterator.generate Functions.identity 5
       |> Iterator.take 10
       |> Iterator.reduce (fun acc _ => acc + 5) 0
       |> Expect.toBeEqualToInt 50;

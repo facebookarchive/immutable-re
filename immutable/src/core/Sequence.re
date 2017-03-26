@@ -101,12 +101,6 @@ let rec reduce
   | _ => acc
 };
 
-let repeat (value: 'a): (t 'a) => {
-  let rec repeatForever value () =>
-    Next value (repeatForever value);
-  repeatForever value;
-};
-
 let scan
     (reducer: 'acc => 'a => 'acc)
     (acc: 'acc)
@@ -275,7 +269,7 @@ let rec zip3With
 };
 
 let zipLongest (seqs: list (t 'a)): (t (list (option 'a))) => seqs
-  |> ImmList.mapReverse (fun seq => concat [seq |> map Option.return, repeat None ])
+  |> ImmList.mapReverse (fun seq => concat [seq |> map Option.return, generate Functions.identity None])
   |> ImmList.reverse
   |> zip
   |> takeWhile (ImmList.some Option.isNotEmpty);

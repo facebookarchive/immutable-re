@@ -197,18 +197,6 @@ let ofOption (opt: Option.t 'a): (t 'a) =>
       Option.reduce while_::predicate f acc opt
   };
 
-let repeat (value: 'a): (t 'a) => {
-  reduce: fun predicate f acc => {
-    let rec recurse value predicate f acc =>
-      if (predicate acc value) {
-        let acc = f acc value;
-        recurse value predicate f acc;
-      }
-      else acc;
-    recurse value predicate f acc;
-  }
-};
-
 let return (value: 'a): (t 'a) => {
   reduce: fun predicate f acc =>
     if (predicate acc value) (f acc value)
