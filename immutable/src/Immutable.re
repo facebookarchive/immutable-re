@@ -33,23 +33,17 @@ module type Hashable_1 = {
   let hash: Hash.t (t 'a);
 };
 
-module type Concatable_1 = {
+module type FlatMappable_1 = {
   type t 'a;
 
-  let concat: (list (t 'a)) => (t 'a);
+  let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
+  let flatten: (t (t 'a)) => (t 'a);
 };
 
 module type Mappable_1 = {
   type t 'a;
 
   let map: ('a => 'b) => (t 'a) => (t 'b);
-};
-
-module type FlatMappable_1 = {
-  type t 'a;
-
-  let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
-  let flatten: (t (t 'a)) => (t 'a);
 };
 
 module type Reduceable = {
@@ -69,11 +63,15 @@ module type ReduceableRight = {
   type a;
   type t;
 
+  include Reduceable with type a := a and type t := t;
+
   let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
 };
 
 module type ReduceableRight_1 = {
   type t 'a;
+
+  include Reduceable_1 with type t 'a := t 'a;
 
   let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
 };
@@ -87,11 +85,11 @@ module type ReverseMappable_1 = {
 module type Streamable_1 = {
   type t 'a;
 
-  include Concatable_1 with type t 'a := t 'a;
   include FlatMappable_1 with type t 'a := t 'a;
   include Mappable_1 with type t 'a := t 'a;
 
   let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
+  let concat: (list (t 'a)) => (t 'a);
   let defer: (unit => t 'a) => (t 'a);
   let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
   let doOnNext: ('a => unit) => (t 'a) => (t 'a);
@@ -519,11 +517,15 @@ module type KeyedReduceableRight_1 = {
   type k;
   type t 'v;
 
+  include KeyedReduceable_1 with type k := k and type t 'v := t 'v;
+
   let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
 };
 
 module type KeyedReduceableRight_2 = {
   type t 'k 'v;
+
+  include KeyedReduceable_2 with type t 'k 'v := t 'k 'v;
 
   let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
 };

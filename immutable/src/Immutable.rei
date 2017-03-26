@@ -11,31 +11,33 @@ let module Equality: {
   /** Equality functions for common types. */
 
   type t 'a = 'a => 'a => bool;
-  /** The Equality function type. */
+  /** The Equality function type.
+   * [equals this that] returns [true] if [this] and [that] are equal, otherwise [false].
+   */
 
   let bytes: t bytes;
-  /** Compares bytes. */
+  /** Equality for bytes. */
 
   let char: t char;
-  /** Compares chars. */
+  /** Equality for chars. */
 
   let int: t int;
-  /** Compares ints. */
+  /** Equality for ints. */
 
   let int32: t int32;
-  /** Compares int32s. */
+  /** Equality for int32s. */
 
   let int64: t int64;
-  /** Compares int64s. */
+  /** Equality for int64s. */
 
   let nativeInt: t nativeint;
-  /** Compares nativeInts. */
+  /** Equality for nativeInts. */
 
   let reference: t 'a;
   /** The reference equality function, analogous to === */
 
   let string: t string;
-  /** Compares strings. */
+  /** Equality for strings. */
 };
 
 let module Ordering: {
@@ -52,7 +54,12 @@ let module Comparator: {
   /** Comparison functions for common types. */
 
   type t 'a = 'a => 'a => Ordering.t;
-  /** The Comparator function type. */
+  /** The Comparator function type.
+   *  By definition a [compare this that] returns:
+   *    [Ordering.greaterThan] if [this] is greater than [that],
+   *    [Ordering.lessThan] if [this] is less than [that],
+   *    otherwise [Ordering.equals].
+   */
 
   let bytes: t bytes;
   /** Compares bytes. */
@@ -83,163 +90,255 @@ let module Hash: {
   /** Hash functions for common types. */
 
   type t 'a = 'a => int;
-  /** The Hash function type */
+  /** The Hash function type. */
 };
 
 module type Equatable = {
+  /** Module type implemented by modules that support testing values for equality. */
+
   type t;
 
   let equals: Equality.t t;
-  /** [equals this that] returns [true] if [this] and [that] are equal, otherwise [false] */
+  /** An equality function for instances of type [t]. */
 };
 
 module type Equatable_1 = {
+  /** Module type implemented by modules that support testing values for equality. */
+
   type t 'a;
 
   let equals: Equality.t (t 'a);
-  /** [equals this that] returns [true] if [this] and [that] are equal, otherwise [false] */
+  /** An equality function for instances of type [t 'a]. */
 };
 
 module type Comparable = {
+  /** Module type implemented by modules that support absolute ordering of values. */
+
   type t;
 
   include Equatable with type t := t;
 
   let compare: Comparator.t t;
-  /** [compare this that] returns:
-   *    [Ordering.greaterThan] if [this] is greater than [that],
-   *    [Ordering.lessThan] if [this] is less than [that],
-   *    otherwise [Ordering.equals].
-   */
+  /** A comparator function for instances of type [t]. */
 };
 
 module type Hashable = {
+  /** Module type implemented by modules that support hashing. */
+
   type t;
 
   let hash: Hash.t t;
-  /** Hashing function.
-   *  1) Guaranteed to return the same hash for the same value if invoked multiple times.
-   *  2) Equals objects will always return the same hash value.
-   *  3) Unequal object may return the same hash.
-   */
+  /** An hashing function for instances of type [t]. */
 };
 
 module type Hashable_1 = {
+  /** Module type implemented by modules that support hashing. */
+
   type t 'a;
 
   let hash: Hash.t (t 'a);
-  /** Hashing function.
-   *  1) Guaranteed to return the same hash for the same value if invoked multiple times.
-   *  2) Equals objects will always return the same hash value.
-   *  3) Unequal object may return the same hash.
-   */
+  /** An hashing function for instances of type [t 'a]. */
 };
 
-module type Concatable_1 = {
+module type FlatMappable_1 = {
+  /** Module type implemented by modules that support the flatmap operation.
+   *  Computational complexity is dependent on whether the underlying type
+   *  is evaluated eagerly, in which case the operation is O(N), or lazily,
+   *  in which case the operation is O(1).
+   */
+
   type t 'a;
 
-  let concat: (list (t 'a)) => (t 'a);
-  /** [concat concatables] concantenates the concatables in order.
-   *  Implementations guarantee support for efficient concatenation,
-   *  i.e. in better than O(N) time.
+  let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
+  /** [flatMap mapper flatMappable] applies the mapper to each value in
+   *  [flatMappable], flattening the resulting [t 'b]'s into a new [t 'b].
+   */
+
+  let flatten: (t (t 'a)) => (t 'a);
+  /** [flatten flatMappables] flattens the nested values in [flatMappables] into
+   *  a new [t'a].
    */
 };
 
 module type Mappable_1 = {
+  /** Module type implemented by modules that support the map operation.
+   *  Computational complexity is dependent on whether the underlying type
+   *  is evaluated eagerly, in which case the operation is O(N), or lazily,
+   *  in which case the operation is O(1).
+   */
+
   type t 'a;
 
   let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map mapper mappable] Returns a new Mappable with values passed through a mapper function.
-   *  Complexity is implementation dependent, based upon whether the result is eagerly or lazily evaluated.
+  /** [map f mappable] Returns a [Mappable_1] whose values are the result of
+   *  applying the function [f] to each value in [mappable].
    */
 };
 
-module type FlatMappable_1 = {
-  type t 'a;
-
-  let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
-  /** [flatMap mapper flatMappable] */
-
-  let flatten: (t (t 'a)) => (t 'a);
-  /** [flatten flatMappable] */
-};
-
 module type Reduceable = {
+  /** Module type implemented by modules that support reducing over
+   *  values contained by a container.
+   */
+
   type a;
   type t;
 
   let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
+   *  function [f] to each value in [reduceable], while [predicate] returns true,
+   *  accumulating the result.
+   */
 };
 
 module type Reduceable_1 = {
+  /** Module type implemented by modules that support reducing over
+   *  values contained by a container.
+   */
+
   type t 'a;
 
   let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
+   *  function [f] to each value in [reduceable], while [predicate] returns true,
+   *  accumulating the result.
+   */
 };
 
 module type ReduceableRight = {
+  /** Module type implemented by modules that support reducing over
+   *  values contained by a container in both the left to right,
+   *  and right to left directions.
+   */
+
   type a;
   type t;
 
+  include Reduceable with type a := a and type t := t;
+
   let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
+   *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+   *  from the right most value, accumulating the result.
+   */
 };
 
 module type ReduceableRight_1 = {
+  /** Module type implemented by modules that support reducing over
+   *  values contained by a container in both the left to right,
+   *  and right to left directions.
+   */
+
   type t 'a;
 
+  include Reduceable_1 with type t 'a := t 'a;
+
   let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
+   *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+   *  from the right most value, accumulating the result.
+   */
 };
 
 module type ReverseMappable_1 = {
+  /** Module type implemented by modules that support the mapReverse operation.
+   *  Computation complexity is dependent on whether the underlying type
+   *  is evaluated eagerly, in which case the operation is O(N), or lazily,
+   *  in which case the operation is O(1).
+   */
+
   type t 'a;
 
   let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+  /** [mapReverse f reverseMappable] Returns a  [ReverseMappable_1] whose values
+   *  are the result of applying the function [f] to each value in [reverseMappable]
+   *  and reversing the order of values
+   */
 };
 
 module type Streamable_1 = {
+  /** Module type implemented by modules that implement lazily evaluated
+   *  stream functions. All functions defined in this module are O(1).
+   */
+
   type t 'a;
 
-  include Concatable_1 with type t 'a := t 'a;
   include FlatMappable_1 with type t 'a := t 'a;
   include Mappable_1 with type t 'a := t 'a;
 
   let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
-  /** [buffer count skip seq] returns a Sequence that collects elements from [seq]
-   *  into buffer lists of size [count], skipping [skip] number of elements in between
+  /** [buffer count skip stream] returns a [Streamable_1] that collects values from [stream]
+   *  into buffer lists of size [count], skipping [skip] number of values in between the
    *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
-   *  and elements are dropped if [seq] completes before filling the last buffer.
+   *  and values are dropped if [stream] completes before filling the last buffer.
+   */
+
+  let concat: (list (t 'a)) => (t 'a);
+  /** [concat streams] returns a [Streamable_1] that lazily concatenates all the
+   *  [Streamable_1]s in [streams]. The resulting [Streamable_1] returns all the values
+   *  in the first [Streamable_1], followed by all the values in the second [Streamable_1],
+   *  and continues until the last [Streamable_1] completes.
    */
 
   let defer: (unit => t 'a) => (t 'a);
-  /** [defer f] returns a Streamble that invokes the function [f] whenever the Sequence is enumerated. */
+  /** [defer f] returns a [Streamable_1] that invokes the function [f] whenever enumerated. */
 
   let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
-  /** [distinctUntilChangedWith equals seq] returns a Sequence that contains only
-   *  distinct contiguous elements from [seq] using [equals] to equate elements.
+  /** [distinctUntilChangedWith equals stream] returns a [Streamable_1] that contains only
+   *  distinct contiguous values from [stream] using [equals] to equate values.
    */
 
   let doOnNext: ('a => unit) => (t 'a) => (t 'a);
+  /** [doOnNext f stream] returns a [Streamable_1] that applies the side effect
+   *  function [f] to each value in the stream as they are enumerated.
+   */
 
   let empty: unit => (t 'a);
-  /** The empty Streamble. */
+  /** Returns an empty [Streamable_1]. */
 
   let filter: ('a => bool) => (t 'a) => (t 'a);
-  let generate: ('a => 'a) => 'a => (t 'a);
-  let repeat: 'a => (t 'a);
-  let return: 'a => (t 'a);
-  let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
-  /** [scan f acc seq] returns a Sequence of accumulated values resulting from the
-   *  application of the accumulator function [f] to each element in [seq] with the
-   *  specified seed value [acc].
+  /** [filter f stream] returns a [Streamable_1] only including values from [stream]
+   *  for which application of the predicate function [f] returns true.
    */
+
+  let generate: ('a => 'a) => 'a => (t 'a);
+  /** [generate f initialValue] generates the infinite [Streamable_1] [x, f(x), f(f(x)), ...] */
+
+  let repeat: 'a => (t 'a);
+  /** [repeat value] returns a [Streamable_1] that repeats [value] indefinitely. */
+
+  let return: 'a => (t 'a);
+  /** [return value] returns a single value [Streamable_1] containing [value]. */
+
+  let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
+  /** [scan f acc stream] returns a [Streamable_1] of accumulated values resulting from the
+   *  application of the accumulator function [f] to each value in [stream] with the
+   *  specified initial value [acc].
+   */
+
   let skip: int => (t 'a) => (t 'a);
+  /** [skip count stream] return a [Streamable_1] which skips the first [count]
+   *  values in [stream].
+   */
+
   let skipWhile: ('a => bool) => (t 'a) => (t 'a);
+  /** [skipWhile f stream] return a [Streamable_1] which skips values in [stream]
+   *  while application of the predicate function [f] returns true, and then returns
+   *  the remaining values.
+   */
+
   let startWith: 'a => (t 'a) => (t 'a);
-  /** [startWith value seq] returns a seq whose first elements is [value]. */
+  /** [startWith value stream] returns a [Streamable_1] whose first
+   *  value is [value], followed by the values in [stream].
+   */
+
   let take: int => (t 'a) => (t 'a);
+  /** [take count stream] returns a [Streamable_1] with the first [count]
+   *  values in [stream].
+   */
+
   let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-  /** [takeWhile f seq] returns a Streamble that applies the predicate [f] to each element in [seq],
-   *  taking elements until [f] first returns false.
+  /** [takeWhile f stream] returns a [Streamable_1] including all values in [stream]
+   *  while application of the predicate function [f] returns true, then completes.
    */
 };
 
@@ -790,11 +889,15 @@ module type KeyedReduceableRight_1 = {
   type k;
   type t 'v;
 
+  include KeyedReduceable_1 with type k := k and type t 'v := t 'v;
+
   let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
 };
 
 module type KeyedReduceableRight_2 = {
   type t 'k 'v;
+
+  include KeyedReduceable_2 with type t 'k 'v := t 'k 'v;
 
   let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
 };
@@ -1614,11 +1717,11 @@ let module rec Vector: {
   type t 'a;
   /** The vector type */
 
-  include Concatable_1 with type t 'a := t 'a;
   include PersistentNavigableCollection_1 with type t 'a := t 'a;
   include IndexedCollection_1 with type t 'a := t 'a;
   include IndexedMappable_1 with type t 'a := t 'a;
 
+  let concat: (list (t 'a)) => (t 'a);
   let init: int => (int => 'a) => (t 'a);
   let insertAt: int => 'a => (t 'a) => (t 'a);
   let removeAt: int => (t 'a) => (t 'a);
