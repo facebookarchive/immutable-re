@@ -77,6 +77,50 @@ let rec contains
   | Empty => false;
 };
 
+let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (map: t 'a): 'acc => switch map {
+  | Level _ nodes _ =>
+      let reducer acc map => reduce f acc map;
+      nodes |> CopyOnWriteArray.reduce reducer acc;
+  | Collision entryHash entrySet => entrySet |> AVLTreeSet.reduce f acc;
+  | Entry entryHash entryValue => f acc entryValue;
+  | Empty => acc;
+};
+
+let rec reduceWhileWithResult
+    (shouldContinue: ref bool)
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (map: t 'a): 'acc => switch map {
+  | Level _ nodes _ =>
+      let reducer acc node => node
+        |> reduceWhileWithResult shouldContinue predicate f acc;
+      let predicate _ _ => !shouldContinue;
+
+      nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
+  | Collision entryHash entrySet => entrySet
+      |> AVLTreeSet.reduceWhileWithResult shouldContinue predicate f acc
+  | Entry entryHash entryValue =>
+      if (!shouldContinue && (predicate acc entryValue)) (f acc entryValue)
+      else acc
+  | Empty => acc
+};
+
+let reduceWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (map: t 'a): 'acc => {
+  let shouldContinue = ref true;
+  let predicate acc v => {
+    let result = predicate acc v;
+    shouldContinue := result;
+    result;
+  };
+
+  reduceWhileWithResult shouldContinue predicate f acc map;
+};
+
 let rec remove
     (comparator: Comparator.t 'a)
     (updateLevelNode: updateLevelNode 'a)

@@ -65,21 +65,17 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator;
 
-/* FIXME: Shouldn't use sequences to implement all these.
- * They're way slow.
- */
-
 let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
   if (isEmpty set) (Sequence.empty ())
   else root |> BitmapTrieSet.toSequence;
 
-/** FIXME: Implement this correctly. ecchh */
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    (set: t 'a): 'acc =>
-  set |> toSequence |> Sequence.reduce while_::predicate f acc;
+    ({ root }: t 'a): 'acc =>
+  if (predicate === Functions.alwaysTrue2) (BitmapTrieSet.reduce f acc root)
+  else (BitmapTrieSet.reduceWhile predicate f acc root);
 
 let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) (Iterator.empty ())

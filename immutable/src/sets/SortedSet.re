@@ -183,15 +183,15 @@ let module Make = fun (Comparable: Comparable.S) => {
   };
 
   let intersect (this: t) (that: t): t =>
-    /* FIXME: Improve this implementation to be O(log N) */
+    /* FIXME: Improve this implementation */
     ImmSet.intersect (toSet this) (toSet that) |> from;
 
   let subtract (this: t) (that: t): t =>
-    /* FIXME: Improve this implementation to be O(log N) */
+    /* FIXME: Improve this implementation */
     ImmSet.subtract (toSet this) (toSet that) |> from;
 
   let union (this: t) (that: t): t =>
-    /* FIXME: Improve this implementation to be O(log N) */
+    /* FIXME: Improve this implementation */
     ImmSet.union (toSet this) (toSet that) |> from;
 
   let module Reducer = Reducer.Make {
