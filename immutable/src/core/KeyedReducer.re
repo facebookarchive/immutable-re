@@ -19,6 +19,8 @@ module type S1 = {
   let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
   let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
   let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+  let first: (t 'v) => (option (k, 'v));
+  let firstOrRaise: (t 'v) => (k, 'v);
   let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
   let none: (k => 'v => bool) => (t 'v) => bool;
   let some: (k => 'v => bool) => (t 'v) => bool;
@@ -35,6 +37,8 @@ module type S2 = {
   let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
   let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
   let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+  let first: (t 'k 'v) => (option ('k, 'v));
+  let firstOrRaise: (t 'k 'v) => ('k, 'v);
   let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
@@ -80,6 +84,15 @@ let module Make1 = fun (KeyedReduceable: KeyedReduceable.S1) => {
 
   let findValueOrRaise (f: k => 'v => bool) (keyedReduceable: t 'v): 'v =>
     findValue f keyedReduceable |> Option.firstOrRaise;
+
+  let first (keyedReduceable: t 'v): (option (k, 'v)) =>
+    keyedReduceable |> KeyedReduceable.reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => Option.return (k, v))
+      None;
+
+  let firstOrRaise (keyedReduceable: t 'v): ('k, 'v) =>
+    keyedReduceable |> first |> Option.firstOrRaise;
 
   let forEach
       while_::(predicate: k => 'v => bool)=Functions.alwaysTrue2
@@ -139,6 +152,15 @@ let module Make2 = fun (KeyedReduceable: KeyedReduceable.S2) => {
 
   let findValueOrRaise (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): 'v =>
     findValue f keyedReduceable |> Option.firstOrRaise;
+
+  let first (keyedReduceable: t 'k 'v): (option ('k, 'v)) =>
+    keyedReduceable |> KeyedReduceable.reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => Option.return (k, v))
+      None;
+
+  let firstOrRaise (keyedReduceable: t 'k 'v): ('k, 'v) =>
+    keyedReduceable |> first |> Option.firstOrRaise;
 
   let forEach
       while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2

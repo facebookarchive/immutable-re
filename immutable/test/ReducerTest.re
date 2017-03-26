@@ -50,6 +50,22 @@ let test = describe "Reducer" [
       (fun () => IntRange.empty |> IntRange.Reducer.findOrRaise (fun i => i ===2))
         |> Expect.shouldRaise;
     }),
+    it "first" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.Reducer.first
+        |> Expect.toBeEqualToSomeOfInt 0;
+
+      IntRange.empty
+        |> IntRange.Reducer.first
+        |> Expect.toBeEqualToNoneOfInt;
+    }),
+    it "firstOrRaise" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.Reducer.firstOrRaise
+        |> Expect.toBeEqualToInt 0;
+
+      (fun () => IntRange.empty |> IntRange.Reducer.firstOrRaise) |> Expect.shouldRaise;
+    }),
     it "forEach" (fun () => {
       let last = ref 0;
       IntRange.create start::0 count::5
@@ -122,6 +138,28 @@ let test = describe "Reducer" [
 
       (fun () => (Iterator.empty ()) |> Iterator.Reducer.findOrRaise (fun i => i ===2))
         |> Expect.shouldRaise;
+    }),
+    it "first" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.toIterator
+        |> Iterator.Reducer.first
+        |> Expect.toBeEqualToSomeOfInt 0;
+
+      IntRange.empty
+        |> IntRange.toIterator
+        |> Iterator.Reducer.first
+        |> Expect.toBeEqualToNoneOfInt;
+    }),
+    it "firstOrRaise" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.toIterator
+        |> Iterator.Reducer.firstOrRaise
+        |> Expect.toBeEqualToInt 0;
+
+      (fun () => IntRange.empty
+        |> IntRange.toIterator
+        |> Iterator.Reducer.firstOrRaise
+      ) |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {
       let last = ref 0;

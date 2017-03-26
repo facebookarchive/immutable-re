@@ -366,6 +366,18 @@ let module Reducer: {
      *  the predicate f returns [true]. Otherwise raises an exception.
      */
 
+    let first: t => (option a);
+    /** [first reduceable] returns first value in [reduceable] or None.
+     *
+     *  Computational Complexity: O(1)
+     */
+
+    let firstOrRaise: t => a;
+    /** [firstOrRaise reduceable] returns the first element in [reduceable] or raises an exception.
+     *
+     *  Computational Complexity: O(1)
+     */
+
     let forEach: while_::(a => bool)? => (a => unit) => t => unit;
     /** [forEach while_::predicate f reduceable] iterates through [reduceable] applying the
      *  side effect function [f] to each value, while [predicate] returns true
@@ -401,6 +413,18 @@ let module Reducer: {
     let findOrRaise: ('a => bool) => (t 'a) => 'a;
     /** [findOrRaise f reduceable] return the the first value in [reduceable] for which the
      *  the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let first: t 'a => (option 'a);
+    /** [first reduceable] returns first value in [reduceable] or None.
+     *
+     *  Computational Complexity: O(1)
+     */
+
+    let firstOrRaise: t 'a => 'a;
+    /** [firstOrRaise reduceable] returns the first element in [reduceable] or raises an exception.
+     *
+     *  Computational Complexity: O(1)
      */
 
     let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
@@ -465,50 +489,13 @@ module type Iterable_1 = {
    */
 };
 
-module type Sequential = {
-  type a;
-  type t;
-
-  include Iterable with type a := a and type t := t;
-
-  let first: t => (option a);
-  /** [tryFirst seq] returns first element in [seq] or None.
-   *
-   *  Complexity: O(_1)
-   */
-
-  let firstOrRaise: t => a;
-  /** [first seq] returns the first element in [seq] or throws.
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type Sequential_1 = {
-  type t 'a;
-
-  include Iterable_1 with type t 'a := t 'a;
-
-  let first: (t 'a) => (option 'a);
-  /** [tryFirst seq] returns first element in [seq] or None.
-   *
-   *  Complexity: O(_1)
-   */
-
-  let firstOrRaise: (t 'a) => 'a;
-  /** [first seq] returns the first element in [seq] or throws.
-   *
-   *  Complexity: O(_1)
-   */
-};
-
 let module Sequence: {
   /** Functional pull based sequences. */
 
   type t 'a;
   /** The Sequence type. */
 
-  include Sequential_1 with type t 'a := t 'a;
+  include Iterable_1 with type t 'a := t 'a;
   include Streamable_1 with type t 'a := t 'a;
 
   let seek: int => (t 'a) => (t 'a);
@@ -657,14 +644,36 @@ module type SequentialCollection = {
   type t;
 
   include Collection with type a := a and type t := t;
-  include Sequential with type a := a and type t := t;
+
+  let first: t => (option a);
+  /** [tryFirst seq] returns first element in [seq] or None.
+   *
+   *  Complexity: O(_1)
+   */
+
+  let firstOrRaise: t => a;
+  /** [first seq] returns the first element in [seq] or throws.
+   *
+   *  Complexity: O(_1)
+   */
 };
 
 module type SequentialCollection_1 = {
   type t 'a;
 
   include Collection_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
+
+  let first: (t 'a) => (option 'a);
+  /** [tryFirst seq] returns first element in [seq] or None.
+   *
+   *  Complexity: O(_1)
+   */
+
+  let firstOrRaise: (t 'a) => 'a;
+  /** [first seq] returns the first element in [seq] or throws.
+   *
+   *  Complexity: O(_1)
+   */
 };
 
 module type PersistentSequentialCollection_1 = {
@@ -993,6 +1002,8 @@ let module KeyedReducer: {
     let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
     let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
     let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+    let first: (t 'v) => (option (k, 'v));
+    let firstOrRaise: (t 'v) => (k, 'v);
     let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
     let none: (k => 'v => bool) => (t 'v) => bool;
     let some: (k => 'v => bool) => (t 'v) => bool;
@@ -1009,6 +1020,8 @@ let module KeyedReducer: {
     let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
     let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
     let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+    let first: (t 'k 'v) => (option ('k, 'v));
+    let firstOrRaise: (t 'k 'v) => ('k, 'v);
     let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
     let none: ('k => 'v => bool) => (t 'k 'v) => bool;
     let some: ('k => 'v => bool) => (t 'k 'v) => bool;
@@ -1654,7 +1667,7 @@ let module List: {
   type t 'a = list 'a;
   /** The List type. */
 
-  include Sequential_1 with type t 'a := t 'a;
+  include Iterable_1 with type t 'a := t 'a;
   include ReverseMappable_1 with type t 'a := t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
@@ -1665,6 +1678,18 @@ let module List: {
 
   let empty: unit => (t 'a);
   /** The empty List. */
+
+  let first: t 'a => (option 'a);
+  /** [tryFirst seq] returns first element in [seq] or None.
+   *
+   *  Complexity: O(1)
+   */
+
+  let firstOrRaise: t 'a => 'a;
+  /** [first seq] returns the first element in [seq] or throws.
+   *
+   *  Complexity: O(1)
+   */
 
   let fromReverse: (Iterator.t 'a) => (t 'a);
   /** [fromReverse iter] returns a new List containing the values in [iter]
@@ -1702,10 +1727,9 @@ let module Option: {
   type t 'a = option 'a;
   /** The Option type. */
 
-  include Collection_1 with type t 'a := t 'a;
   include FlatMappable_1 with type t 'a := t 'a;
   include Mappable_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
+  include SequentialCollection_1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
   /** The empty Option, None. */

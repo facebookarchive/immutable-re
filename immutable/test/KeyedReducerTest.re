@@ -86,6 +86,24 @@ let test = describe "KeyedReducer" [
         |> SortedIntMap.KeyedReducer.findOrRaise (fun k v => k === 5 && v === 5)
       ) |> Expect.shouldRaise;
     }),
+    it "first" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) (SortedIntMap.empty ())
+        |> SortedIntMap.KeyedReducer.first
+        |> expectToBeEqualToSomeOfIntPair (0, 0);
+
+      (SortedIntMap.empty ())
+        |> SortedIntMap.KeyedReducer.first
+        |> expectToBeEqualToNoneOfIntPair;
+    }),
+    it "firstOrRaise" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.reduce (fun acc i => acc |> SortedIntMap.put i i) (SortedIntMap.empty ())
+        |> SortedIntMap.KeyedReducer.firstOrRaise
+        |> expectToBeEqualToIntPair (0, 0);
+
+      (fun () => (SortedIntMap.empty ()) |> SortedIntMap.KeyedReducer.firstOrRaise) |> Expect.shouldRaise;
+    }),
     it "forEach" (fun () => {
       let last = ref 0;
       IntRange.create start::0 count::5
@@ -170,6 +188,26 @@ let test = describe "KeyedReducer" [
       (fun () => IntRange.create start::0 count::5
         |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
         |> HashMap.KeyedReducer.findOrRaise (fun k v => k ===5 && v ===5)
+      ) |> Expect.shouldRaise;
+    }),
+    it "first" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
+        |> HashMap.KeyedReducer.first
+        |> expectToBeEqualToSomeOfIntPair (0, 0);
+
+      (emptyHashIntMap ())
+        |> HashMap.KeyedReducer.first
+        |> expectToBeEqualToNoneOfIntPair;
+    }),
+    it "firstOrRaise" (fun () => {
+      IntRange.create start::0 count::5
+        |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
+        |> HashMap.KeyedReducer.firstOrRaise
+        |> expectToBeEqualToIntPair (0, 0);
+
+      (fun () => (emptyHashIntMap ())
+        |> HashMap.KeyedReducer.firstOrRaise
       ) |> Expect.shouldRaise;
     }),
     it "forEach" (fun () => {

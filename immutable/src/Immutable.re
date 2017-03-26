@@ -126,25 +126,6 @@ module type Iterable_1 = {
   let toIterator: t 'a => (Iterator.t 'a);
 };
 
-module type Sequential = {
-  type a;
-  type t;
-
-  include Iterable with type a := a and type t := t;
-
-  let first: t => (option a);
-  let firstOrRaise: t => a;
-};
-
-module type Sequential_1 = {
-  type t 'a;
-
-  include Iterable_1 with type t 'a := t 'a;
-
-  let first: (t 'a) => (option 'a);
-  let firstOrRaise: (t 'a) => 'a;
-};
-
 let module Sequence = Sequence;
 
 module type Collection = {
@@ -213,14 +194,18 @@ module type SequentialCollection = {
   type t;
 
   include Collection with type a := a and type t := t;
-  include Sequential with type a := a and type t := t;
+
+  let first: t => (option a);
+  let firstOrRaise: t => a;
 };
 
 module type SequentialCollection_1 = {
   type t 'a;
 
   include Collection_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
+
+  let first: (t 'a) => (option 'a);
+  let firstOrRaise: (t 'a) => 'a;
 };
 
 module type PersistentSequentialCollection_1 = {

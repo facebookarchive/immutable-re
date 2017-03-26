@@ -60,16 +60,6 @@ let rec filter (f: 'a => bool) (seq: t 'a): (t 'a) => {
   fun () => seq () |> filterIter f
 };
 
-let first (seq: t 'a): (option 'a) => switch (seq ()) {
-  | Next value _ => Some value
-  | Completed => None
-};
-
-let firstOrRaise (seq: t 'a): 'a => switch (seq ()) {
-  | Next value _ => value
-  | Completed => failwith "empty"
-};
-
 let rec generate (f: 'acc => 'acc) (acc: 'acc): (t 'acc) => fun () =>
   Next acc (generate f (f acc));
 

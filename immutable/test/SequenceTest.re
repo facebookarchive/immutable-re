@@ -76,22 +76,6 @@ let test = describe "Sequence" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 2, 0];
   }),
-  it "first" (fun () => {
-    IntRange.create start::0 count::10
-      |> IntRange.toSequence
-      |> Sequence.first
-      |> Expect.toBeEqualToSomeOfInt 0;
-
-    (Sequence.empty ()) |> Sequence.first |> Expect.toBeEqualToNoneOfInt;
-  }),
-  it "firstOrRaise" (fun () => {
-    IntRange.create start::0 count::10
-      |> IntRange.toSequence
-      |> Sequence.firstOrRaise
-      |> Expect.toBeEqualToInt 0;
-
-    (fun () => (Sequence.empty ()) |> Sequence.firstOrRaise) |> Expect.shouldRaise;
-  }),
   it "flatMap" (fun () => {
     IntRange.create start::0 count::3
       |> IntRange.toSequence
@@ -155,14 +139,14 @@ let test = describe "Sequence" [
       |> IntRange.toSequence
       |> Sequence.seek 2;
 
-    seeked |> Sequence.firstOrRaise |> Expect.toBeEqualToInt 2;
+    seeked |> Sequence.Reducer.firstOrRaise |> Expect.toBeEqualToInt 2;
   }),
   it "seekWhile" (fun () => {
     let seeked = IntRange.create start::0 count::5
       |> IntRange.toSequence
       |> Sequence.seekWhile (fun i => i < 2);
 
-    seeked |> Sequence.firstOrRaise |> Expect.toBeEqualToInt 2;
+    seeked |> Sequence.Reducer.firstOrRaise |> Expect.toBeEqualToInt 2;
   }),
   it "skip" (fun () => {
     (fun () => Sequence.empty () |> Sequence.skip (-5)) |> Expect.shouldRaise;

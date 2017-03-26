@@ -16,8 +16,14 @@ let test = describe "ReadOnlyArray" [
     ReadOnlyArray.empty () |> ReadOnlyArray.count |> Expect.toBeEqualToInt 0;
     ReadOnlyArray.ofUnsafe [| 1, 2, 3 |] |> ReadOnlyArray.count |> Expect.toBeEqualToInt 3;
   }),
-  it "first" (fun () => ()),
-  it "firstOrRaise" (fun () => ()),
+  it "first" (fun () => {
+    ReadOnlyArray.ofUnsafe [| 1, 2, 3 |] |> ReadOnlyArray.first |> Expect.toBeEqualToSomeOfInt 1;
+    ReadOnlyArray.empty () |> ReadOnlyArray.first |> Expect.toBeEqualToNoneOfInt;
+  }),
+  it "firstOrRaise" (fun () => {
+    ReadOnlyArray.ofUnsafe [| 1, 2, 3 |] |> ReadOnlyArray.firstOrRaise |> Expect.toBeEqualToInt 1;
+    (fun () => ReadOnlyArray.empty () |> ReadOnlyArray.firstOrRaise) |> Expect.shouldRaise;
+  }),
   it "get" (fun () => {
     let arr = ReadOnlyArray.ofUnsafe [| 1, 2, 3 |];
     arr |> ReadOnlyArray.get 0 |> Expect.toBeEqualToSomeOfInt 1;
