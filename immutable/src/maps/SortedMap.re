@@ -8,7 +8,7 @@
  */
 
  /** AVL tree based Map. */
-module type S = {
+module type S1 = {
   type k;
   type t +'v;
 
@@ -55,7 +55,7 @@ module type S = {
   let module KeyedReducer: KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
 };
 
-let module Make = fun (Comparable: Comparable.S) => {
+let module Make1 = fun (Comparable: Comparable.S) => {
   type k = Comparable.t;
 
   let comparator = Comparable.compare;

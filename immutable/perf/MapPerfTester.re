@@ -63,7 +63,7 @@ let module CamlIntMap = CamlMap.Make {
     else 0;
 };
 
-let module SortedIntMap = SortedMap.Make {
+let module SortedIntMap = SortedMap.Make1 {
   type t = int;
 
   let compare = Comparator.int;

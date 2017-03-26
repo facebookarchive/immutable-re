@@ -1576,7 +1576,7 @@ let module Stack: {
 
 let module SortedMap: {
   /** AVL tree based Map. */
-  module type S = {
+  module type S1 = {
     type k;
 
     type t +'v;
@@ -1587,7 +1587,7 @@ let module SortedMap: {
     let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
   };
 
-  let module Make: (Comparable: Comparable) => S with type k = Comparable.t;
+  let module Make1: (Comparable: Comparable) => S1 with type k = Comparable.t;
 };
 
 let module SortedSet: {

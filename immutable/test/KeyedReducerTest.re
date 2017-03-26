@@ -11,7 +11,7 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let module SortedIntMap = SortedMap.Make {
+let module SortedIntMap = SortedMap.Make1 {
   type t = int;
   let compare = Comparator.int;
   let equals = Equality.int;
