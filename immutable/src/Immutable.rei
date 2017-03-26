@@ -1086,13 +1086,19 @@ module type PersistentNavigableMap_1 = {
    */
 };
 
-module type Stack_1 = {
+module type SequentialCollection_1 = {
   type t 'a;
 
   include Collection_1 with type t 'a := t 'a;
+  include Sequential_1 with type t 'a := t 'a;
+};
+
+module type PersistentSequentialCollection_1 = {
+  type t 'a;
+
   include PersistentCollection_1 with type t 'a := t 'a;
   include ReverseMappable_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
+  include SequentialCollection_1 with type t 'a := t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
   /** [addFirst value stack] returns a new Stack with [value] prepended.
@@ -1121,7 +1127,7 @@ module type Stack_1 = {
    */
 };
 
-module type TransientStack_1 = {
+module type TransientSequentialCollection_1 = {
   type t 'a;
 
   include TransientCollection_1 with type t 'a := t 'a;
@@ -1148,12 +1154,12 @@ module type TransientStack_1 = {
    */
 };
 
-module type Deque_1 = {
+module type PersistentNavigableCollection_1 = {
   type t 'a;
 
   include Mappable_1 with type t 'a := t 'a;
   include NavigableCollection_1 with type t 'a := t 'a;
-  include Stack_1 with type t 'a := t 'a;
+  include PersistentSequentialCollection_1 with type t 'a := t 'a;
 
   let addLast: 'a => (t 'a) => (t 'a);
   /** [addLast value deque] returns a new Deque with [value] appended.
@@ -1177,10 +1183,10 @@ module type Deque_1 = {
    */
 };
 
-module type TransientDeque_1 = {
+module type TransientNavigableCollection_1 = {
   type t 'a;
 
-  include TransientStack_1 with type t 'a := t 'a;
+  include TransientSequentialCollection_1 with type t 'a := t 'a;
 
   let addLast: 'a => (t 'a) => (t 'a);
   /** [addLast value transient] appends [value] to [transient].
@@ -1243,7 +1249,7 @@ let module rec Deque: {
   type t 'a;
   /** The Deque type. */
 
-  include Deque_1 with type t 'a := t 'a;
+  include PersistentNavigableCollection_1 with type t 'a := t 'a;
 
   let mutate: (t 'a) => (TransientDeque.t 'a);
   /** [mutate deque] returns a TransientDeque containing the same elements as [deque].
@@ -1267,7 +1273,7 @@ and TransientDeque: {
 
   type t 'a;
 
-  include TransientDeque_1 with type t 'a := t 'a;
+  include TransientNavigableCollection_1 with type t 'a := t 'a;
   /** The TransientDeque type. */
 
   let persist: (t 'a) => (Deque.t 'a);
@@ -1548,7 +1554,7 @@ let module Stack: {
   type t 'a;
   /** The Stack type. */
 
-  include Stack_1 with type t 'a := t 'a;
+  include PersistentSequentialCollection_1 with type t 'a := t 'a;
 
   let fromList: (list 'a) => (t 'a);
   /** [fromList list] returns a Stack backed by [list].
@@ -1603,7 +1609,7 @@ let module rec Vector: {
   /** The vector type */
 
   include Concatable_1 with type t 'a := t 'a;
-  include Deque_1 with type t 'a := t 'a;
+  include PersistentNavigableCollection_1 with type t 'a := t 'a;
   include IndexedCollection_1 with type t 'a := t 'a;
   include IndexedMappable_1 with type t 'a := t 'a;
 
@@ -1629,7 +1635,7 @@ and TransientVector: {
   type t 'a;
   /** The TransientVector type. */
 
-  include TransientDeque_1 with type t 'a := t 'a;
+  include TransientNavigableCollection_1 with type t 'a := t 'a;
 
   let get: int => (t 'a) => (option 'a);
 

@@ -10,7 +10,7 @@
 open Immutable;
 open ReUnit.Test;
 
-let module Tester = StackTester.Make (Stack: Stack_1) ({
+let module Tester = StackTester.Make (Stack: PersistentSequentialCollection_1) ({
   let count = 10;
 });
 

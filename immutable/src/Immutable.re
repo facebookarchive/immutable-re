@@ -630,13 +630,19 @@ module type PersistentNavigableMap_1 = {
   let removeLastOrRaise: (t 'v) => (t 'v);
 };
 
-module type Stack_1 = {
+module type SequentialCollection_1 = {
   type t 'a;
 
   include Collection_1 with type t 'a := t 'a;
+  include Sequential_1 with type t 'a := t 'a;
+};
+
+module type PersistentSequentialCollection_1 = {
+  type t 'a;
+
   include PersistentCollection_1 with type t 'a := t 'a;
   include ReverseMappable_1 with type t 'a := t 'a;
-  include Sequential_1 with type t 'a := t 'a;
+  include SequentialCollection_1 with type t 'a := t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
   let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
@@ -646,7 +652,7 @@ module type Stack_1 = {
   let removeFirstOrRaise: (t 'a) => (t 'a);
 };
 
-module type TransientStack_1 = {
+module type TransientSequentialCollection_1 = {
   type t 'a;
 
   include TransientCollection_1 with type t 'a := t 'a;
@@ -658,12 +664,12 @@ module type TransientStack_1 = {
   let removeFirstOrRaise: (t 'a) => (t 'a);
 };
 
-module type Deque_1 = {
+module type PersistentNavigableCollection_1 = {
   type t 'a;
 
   include Mappable_1 with type t 'a := t 'a;
   include NavigableCollection_1 with type t 'a := t 'a;
-  include Stack_1 with type t 'a := t 'a;
+  include PersistentSequentialCollection_1 with type t 'a := t 'a;
 
   let addLast: 'a => (t 'a) => (t 'a);
   let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
@@ -671,10 +677,10 @@ module type Deque_1 = {
   let removeLastOrRaise: (t 'a) => (t 'a);
 };
 
-module type TransientDeque_1 = {
+module type TransientNavigableCollection_1 = {
   type t 'a;
 
-  include TransientStack_1 with type t 'a := t 'a;
+  include TransientSequentialCollection_1 with type t 'a := t 'a;
 
   let addLast: 'a => (t 'a) => (t 'a);
   let last: (t 'a) => option 'a;
