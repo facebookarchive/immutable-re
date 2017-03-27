@@ -14,74 +14,6 @@ type t 'v =
 
 type updateLevelNode 'v = Transient.Owner.t => int => (t 'v) => (t 'v) => (t 'v);
 
-let rec alter
-    (updateLevelNode: updateLevelNode 'v)
-    (owner: Transient.Owner.t)
-    (alterResult: ref AlterResult.t)
-    (depth: int)
-    (key: int)
-    (f: option 'v => option 'v)
-    (map: t 'v): (t 'v) => switch map {
-  | Entry entryKey entryValue when key === entryKey => switch (f @@ Option.return @@ entryValue) {
-      | Some newEntryValue when newEntryValue === entryValue =>
-          alterResult := AlterResult.NoChange;
-          map;
-      | Some newEntryValue =>
-          alterResult := AlterResult.Replace;
-          Entry key newEntryValue
-      | None =>
-          alterResult := AlterResult.Removed;
-          Empty
-    }
-  | Entry entryKey _ => switch (f None) {
-      | Some newEntryValue =>
-          let bitmap = BitmapTrie.bitPos entryKey depth;
-          Level bitmap [| map |] owner
-            |> alter updateLevelNode owner alterResult depth key (Functions.returnSome newEntryValue)
-      | _ =>
-          alterResult := AlterResult.NoChange;
-          map;
-    }
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos key depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      if (BitmapTrie.containsNode bitmap bit) {
-        let childNode = nodes.(index);
-        let newChildNode = childNode |> alter updateLevelNode owner alterResult (depth + 1) key f;
-
-        switch !alterResult {
-          | AlterResult.Added => map |> updateLevelNode owner index newChildNode;
-          | AlterResult.NoChange => map
-          | AlterResult.Replace => map |> updateLevelNode owner index newChildNode
-          | AlterResult.Removed => switch newChildNode {
-              | Empty =>
-                  let nodes = nodes |> CopyOnWriteArray.removeAt index;
-                  if (CopyOnWriteArray.count nodes > 0) (Level (Int32.logxor bitmap bit) nodes owner)
-                  else Empty
-              | _ => map |> updateLevelNode owner index newChildNode
-            }
-        }
-      } else (switch (f None) {
-        | Some newEntryValue =>
-            alterResult := AlterResult.Added;
-            let node = Entry key newEntryValue;
-            let nodes = nodes |> CopyOnWriteArray.insertAt index node;
-            Level (Int32.logor bitmap bit) nodes owner;
-        | None =>
-            alterResult := AlterResult.NoChange;
-            map;
-      })
-  | Empty => switch (f None) {
-      | None =>
-          alterResult := AlterResult.NoChange;
-          map
-      | Some v =>
-          alterResult := AlterResult.Added;
-          Entry key v;
-    }
-};
-
 let rec putWithResult
     (updateLevelNode: updateLevelNode 'v)
     (owner: Transient.Owner.t)
@@ -127,6 +59,74 @@ let rec putWithResult
   | Empty =>
       alterResult := AlterResult.Added;
       Entry key newEntryValue;
+};
+
+let rec alter
+    (updateLevelNode: updateLevelNode 'v)
+    (owner: Transient.Owner.t)
+    (alterResult: ref AlterResult.t)
+    (depth: int)
+    (key: int)
+    (f: option 'v => option 'v)
+    (map: t 'v): (t 'v) => switch map {
+  | Entry entryKey entryValue when key === entryKey => switch (f @@ Option.return @@ entryValue) {
+      | Some newEntryValue when newEntryValue === entryValue =>
+          alterResult := AlterResult.NoChange;
+          map;
+      | Some newEntryValue =>
+          alterResult := AlterResult.Replace;
+          Entry key newEntryValue
+      | None =>
+          alterResult := AlterResult.Removed;
+          Empty
+    }
+  | Entry entryKey _ => switch (f None) {
+      | Some newEntryValue =>
+          let bitmap = BitmapTrie.bitPos entryKey depth;
+          Level bitmap [| map |] owner
+            |> putWithResult updateLevelNode owner alterResult depth key newEntryValue
+      | _ =>
+          alterResult := AlterResult.NoChange;
+          map;
+    }
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos key depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) {
+        let childNode = nodes.(index);
+        let newChildNode = childNode |> alter updateLevelNode owner alterResult (depth + 1) key f;
+
+        switch !alterResult {
+          | AlterResult.Added => map |> updateLevelNode owner index newChildNode;
+          | AlterResult.NoChange => map
+          | AlterResult.Replace => map |> updateLevelNode owner index newChildNode
+          | AlterResult.Removed => switch newChildNode {
+              | Empty =>
+                  let nodes = nodes |> CopyOnWriteArray.removeAt index;
+                  if (CopyOnWriteArray.count nodes > 0) (Level (Int32.logxor bitmap bit) nodes owner)
+                  else Empty
+              | _ => map |> updateLevelNode owner index newChildNode
+            }
+        }
+      } else (switch (f None) {
+        | Some newEntryValue =>
+            alterResult := AlterResult.Added;
+            let node = Entry key newEntryValue;
+            let nodes = nodes |> CopyOnWriteArray.insertAt index node;
+            Level (Int32.logor bitmap bit) nodes owner;
+        | None =>
+            alterResult := AlterResult.NoChange;
+            map;
+      })
+  | Empty => switch (f None) {
+      | None =>
+          alterResult := AlterResult.NoChange;
+          map
+      | Some v =>
+          alterResult := AlterResult.Added;
+          Entry key v;
+    }
 };
 
 let updateLevelNodePersistent
