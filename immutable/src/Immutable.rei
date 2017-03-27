@@ -1625,6 +1625,7 @@ let module rec Deque: {
    *  Complexity: O(1)
    */
 
+  let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
 
@@ -1780,6 +1781,7 @@ let module IntRange: {
 
   let create: start::int => count::int => t;
 
+  let module ReducerRight: Reducer.S with type a := a and type t := t;
   let module Reducer: Reducer.S with type a := a and type t := t;
 };
 
@@ -1918,6 +1920,7 @@ let module ReadOnlyArray: {
    *  Complexity: O(1)
    */
 
+  let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
@@ -1951,6 +1954,7 @@ let module SortedMap: {
 
     include PersistentNavigableMap.S1 with type k := k and type t 'v := t 'v;
 
+    let module KeyedReducerRight: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
     let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
   };
 
@@ -1967,6 +1971,7 @@ let module SortedSet: {
     include Comparable.S with type t := t;
     include PersistentNavigableSet.S with type a := a and type t := t;
 
+    let module ReducerRight: Reducer.S with type a:= a and type t:= t;
     let module Reducer: Reducer.S with type a := a and type t := t;
   };
 
@@ -1974,8 +1979,7 @@ let module SortedSet: {
 };
 
 let module rec Vector: {
-  /** Indexed type that supports efficient operations for
-   * prepend, appends, indexing, conctentation, and splits.
+  /** An IndexedCollection supporting efficient prepend, appends, indexing, conctentation, and splits.
    */
 
   type t 'a;
@@ -1998,6 +2002,7 @@ let module rec Vector: {
 
   let mutate: (t 'a) => (TransientVector.t 'a);
 
+  let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
 

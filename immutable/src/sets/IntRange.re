@@ -124,6 +124,12 @@ let toSet (set: t): (ImmSet.t int) => {
   sequence: fun () => toSequence set,
 };
 
+let module ReducerRight = Reducer.Make {
+  type a = int;
+  type nonrec t = t;
+  let reduce = reduceRight;
+};
+
 let module Reducer = Reducer.Make {
   type a = int;
   type nonrec t = t;

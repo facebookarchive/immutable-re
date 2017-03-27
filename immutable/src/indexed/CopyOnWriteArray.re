@@ -318,6 +318,11 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   sequence: fun () => toSequenceWithIndex arr,
 };
 
+let module ReducerRight = Reducer.Make1 {
+  type nonrec t 'a = t 'a;
+  let reduce = reduceRight;
+};
+
 let module Reducer = Reducer.Make1 {
   type nonrec t 'a = t 'a;
   let reduce = reduce;
