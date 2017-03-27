@@ -11,6 +11,6 @@ open Immutable;
 open ReUnit.Test;
 
 let test = describe "IntMap" [
-  PersistentMapTester.test (module IntMap: PersistentMap_1  with type k = IntMap.k) 100,
-  PersistentMapTester.test (module IntMap: PersistentMap_1 with type k = IntMap.k) 10000,
+  PersistentMapTester.test (module IntMap: PersistentMap.S1  with type k = IntMap.k) 100,
+  PersistentMapTester.test (module IntMap: PersistentMap.S1 with type k = IntMap.k) 10000,
 ];

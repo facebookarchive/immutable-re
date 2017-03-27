@@ -12,7 +12,7 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let test (module PersistentMap: PersistentMap_1 with type k = int) (count: int) => {
+let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int) => {
   let countDiv2 = count / 2;
   let countDiv4 = count / 4;
 

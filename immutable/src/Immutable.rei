@@ -93,254 +93,282 @@ let module Hash: {
   /** The Hash function type. */
 };
 
-module type Equatable = {
-  /** Module type implemented by modules that support testing values for equality. */
+let module Equatable: {
+  /** Module types implemented by modules that support testing values for equality. */
 
-  type t;
+  module type S = {
+    /* Equatable module type signature for types with a parametric arity of 0. */
 
-  let equals: Equality.t t;
-  /** An equality function for instances of type [t]. */
+    type t;
+
+    let equals: Equality.t t;
+    /** An equality function for instances of type [t]. */
+  };
+
+  module type S1 = {
+    /* Equatable module type signature for types with a parametric arity of 1 */
+
+    type t 'a;
+
+    let equals: Equality.t (t 'a);
+    /** An equality function for instances of type [t 'a]. */
+  };
 };
 
-module type Equatable_1 = {
-  /** Module type implemented by modules that support testing values for equality. */
+let module Comparable: {
+  /** Module types implemented by modules that support absolute ordering of values. */
 
-  type t 'a;
+  module type S = {
+    /** Comparable module type signature for types with a parametric arity of 0. */
 
-  let equals: Equality.t (t 'a);
-  /** An equality function for instances of type [t 'a]. */
+    type t;
+
+    include Equatable.S with type t := t;
+
+    let compare: Comparator.t t;
+    /** A comparator function for instances of type [t]. */
+  };
 };
 
-module type Comparable = {
-  /** Module type implemented by modules that support absolute ordering of values. */
+let module Hashable: {
+  /** Module types implemented by modules that support hashing. */
 
-  type t;
+  module type S = {
+    /** Hashable module type signature for types with a parametric arity of 0. */
 
-  include Equatable with type t := t;
+    type t;
 
-  let compare: Comparator.t t;
-  /** A comparator function for instances of type [t]. */
+    let hash: Hash.t t;
+    /** An hashing function for instances of type [t]. */
+  };
+
+  module type S1 = {
+    /** Hashable module type signature for types with a parametric arity of 1. */
+
+    type t 'a;
+
+    let hash: Hash.t (t 'a);
+    /** An hashing function for instances of type [t 'a]. */
+  };
 };
 
-module type Hashable = {
-  /** Module type implemented by modules that support hashing. */
-
-  type t;
-
-  let hash: Hash.t t;
-  /** An hashing function for instances of type [t]. */
-};
-
-module type Hashable_1 = {
-  /** Module type implemented by modules that support hashing. */
-
-  type t 'a;
-
-  let hash: Hash.t (t 'a);
-  /** An hashing function for instances of type [t 'a]. */
-};
-
-module type FlatMappable_1 = {
+let module FlatMappable: {
   /** Module type implemented by modules that support the flatmap operation.
    *  Computational complexity is dependent upon whether the underlying type
    *  is evaluated eagerly, in which case the operation is O(N), or lazily,
    *  in which case the operation is O(1).
    */
 
-  type t 'a;
+  module type S1 = {
+    /** FlatMappable module type signature for types with a parametric arity of 1. */
 
-  let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
-  /** [flatMap mapper flatMappable] applies the mapper to each value in
-   *  [flatMappable], flattening the resulting [t 'b]'s into a new [t 'b].
-   */
+    type t 'a;
 
-  let flatten: (t (t 'a)) => (t 'a);
-  /** [flatten flatMappables] flattens the nested values in [flatMappables] into
-   *  a new [t'a].
-   */
+    let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
+    /** [flatMap mapper flatMappable] applies the mapper to each value in
+     *  [flatMappable], flattening the resulting [t 'b]'s into a new [t 'b].
+     */
+
+    let flatten: (t (t 'a)) => (t 'a);
+    /** [flatten flatMappables] flattens the nested values in [flatMappables] into
+     *  a new [t'a].
+     */
+  };
 };
 
-module type Mappable_1 = {
+let module Mappable: {
   /** Module type implemented by modules that support the map operation.
    *  Computational complexity is dependent upon whether the underlying type
    *  is evaluated eagerly, in which case the operation is O(N), or lazily,
    *  in which case the operation is O(1).
    */
 
-  type t 'a;
+  module type S1 = {
+    /** Mappable module type signature for types with a parametric arity of 1. */
 
-  let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map f mappable] Returns a [Mappable_1] whose values are the result of
-   *  applying the function [f] to each value in [mappable].
-   */
+    type t 'a;
+
+    let map: ('a => 'b) => (t 'a) => (t 'b);
+    /** [map f mappable] Returns a [Mappable] whose values are the result of
+     *  applying the function [f] to each value in [mappable].
+     */
+  };
 };
 
-module type Reduceable = {
-  /** Module type implemented by modules that support reducing over
-   *  values contained by a container.
-   */
+let module Reduceable: {
+  /** Module types implemented by modules that support reducing over values. */
 
-  type a;
-  type t;
+  module type S = {
+    /** Reduceable module type signature for types with a parametric arity of 0. */
 
-  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-   *  function [f] to each value in [reduceable], while [predicate] returns true,
-   *  accumulating the result.
-   */
+    type a;
+    type t;
+
+    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each value in [reduceable], while [predicate] returns true,
+     *  accumulating the result.
+     */
+  };
+
+  module type S1 = {
+    /** Reduceable module type signature for types with a parametric arity of 1. */
+
+    type t 'a;
+
+    let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each value in [reduceable], while [predicate] returns true,
+     *  accumulating the result.
+     */
+  };
 };
 
-module type Reduceable_1 = {
-  /** Module type implemented by modules that support reducing over
-   *  values contained by a container.
+let module ReduceableRight: {
+  /** Module types implemented by modules that support reducing over
+   *  values in both the left to right, and right to left directions.
    */
 
-  type t 'a;
+  module type S = {
+    /** ReduceableRight module type signature for types with a parametric arity of 0. */
 
-  let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-   *  function [f] to each value in [reduceable], while [predicate] returns true,
-   *  accumulating the result.
-   */
+    type a;
+    type t;
+
+    include Reduceable.S with type a := a and type t := t;
+
+    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+  };
+
+  module type S1 = {
+    /** ReduceableRight module type signature for types with a parametric arity of 1. */
+
+    type t 'a;
+
+    include Reduceable.S1 with type t 'a := t 'a;
+
+    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+  };
 };
 
-module type ReduceableRight = {
-  /** Module type implemented by modules that support reducing over
-   *  values contained by a container in both the left to right,
-   *  and right to left directions.
-   */
-
-  type a;
-  type t;
-
-  include Reduceable with type a := a and type t := t;
-
-  let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-   *  function [f] to each value in [reduceable] while [predicate] returns true, starting
-   *  from the right most value, accumulating the result.
-   */
-};
-
-module type ReduceableRight_1 = {
-  /** Module type implemented by modules that support reducing over
-   *  values contained by a container in both the left to right,
-   *  and right to left directions.
-   */
-
-  type t 'a;
-
-  include Reduceable_1 with type t 'a := t 'a;
-
-  let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-   *  function [f] to each value in [reduceable] while [predicate] returns true, starting
-   *  from the right most value, accumulating the result.
-   */
-};
-
-module type ReverseMappable_1 = {
-  /** Module type implemented by modules that support the mapReverse operation.
+let module ReverseMappable: {
+  /** Module types implemented by modules that support the mapReverse operation.
    *  Computation complexity is dependent upon whether the underlying type
    *  is evaluated eagerly, in which case the operation is O(N), or lazily,
    *  in which case the operation is O(1).
    */
 
-  type t 'a;
+  module type S1 = {
+    /** ReverseMappable module type signature for types with a parametric arity of 1. */
 
-  let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
-  /** [mapReverse f reverseMappable] Returns a  [ReverseMappable_1] whose values
-   *  are the result of applying the function [f] to each value in [reverseMappable]
-   *  and reversing the order of values
-   */
+    type t 'a;
+
+    let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
+    /** [mapReverse f reverseMappable] Returns a  [ReverseMappable] whose values
+     *  are the result of applying the function [f] to each value in [reverseMappable]
+     *  and reversing the order of values
+     */
+  };
 };
 
-module type Streamable_1 = {
-  /** Module type implemented by modules that implement lazily evaluated
+let module Stream: {
+  /** Module types implemented by modules that support lazily evaluated
    *  stream functions. All functions defined in this module are O(1).
    */
 
-  type t 'a;
+  module type S1 = {
+    /** Stream module type signature for types with a parametric arity of 1. */
 
-  include FlatMappable_1 with type t 'a := t 'a;
-  include Mappable_1 with type t 'a := t 'a;
+    type t 'a;
 
-  let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
-  /** [buffer count skip stream] returns a [Streamable_1] that collects values from [stream]
-   *  into buffer lists of size [count], skipping [skip] number of values in between the
-   *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
-   *  and values are dropped if [stream] completes before filling the last buffer.
-   */
+    include FlatMappable.S1 with type t 'a := t 'a;
+    include Mappable.S1 with type t 'a := t 'a;
 
-  let concat: (list (t 'a)) => (t 'a);
-  /** [concat streams] returns a [Streamable_1] that lazily concatenates all the
-   *  [Streamable_1]s in [streams]. The resulting [Streamable_1] returns all the values
-   *  in the first [Streamable_1], followed by all the values in the second [Streamable_1],
-   *  and continues until the last [Streamable_1] completes.
-   */
+    let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
+    /** [buffer count skip stream] returns a Stream that collects values from [stream]
+     *  into list buffers of size [count], skipping [skip] number of values in between the
+     *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
+     *  and values are dropped if [stream] completes before filling the last buffer.
+     */
 
-  let defer: (unit => t 'a) => (t 'a);
-  /** [defer f] returns a [Streamable_1] that invokes the function [f] whenever enumerated. */
+    let concat: (list (t 'a)) => (t 'a);
+    /** [concat streams] returns a Stream that lazily concatenates all the
+     *  Streams in [streams]. The resulting Stream returns all the values
+     *  in the first Stream, followed by all the values in the second Stream,
+     *  and continues until the last Stream completes.
+     */
 
-  let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
-  /** [distinctUntilChangedWith equals stream] returns a [Streamable_1] that contains only
-   *  distinct contiguous values from [stream] using [equals] to equate values.
-   */
+    let defer: (unit => t 'a) => (t 'a);
+    /** [defer f] returns a Stream that invokes the function [f] whenever enumerated. */
 
-  let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-  /** [doOnNext f stream] returns a [Streamable_1] that applies the side effect
-   *  function [f] to each value in the stream as they are enumerated.
-   */
+    let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
+    /** [distinctUntilChangedWith equals stream] returns a Stream that contains only
+     *  distinct contiguous values from [stream] using [equals] to equate values.
+     */
 
-  let empty: unit => (t 'a);
-  /** Returns an empty [Streamable_1]. */
+    let doOnNext: ('a => unit) => (t 'a) => (t 'a);
+    /** [doOnNext f stream] returns a Stream that applies the side effect
+     *  function [f] to each value in the stream as they are enumerated.
+     */
 
-  let filter: ('a => bool) => (t 'a) => (t 'a);
-  /** [filter f stream] returns a [Streamable_1] only including values from [stream]
-   *  for which application of the predicate function [f] returns true.
-   */
+    let empty: unit => (t 'a);
+    /** Returns an empty Stream. */
 
-  let generate: ('a => 'a) => 'a => (t 'a);
-  /** [generate f initialValue] generates the infinite [Streamable_1] [x, f(x), f(f(x)), ...] */
+    let filter: ('a => bool) => (t 'a) => (t 'a);
+    /** [filter f stream] returns a Stream only including values from [stream]
+     *  for which application of the predicate function [f] returns true.
+     */
 
-  let return: 'a => (t 'a);
-  /** [return value] returns a single value [Streamable_1] containing [value]. */
+    let generate: ('a => 'a) => 'a => (t 'a);
+    /** [generate f initialValue] generates the infinite Stream [x, f(x), f(f(x)), ...] */
 
-  let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
-  /** [scan f acc stream] returns a [Streamable_1] of accumulated values resulting from the
-   *  application of the accumulator function [f] to each value in [stream] with the
-   *  specified initial value [acc].
-   */
+    let return: 'a => (t 'a);
+    /** [return value] returns a single value Stream containing [value]. */
 
-  let skip: int => (t 'a) => (t 'a);
-  /** [skip count stream] return a [Streamable_1] which skips the first [count]
-   *  values in [stream].
-   */
+    let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
+    /** [scan f acc stream] returns a Stream of accumulated values resulting from the
+     *  application of the accumulator function [f] to each value in [stream] with the
+     *  specified initial value [acc].
+     */
 
-  let skipWhile: ('a => bool) => (t 'a) => (t 'a);
-  /** [skipWhile f stream] return a [Streamable_1] which skips values in [stream]
-   *  while application of the predicate function [f] returns true, and then returns
-   *  the remaining values.
-   */
+    let skip: int => (t 'a) => (t 'a);
+    /** [skip count stream] return a Stream which skips the first [count]
+     *  values in [stream].
+     */
 
-  let startWith: 'a => (t 'a) => (t 'a);
-  /** [startWith value stream] returns a [Streamable_1] whose first
-   *  value is [value], followed by the values in [stream].
-   */
+    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
+    /** [skipWhile f stream] return a Stream which skips values in [stream]
+     *  while application of the predicate function [f] returns true, and then returns
+     *  the remaining values.
+     */
 
-  let take: int => (t 'a) => (t 'a);
-  /** [take count stream] returns a [Streamable_1] with the first [count]
-   *  values in [stream].
-   */
+    let startWith: 'a => (t 'a) => (t 'a);
+    /** [startWith value stream] returns a Stream whose first
+     *  value is [value], followed by the values in [stream].
+     */
 
-  let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-  /** [takeWhile f stream] returns a [Streamable_1] including all values in [stream]
-   *  while application of the predicate function [f] returns true, then completes.
-   */
+    let take: int => (t 'a) => (t 'a);
+    /** [take count stream] returns a Stream with the first [count]
+     *  values in [stream].
+     */
+
+    let takeWhile: ('a => bool) => (t 'a) => (t 'a);
+    /** [takeWhile f stream] returns a Stream including all values in [stream]
+     *  while application of the predicate function [f] returns true, then completes.
+     */
+  };
 };
 
 let module Reducer: {
-  /** Module functions for generating modules which provide common reduction functions for [Reduceable]s.
+  /** Module functions for generating modules which provide common reduction functions for Reduceables.
    *  All functions are O(N), unless otherwise noted.
    */
 
@@ -443,94 +471,109 @@ let module Reducer: {
      */
   };
 
-  let module Make: (Reduceable: Reduceable) => S with type a = Reduceable.a and type t = Reduceable.t;
-  /** Module function to create a [Reducer] for a specific [Reduceable] type. */
+  let module Make: (Reduceable: Reduceable.S) => S with type a = Reduceable.a and type t = Reduceable.t;
+  /** Module function to create a Reducer for a specific Reduceable type. */
 
-  let module Make1: (Reduceable: Reduceable_1) => S1 with type t 'a = Reduceable.t 'a;
-  /** Module function to create a [Reducer] for a specific [Reduceable] type
+  let module Make1: (Reduceable: Reduceable.S1) => S1 with type t 'a = Reduceable.t 'a;
+  /** Module function to create a Reducer for a specific Reduceable type
    *  with a parametric type arity of 1.
    */
 };
 
 let module Iterator: {
-  /** Functional iterator over a collection of values. Iterators are stateless and can be reused. */
+  /** Functional iterators over a collection of values. Iterators are stateless and can be reused. */
   type t 'a;
 
-  include Reduceable_1 with type t 'a := t 'a;
-  include Streamable_1 with type t 'a := t 'a;
+  include Reduceable.S1 with type t 'a := t 'a;
+  include Stream.S1 with type t 'a := t 'a;
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Iterators. */
 };
 
-module type Iterable = {
-  /** Module type implemented by modules that supporting iterating over their values. */
+let module Iterable: {
+  /** Module types implemented by modules that supporting iterating over their values. */
 
-  type a;
-  type t;
+  module type S = {
+    /** Iterable type signature for types with a parametric arity of 0. */
 
-  include Reduceable with type a := a and type t := t;
+    type a;
+    type t;
 
-  let toIterator: t => (Iterator.t a);
-  /* [toIterator iterable] returns an [Iterator] that can be used to iterate over
-   * the values in [iterable].
-   */
-};
+    include Reduceable.S with type a := a and type t := t;
 
-module type Iterable_1 = {
-  /** Module type implemented by modules that supporting iterating over their values. */
+    let toIterator: t => (Iterator.t a);
+    /* [toIterator iterable] returns an [Iterator] that can be used to iterate over
+     * the values in [iterable].
+     */
+  };
 
-  type t 'a;
+  module type S1 = {
+    /** Iterable type signature for types with a parametric arity of 1. */
 
-  include Reduceable_1 with type t 'a := t 'a;
+    type t 'a;
 
-  let toIterator: t 'a => (Iterator.t 'a);
-  /* [toIterator iterable] returns an [Iterator] that can be used to iterate over
-   * the values in [iterable].
-   */
+    include Reduceable.S1 with type t 'a := t 'a;
+
+    let toIterator: t 'a => (Iterator.t 'a);
+    /* [toIterator iterable] returns an [Iterator] that can be used to iterate over
+     * the values in [iterable].
+     */
+  };
 };
 
 let module Sequence: {
-  /** Functional pull based sequences. */
+  /** Functional pull based sequences. Sequences are generally lazy, computing values as
+   *  they are pulled from the stream. Sequences are reusable and are guaranteed to produce the
+   *  same values, in the same order every time they are enumerated. In addition, Sequences
+   *  support eager seeking and zipping. These are there main advantage over Iterators.
+   *  In general, only use Sequences when you require support for one or both of these features.
+   *  Otherwise Iterators are generally more efficient.
+   */
 
   type t 'a;
   /** The Sequence type. */
 
-  include Iterable_1 with type t 'a := t 'a;
-  include Streamable_1 with type t 'a := t 'a;
+  include Iterable.S1 with type t 'a := t 'a;
+  include Stream.S1 with type t 'a := t 'a;
 
   let seek: int => (t 'a) => (t 'a);
-  /** [seek count seq] scans forward [count] times through [seq]. It is the eagerly
-   *  evaluated equivalent of [skip count seq]. Computational complexity is O(count).
+  /** [seek count seq] scans forward [count] values in [seq]. It is the eagerly
+   *  evaluated equivalent of [skip count seq].
+   *
+   *  Computational complexity is O(count).
    */
 
   let seekWhile: ('a => bool) => (t 'a) => (t 'a);
   /** [seekWhile f seq] scans forward through [seq] while application of
    *  the predicate function [f] returns true. It is the eagerly evaluated
-   *  equivalent of [skipWhile f seq]. Computational complexity is O(N).
+   *  equivalent of [skipWhile f seq].
+   *
+   *  Computational complexity is O(N).
    */
 
   let zip: (list (t 'a)) => (t (list 'a));
-  /** [zip seq] returns a [Sequence] which zips a list of [Sequence]s
-   *  into a single [Sequence.t (list 'a)]. Values are produce until any [Sequence]
-   *  in [seq] completes.
+  /** [zip seqs] returns a Sequence which lazily zips a list of [Sequence]s
+   *  into a single Sequence of lists. Values are produce until any Sequence
+   *  in [seqs] completes.
    */
 
   let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
-  /** [zip2With zipper first second] returns a [Sequence] which zips two [Sequence]s,
-   *  combining values using [zipper]. Values are produce until either [first]
-   *  or [second] complete.
+  /** [zip2With zipper first second] returns a Sequence which lazily zips two Sequences,
+   *  combining their values using [zipper]. Values are produce until either [first]
+   *  or [second] completes.
    */
 
   let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
-  /** [zip3With zipper first second third] returns a [Sequence] which zips three [Sequence]s,
-   *  combining values using [zipper]. Values are produce until either [first], [second]
+  /** [zip3With zipper first second third] returns a Sequence which lazily zips three Sequences,
+   *  combining their values using [zipper]. Values are produce until either [first], [second]
    *  or [third] complete.
    */
 
   let zipLongest: (list (t 'a)) => (t (list (option 'a)));
-  /** [zipLongest seq] returns a [Sequence] which zips a list of [Sequence]s
-   *  into a single of [Sequence.t (list (option 'a))]. Values are produce until all [Sequence]s
-   *  in [seq] complete.
+  /** [zipLongest seqs] returns a Sequence which zips a list of Sequences
+   *  into a single of Sequence of lists. Values are produce until all Sequences
+   *  in [seqs] complete.
    */
 
   let zipLongest2With:
@@ -538,8 +581,8 @@ let module Sequence: {
     (t 'a) =>
     (t 'b) =>
     (t 'c);
-  /** [zipLongest2With zipper first second] returns a [Sequence] which zips two [Sequence]s,
-   *  combining values using [zipper]. Values are produce until both [first]
+  /** [zipLongest2With zipper first second] returns a Sequence which lazily zips two Sequences,
+   *  combining their values using [zipper]. Values are produce until both [first]
    *  and [second] complete.
    */
 
@@ -549,270 +592,289 @@ let module Sequence: {
     (t 'b) =>
     (t 'c) =>
     (t 'd);
-  /** [zipLongest3With zipper first second third] returns a [Sequence] which
-   *  zips three [Sequence]s, combining values using [zipper]. Values are produce
+  /** [zipLongest3With zipper first second third] returns a Sequence which lazily
+   *  zips three Sequences, combining their values using [zipper]. Values are produce
    *  until [first], [second] and [third] all complete.
    */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Sequences. */
 };
 
-module type Collection = {
-  type a;
-  type t;
+let module Collection: {
+  module type S = {
+    type a;
+    type t;
 
-  include Iterable with type a := a and type t := t;
+    include Iterable.S with type a := a and type t := t;
 
-  let count: t => int;
-  let empty: t;
-  let isEmpty: t => bool;
-  let isNotEmpty: t => bool;
-  let toSequence: t => (Sequence.t a);
+    let count: t => int;
+    let empty: t;
+    let isEmpty: t => bool;
+    let isNotEmpty: t => bool;
+    let toSequence: t => (Sequence.t a);
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include Iterable.S1 with type t 'a := t 'a;
+
+    let count: (t 'a) => int;
+    let isEmpty: (t 'a) => bool;
+    let isNotEmpty: (t 'a) => bool;
+    let toSequence: (t 'a) => (Sequence.t 'a);
+  };
 };
 
-module type Collection_1 = {
-  type t 'a;
+let module PersistentCollection: {
+  module type S = {
+    type a;
+    type t;
 
-  include Iterable_1 with type t 'a := t 'a;
+    include Collection.S with type a := a and type t := t;
 
-  let count: (t 'a) => int;
-  let isEmpty: (t 'a) => bool;
-  let isNotEmpty: (t 'a) => bool;
-  let toSequence: (t 'a) => (Sequence.t 'a);
+    let removeAll: t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include Collection.S1 with type t 'a := t 'a;
+
+    let removeAll: t 'a => t 'a;
+  };
 };
 
-module type PersistentCollection = {
-  type a;
-  type t;
+let module TransientCollection: {
+  module type S = {
+    type a;
+    type t;
 
-  include Collection with type a := a and type t := t;
+    let count: t => int;
+    /** [count transient] returns the number of elements in [transient]. */
 
-  let removeAll: t => t;
+    let empty: unit => t;
+
+    let isEmpty: t => bool;
+    /** [isEmpty transient] returns true if [transient] contains no elements. */
+
+    let isNotEmpty: t => bool;
+    /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+
+    let removeAll: t => t;
+    /** [removeAll transient] removes all elements from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    let count: (t 'a) => int;
+    /** [count transient] returns the number of elements in [transient]. */
+
+    let isEmpty: (t 'a) => bool;
+    /** [isEmpty transient] returns true if [transient] contains no elements. */
+
+    let isNotEmpty: (t 'a) => bool;
+    /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+
+    let removeAll: (t 'a) => (t 'a);
+    /** [removeAll transient] removes all elements from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
-module type PersistentCollection_1 = {
-  type t 'a;
+let module SequentialCollection: {
+  module type S = {
+    type a;
+    type t;
 
-  include Collection_1 with type t 'a := t 'a;
+    include Collection.S with type a := a and type t := t;
 
-  let removeAll: t 'a => t 'a;
+    let first: t => (option a);
+    /** [tryFirst seq] returns first element in [seq] or None.
+     *
+     *  Complexity: O(1)
+     */
+
+    let firstOrRaise: t => a;
+    /** [first seq] returns the first element in [seq] or throws.
+     *
+     *  Complexity: O(1)
+     */
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include Collection.S1 with type t 'a := t 'a;
+
+    let first: (t 'a) => (option 'a);
+    /** [tryFirst seq] returns first element in [seq] or None.
+     *
+     *  Complexity: O(1)
+     */
+
+    let firstOrRaise: (t 'a) => 'a;
+    /** [first seq] returns the first element in [seq] or throws.
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
-module type TransientCollection = {
-  type a;
-  type t;
+let module PersistentSequentialCollection: {
+  module type S1 = {
+    type t 'a;
 
-  let count: t => int;
-  /** [count transient] returns the number of elements in [transient]. */
+    include PersistentCollection.S1 with type t 'a := t 'a;
+    include ReverseMappable.S1 with type t 'a := t 'a;
+    include SequentialCollection.S1 with type t 'a := t 'a;
 
-  let empty: unit => t;
+    let addFirst: 'a => (t 'a) => (t 'a);
+    /** [addFirst value stack] returns a new Stack with [value] prepended.
+     *
+     *  Complexity: O(1)
+     */
 
-  let isEmpty: t => bool;
-  /** [isEmpty transient] returns true if [transient] contains no elements. */
+    let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
 
-  let isNotEmpty: t => bool;
-  /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+    let empty: unit => (t 'a);
+    /** The empty Vector. */
 
-  let removeAll: t => t;
-  /** [removeAll transient] removes all elements from [transient].
-   *
-   *  Complexity: O(_1)
-   */
+    let fromReverse: (Iterator.t 'a) => (t 'a);
+    /** [fromReverse iter] returns a new Stack containing the values in [iter]
+     *  in reverse order.
+     */
+
+    let return: 'a => (t 'a);
+    /** [return value] returns a new Stack containing a single element, [value]. */
+
+    let removeFirstOrRaise: (t 'a) => (t 'a);
+    /** [removeFirstOrRaise stack] returns a new Stack without the first element.
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
-module type TransientCollection_1 = {
-  type t 'a;
+let module TransientSequentialCollection: {
+  module type S1 = {
+    type t 'a;
 
-  let count: (t 'a) => int;
-  /** [count transient] returns the number of elements in [transient]. */
+    include TransientCollection.S1 with type t 'a := t 'a;
 
-  let isEmpty: (t 'a) => bool;
-  /** [isEmpty transient] returns true if [transient] contains no elements. */
+    let addFirst: 'a => (t 'a) => (t 'a);
+    /** [addFirst value transient] prepends [value] to [transient].
+     *
+     *  Complexity: O(1)
+     */
 
-  let isNotEmpty: (t 'a) => bool;
-  /** [isNotEmpty transient] returns true if [transient] contains at least one element. */
+    let empty: unit => (t 'a);
+    /** [empty ()] returns a new empty TransientDeque. */
 
-  let removeAll: (t 'a) => (t 'a);
-  /** [removeAll transient] removes all elements from [transient].
-   *
-   *  Complexity: O(_1)
-   */
+    let first: (t 'a) => option 'a;
+    /** [tryFirst transient] returns first element in [transient] or None. */
+
+    let firstOrRaise: (t 'a) => 'a;
+    /** [first transient] returns the first element in [transient] or throws. */
+
+    let removeFirstOrRaise: (t 'a) => (t 'a);
+    /** [removeFirstOrRaise transient] removes the first element from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
-module type SequentialCollection = {
-  type a;
-  type t;
+let module NavigableCollection: {
+  module type S = {
+    type a;
+    type t;
 
-  include Collection with type a := a and type t := t;
+    include ReduceableRight.S with type a := a and type t := t;
+    include SequentialCollection.S with type a := a and type t := t;
 
-  let first: t => (option a);
-  /** [tryFirst seq] returns first element in [seq] or None.
-   *
-   *  Complexity: O(_1)
-   */
+    let last: t => (option a);
+    let lastOrRaise: t => a;
+    let toIteratorRight: t => (Iterator.t a);
+    let toSequenceRight: t => (Sequence.t a);
+  };
 
-  let firstOrRaise: t => a;
-  /** [first seq] returns the first element in [seq] or throws.
-   *
-   *  Complexity: O(_1)
-   */
+  module type S1 = {
+    type t 'a;
+
+    include ReduceableRight.S1 with type t 'a := t 'a;
+    include SequentialCollection.S1 with type t 'a := t 'a;
+
+    let last: (t 'a) => (option 'a);
+    let lastOrRaise: (t 'a) => 'a;
+    let toIteratorRight: (t 'a) => (Iterator.t 'a);
+    let toSequenceRight: (t 'a) => (Sequence.t 'a);
+  };
 };
 
-module type SequentialCollection_1 = {
-  type t 'a;
+let module PersistentNavigableCollection: {
+  module type S1 = {
+    type t 'a;
 
-  include Collection_1 with type t 'a := t 'a;
+    include Mappable.S1 with type t 'a := t 'a;
+    include NavigableCollection.S1 with type t 'a := t 'a;
+    include PersistentSequentialCollection.S1 with type t 'a := t 'a;
 
-  let first: (t 'a) => (option 'a);
-  /** [tryFirst seq] returns first element in [seq] or None.
-   *
-   *  Complexity: O(_1)
-   */
+    let addLast: 'a => (t 'a) => (t 'a);
+    /** [addLast value deque] returns a new Deque with [value] appended.
+     *
+     *  Complexity: O(1)
+     */
 
-  let firstOrRaise: (t 'a) => 'a;
-  /** [first seq] returns the first element in [seq] or throws.
-   *
-   *  Complexity: O(_1)
-   */
+    let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    /** [addLastAll iter deque] returns a new Deque with the values in [iter] appended. */
+
+    let from: (Iterator.t 'a) => (t 'a);
+    /** [from iter] returns a new Deque containing the values in [iter].
+     *
+     * Complexity: O(N) the number of elements in [iter].
+     */
+
+    let removeLastOrRaise: (t 'a) => (t 'a);
+    /** [removeLastOrRaise deque] returns a new Deque without the last element.
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
-module type PersistentSequentialCollection_1 = {
-  type t 'a;
+let module TransientNavigableCollection: {
+  module type S1 = {
+    type t 'a;
 
-  include PersistentCollection_1 with type t 'a := t 'a;
-  include ReverseMappable_1 with type t 'a := t 'a;
-  include SequentialCollection_1 with type t 'a := t 'a;
+    include TransientSequentialCollection.S1 with type t 'a := t 'a;
 
-  let addFirst: 'a => (t 'a) => (t 'a);
-  /** [addFirst value stack] returns a new Stack with [value] prepended.
-   *
-   *  Complexity: O(_1)
-   */
+    let addLast: 'a => (t 'a) => (t 'a);
+    /** [addLast value transient] appends [value] to [transient].
+     *
+     *  Complexity: O(1)
+     */
 
-  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll iter stack] returns a new Stack with the values in [iter] prepended. */
+    let last: (t 'a) => option 'a;
+    /** [tryLast transient] returns the last element in [transient] or None. */
 
-  let empty: unit => (t 'a);
-  /** The empty Vector. */
+    let lastOrRaise: (t 'a) => 'a;
+    /** [last transient] returns the last element in [transient] or throws. */
 
-  let fromReverse: (Iterator.t 'a) => (t 'a);
-  /** [fromReverse iter] returns a new Stack containing the values in [iter]
-   *  in reverse order.
-   */
-
-  let return: 'a => (t 'a);
-  /** [return value] returns a new Stack containing a single element, [value]. */
-
-  let removeFirstOrRaise: (t 'a) => (t 'a);
-  /** [removeFirstOrRaise stack] returns a new Stack without the first element.
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type TransientSequentialCollection_1 = {
-  type t 'a;
-
-  include TransientCollection_1 with type t 'a := t 'a;
-
-  let addFirst: 'a => (t 'a) => (t 'a);
-  /** [addFirst value transient] prepends [value] to [transient].
-   *
-   *  Complexity: O(_1)
-   */
-
-  let empty: unit => (t 'a);
-  /** [empty ()] returns a new empty TransientDeque. */
-
-  let first: (t 'a) => option 'a;
-  /** [tryFirst transient] returns first element in [transient] or None. */
-
-  let firstOrRaise: (t 'a) => 'a;
-  /** [first transient] returns the first element in [transient] or throws. */
-
-  let removeFirstOrRaise: (t 'a) => (t 'a);
-  /** [removeFirstOrRaise transient] removes the first element from [transient].
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type NavigableCollection = {
-  type a;
-  type t;
-
-  include ReduceableRight with type a := a and type t := t;
-  include SequentialCollection with type a := a and type t := t;
-
-  let last: t => (option a);
-  let lastOrRaise: t => a;
-  let toIteratorRight: t => (Iterator.t a);
-  let toSequenceRight: t => (Sequence.t a);
-};
-
-module type NavigableCollection_1 = {
-  type t 'a;
-
-  include ReduceableRight_1 with type t 'a := t 'a;
-  include SequentialCollection_1 with type t 'a := t 'a;
-
-  let last: (t 'a) => (option 'a);
-  let lastOrRaise: (t 'a) => 'a;
-  let toIteratorRight: (t 'a) => (Iterator.t 'a);
-  let toSequenceRight: (t 'a) => (Sequence.t 'a);
-};
-
-module type PersistentNavigableCollection_1 = {
-  type t 'a;
-
-  include Mappable_1 with type t 'a := t 'a;
-  include NavigableCollection_1 with type t 'a := t 'a;
-  include PersistentSequentialCollection_1 with type t 'a := t 'a;
-
-  let addLast: 'a => (t 'a) => (t 'a);
-  /** [addLast value deque] returns a new Deque with [value] appended.
-   *
-   *  Complexity: O(_1)
-   */
-
-  let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  /** [addLastAll iter deque] returns a new Deque with the values in [iter] appended. */
-
-  let from: (Iterator.t 'a) => (t 'a);
-  /** [from iter] returns a new Deque containing the values in [iter].
-   *
-   * Complexity: O(N) the number of elements in [iter].
-   */
-
-  let removeLastOrRaise: (t 'a) => (t 'a);
-  /** [removeLastOrRaise deque] returns a new Deque without the last element.
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type TransientNavigableCollection_1 = {
-  type t 'a;
-
-  include TransientSequentialCollection_1 with type t 'a := t 'a;
-
-  let addLast: 'a => (t 'a) => (t 'a);
-  /** [addLast value transient] appends [value] to [transient].
-   *
-   *  Complexity: O(_1)
-   */
-
-  let last: (t 'a) => option 'a;
-  /** [tryLast transient] returns the last element in [transient] or None. */
-
-  let lastOrRaise: (t 'a) => 'a;
-  /** [last transient] returns the last element in [transient] or throws. */
-
-  let removeLastOrRaise: (t 'a) => (t 'a);
-  /** [removeLastOrRaise transient] removes the last element from [transient].
-   *
-   *  Complexity: O(_1)
-   */
+    let removeLastOrRaise: (t 'a) => (t 'a);
+    /** [removeLastOrRaise transient] removes the last element from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
 let module rec Set: {
@@ -825,8 +887,8 @@ let module rec Set: {
      type a;
      type t;
 
-     include Collection with type a := a and type t := t;
-     include Equatable with type t := t;
+     include Collection.S with type a := a and type t := t;
+     include Equatable.S with type t := t;
 
      let contains: a => t => bool;
 
@@ -836,8 +898,8 @@ let module rec Set: {
    module type S1 = {
      type t 'a;
 
-     include Collection_1 with type t 'a := t 'a;
-     include Equatable_1 with type t 'a := t 'a;
+     include Collection.S1 with type t 'a := t 'a;
+     include Equatable.S1 with type t 'a := t 'a;
 
      let contains: 'a => (t 'a) => bool;
 
@@ -868,125 +930,137 @@ let module rec Set: {
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 };
 
-module type PersistentSet = {
-  type a;
-  type t;
+let module PersistentSet: {
+  module type S = {
+    type a;
+    type t;
 
-  include Set.S with type a := a and type t := t;
-  include PersistentCollection with type a := a and type t := t;
+    include Set.S with type a := a and type t := t;
+    include PersistentCollection.S with type a := a and type t := t;
 
-  let add: a => t => t;
-  let addAll: (Iterator.t a) => t => t;
-  let from: (Iterator.t a) => t;
-  let intersect: t => t => t;
-  let remove: a => t => t;
-  let subtract: t => t => t;
-  let union: t => t => t;
+    let add: a => t => t;
+    let addAll: (Iterator.t a) => t => t;
+    let from: (Iterator.t a) => t;
+    let intersect: t => t => t;
+    let remove: a => t => t;
+    let subtract: t => t => t;
+    let union: t => t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include Set.S1 with type t 'a := t 'a;
+    include PersistentCollection.S1 with type t 'a := t 'a;
+
+    let add: 'a => (t 'a) => (t 'a);
+    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let intersect: (t 'a) => (t 'a) => (t 'a);
+    let remove: 'a => (t 'a) => (t 'a);
+    let subtract: (t 'a) => (t 'a) => (t 'a);
+    let union: (t 'a) => (t 'a) => (t 'a);
+  };
 };
 
-module type PersistentSet_1 = {
-  type t 'a;
+let module TransientSet: {
+  module type S = {
+    type a;
+    type t;
 
-  include Set.S1 with type t 'a := t 'a;
-  include PersistentCollection_1 with type t 'a := t 'a;
+    include TransientCollection.S with type a := a and type t := t;
 
-  let add: 'a => (t 'a) => (t 'a);
-  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  let intersect: (t 'a) => (t 'a) => (t 'a);
-  let remove: 'a => (t 'a) => (t 'a);
-  let subtract: (t 'a) => (t 'a) => (t 'a);
-  let union: (t 'a) => (t 'a) => (t 'a);
+    let add: a => t => t;
+    let addAll: (Iterator.t a) => t => t;
+    let contains: a => t => bool;
+    let remove: a => t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include TransientCollection.S1 with type t 'a := t 'a;
+
+    let add: 'a => (t 'a) => (t 'a);
+    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let contains: 'a => (t 'a) => bool;
+    let remove: 'a => (t 'a) => (t 'a);
+  };
 };
 
-module type TransientSet = {
-  type a;
-  type t;
+let module NavigableSet: {
+  module type S = {
+    type a;
+    type t;
 
-  include TransientCollection with type a := a and type t := t;
+    include Set.S with type a := a and type t := t;
+    include NavigableCollection.S with type a := a and type t := t;
+  };
 
-  let add: a => t => t;
-  let addAll: (Iterator.t a) => t => t;
-  let contains: a => t => bool;
-  let remove: a => t => t;
+  module type S1 = {
+    type t 'a;
+
+    include Set.S1 with type t 'a := t 'a;
+    include NavigableCollection.S1 with type t 'a := t 'a;
+  };
 };
 
-module type TransientSet_1 = {
-  type t 'a;
+let module PersistentNavigableSet: {
+  module type S = {
+    type a;
+    type t;
 
-  include TransientCollection_1 with type t 'a := t 'a;
+    include NavigableSet.S with type a := a and type t := t;
+    include PersistentSet.S with type a := a and type t := t;
 
-  let add: 'a => (t 'a) => (t 'a);
-  let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  let contains: 'a => (t 'a) => bool;
-  let remove: 'a => (t 'a) => (t 'a);
+    let removeFirstOrRaise: t => t;
+
+    let removeLastOrRaise: t => t;
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    include NavigableSet.S1 with type t 'a := t 'a;
+    include PersistentSet.S1 with type t 'a := t 'a;
+
+    let removeFirstOrRaise: t 'a => t 'a;
+
+    let removeLastOrRaise: t 'a => t 'a;
+  };
 };
 
-module type NavigableSet = {
-  type a;
-  type t;
+let module KeyedReduceable: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include Set.S with type a := a and type t := t;
-  include NavigableCollection with type a := a and type t := t;
+    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  };
 };
 
-module type NavigableSet_1 = {
-  type t 'a;
+let module KeyedReduceableRight: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include Set.S1 with type t 'a := t 'a;
-  include NavigableCollection_1 with type t 'a := t 'a;
-};
+    include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
 
-module type PersistentNavigableSet = {
-  type a;
-  type t;
+    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  };
 
-  include NavigableSet with type a := a and type t := t;
-  include PersistentSet with type a := a and type t := t;
+  module type S2 = {
+    type t 'k 'v;
 
-  let removeFirstOrRaise: t => t;
+    include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
 
-  let removeLastOrRaise: t => t;
-};
-
-module type PersistentNavigableSet_1 = {
-  type t 'a;
-
-  include NavigableSet_1 with type t 'a := t 'a;
-  include PersistentSet_1 with type t 'a := t 'a;
-
-  let removeFirstOrRaise: t 'a => t 'a;
-
-  let removeLastOrRaise: t 'a => t 'a;
-};
-
-module type KeyedReduceable_1 = {
-  type k;
-  type t 'v;
-
-  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-};
-
-module type KeyedReduceable_2 = {
-  type t 'k 'v;
-
-  let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-};
-
-module type KeyedReduceableRight_1 = {
-  type k;
-  type t 'v;
-
-  include KeyedReduceable_1 with type k := k and type t 'v := t 'v;
-
-  let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-};
-
-module type KeyedReduceableRight_2 = {
-  type t 'k 'v;
-
-  include KeyedReduceable_2 with type t 'k 'v := t 'k 'v;
-
-  let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  };
 };
 
 let module KeyedReducer: {
@@ -1027,14 +1101,14 @@ let module KeyedReducer: {
     let some: ('k => 'v => bool) => (t 'k 'v) => bool;
   };
 
-  let module Make1: (KeyedReduceable: KeyedReduceable_1) => S1 with type k = KeyedReduceable.k and type t 'v = KeyedReduceable.t 'v;
-  let module Make2: (KeyedReduceable: KeyedReduceable_2) => S2 with type t 'k 'v = KeyedReduceable.t 'k 'v;
+  let module Make1: (KeyedReduceable: KeyedReduceable.S1) => S1 with type k = KeyedReduceable.k and type t 'v = KeyedReduceable.t 'v;
+  let module Make2: (KeyedReduceable: KeyedReduceable.S2) => S2 with type t 'k 'v = KeyedReduceable.t 'k 'v;
 };
 
 let module KeyedIterator: {
   type t 'k 'v;
 
-  include KeyedReduceable_2 with type t 'k 'v := t 'k 'v;
+  include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
 
   let concat: (list (t 'k 'v)) => (t 'k 'v);
   let defer: (unit => t 'k 'v) => (t 'k 'v);
@@ -1070,151 +1144,161 @@ let module KeyedIterator: {
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
 };
 
-module type KeyedIterable_1 = {
-  type k;
-  type t 'v;
+let module KeyedIterable: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include KeyedReduceable_1 with type k := k and type t 'v := t 'v;
+    include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
 
-  let toIterator: t 'v => Iterator.t (k, 'v);
+    let toIterator: t 'v => Iterator.t (k, 'v);
 
-  let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
+    let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
+
+    let toIterator: t 'k 'v => Iterator.t ('k, 'v);
+
+    let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
+  };
 };
 
-module type KeyedIterable_2 = {
-  type t 'k 'v;
+let module KeyedCollection: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include KeyedReduceable_2 with type t 'k 'v := t 'k 'v;
+    include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
 
-  let toIterator: t 'k 'v => Iterator.t ('k, 'v);
+    let containsKey: k => t 'v => bool;
+    let count: t 'v => int;
+    let isEmpty: (t 'v) => bool;
+    let isNotEmpty: (t 'v) => bool;
+    let keys: (t 'v) => (Set.t k);
+    let toSequence: (t 'v) => (Sequence.t (k, 'v));
+  };
 
-  let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
+  module type S2 = {
+    type t 'k 'v;
+
+    include KeyedIterable.S2 with type t 'k 'v := t 'k 'v;
+
+    let containsKey: 'k => t 'k 'v => bool;
+    let count: t 'k 'v => int;
+    let isEmpty: (t 'k 'v) => bool;
+    let isNotEmpty: (t 'k 'v) => bool;
+    let keys: (t 'k 'v) => (Set.t 'k);
+    let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+  };
 };
 
-module type KeyedCollection_1 = {
-  type k;
-  type t 'v;
+let module PersistentKeyedCollection: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include KeyedIterable_1 with type k := k and type t 'v := t 'v;
+    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
-  let containsKey: k => t 'v => bool;
-  let count: t 'v => int;
-  let isEmpty: (t 'v) => bool;
-  let isNotEmpty: (t 'v) => bool;
-  let keys: (t 'v) => (Set.t k);
-  let toSequence: (t 'v) => (Sequence.t (k, 'v));
+    let remove: k => (t 'v) => (t 'v);
+
+    let removeAll: (t 'v) => (t 'v);
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    include KeyedCollection.S2 with  type t 'k 'v := t 'k 'v;
+
+    let remove: 'k => (t 'k 'v) => (t 'k 'v);
+
+    let removeAll: (t 'k 'v) => (t 'k 'v);
+  };
 };
 
-module type KeyedCollection_2 = {
-  type t 'k 'v;
+let module TransientKeyedCollection: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include KeyedIterable_2 with type t 'k 'v := t 'k 'v;
+    let containsKey: k => (t 'v) => bool;
 
-  let containsKey: 'k => t 'k 'v => bool;
-  let count: t 'k 'v => int;
-  let isEmpty: (t 'k 'v) => bool;
-  let isNotEmpty: (t 'k 'v) => bool;
-  let keys: (t 'k 'v) => (Set.t 'k);
-  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+    let count: (t 'v) => int;
+    /** [count map] returns the number of key/value pairs in [map]. */
+
+    let isEmpty: (t 'v) => bool;
+    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
+    let isNotEmpty: (t 'v) => bool;
+    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
+    let remove: k => (t 'v) => (t 'v);
+
+    let removeAll: (t 'v) => (t 'v);
+    /** [removeAll transient] removes all mappings from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let containsKey: 'k => (t 'k 'v) => bool;
+
+    let count: (t 'k 'v) => int;
+    /** [count map] returns the number of key/value pairs in [map]. */
+
+    let isEmpty: (t 'k 'v) => bool;
+    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+
+    let isNotEmpty: (t 'k 'v) => bool;
+    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+
+    let remove: 'k => (t 'k 'v) => (t 'k 'v);
+
+    let removeAll: (t 'k 'v) => (t 'k 'v);
+    /** [removeAll transient] removes all mappings from [transient].
+     *
+     *  Complexity: O(1)
+     */
+  };
 };
 
-module type PersistentKeyedCollection_1 = {
-  type k;
-  type t 'v;
+let module NavigableKeyedCollection: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include KeyedCollection_1 with type k := k and type t 'v := t 'v;
+    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
+    include KeyedReduceableRight.S1 with type k := k and type t 'v := t 'v;
 
-  let remove: k => (t 'v) => (t 'v);
+    let first: (t 'v) => (option (k, 'v));
+    let firstOrRaise: (t 'v) => (k, 'v);
+    let last: (t 'v) => (option (k, 'v));
+    let lastOrRaise: (t 'v) => (k, 'v);
+    let toIteratorRight: t 'v => Iterator.t (k, 'v);
+    let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
+    let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
+  };
 
-  let removeAll: (t 'v) => (t 'v);
-};
+  module type S2 = {
+    type t 'k 'v;
 
-module type PersistentKeyedCollection_2 = {
-  type t 'k 'v;
+    include KeyedCollection.S2 with type t 'k 'v := t  'k 'v;
+    include KeyedReduceableRight.S2 with type t 'k 'v := t 'k 'v;
 
-  include KeyedCollection_2 with  type t 'k 'v := t 'k 'v;
-
-  let remove: 'k => (t 'k 'v) => (t 'k 'v);
-
-  let removeAll: (t 'k 'v) => (t 'k 'v);
-};
-
-module type TransientKeyedCollection_1 = {
-  type k;
-  type t 'v;
-
-  let containsKey: k => (t 'v) => bool;
-
-  let count: (t 'v) => int;
-  /** [count map] returns the number of key/value pairs in [map]. */
-
-  let isEmpty: (t 'v) => bool;
-  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
-
-  let isNotEmpty: (t 'v) => bool;
-  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
-
-  let remove: k => (t 'v) => (t 'v);
-
-  let removeAll: (t 'v) => (t 'v);
-  /** [removeAll transient] removes all mappings from [transient].
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type TransientKeyedCollection_2 = {
-  type t 'k 'v;
-
-  let containsKey: 'k => (t 'k 'v) => bool;
-
-  let count: (t 'k 'v) => int;
-  /** [count map] returns the number of key/value pairs in [map]. */
-
-  let isEmpty: (t 'k 'v) => bool;
-  /** [isEmpty map] returns true if [map] contains no key/value pairs. */
-
-  let isNotEmpty: (t 'k 'v) => bool;
-  /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
-
-  let remove: 'k => (t 'k 'v) => (t 'k 'v);
-
-  let removeAll: (t 'k 'v) => (t 'k 'v);
-  /** [removeAll transient] removes all mappings from [transient].
-   *
-   *  Complexity: O(_1)
-   */
-};
-
-module type NavigableKeyedCollection_1 = {
-  type k;
-  type t 'v;
-
-  include KeyedCollection_1 with type k := k and type t 'v := t 'v;
-  include KeyedReduceableRight_1 with type k := k and type t 'v := t 'v;
-
-  let first: (t 'v) => (option (k, 'v));
-  let firstOrRaise: (t 'v) => (k, 'v);
-  let last: (t 'v) => (option (k, 'v));
-  let lastOrRaise: (t 'v) => (k, 'v);
-  let toIteratorRight: t 'v => Iterator.t (k, 'v);
-  let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
-  let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-};
-
-module type NavigableKeyedCollection_2 = {
-  type t 'k 'v;
-
-  include KeyedCollection_2 with type t 'k 'v := t  'k 'v;
-  include KeyedReduceableRight_2 with type t 'k 'v := t 'k 'v;
-
-  let first: (t 'k 'v) => (option ('k, 'v));
-  let firstOrRaise: (t 'k 'v) => ('k, 'v);
-  let last: (t 'k 'v) => (option ('k, 'v));
-  let lastOrRaise: (t 'k 'v) => ('k, 'v);
-  let toIteratorRight: t 'k 'v => Iterator.t ('k, 'v);
-  let toKeyedIteratorRight: t 'k 'v => KeyedIterator.t 'k 'v;
-  let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
+    let first: (t 'k 'v) => (option ('k, 'v));
+    let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    let last: (t 'k 'v) => (option ('k, 'v));
+    let lastOrRaise: (t 'k 'v) => ('k, 'v);
+    let toIteratorRight: t 'k 'v => Iterator.t ('k, 'v);
+    let toKeyedIteratorRight: t 'k 'v => KeyedIterator.t 'k 'v;
+    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
+  };
 };
 
 let module rec Map: {
@@ -1227,7 +1311,7 @@ let module rec Map: {
      type k;
      type t 'v;
 
-     include KeyedCollection_1 with type k := k and type t 'v := t 'v;
+     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
      let get: k => (t 'v) => (option 'v);
      let getOrRaise: k => (t 'v) => 'v;
@@ -1238,7 +1322,7 @@ let module rec Map: {
    module type S2 = {
      type t 'k 'v;
 
-     include KeyedCollection_2 with type t 'k 'v := t 'k 'v;
+     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
      let get: 'k => (t 'k 'v) => (option 'v);
      let getOrRaise: 'k => (t 'k 'v) => 'v;
@@ -1259,188 +1343,200 @@ let module rec Map: {
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
 };
 
-module type PersistentMap_1 = {
-  type k;
-  type t 'v;
+let module PersistentMap: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include PersistentKeyedCollection_1 with type k := k and type t 'v := t 'v;
-  include Map.S1 with type k := k and type t 'v := t 'v;
+    include PersistentKeyedCollection.S1 with type k := k and type t 'v := t 'v;
+    include Map.S1 with type k := k and type t 'v := t 'v;
 
-  let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+    let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
 
-  let empty: unit => (t 'v);
-  /** The empty SortedMap using the structural comparator. */
+    let empty: unit => (t 'v);
+    /** The empty SortedMap using the structural comparator. */
 
-  let from: (KeyedIterator.t k 'v) => (t 'v);
-  /** [from iter] returns a SortedMap including the key/value pairs in [iter]
-   *  using the structural comparison.
-   */
+    let from: (KeyedIterator.t k 'v) => (t 'v);
+    /** [from iter] returns a SortedMap including the key/value pairs in [iter]
+     *  using the structural comparison.
+     */
 
-  let fromEntries: (Iterator.t (k, 'v)) => (t 'v);
+    let fromEntries: (Iterator.t (k, 'v)) => (t 'v);
 
-  let map: (k => 'a => 'b) => (t 'a) => (t 'b);
+    let map: (k => 'a => 'b) => (t 'a) => (t 'b);
 
-  let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
+    let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
 
-  let put: k => 'v => (t 'v) => (t 'v);
+    let put: k => 'v => (t 'v) => (t 'v);
 
-  let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
 
-  let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+    let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    include PersistentKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+    include Map.S2 with type t 'k 'v := t 'k 'v;
+
+    let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+
+    let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+
+    let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
+
+    let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+
+    let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+
+    let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+  };
 };
 
-module type PersistentMap_2 = {
-  type t 'k 'v;
+let module TransientMap: {
+  module type S1 = {
+    type k;
 
-  include PersistentKeyedCollection_2 with type t 'k 'v := t 'k 'v;
-  include Map.S2 with type t 'k 'v := t 'k 'v;
+    type t 'v;
 
-  let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+    include TransientKeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+    let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+    /** [alter key f transient] enables efficient deep updates to an existing
+     *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
+     *  [f] will be called with Some, otherwise it will be called with None.
+     *  If [f] returns None, alter removes any mapping from [key] in [transient].
+     *  If [f] returns Some, alter returns add or updates the mapping
+     *  from [key] in [transient].
+     */
 
-  let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
+    let empty: unit => (t 'v);
+    /** [empty ()] returns a new empty TransientIntMap. */
 
-  let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+    let get: k => (t 'v) => (option 'v);
+    /** [tryGet key transient] returns the value associated with [key] or None
+     *
+     *  Complexity: O(log32 N), effectively O(1)
+     */
 
-  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    let getOrRaise: k => (t 'v) => 'v;
 
-  let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    let put: k => 'v => (t 'v) => (t 'v);
+    /** [put key value transient] adds the mapping of [key] to [value] to [transient].
+     *
+     *  Complexity: O(log32 N), effectively O(1)
+     */
+
+    let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
+     *  Key value pairs in [iter] replace existing mappings in [transient].
+     */
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    include TransientKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+
+    let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+    /** [alter key f transient] enables efficient deep updates to an existing
+     *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
+     *  [f] will be called with Some, otherwise it will be called with None.
+     *  If [f] returns None, alter removes any mapping from [key] in [transient].
+     *  If [f] returns Some, alter returns add or updates the mapping
+     *  from [key] in [transient].
+     */
+
+    let get: 'k => (t 'k 'v) => (option 'v);
+    /** [tryGet key transient] returns the value associated with [key] or None
+     *
+     *  Complexity: O(log32 N), effectively O(1)
+     */
+
+    let getOrRaise: 'k => (t 'k 'v) => 'v;
+
+    let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+    /** [put key value transient] adds the mapping of [key] to [value] to [transient].
+     *
+     *  Complexity: O(log32 N), effectively O(1)
+     */
+
+    let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
+     *  Key value pairs in [iter] replace existing mappings in [transient].
+     */
+  };
 };
 
-module type TransientMap_1 = {
-  type k;
+let module NavigableMap: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  type t 'v;
-
-  include TransientKeyedCollection_1 with type k := k and type t 'v := t 'v;
-
-  let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
-  /** [alter key f transient] enables efficient deep updates to an existing
-   *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
-   *  [f] will be called with Some, otherwise it will be called with None.
-   *  If [f] returns None, alter removes any mapping from [key] in [transient].
-   *  If [f] returns Some, alter returns add or updates the mapping
-   *  from [key] in [transient].
-   */
-
-  let empty: unit => (t 'v);
-  /** [empty ()] returns a new empty TransientIntMap. */
-
-  let get: k => (t 'v) => (option 'v);
-  /** [tryGet key transient] returns the value associated with [key] or None
-   *
-   *  Complexity: O(log3_2 N), effectively O(_1)
-   */
-
-  let getOrRaise: k => (t 'v) => 'v;
-
-  let put: k => 'v => (t 'v) => (t 'v);
-  /** [put key value transient] adds the mapping of [key] to [value] to [transient].
-   *
-   *  Complexity: O(log3_2 N), effectively O(_1)
-   */
-
-  let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
-  /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
-   *  Key value pairs in [iter] replace existing mappings in [transient].
-   */
+    include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
+    include Map.S1 with type k := k and type t 'v := t 'v;
+  };
 };
 
-module type TransientMap_2 = {
-  type t 'k 'v;
+let module PersistentNavigableMap: {
+  module type S1 = {
+    type k;
+    type t 'v;
 
-  include TransientKeyedCollection_2 with type t 'k 'v := t 'k 'v;
+    include NavigableMap.S1 with type k := k and type t 'v := t 'v;
+    include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
-  let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
-  /** [alter key f transient] enables efficient deep updates to an existing
-   *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
-   *  [f] will be called with Some, otherwise it will be called with None.
-   *  If [f] returns None, alter removes any mapping from [key] in [transient].
-   *  If [f] returns Some, alter returns add or updates the mapping
-   *  from [key] in [transient].
-   */
+    let removeFirstOrRaise: (t 'v) => (t 'v);
+    /** [removeFirstOrRaise map] returns a new SortedMap without the first element.
+     *
+     *  Complexity: O(log N)
+     */
 
-  let get: 'k => (t 'k 'v) => (option 'v);
-  /** [tryGet key transient] returns the value associated with [key] or None
-   *
-   *  Complexity: O(log3_2 N), effectively O(_1)
-   */
-
-  let getOrRaise: 'k => (t 'k 'v) => 'v;
-
-  let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  /** [put key value transient] adds the mapping of [key] to [value] to [transient].
-   *
-   *  Complexity: O(log3_2 N), effectively O(_1)
-   */
-
-  let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-  /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
-   *  Key value pairs in [iter] replace existing mappings in [transient].
-   */
+    let removeLastOrRaise: (t 'v) => (t 'v);
+    /** [removeLastOrRaise map] returns a new SortedMap without the last element.
+     *
+     *  Complexity: O(log N)
+     */
+  };
 };
 
-module type NavigableMap_1 = {
-  type k;
-  type t 'v;
+let module IndexedCollection: {
+  module type S1 = {
+    type t 'a;
 
-  include NavigableKeyedCollection_1 with type k := k and type t 'v := t 'v;
-  include Map.S1 with type k := k and type t 'v := t 'v;
+    include NavigableCollection.S1 with type t 'a := t 'a;
+
+    let get: int => (t 'a) => (option 'a);
+    /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
+
+    let getOrRaise: int => (t 'a) => 'a;
+
+    let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
+
+    let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
+
+    let toMap: (t 'a) => (Map.t int 'a);
+  };
 };
 
-module type PersistentNavigableMap_1 = {
-  type k;
-  type t 'v;
+let module IndexedMappable: {
+  module type S1 = {
+    type t 'a;
 
-  include NavigableMap_1 with type k := k and type t 'v := t 'v;
-  include PersistentMap_1 with type k := k and type t 'v := t 'v;
+    include Mappable.S1 with type t 'a := t 'a;
+    include ReverseMappable.S1 with type t 'a := t 'a;
 
-  let removeFirstOrRaise: (t 'v) => (t 'v);
-  /** [removeFirstOrRaise map] returns a new SortedMap without the first element.
-   *
-   *  Complexity: O(log N)
-   */
+    let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
+    /** [map f vec] returns a new Vector applying the
+     *  function [f] to each index/element pair in [vec].
+     */
 
-  let removeLastOrRaise: (t 'v) => (t 'v);
-  /** [removeLastOrRaise map] returns a new SortedMap without the last element.
-   *
-   *  Complexity: O(log N)
-   */
-};
-
-module type IndexedCollection_1 = {
-  type t 'a;
-
-  include NavigableCollection_1 with type t 'a := t 'a;
-
-  let get: int => (t 'a) => (option 'a);
-  /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
-
-  let getOrRaise: int => (t 'a) => 'a;
-
-  let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
-
-  let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
-
-  let toMap: (t 'a) => (Map.t int 'a);
-};
-
-module type IndexedMappable_1 = {
-  type t 'a;
-
-  include Mappable_1 with type t 'a := t 'a;
-  include ReverseMappable_1 with type t 'a := t 'a;
-
-  let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
-  /** [map f vec] returns a new Vector applying the
-   *  function [f] to each index/element pair in [vec].
-   */
-
-  let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
-  /** [mapReverseWithIndex f vec] returns a new Vector applying the
-   *  function [f] to each index/element pair in [vec], reversing the result.
-   */
+    let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
+    /** [mapReverseWithIndex f vec] returns a new Vector applying the
+     *  function [f] to each index/element pair in [vec], reversing the result.
+     */
+  };
 };
 
 let module rec Deque: {
@@ -1451,18 +1547,18 @@ let module rec Deque: {
   type t 'a;
   /** The Deque type. */
 
-  include PersistentNavigableCollection_1 with type t 'a := t 'a;
+  include PersistentNavigableCollection.S1 with type t 'a := t 'a;
 
   let mutate: (t 'a) => (TransientDeque.t 'a);
   /** [mutate deque] returns a TransientDeque containing the same elements as [deque].
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let reverse: (t 'a) => (t 'a);
   /** [reverse deque] returns a new Deque with [deque]'s elements reversed.
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
@@ -1475,7 +1571,7 @@ and TransientDeque: {
 
   type t 'a;
 
-  include TransientNavigableCollection_1 with type t 'a := t 'a;
+  include TransientNavigableCollection.S1 with type t 'a := t 'a;
   /** The TransientDeque type. */
 
   let persist: (t 'a) => (Deque.t 'a);
@@ -1486,7 +1582,7 @@ and TransientDeque: {
   let reverse: (t 'a) => (t 'a);
   /** [reverse transient] reverse [transient]'s elements.
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 };
 
@@ -1496,7 +1592,7 @@ let module rec HashMap: {
   type t 'k 'v;
   /** The HashMap type. */
 
-  include PersistentMap_2 with type t 'k 'v := t 'k 'v;
+  include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
   let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
   let fromWith:
@@ -1513,7 +1609,7 @@ let module rec HashMap: {
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
   /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map].
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
@@ -1528,7 +1624,7 @@ and TransientHashMap: {
   type t 'k 'v;
   /** The TransientHashMap type. */
 
-  include TransientMap_2 with type t 'k 'v := t 'k 'v;
+  include TransientMap.S2 with type t 'k 'v := t 'k 'v;
 
   let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (TransientHashMap.t 'k 'v);
   let persist: (t 'k 'v) => (HashMap.t 'k 'v);
@@ -1545,15 +1641,15 @@ let module rec HashSet: {
   type t 'a;
   /** The HashSet type. */
 
-  include PersistentSet_1 with type t 'a := t 'a;
-  include Hashable_1 with type t 'a := t 'a;
+  include PersistentSet.S1 with type t 'a := t 'a;
+  include Hashable.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
   let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same elements as [set].
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
@@ -1568,7 +1664,7 @@ and TransientHashSet: {
   type t 'a;
   /** The TransientHashSet type. */
 
-  include TransientSet_1 with type t 'a := t 'a;
+  include TransientSet.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
   let persist: (t 'a) => (HashSet.t 'a);
@@ -1584,12 +1680,12 @@ let module rec IntMap: {
   type t 'v;
   /** The IntMap type. */
 
-  include PersistentMap_1 with type k := k and type t 'v := t 'v;
+  include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
   let mutate: (t 'v) => (TransientIntMap.t 'v);
   /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map].
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let module KeyedReducer: KeyedReducer.S1 with type k = k and type t 'v := t 'v;
@@ -1599,7 +1695,7 @@ and TransientIntMap: {
   type k = int;
   type t 'v;
 
-  include TransientMap_1 with type k := k and type t 'v := t 'v;
+  include TransientMap.S1 with type k := k and type t 'v := t 'v;
 
   let persist: (t 'v) => (IntMap.t 'v);
   /** [persist transient] returns a persisted HashBiMap. Further attempts to access or mutate [transient]
@@ -1614,9 +1710,9 @@ let module IntRange: {
   type t;
   /** The IntRange type.*/
 
-  include NavigableSet with type a := a and type t := t;
-  include Comparable with type t := t;
-  include Hashable with type t := t;
+  include NavigableSet.S with type a := a and type t := t;
+  include Comparable.S with type t := t;
+  include Hashable.S with type t := t;
 
   let create: start::int => count::int => t;
 
@@ -1630,12 +1726,12 @@ let module rec IntSet: {
   type t;
   /** The IntSet type. */
 
-  include PersistentSet with type a := a and type t := t;
+  include PersistentSet.S with type a := a and type t := t;
 
   let mutate: t => TransientIntSet.t;
   /** [mutate set] returns a TransientIntSet containing the same elements as [set].
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let module Reducer: Reducer.S with type a = a and type t := t;
@@ -1650,7 +1746,7 @@ and TransientIntSet: {
   type t;
   /** The TransientIntSet type. */
 
-  include TransientSet with type a := a and type t := t;
+  include TransientSet.S with type a := a and type t := t;
 
   let empty: unit => t;
   /** [empty ()] return a new empty TransientIntSet. */
@@ -1667,8 +1763,8 @@ let module List: {
   type t 'a = list 'a;
   /** The List type. */
 
-  include Iterable_1 with type t 'a := t 'a;
-  include ReverseMappable_1 with type t 'a := t 'a;
+  include Iterable.S1 with type t 'a := t 'a;
+  include ReverseMappable.S1 with type t 'a := t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
   /** [addFirst value list] returns a new List with [value] prepended. */
@@ -1701,13 +1797,13 @@ let module List: {
   let removeAll: (t 'a) => (t 'a);
   /** [removeAll list] returns the empty List.
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let removeFirstOrRaise: (t 'a) => (t 'a);
   /** [removeFirstOrRaise list] returns a new List without the first element.
    *
-   *  Complexity: O(_1)
+   *  Complexity: O(1)
    */
 
   let return: 'a => (t 'a);
@@ -1721,15 +1817,15 @@ let module List: {
 
 let module Option: {
   /** OCaml option type. Can be considered a set of zero or one elements.
-   *  All operations have a complexity of O(_1).
+   *  All operations have a complexity of O(1).
    */
 
   type t 'a = option 'a;
   /** The Option type. */
 
-  include FlatMappable_1 with type t 'a := t 'a;
-  include Mappable_1 with type t 'a := t 'a;
-  include SequentialCollection_1 with type t 'a := t 'a;
+  include FlatMappable.S1 with type t 'a := t 'a;
+  include Mappable.S1 with type t 'a := t 'a;
+  include SequentialCollection.S1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
   /** The empty Option, None. */
@@ -1746,8 +1842,8 @@ let module ReadOnlyArray: {
   type t 'a;
   /** The CopyOnWriteArray type. */
 
-  include IndexedCollection_1 with type t 'a := t 'a;
-  include IndexedMappable_1 with type t 'a := t 'a;
+  include IndexedCollection.S1 with type t 'a := t 'a;
+  include IndexedMappable.S1 with type t 'a := t 'a;
 
   let empty: unit => t 'a;
   let init: int => (int => 'a) => (t 'a);
@@ -1762,12 +1858,12 @@ let module ReadOnlyArray: {
 };
 
 let module Stack: {
-  /** A singly-linked stack with an O(_1) count operation. */
+  /** A singly-linked stack with an O(1) count operation. */
 
   type t 'a;
   /** The Stack type. */
 
-  include PersistentSequentialCollection_1 with type t 'a := t 'a;
+  include PersistentSequentialCollection.S1 with type t 'a := t 'a;
 
   let fromList: (list 'a) => (t 'a);
   /** [fromList list] returns a Stack backed by [list].
@@ -1789,12 +1885,12 @@ let module SortedMap: {
     type t +'v;
     /** The SortedMap type. */
 
-    include PersistentNavigableMap_1 with type k := k and type t 'v := t 'v;
+    include PersistentNavigableMap.S1 with type k := k and type t 'v := t 'v;
 
     let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
   };
 
-  let module Make1: (Comparable: Comparable) => S1 with type k = Comparable.t;
+  let module Make1: (Comparable: Comparable.S) => S1 with type k = Comparable.t;
 };
 
 let module SortedSet: {
@@ -1804,13 +1900,13 @@ let module SortedSet: {
     type t;
     /** The SortedSet type */
 
-    include Comparable with type t := t;
-    include PersistentNavigableSet with type a := a and type t := t;
+    include Comparable.S with type t := t;
+    include PersistentNavigableSet.S with type a := a and type t := t;
 
     let module Reducer: Reducer.S with type a := a and type t := t;
   };
 
-  let module Make: (Comparable: Comparable) => S with type a = Comparable.t;
+  let module Make: (Comparable: Comparable.S) => S with type a = Comparable.t;
 };
 
 let module rec Vector: {
@@ -1821,9 +1917,9 @@ let module rec Vector: {
   type t 'a;
   /** The vector type */
 
-  include PersistentNavigableCollection_1 with type t 'a := t 'a;
-  include IndexedCollection_1 with type t 'a := t 'a;
-  include IndexedMappable_1 with type t 'a := t 'a;
+  include PersistentNavigableCollection.S1 with type t 'a := t 'a;
+  include IndexedCollection.S1 with type t 'a := t 'a;
+  include IndexedMappable.S1 with type t 'a := t 'a;
 
   let concat: (list (t 'a)) => (t 'a);
   let init: int => (int => 'a) => (t 'a);
@@ -1848,7 +1944,7 @@ and TransientVector: {
   type t 'a;
   /** The TransientVector type. */
 
-  include TransientNavigableCollection_1 with type t 'a := t 'a;
+  include TransientNavigableCollection.S1 with type t 'a := t 'a;
 
   let get: int => (t 'a) => (option 'a);
 
@@ -1859,7 +1955,7 @@ and TransientVector: {
    *
    *  WARNING: Not implemented
    *
-   *  Complexity: O(log3_2 N)
+   *  Complexity: O(log32 N)
    */
 
   let removeAt: int => (t 'a) => (t 'a);
@@ -1867,13 +1963,13 @@ and TransientVector: {
    *
    *  WARNING: Not implemented
    *
-   *  Complexity: O(log3_2 N)
+   *  Complexity: O(log32 N)
    */
 
   let update: int => 'a => (t 'a) => (t 'a);
   /** [update index value transient] replaces the element at [index] with [value].
    *
-   *  Complexity: O(log3_2 N)
+   *  Complexity: O(log32 N)
    */
 
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
@@ -1887,7 +1983,7 @@ and TransientVector: {
   /** [updateWith index f transient] updates the element at [index] with the result
    *  of applying the function [f] to the element.
    *
-   *  Complexity: O(log3_2 N)
+   *  Complexity: O(log32 N)
    */
 
   let persist: (t 'a) => (Vector.t 'a);

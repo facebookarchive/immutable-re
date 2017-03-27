@@ -10,7 +10,7 @@
 open Immutable;
 open ReUnit.Test;
 
-let module HashIntMap: PersistentMap_1 with type k = int = {
+let module HashIntMap: PersistentMap.S1 with type k = int = {
   type k = int;
   type t 'v = HashMap.t k 'v;
 
@@ -49,6 +49,6 @@ let module HashIntMap: PersistentMap_1 with type k = int = {
 };
 
 let test = describe "HashMap" [
-  PersistentMapTester.test (module HashIntMap: PersistentMap_1 with type k = HashIntMap.k) 100,
-  PersistentMapTester.test (module HashIntMap: PersistentMap_1 with type k = HashIntMap.k) 10000,
+  PersistentMapTester.test (module HashIntMap: PersistentMap.S1 with type k = HashIntMap.k) 100,
+  PersistentMapTester.test (module HashIntMap: PersistentMap.S1 with type k = HashIntMap.k) 10000,
 ];

@@ -10,7 +10,7 @@
 open Immutable;
 open ReUnit.Test;
 
-let module Tester = DequeTester.Make (Deque: PersistentNavigableCollection_1) ({
+let module Tester = DequeTester.Make (Deque: PersistentNavigableCollection.S1) ({
   let count = 5000;
 });
 
