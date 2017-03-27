@@ -43,7 +43,7 @@ let firstOrRaise (arr: t 'a): 'a => getOrRaise 0 arr;
 
 let lastIndexOrRaise (arr: t 'a): int => {
   let lastIndex = count arr - 1;
-  if (lastIndex > 0) lastIndex
+  if (lastIndex >= 0) lastIndex
   else failwith "empty";
 };
 

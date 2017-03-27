@@ -381,24 +381,31 @@ let skipImpl
     let result = CopyOnWriteArray.skip skipCount nodes;
     (result, empty)
   | Level _ _ _ _ =>
-    trie |> computeLevelIndex (skipCount - 1) (fun (Level depth _ _ tries) _ childIndex => {
-      let triesLastIndex = CopyOnWriteArray.lastIndexOrRaise tries;
+    trie |> computeLevelIndex (skipCount - 1) (fun (Level depth _ _ tries) effectiveIndex childIndex => {
       let childNode = tries.(childIndex);
-      let (tail, newChildNode) as childResult = childNode |> skip owner skipCount;
+      let (tail, newChildNode) as childResult = childNode |> skip owner (effectiveIndex + 1);
+
+      let triesLastIndex = CopyOnWriteArray.lastIndexOrRaise tries;
 
       switch newChildNode {
-        | Empty when childIndex === triesLastIndex => childResult
+        | Empty when childIndex === triesLastIndex =>
+            childResult
         | Empty when childIndex === (triesLastIndex - 1) =>
-          (tail, tries |> CopyOnWriteArray.lastOrRaise)
+            (tail, tries |> CopyOnWriteArray.lastOrRaise)
         | Empty =>
-          let newTries = tries |> CopyOnWriteArray.skip (childIndex + 1);
-          let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
-          (tail, Level depth (ref levelCount) owner newTries)
-        | _ =>
-          let newTries = tries |> CopyOnWriteArray.skip childIndex;
-          newTries.(0) = newChildNode;
-          let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
-          (tail, Level depth (ref levelCount) owner newTries)
+            let newTries = tries |> CopyOnWriteArray.skip (childIndex + 1);
+            let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
+            (tail, Level depth (ref levelCount) owner newTries)
+        | Leaf _ _ =>
+            let newTries = tries |> CopyOnWriteArray.skip childIndex;
+            newTries.(0) = newChildNode;
+            let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
+            (tail, Level depth (ref levelCount) owner newTries)
+        | Level d1 _ _ _ =>
+            let newTries = tries |> CopyOnWriteArray.skip childIndex;
+            newTries.(0) = newChildNode;
+            let levelCount = newTries |> CopyOnWriteArray.reduce (fun acc next => acc + (count next)) 0;
+            (tail, Level depth (ref levelCount) owner newTries)
       }
     });
   | Empty => failwith "invalid state"

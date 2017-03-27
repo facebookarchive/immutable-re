@@ -250,7 +250,7 @@ describe (sprintf "count: %i" count) [
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          IntRange.create start::countDiv4 count::(count - countDiv2)
+          IntRange.create start::countDiv4 count::(count - countDiv4 - countDiv4)
             |> IntRange.toIterator
             |> List.fromReverse
         );
@@ -280,7 +280,7 @@ describe (sprintf "count: %i" count) [
       |> Vector.toIterator
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          IntRange.create start::countDiv4 count::(count - countDiv4)
+          IntRange.create start::countDiv4 count::(count - countDiv4 - countDiv4)
             |> IntRange.toIterator
             |> List.fromReverse
         );

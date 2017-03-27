@@ -1074,15 +1074,14 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) =
     | None => vecCount
   };
 
-  let skipCount =
-    if (start >= 0) start
-    else (vecCount + start);
+  let start = if (start < 0) (start + vecCount) else start;
+  let end_ = if (end_ < 0) (end_ + vecCount) else end_;
 
-  let takeCount =
-    if (end_ >= 0) end_
-    else (vecCount + end_ - skipCount);
+  let skipCount = start;
+  let takeCount = max (end_ - start) 0;
 
   if (skipCount === 0 && takeCount === vecCount) vec
+  else if (takeCount === 0) (empty ())
   else vec |> skip skipCount |> take takeCount;
 };
 
