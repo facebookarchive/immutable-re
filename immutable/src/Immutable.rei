@@ -754,6 +754,7 @@ let module SequentialCollection: {
    *
    *  By contract, all functions must be efficient, with no worst than O(log N) performance.
    */
+
   module type S = {
     /** SequentialCollection module type signature for types with a parametric type arity of 0. */
 
@@ -817,13 +818,13 @@ let module PersistentSequentialCollection: {
 
     let removeFirstOrRaise: (t 'a) => (t 'a);
     /** [removeFirstOrRaise collection] returns a PersistentSequentialCollection without
-     * the first element or raises an exception if [collection] is empty.
+     *  the first value or raises an exception if [collection] is empty.
      */
   };
 };
 
 let module TransientSequentialCollection: {
-  /** Module types implemented by transient collections supporting mutations to left
+  /** Module types implemented by transient collections supporting transient mutations to left
    *  side of the collection.
    *
    *  By contract, all functions must be efficient, with no worst than O(log N) performance.
@@ -846,20 +847,28 @@ let module TransientSequentialCollection: {
     /** [empty ()] returns a new empty TransientSequentialCollection. */
 
     let first: (t 'a) => option 'a;
-    /** [first transient] returns first element in [transient] or None. */
+    /** [first transient] returns first value in [transient] or None. */
 
     let firstOrRaise: (t 'a) => 'a;
-    /** [firstOrRaise transient] returns the first element in [transient] or raises an exception. */
+    /** [firstOrRaise transient] returns the first value in [transient] or raises an exception. */
 
     let removeFirstOrRaise: (t 'a) => (t 'a);
-    /** [removeFirstOrRaise transient] removes the first element from [transient] or raises
+    /** [removeFirstOrRaise transient] removes the first value from [transient] or raises
      *  an exception if [transient] is empty.
      */
   };
 };
 
 let module NavigableCollection: {
+  /** Module types implemented by collections that support sequential access to
+   *  both left and right most contained values. Concrete implementations include [Deque] and [Vector].
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
+
   module type S = {
+    /** NavigableCollection module type signature for types with a parametric type arity of 0. */
+
     type a;
     type t;
 
@@ -867,26 +876,58 @@ let module NavigableCollection: {
     include SequentialCollection.S with type a := a and type t := t;
 
     let last: t => (option a);
+    /** [last collection] returns last element in [collection] or None. */
+
     let lastOrRaise: t => a;
+    /** [lastOrRaise collection] returns the first element in [collection] or raises an exception. */
+
     let toIteratorRight: t => (Iterator.t a);
+    /* [toIteratorRight collection] returns an Iterator that can be used to iterate over
+     * the values in [collection] from right to left.
+     */
+
     let toSequenceRight: t => (Sequence.t a);
+    /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
+     * the values in [collection] from right to left.
+     */
   };
 
   module type S1 = {
+    /** NavigableCollection module type signature for types with a parametric type arity of 1. */
+
     type t 'a;
 
     include ReduceableRight.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let last: (t 'a) => (option 'a);
+    /** [last collection] returns last element in [collection] or None. */
+
     let lastOrRaise: (t 'a) => 'a;
+    /** [lastOrRaise collection] returns the first element in [collection] or raises an exception. */
+
     let toIteratorRight: (t 'a) => (Iterator.t 'a);
+    /* [toIteratorRight collection] returns an Iterator that can be used to iterate over
+     * the values in [collection] from right to left.
+     */
+
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
+    /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
+     * the values in [collection] from right to left.
+     */
   };
 };
 
 let module PersistentNavigableCollection: {
+  /** Module types implemented by collections supporting persistent mutations to both the left
+   *  and right side of the collection.
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
+
   module type S1 = {
+    /** PersistentNavigableCollection module type signature for types with a parametric type arity of 1. */
+
     type t 'a;
 
     include Mappable.S1 with type t 'a := t 'a;
@@ -894,30 +935,36 @@ let module PersistentNavigableCollection: {
     include PersistentSequentialCollection.S1 with type t 'a := t 'a;
 
     let addLast: 'a => (t 'a) => (t 'a);
-    /** [addLast value deque] returns a new Deque with [value] appended.
+    /** [addLast value collection] returns a PersistentNavigableCollection with [value] appended.
      *
      *  Complexity: O(1)
      */
 
     let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-    /** [addLastAll iter deque] returns a new Deque with the values in [iter] appended. */
+    /** [addLastAll iter deque] returns a PersistentNavigableCollection with the values in [iter] appended. */
 
     let from: (Iterator.t 'a) => (t 'a);
-    /** [from iter] returns a new Deque containing the values in [iter].
+    /** [from iter] returns a PersistentNavigableCollection containing the values in [iter].
      *
      * Complexity: O(N) the number of elements in [iter].
      */
 
     let removeLastOrRaise: (t 'a) => (t 'a);
-    /** [removeLastOrRaise deque] returns a new Deque without the last element.
-     *
-     *  Complexity: O(1)
+    /** [removeLastOrRaise collection] returns a PersistentSequentialCollection without
+     *  the last value or raises an exception if [collection] is empty.
      */
   };
 };
 
 let module TransientNavigableCollection: {
+  /** Module types implemented by transient collections supporting transient mutations to both
+   *  the left and rights sides of the collection.
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
   module type S1 = {
+    /** TransientNavigableCollection module type signature for types with a parametric type arity of 1. */
+
     type t 'a;
 
     include TransientSequentialCollection.S1 with type t 'a := t 'a;
@@ -929,46 +976,54 @@ let module TransientNavigableCollection: {
      */
 
     let last: (t 'a) => option 'a;
-    /** [tryLast transient] returns the last element in [transient] or None. */
+    /** [tryLast transient] returns the last value in [transient] or None. */
 
     let lastOrRaise: (t 'a) => 'a;
-    /** [last transient] returns the last element in [transient] or throws. */
+    /** [last transient] returns the last value in [transient] or raises an exception. */
 
     let removeLastOrRaise: (t 'a) => (t 'a);
-    /** [removeLastOrRaise transient] removes the last element from [transient].
-     *
-     *  Complexity: O(1)
+    /** [removeLastOrRaise transient] removes the last value from [transient] or raises
+     *  an exception if [transient] is empty.
      */
   };
 };
 
 let module rec Set: {
-  /** A read only view of an underlying set of unique values. The intent of this type is to enable
-   *  interop between alternative concrete implementations such as [SortedSet] and [g].
+  /** A read only view of a unique Set of values. The intent of this type is to enable
+   *  interop between alternative concrete implementations such as SortedSet and HashSet.
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
-   module type S = {
-     type a;
-     type t;
+  module type S = {
+    /** Set module type signature for types with a parametric type arity of 0. */
 
-     include Collection.S with type a := a and type t := t;
+    type a;
+    type t;
 
-     let contains: a => t => bool;
+    include Collection.S with type a := a and type t := t;
 
-     let toSet: t => Set.t a;
-   };
+    let contains: a => t => bool;
+    /** [contains value set] returns true if [set] contains at least one instace of [value],
+     *  otherwise false;
+     *
+     *  By contract, an implementation must be efficient, with no worst than O(log N) performance.
+     */
 
-   module type S1 = {
-     type t 'a;
+    let toSet: t => Set.t a;
+    /** [toSet set] returns a Set view of [set]. */
+  };
 
-     include Collection.S1 with type t 'a := t 'a;
-     include Equatable.S1 with type t 'a := t 'a;
+  module type S1 = {
+    /** Set module type signature for types with a parametric type arity of 0. */
+    type t 'a;
 
-     let contains: 'a => (t 'a) => bool;
+    include Collection.S1 with type t 'a := t 'a;
+    include Equatable.S1 with type t 'a := t 'a;
 
-     let toSet: (t 'a) => Set.t 'a;
-   };
+    let contains: 'a => (t 'a) => bool;
+
+    let toSet: (t 'a) => Set.t 'a;
+  };
 
   type t 'a;
   /** The Set type. */
@@ -992,10 +1047,18 @@ let module rec Set: {
   /** [union this that] returns an Iterator of unique elements which occur in either [this] or [that]. */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Iterators. */
 };
 
 let module PersistentSet: {
+  /** Module types implemented by Set collections supporting persistent mutations.
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
+
   module type S = {
+    /** PersistentSet module type signature for types with a parametric type arity of 0. */
+
     type a;
     type t;
 
@@ -1003,72 +1066,151 @@ let module PersistentSet: {
     include PersistentCollection.S with type a := a and type t := t;
 
     let add: a => t => t;
+    /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
+     *  it is returned unmodified.
+     */
+
     let addAll: (Iterator.t a) => t => t;
+    /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
+
     let from: (Iterator.t a) => t;
+    /** [from iter] returns a PersistentSet with all the values in [iter] */
+
     let intersect: t => t => t;
+    /** [intersect this that] returns a PersistentSet of unique elements
+     *  which occur in both [this] and [that].
+     */
+
     let remove: a => t => t;
+    /** [remove value set] returns a PersistentSet that does not contain [value].
+     *  If [set] does not contain [value], it is returned unmodified.
+     */
+
     let subtract: t => t => t;
+    /** [subtract this that] returns an PersistentSet of unique element
+     *  which occur in [this] but not in [that].
+     */
+
     let union: t => t => t;
+    /** [union this that] returns an PersistentSet of unique elements which occur in either [this] or [that]. */
   };
 
   module type S1 = {
+    /** PersistentSet module type signature for types with a parametric type arity of 1. */
+
     type t 'a;
 
     include Set.S1 with type t 'a := t 'a;
     include PersistentCollection.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
+    /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
+     *  it is returned unmodified.
+     */
+
     let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
+
     let intersect: (t 'a) => (t 'a) => (t 'a);
+    /** [intersect this that] returns a PersistentSet of unique elements
+     *  which occur in both [this] and [that].
+     */
+
     let remove: 'a => (t 'a) => (t 'a);
+    /** [remove value set] returns a PersistentSet that does not contain [value].
+     *  If [set] does not contain [value], it is returned unmodified.
+     */
+
     let subtract: (t 'a) => (t 'a) => (t 'a);
+    /** [subtract this that] returns an PersistentSet of unique element
+     *  which occur in [this] but not in [that].
+     */
+
     let union: (t 'a) => (t 'a) => (t 'a);
+    /** [union this that] returns an PersistentSet of unique elements which occur in either [this] or [that]. */
   };
 };
 
 let module TransientSet: {
+  /** Module types implemented by transiently mutable sets.
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
+
   module type S = {
+    /** TransientSet module type signature for types with a parametric type arity of 0. */
+
     type a;
     type t;
 
     include TransientCollection.S with type a := a and type t := t;
 
     let add: a => t => t;
+    /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
+     *  it is returned unmodified.
+     */
+
     let addAll: (Iterator.t a) => t => t;
+    /** [addAll iter transient] adds all values in [iter] to [transient]. */
+
     let contains: a => t => bool;
+    /** [contains value set] returns true if [set] contains at least one instace of [value],
+     *  otherwise false;
+     */
+
     let remove: a => t => t;
+    /** [remove value transient] removes [value] from [transient].
+     *  If [transient] does not contain [value], it is returned unmodified.
+     */
   };
 
   module type S1 = {
+    /** TransientSet module type signature for types with a parametric type arity of 0. */
+
     type t 'a;
 
     include TransientCollection.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
+    /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
+     *  it is returned unmodified.
+     */
+
     let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    /** [addAll iter transient] adds all values in [iter] to [transient]. */
+
     let contains: 'a => (t 'a) => bool;
+    /** [contains value set] returns true if [set] contains at least one instace of [value],
+     *  otherwise false;
+     */
+
     let remove: 'a => (t 'a) => (t 'a);
+    /** [remove value transient] removes [value] from [transient].
+     *  If [transient] does not contain [value], it is returned unmodified.
+     */
   };
 };
 
 let module NavigableSet: {
+  /*  Module types implemented by Sets that supports navigation operations. */
+
   module type S = {
+    /** NavigableSet module type signature for types with a parametric type arity of 0. */
+
     type a;
     type t;
 
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
   };
-
-  module type S1 = {
-    type t 'a;
-
-    include Set.S1 with type t 'a := t 'a;
-    include NavigableCollection.S1 with type t 'a := t 'a;
-  };
 };
 
 let module PersistentNavigableSet: {
+  /** Module types implemented by NavigableSet collections supporting persistent mutations.
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
+
   module type S = {
     type a;
     type t;
@@ -1077,19 +1219,14 @@ let module PersistentNavigableSet: {
     include PersistentSet.S with type a := a and type t := t;
 
     let removeFirstOrRaise: t => t;
+    /** [removeFirstOrRaise set] returns a PersistentNavigableSet without
+     *  the first value or raises an exception if [set] is empty.
+     */
 
     let removeLastOrRaise: t => t;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include NavigableSet.S1 with type t 'a := t 'a;
-    include PersistentSet.S1 with type t 'a := t 'a;
-
-    let removeFirstOrRaise: t 'a => t 'a;
-
-    let removeLastOrRaise: t 'a => t 'a;
+    /** [removeLastOrRaise set] returns a PersistentNavigableSet without
+     *  the last value or raises an exception if [set] is empty.
+     */
   };
 };
 

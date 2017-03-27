@@ -407,13 +407,6 @@ let module NavigableSet = {
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
   };
-
-  module type S1 = {
-    type t 'a;
-
-    include Set.S1 with type t 'a := t 'a;
-    include NavigableCollection.S1 with type t 'a := t 'a;
-  };
 };
 
 let module PersistentNavigableSet = {
@@ -427,17 +420,6 @@ let module PersistentNavigableSet = {
     let removeFirstOrRaise: t => t;
 
     let removeLastOrRaise: t => t;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include NavigableSet.S1 with type t 'a := t 'a;
-    include PersistentSet.S1 with type t 'a := t 'a;
-
-    let removeFirstOrRaise: t 'a => t 'a;
-
-    let removeLastOrRaise: t 'a => t 'a;
   };
 };
 
