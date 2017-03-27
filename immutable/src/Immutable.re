@@ -148,6 +148,7 @@ let module Collection = {
     type t;
 
     include Iterable.S with type a := a and type t := t;
+    include Equatable.S with type t := t;
 
     let count: t => int;
     let empty: t;
@@ -254,6 +255,7 @@ let module TransientSequentialCollection = {
     include TransientCollection.S1 with type t 'a := t 'a;
 
     let addFirst: 'a => (t 'a) => (t 'a);
+    let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
     let empty: unit => (t 'a);
     let first: (t 'a) => option 'a;
     let firstOrRaise: (t 'a) => 'a;
@@ -324,7 +326,6 @@ let module Set = {
     type t;
 
     include Collection.S with type a := a and type t := t;
-    include Equatable.S with type t := t;
 
     let contains: a => t => bool;
     let toSet: t => ImmSet.t a;

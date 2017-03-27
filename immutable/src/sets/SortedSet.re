@@ -20,12 +20,12 @@ module type S = {
   let lastOrRaise: t => a;
   let toIteratorRight: t => Iterator.t a;
   let toSequenceRight: t => Sequence.t a;
-  let equals: Equality.t t;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;
   let reduce:
     while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toIterator: t => Iterator.t a;
+  let equals: Equality.t t;
   let count: t => int;
   let empty: t;
   let isEmpty: t => bool;
