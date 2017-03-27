@@ -447,14 +447,6 @@ let module KeyedReduceableRight = {
 
     let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
-
-    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  };
 };
 
 let module KeyedReducer = KeyedReducer;
@@ -578,21 +570,6 @@ let module NavigableKeyedCollection = {
     let toIteratorRight: t 'v => Iterator.t (k, 'v);
     let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include KeyedCollection.S2 with type t 'k 'v := t  'k 'v;
-    include KeyedReduceableRight.S2 with type t 'k 'v := t 'k 'v;
-
-    let first: (t 'k 'v) => (option ('k, 'v));
-    let firstOrRaise: (t 'k 'v) => ('k, 'v);
-    let last: (t 'k 'v) => (option ('k, 'v));
-    let lastOrRaise: (t 'k 'v) => ('k, 'v);
-    let toIteratorRight: t 'k 'v => Iterator.t ('k, 'v);
-    let toKeyedIteratorRight: t 'k 'v => KeyedIterator.t 'k 'v;
-    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
 };
 

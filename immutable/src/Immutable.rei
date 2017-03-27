@@ -401,7 +401,7 @@ let module Reducer: {
      */
 
     let firstOrRaise: t => a;
-    /** [firstOrRaise reduceable] returns the first element in [reduceable] or raises an exception.
+    /** [firstOrRaise reduceable] returns the first value in [reduceable] or raises an exception.
      *
      *  Computational Complexity: O(1)
      */
@@ -450,7 +450,7 @@ let module Reducer: {
      */
 
     let firstOrRaise: t 'a => 'a;
-    /** [firstOrRaise reduceable] returns the first element in [reduceable] or raises an exception.
+    /** [firstOrRaise reduceable] returns the first value in [reduceable] or raises an exception.
      *
      *  Computational Complexity: O(1)
      */
@@ -1212,6 +1212,7 @@ let module PersistentNavigableSet: {
    */
 
   module type S = {
+    /** PersistentNavigableSet module type signature for types with a parametric type arity of 0. */
     type a;
     type t;
 
@@ -1231,79 +1232,203 @@ let module PersistentNavigableSet: {
 };
 
 let module KeyedReduceable: {
+  /** Module types implemented by modules that support reducing over key/value pairs. */
+
   module type S1 = {
+    /** KeyedReduceable module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
     let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each key/value pair in [reduceable], while [predicate] returns true,
+     *  accumulating the result.
+     */
   };
 
   module type S2 = {
+    /** KeyedReduceable module type signature for types with a parametric type arity of 2. */
+
     type t 'k 'v;
 
     let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each key/value pair in [reduceable], while [predicate] returns true,
+     *  accumulating the result.
+     */
   };
 };
 
 let module KeyedReduceableRight: {
+  /** Module types implemented by modules that support reducing over
+   *  key/value pairs in both the left to right, and right to left directions.
+   */
+
   module type S1 = {
+    /** KeyedReduceableRight module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
     include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
 
     let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
-
-    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each key/value pair in [reduceable] while [predicate] returns true, starting
+     *  from the right most key/value pair, accumulating the result.
+     */
   };
 };
 
 let module KeyedReducer: {
+  /** Module functions for generating modules which provide common reduction functions for Reduceables.
+   *  All functions are O(N), unless otherwise noted.
+   */
   module type S1 = {
     type k;
     type t 'v;
 
     let count: (t 'v) => int;
+    /** [count keyedReduceable] returns the total number key/value pairs produced by [keyedReduceable] */
+
     let every: (k => 'v => bool) => (t 'v) => bool;
+    /** [every f keyedReduceable] returns true if the predicate [f] returns true for all
+     *  key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
+     */
+
     let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+    /** [find f keyedReduceable] return the Some of the first key/value pair in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
     let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+    /** [findOrRaise f keyedReduceable] return the the first key/value pair in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let findKey: (k => 'v => bool) => (t 'v) => (option k);
+    /** [findKey f keyedReduceable] return the Some of the first key in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
     let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
+    /** [findOrRaise f keyedReduceable] return the the first key in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
+    /** [findValue f keyedReduceable] return the Some of the first value in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
     let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+    /** [findOrRaise f keyedReduceable] return the the first value in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let first: (t 'v) => (option (k, 'v));
+    /** [first keyedReduceable] returns first key/value pair in [reduceable] or None.
+     *
+     *  Computational Complexity: O(1)
+     */
+
     let firstOrRaise: (t 'v) => (k, 'v);
+    /** [firstOrRaise keyedReduceable] returns the first key/value pair in [keyedReduceable] or raises an exception.
+     *
+     *  Computational Complexity: O(1)
+     */
+
     let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
+    /** [forEach while_::predicate f keyedReduceable] iterates through [keyedReduceable] applying the
+     *  side effect function [f] to each key/value pair, while [predicate] returns true
+     */
+
     let none: (k => 'v => bool) => (t 'v) => bool;
+    /** [none f keyedReduceable] returns true if the predicate [f] returns false
+     *  for all key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
+     */
+
     let some: (k => 'v => bool) => (t 'v) => bool;
+    /** [some f keyedReduceable] returns true if the predicate [f] returns true for at least
+     *  one key/value pair in [keyedReduceable]. If [keyedReduceable] is empty, returns [false].
+     */
   };
 
   module type S2 = {
     type t 'k 'v;
 
     let count: (t 'k 'v) => int;
+    /** [count keyedReduceable] returns the total number key/value pairs produced by [keyedReduceable] */
+
     let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+    /** [every f keyedReduceable] returns true if the predicate [f] returns true for all
+     *  key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
+     */
+
     let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+    /** [find f keyedReduceable] return the Some of the first key/value pair in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
     let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+    /** [findOrRaise f keyedReduceable] return the the first key/value pair in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
+    /** [findKey f keyedReduceable] return the Some of the first key in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
     let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
+    /** [findOrRaise f keyedReduceable] return the the first key in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
+    /** [findValue f keyedReduceable] return the Some of the first value in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
     let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+    /** [findOrRaise f keyedReduceable] return the the first value in [keyedReduceable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
     let first: (t 'k 'v) => (option ('k, 'v));
+    /** [first keyedReduceable] returns first key/value pair in [reduceable] or None.
+     *
+     *  Computational Complexity: O(1)
+     */
+
     let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    /** [firstOrRaise keyedReduceable] returns the first key/value pair in [keyedReduceable] or raises an exception.
+     *
+     *  Computational Complexity: O(1)
+     */
+
     let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
+    /** [forEach while_::predicate f keyedReduceable] iterates through [keyedReduceable] applying the
+     *  side effect function [f] to each key/value pair, while [predicate] returns true
+     */
+
     let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+    /** [none f keyedReduceable] returns true if the predicate [f] returns false
+     *  for all key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
+     */
+
     let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+    /** [some f keyedReduceable] returns true if the predicate [f] returns true for at least
+     *  one key/value pair in [keyedReduceable]. If [keyedReduceable] is empty, returns [false].
+     */
   };
 
   let module Make1: (KeyedReduceable: KeyedReduceable.S1) => S1 with type k = KeyedReduceable.k and type t 'v = KeyedReduceable.t 'v;
+  /** Module function to create a KeyedReducer for a specific KeyedReduceable type with a parametric type arity of 1. */
+
   let module Make2: (KeyedReduceable: KeyedReduceable.S2) => S2 with type t 'k 'v = KeyedReduceable.t 'k 'v;
+  /** Module function to create a KeyedReducer for a specific KeyedReduceable type with a parametric type arity of 2. */
 };
 
 let module KeyedIterator: {
@@ -1484,21 +1609,6 @@ let module NavigableKeyedCollection: {
     let toIteratorRight: t 'v => Iterator.t (k, 'v);
     let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include KeyedCollection.S2 with type t 'k 'v := t  'k 'v;
-    include KeyedReduceableRight.S2 with type t 'k 'v := t 'k 'v;
-
-    let first: (t 'k 'v) => (option ('k, 'v));
-    let firstOrRaise: (t 'k 'v) => ('k, 'v);
-    let last: (t 'k 'v) => (option ('k, 'v));
-    let lastOrRaise: (t 'k 'v) => ('k, 'v);
-    let toIteratorRight: t 'k 'v => Iterator.t ('k, 'v);
-    let toKeyedIteratorRight: t 'k 'v => KeyedIterator.t 'k 'v;
-    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
 };
 
