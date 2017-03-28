@@ -1,5 +1,5 @@
-Immutable Collections For Reason
-================================
+![Immutable Collections For Reason](/docs/images/logo-800x215.png?raw=true)
+===========================================================================
 
 **Note for JavaScript developers**: This is the pure [Reason](https://facebook.github.io/reason) implementation of immutable data structures. To use Reason to interoperate with [ImmutableJS](https://github.com/facebook/immutable-js) in JavaScript, see [bs-immutablejs](https://github.com/BuckleTypes/bs-immutablejs.git).
 
