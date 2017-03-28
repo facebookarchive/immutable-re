@@ -142,6 +142,31 @@ let fromEntries (iter: Iterator.t ('k, 'v)): (t 'k 'v) =>
     }
   };
 
+let generate
+    genKey::(genKey: 'k => 'v => 'k)
+    genValue::(genValue: 'k => 'v => 'v)
+    (initialKey: 'k)
+    (initialValue: 'v): (t 'k 'v) => {
+  reduce: fun predicate f acc => {
+    let rec recurse genKey genValue  key value predicate f acc => {
+      let nextKey = genKey key value;
+      let nextValue = genValue key value;
+
+      if (predicate acc nextKey nextValue) {
+        let acc = f acc nextKey nextValue;
+        recurse genKey genValue nextKey nextValue predicate f acc;
+      }
+      else acc;
+    };
+
+    if (predicate acc initialKey initialValue) {
+      let acc = f acc initialKey initialValue;
+      recurse genKey genValue initialKey initialValue predicate f acc;
+    } else acc;
+  }
+};
+
+
 let keys (iter: t 'k 'v): (Iterator.t 'k) =>
   if (iter.reduce === emptyReducer) (Iterator.empty ())
   else {
@@ -223,18 +248,6 @@ let mapValues (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) =>
     }
   };
 
-let repeat (key:'k) (value: 'v): (t 'k 'v) => {
-  reduce: fun predicate f acc => {
-    let rec recurse key value predicate f acc =>
-      if (predicate acc key value) {
-        let acc = f acc key value;
-        recurse key value predicate f acc;
-      }
-      else acc;
-    recurse key value predicate f acc;
-  }
-};
-
 let return (key: 'k) (value: 'v): (t 'k 'v) => {
   reduce: fun predicate f acc =>
     if (predicate acc key value) (f acc key value)
@@ -245,26 +258,27 @@ let scan
     (reducer: 'acc => 'k => 'v => 'acc)
     (initialValue: 'acc)
     (iter: t 'k 'v): (Iterator.t 'acc) => if (iter.reduce === emptyReducer) (Iterator.empty ()) else {
-  reduce: fun predicate f acc => {
-    let result = ref (f acc initialValue);
-    let memoized = [| initialValue |];
+  reduce: fun predicate f acc =>
+    if (predicate acc initialValue)  {
+      let result = ref (f acc initialValue);
+      let memoized = [| initialValue |];
 
-    let predicate acc key value => {
-      let nextValue = reducer acc key value;
-      memoized.(0) = nextValue;
-      predicate !result nextValue;
-    };
+      let predicate acc key value => {
+        let nextValue = reducer acc key value;
+        memoized.(0) = nextValue;
+        predicate !result nextValue;
+      };
 
-    let f _ _ _ => {
-      let acc = memoized.(0);
-      result := f !result acc;
-      acc
-    };
+      let f _ _ _ => {
+        let acc = memoized.(0);
+        result := f !result acc;
+        acc
+      };
 
-    iter.reduce predicate f initialValue |> ignore;
+      iter.reduce predicate f initialValue |> ignore;
 
-    !result
-  }
+      !result
+    } else acc
 };
 
 let skip (count: int) (iter: t 'k 'v): (t 'k 'v) =>

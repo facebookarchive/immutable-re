@@ -1432,42 +1432,118 @@ let module KeyedReducer: {
 };
 
 let module KeyedIterator: {
+  /** Functional iterators over a collection of key/value pairs. KeyedIterators are stateless and can be reused.
+   *  All functions defined in this module are O(1).
+   */
   type t 'k 'v;
 
   include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
 
   let concat: (list (t 'k 'v)) => (t 'k 'v);
+  /** [concat keyedIters] returns a KeyedIterator that lazily concatenates all the
+   *  KeyedIterators in [keyedIters]. The resulting KeyedIterator returns all the key/value pairs
+   *  in the first KeyedIterator, followed by all the key/value pairs in the second KeyedIterator,
+   *  and continues until the last KeyedIterator completes.
+   */
+
   let defer: (unit => t 'k 'v) => (t 'k 'v);
-  let distinctUntilChangedWith:
-    keyEquals::(Equality.t 'k) =>
-    valueEquals::(Equality.t 'v) =>
-    (t 'k 'v) =>
-    (t 'k 'v);
+  /** [defer f] returns a KeyedIterator that invokes the function [f] whenever iterated. */
+
+  let distinctUntilChangedWith: keyEquals::(Equality.t 'k) => valueEquals::(Equality.t 'v) => (t 'k 'v) => (t 'k 'v);
+  /** [distinctUntilChangedWith equals keyedIter] returns a KeyedIterator that contains only
+   *  distinct contiguous key/value pairs from [keyedIter] using [keyEquals] and [valueEquals] to
+   *  equate key/value pairs.
+   */
+
   let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
+  /** [doOnNext f keyedIter] returns a KeyedIterator that applies the side effect
+   *  function [f] to each key/value pair they are iterated.
+   */
+
   let empty: unit => (t 'k 'v);
+  /** Returns an empty KeyedIterator. */
+
   let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+  /** [filter f keyedIter] returns a KeyedIterator only including key/value pairs from [keyedIter]
+   *  for which application of the predicate function [f] returns true.
+   */
+
   let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+  /** [flatMap mapper keyedIter] returns a KeyedIterator which applies [mapper] to each value in
+   *  [keyedIter], flattening the results.
+   */
+
   let fromEntries: Iterator.t ('k, 'v) => (t 'k 'v);
+  /** [fromEntries iter] returns a KeyedIterator view of  key/value tuples in [iter]. */
+
+  let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
+  /** [generate genKey gen value k v] generates an infinite KeyedSequence
+   *  where the keys are [k, genKey(k v), genKey(genKey(k v), v1), ...]
+   *  and values are [v, genValue(k, v), genValue(k1, genValue(k, v)), ...]
+   */
+
   let keys: (t 'k 'v) => (Iterator.t 'k);
-  let map:
-      keyMapper::('kA => 'vA => 'kB) =>
-      valueMapper::('kA => 'vA => 'vB) =>
-      (t 'kA 'vA) =>
-      (t 'kB 'vB);
+  /** [keys keyedIter] returns an Iterator view of the keys in [keyedIter] */
+
+  let map: keyMapper::('kA => 'vA => 'kB) => valueMapper::('kA => 'vA => 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+  /** [map keyMapper::keyMapper valueMapper::valueMapper keyedIter] returns a KeyedIterator
+   *  whose keys are the result applying [keyMapper] to each key, and whose values are the result
+   *  of applying [valueMapper] to each value in [keyedIter].
+   */
+
   let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
+  /** [mapKeys mapper keyedIter] returns a KeyedIterator with mapper applied
+   *  to each key in [keyedIter].
+   */
+
   let mapValues: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  let repeat: 'k => 'v => (t 'k 'v);
+  /** [mapValues mapper keyedIter] returns a KeyedIterator with mapper applied
+   *  to each value in [keyedIter].
+   */
+
   let return: 'k => 'v => (t 'k 'v);
+  /** [return key value] returns a KeyedIterator containing the pair ([key], [value]). */
+
   let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterator.t 'acc);
+  /** [scan f acc keyedIter] returns a KeyedIterator of accumulated values resulting from the
+   *  application of the accumulator function [f] to each value in [keyedIter] with the
+   *  specified initial value [acc].
+   */
+
   let skip: int => (t 'k 'v) => (t 'k 'v);
+  /** [skip count keyedIter] return a KeyedIterator which skips the first [count]
+   *  values in [keyedIter].
+   */
+
   let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+  /** [skipWhile f keyedIter] return a KeyedIterator which skips key/value pairs in [keyedIter]
+   *  while application of the predicate function [f] returns true, and then returns
+   *  the remaining values.
+   */
+
   let startWith: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+  /** [startWith key value keyedIter] returns a KeyedIterator whose first
+   *  pair is (key, value), followed by the key/value pairs in [keyedIter].
+   */
+
   let take: int => (t 'k 'v) => (t 'k 'v);
+  /** [take count keyedIter] returns a KeyedIterator with the first [count]
+   *  key/value pairs in [keyedIter].
+   */
+
   let takeWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+  /** [takeWhile f keyedIter] returns a KeyedIterator including all values in [keyedIter]
+   *  while application of the predicate function [f] returns true, then completes.
+   */
+
   let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
+  /** [toIterator keyedIter] returns an Iterator view key/value pairs in [keyedIter] as tuples. */
+
   let values: (t 'k 'v) => Iterator.t 'v;
+  /** [values keyedIter] returns an Iterator view of the values in [keyedIter] */
 
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+   /* KeyedReducer module for KeyedIterators. */
 };
 
 let module KeyedIterable: {

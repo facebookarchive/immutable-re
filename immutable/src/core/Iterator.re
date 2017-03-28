@@ -151,8 +151,10 @@ let generate (gen: 'acc => 'acc) (initialValue: 'acc): (t 'acc) => {
       else acc;
     };
 
-    let acc = f acc initialValue;
-    recurse gen initialValue predicate f acc;
+    if (predicate acc initialValue) {
+      let acc = f acc initialValue;
+      recurse gen initialValue predicate f acc;
+    } else acc;
   }
 };
 
@@ -207,26 +209,27 @@ let scan
     (reducer: 'acc => 'a => 'acc)
     (initialValue: 'acc)
     (iter: t 'a): (t 'acc) => if (iter.reduce === emptyReducer) (empty ()) else {
-  reduce: fun predicate f acc => {
-    let result = ref (f acc initialValue);
-    let memoized = [| initialValue |];
+  reduce: fun predicate f acc =>
+    if (predicate acc initialValue) {
+      let result = ref (f acc initialValue);
+      let memoized = [| initialValue |];
 
-    let predicate acc next => {
-      let nextValue = reducer acc next;
-      memoized.(0) = nextValue;
-      predicate !result nextValue;
-    };
+      let predicate acc next => {
+        let nextValue = reducer acc next;
+        memoized.(0) = nextValue;
+        predicate !result nextValue;
+      };
 
-    let f _ _ => {
-      let acc = memoized.(0);
-      result := f !result acc;
-      acc
-    };
+      let f _ _ => {
+        let acc = memoized.(0);
+        result := f !result acc;
+        acc
+      };
 
-    iter.reduce predicate f initialValue |> ignore;
+      iter.reduce predicate f initialValue |> ignore;
 
-    !result
-  }
+      !result
+  } else acc
 };
 
 let skip (count: int) (iter: t 'a): (t 'a) =>

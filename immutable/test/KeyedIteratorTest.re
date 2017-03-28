@@ -114,9 +114,10 @@ let test = describe "KeyedIterator" [
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [2, 1, 0, 2, 1, 0];
   }),
+  it "generate" (fun () => { () }),
   it "keys" (fun () => { () }),
   it "map" (fun () => {
-    let mapped = KeyedIterator.repeat 2 3
+    let mapped = KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.take 5
       |> KeyedIterator.map
           keyMapper::(fun _ v => v)
@@ -131,14 +132,14 @@ let test = describe "KeyedIterator" [
       |> Expect.toBeEqualToListOfInt [2, 2, 2, 2, 2];
   }),
   it "mapKeys" (fun () => {
-    KeyedIterator.repeat 2 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.take 5
       |> KeyedIterator.mapKeys (fun _ _ => 4)
       |> KeyedIterator.keys
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 4, 4, 4, 4];
 
-    KeyedIterator.repeat 2 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.take 5
       |> KeyedIterator.mapKeys (fun _ _ => 4)
       |> KeyedIterator.values
@@ -146,14 +147,14 @@ let test = describe "KeyedIterator" [
       |> Expect.toBeEqualToListOfInt [3, 3, 3, 3, 3];
   }),
   it "mapValues" (fun () => {
-    KeyedIterator.repeat 2 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.take 5
       |> KeyedIterator.mapValues (fun _ _ => 4)
       |> KeyedIterator.values
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [4, 4, 4, 4, 4];
 
-    KeyedIterator.repeat 2 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.take 5
       |> KeyedIterator.mapKeys (fun _ _ => 4)
       |> KeyedIterator.values
@@ -161,7 +162,7 @@ let test = describe "KeyedIterator" [
       |> Expect.toBeEqualToListOfInt [3, 3, 3, 3, 3];
   }),
   it "repeat" (fun () => {
-    KeyedIterator.repeat 2 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.take 10
       |> KeyedIterator.doOnNext (fun k v => {
           k |> Expect.toBeEqualToInt 2;
@@ -180,7 +181,7 @@ let test = describe "KeyedIterator" [
       |> Expect.toBeEqualToInt 0;
   }),
   it "scan" (fun () => {
-    KeyedIterator.repeat 2 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.scan (fun _ k v => k + v) 0
       |> Iterator.take 5
       |> List.fromReverse
@@ -188,8 +189,8 @@ let test = describe "KeyedIterator" [
   }),
   it "skip" (fun () => {
     KeyedIterator.concat [
-      KeyedIterator.repeat 2 2 |> KeyedIterator.take 2,
-      KeyedIterator.repeat 3 3 |> KeyedIterator.take 5,
+      KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 2 |> KeyedIterator.take 2,
+      KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 3 3 |> KeyedIterator.take 5,
     ] |> KeyedIterator.skip 2
       |> KeyedIterator.keys
       |> List.fromReverse
@@ -201,8 +202,8 @@ let test = describe "KeyedIterator" [
   }),
   it "skipWhile" (fun () => {
     KeyedIterator.concat [
-      KeyedIterator.repeat 2 2 |> KeyedIterator.take 5,
-      KeyedIterator.repeat 3 3 |> KeyedIterator.take 5,
+      KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 2 |> KeyedIterator.take 2,
+      KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 3 3 |> KeyedIterator.take 5,
     ] |> KeyedIterator.skipWhile (fun k _ => k < 3)
       |> KeyedIterator.keys
       |> List.fromReverse
@@ -215,7 +216,7 @@ let test = describe "KeyedIterator" [
       |> Expect.toBeEqualToTrue;
   }),
   it "startWith" (fun () => {
-    KeyedIterator.repeat 3 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 3 3
       |> KeyedIterator.startWith 1 1
       |> KeyedIterator.take 3
       |> KeyedIterator.keys
@@ -223,7 +224,7 @@ let test = describe "KeyedIterator" [
       |> Expect.toBeEqualToListOfInt [3, 3, 1];
   }),
   it "take" (fun () => {
-    KeyedIterator.repeat 3 3
+    KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 3 3
       |> KeyedIterator.take 3
       |> KeyedIterator.values
       |> List.fromReverse
@@ -235,8 +236,8 @@ let test = describe "KeyedIterator" [
   }),
   it "takeWhile" (fun () => {
     KeyedIterator.concat [
-      KeyedIterator.repeat 2 2 |> KeyedIterator.take 2,
-      KeyedIterator.repeat 3 3 |> KeyedIterator.take 5,
+      KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 2 |> KeyedIterator.take 2,
+      KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 3 3 |> KeyedIterator.take 2,
     ] |> KeyedIterator.takeWhile (fun k _ => k < 3)
       |> KeyedIterator.keys
       |> List.fromReverse
