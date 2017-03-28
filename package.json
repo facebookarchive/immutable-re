@@ -19,7 +19,7 @@
     "rebuild": "eval $(dependencyEnv) && nopam && rebuild",
     "buildHelp": "eval $(dependencyEnv) && nopam && rebuild --help",
 
-    "build-docs": "eval $(dependencyEnv) && nopam && rm -rf ./docs/api && mkdir -p ./docs/api && refmt -p ml immutable/src/Immutable.rei > ./docs/Immutable.mli && ocamldoc -html -d ./docs/api ./docs/api/Immutable.mli && rm -f ./docs/api/Immutable.mli",
+    "build-docs": "eval $(dependencyEnv) && nopam && rm -rf ./docs/api && mkdir -p ./docs/api && refmt -p ml immutable/src/Immutable.rei > ./docs/api/Immutable.mli && ocamldoc -html -d ./docs/api ./docs/api/Immutable.mli && rm -f ./docs/api/Immutable.mli",
 
     "build-test": "eval $(dependencyEnv) && nopam && rebuild -cflag -g -Is immutable/src,immutable/src/sets,immutable/src/core,immutable/src/queues,immutable/src/indexed,immutable/src/maps,immutable/src/utils,reUnit/src,immutable/test/testers,immutable/test ./immutable/test/ImmutableTest.byte",
     "run-test": "eval $(dependencyEnv) && ./_build/immutable/test/ImmutableTest.byte",
