@@ -6,7 +6,15 @@
       "subdirs": [
         {
           "dir": "src",
-          "subdirs": ["sets", "core", "queues", "indexed", "maps", "utils"],
+          "subdirs": [
+            {"dir": "sets", "public": "none"}, 
+            {"dir": "core", "public": "none"}, 
+            {"dir": "queues", "public": "none"},
+            {"dir": "indexed", "public": "none"},
+            {"dir": "maps", "public": "none"},
+            {"dir": "utils", "public": "none"},
+          ],
+          "public": ["Immutable"],
         },
         {
           "dir": "test",
