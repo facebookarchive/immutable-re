@@ -279,13 +279,13 @@ let module ReverseMappable: {
   };
 };
 
-let module Stream: {
+let module Streamable: {
   /** Module types implemented by modules that support lazily evaluated
    *  stream functions. All functions defined in this module are O(1).
    */
 
   module type S1 = {
-    /** Stream module type signature for types with a parametric type arity of 1. */
+    /** Streamable module type signature for types with a parametric type arity of 1. */
 
     type t 'a;
 
@@ -293,75 +293,75 @@ let module Stream: {
     include Mappable.S1 with type t 'a := t 'a;
 
     let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
-    /** [buffer count skip stream] returns a Stream that collects values from [stream]
+    /** [buffer count skip stream] returns a Streamable that collects values from [stream]
      *  into list buffers of size [count], skipping [skip] number of values in between the
      *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
      *  and values are dropped if [stream] completes before filling the last buffer.
      */
 
     let concat: (list (t 'a)) => (t 'a);
-    /** [concat streams] returns a Stream that lazily concatenates all the
-     *  Streams in [streams]. The resulting Stream returns all the values
-     *  in the first Stream, followed by all the values in the second Stream,
-     *  and continues until the last Stream completes.
+    /** [concat streams] returns a Streamable that lazily concatenates all the
+     *  Streamables in [streams]. The resulting Streamable returns all the values
+     *  in the first Streamable, followed by all the values in the second Streamable,
+     *  and continues until the last Streamable completes.
      */
 
     let defer: (unit => t 'a) => (t 'a);
-    /** [defer f] returns a Stream that invokes the function [f] whenever enumerated. */
+    /** [defer f] returns a Streamable that invokes the function [f] whenever enumerated. */
 
     let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
-    /** [distinctUntilChangedWith equals stream] returns a Stream that contains only
+    /** [distinctUntilChangedWith equals stream] returns a Streamable that contains only
      *  distinct contiguous values from [stream] using [equals] to equate values.
      */
 
     let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-    /** [doOnNext f stream] returns a Stream that applies the side effect
+    /** [doOnNext f stream] returns a Streamable that applies the side effect
      *  function [f] to each value in the stream as they are enumerated.
      */
 
     let empty: unit => (t 'a);
-    /** Returns an empty Stream. */
+    /** Returns an empty Streamable. */
 
     let filter: ('a => bool) => (t 'a) => (t 'a);
-    /** [filter f stream] returns a Stream only including values from [stream]
+    /** [filter f stream] returns a Streamable only including values from [stream]
      *  for which application of the predicate function [f] returns true.
      */
 
     let generate: ('a => 'a) => 'a => (t 'a);
-    /** [generate f initialValue] generates the infinite Stream [x, f(x), f(f(x)), ...] */
+    /** [generate f initialValue] generates the infinite Streamable [x, f(x), f(f(x)), ...] */
 
     let return: 'a => (t 'a);
-    /** [return value] returns a single value Stream containing [value]. */
+    /** [return value] returns a single value Streamable containing [value]. */
 
     let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
-    /** [scan f acc stream] returns a Stream of accumulated values resulting from the
+    /** [scan f acc stream] returns a Streamable of accumulated values resulting from the
      *  application of the accumulator function [f] to each value in [stream] with the
      *  specified initial value [acc].
      */
 
     let skip: int => (t 'a) => (t 'a);
-    /** [skip count stream] return a Stream which skips the first [count]
+    /** [skip count stream] return a Streamable which skips the first [count]
      *  values in [stream].
      */
 
     let skipWhile: ('a => bool) => (t 'a) => (t 'a);
-    /** [skipWhile f stream] return a Stream which skips values in [stream]
+    /** [skipWhile f stream] return a Streamable which skips values in [stream]
      *  while application of the predicate function [f] returns true, and then returns
      *  the remaining values.
      */
 
     let startWith: 'a => (t 'a) => (t 'a);
-    /** [startWith value stream] returns a Stream whose first
+    /** [startWith value stream] returns a Streamable whose first
      *  value is [value], followed by the values in [stream].
      */
 
     let take: int => (t 'a) => (t 'a);
-    /** [take count stream] returns a Stream with the first [count]
+    /** [take count stream] returns a Streamable with the first [count]
      *  values in [stream].
      */
 
     let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-    /** [takeWhile f stream] returns a Stream including all values in [stream]
+    /** [takeWhile f stream] returns a Streamable including all values in [stream]
      *  while application of the predicate function [f] returns true, then completes.
      */
   };
@@ -485,14 +485,14 @@ let module Iterator: {
   type t 'a;
 
   include Reduceable.S1 with type t 'a := t 'a;
-  include Stream.S1 with type t 'a := t 'a;
+  include Streamable.S1 with type t 'a := t 'a;
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Iterators. */
 };
 
 let module Iterable: {
-  /** Module types implemented by modules that supporting iterating over their values. */
+  /** Module types implemented by modules that supporting iterating over values. */
 
   module type S = {
     /** Iterable module type signature for types with a parametric type arity of 0. */
@@ -503,7 +503,7 @@ let module Iterable: {
     include Reduceable.S with type a := a and type t := t;
 
     let toIterator: t => (Iterator.t a);
-    /* [toIterator iterable] returns an Iterator that can be used to iterate over
+    /** [toIterator iterable] returns an Iterator that can be used to iterate over
      * the values in [iterable].
      */
   };
@@ -516,7 +516,7 @@ let module Iterable: {
     include Reduceable.S1 with type t 'a := t 'a;
 
     let toIterator: t 'a => (Iterator.t 'a);
-    /* [toIterator iterable] returns an Iterator that can be used to iterate over
+    /** [toIterator iterable] returns an Iterator that can be used to iterate over
      * the values in [iterable].
      */
   };
@@ -535,7 +535,7 @@ let module Sequence: {
   /** The Sequence type. */
 
   include Iterable.S1 with type t 'a := t 'a;
-  include Stream.S1 with type t 'a := t 'a;
+  include Streamable.S1 with type t 'a := t 'a;
 
   let seek: int => (t 'a) => (t 'a);
   /** [seek count seq] scans forward [count] values in [seq]. It is the eagerly
@@ -1547,7 +1547,11 @@ let module KeyedIterator: {
 };
 
 let module KeyedIterable: {
+  /** Module types implemented by modules that supporting iterating over key/value pairs. */
+
   module type S1 = {
+    /** KeyedIterable module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
@@ -1559,13 +1563,21 @@ let module KeyedIterable: {
   };
 
   module type S2 = {
+    /** KeyedIterable module type signature for types with a parametric type arity of 2. */
+
     type t 'k 'v;
 
     include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
 
     let toIterator: t 'k 'v => Iterator.t ('k, 'v);
+    /** [toIterator keyedIterable] returns an Iterator that can be used to iterate over
+     *  the key/value pairs in [keyedIterable] as tuples.
+     */
 
     let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
+    /** [toKeyedIterator keyedIterable] returns a KeyedIterator that can be used to iterate over
+     *  the key/value pairs in [keyedIterable].
+     */
   };
 };
 

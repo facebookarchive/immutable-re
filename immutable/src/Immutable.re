@@ -92,7 +92,7 @@ let module ReverseMappable = {
   };
 };
 
-let module Stream = {
+let module Streamable = {
   module type S1 = {
     type t 'a;
 
