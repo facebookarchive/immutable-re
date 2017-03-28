@@ -62,7 +62,7 @@ Immutable-re is under active development and is not yet production ready. We are
 releasing this early alpha to get community input and contributions. If you are
 interested in contributing please follow the directions [here](https://github.com/facebookincubator/immutable-re/blob/master/CONTRIBUTING.md).
 
-For JavsScript developers needing production ready immutable collections,
+For JavaScript developers needing production ready immutable collections,
 we recommend using the [Reason BuckleScript bindings to Immutable.js](https://github.com/BuckleTypes/bs-immutablejs.git).
 
 License
