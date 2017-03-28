@@ -658,8 +658,8 @@ let module Collection: {
 };
 
 let module PersistentCollection: {
-  /** Module types implemented by collections supporting fully persistent mutations. That is to say,
-   *  mutation operations on these types do not mutate the underlying collection, but instead
+  /** Module types implemented by collections supporting fully persistent mutations.
+   *  Mutation operations on these types do not mutate the underlying collection, but instead
    *  create a new collection, with the mutation applied.
 
    *  By contract, all functions have a computational complexity of O(1).
@@ -674,7 +674,7 @@ let module PersistentCollection: {
     include Collection.S with type a := a and type t := t;
 
     let removeAll: t => t;
-    /** [removeAll collection] return a new empty collection. Depending on the implementation,
+    /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
      *  the new collection may share the same configuration as [collection]. For instance, the HashSet
      *  implementations shares the same hash and comparison functions.
      */
@@ -688,7 +688,7 @@ let module PersistentCollection: {
     include Collection.S1 with type t 'a := t 'a;
 
     let removeAll: t 'a => t 'a;
-    /** [removeAll collection] return a new empty collection. Depending on the implementation,
+    /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
      *  the new collection may share the same configuration as [collection]. For instance, HashSet
      *  implementations shares the same hash and comparison functions.
      */
@@ -696,7 +696,7 @@ let module PersistentCollection: {
 };
 
 let module TransientCollection: {
-  /** Module types implemented by transiently mutable collections. Transient collections
+  /** Module types implemented by transiently mutable Collections. Transient collections
    *  are designed to enable fast and efficient batch operations by temporarily enabling mutation
    *  of an underlying collection type. Unlike PersistentCollection functions, TransientCollection
    *  APIs always return the same value reference passed in as an argument, with mutations applied.
@@ -860,8 +860,8 @@ let module TransientSequentialCollection: {
 };
 
 let module NavigableCollection: {
-  /** Module types implemented by collections that support sequential access to
-   *  both left and right most contained values. Concrete implementations include [Deque] and [Vector].
+  /** Module types implemented by Collections that are ordered or sorted and support
+   *  navigation operations.
    *
    *  By contract, all functions must be efficient, with no worst than O(log N) performance.
    */
@@ -876,10 +876,16 @@ let module NavigableCollection: {
     include SequentialCollection.S with type a := a and type t := t;
 
     let last: t => (option a);
-    /** [last collection] returns last element in [collection] or None. */
+    /** [last collection] returns last value in [collection] or None.
+     *
+     *  By contract, implementations are efficient with no worst than O(log N) performance.
+     */
 
     let lastOrRaise: t => a;
-    /** [lastOrRaise collection] returns the first element in [collection] or raises an exception. */
+    /** [lastOrRaise collection] returns the last value in [collection] or raises an exception.
+     *
+     *  By contract, implementations are efficient with no worst than O(log N) performance.
+     */
 
     let toIteratorRight: t => (Iterator.t a);
     /* [toIteratorRight collection] returns an Iterator that can be used to iterate over
@@ -1537,7 +1543,7 @@ let module KeyedIterator: {
    */
 
   let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
-  /** [toIterator keyedIter] returns an Iterator view key/value pairs in [keyedIter] as tuples. */
+  /** [toIterator keyedIter] returns an Iterator view of the key/value pairs in [keyedIter] as tuples. */
 
   let values: (t 'k 'v) => Iterator.t 'v;
   /** [values keyedIter] returns an Iterator view of the values in [keyedIter] */
@@ -1558,8 +1564,14 @@ let module KeyedIterable: {
     include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
 
     let toIterator: t 'v => Iterator.t (k, 'v);
+    /** [toIterator keyedIterable] returns an Iterator that can be used to iterate over
+     *  the key/value pairs in [keyedIterable] as tuples.
+     */
 
     let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
+    /** [toKeyedIterator keyedIterable] returns a KeyedIterator that can be used to iterate over
+     *  the key/value pairs in [keyedIterable].
+     */
   };
 
   module type S2 = {
@@ -1582,108 +1594,221 @@ let module KeyedIterable: {
 };
 
 let module KeyedCollection: {
+  /** Module types implemented by all immutable keyed collections. This module
+   *  signature does not impose any restrictions on the relationship between
+   *  keys and associated values.
+   *
+   *  By contract, all functions have a computational complexity of O(1),
+   *  unless otherwise noted.
+   */
+
   module type S1 = {
+     /** KeyedCollection module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
     include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
 
     let containsKey: k => t 'v => bool;
+    /** [containsKey key keyed] returns true if [keyed] contains an association from [key] to
+     *  one or more values, otherwise false.
+     *
+     *  By contract, [containsKey] is efficient with no worst than O(log N) performance.
+     */
+
     let count: t 'v => int;
+    /** [count keyed] returns number of key/value pairs contained in [keyed]. */
+
     let isEmpty: (t 'v) => bool;
+    /** [isEmpty keyed] returns true if [keyed] is empty, otherwise false. */
+
     let isNotEmpty: (t 'v) => bool;
+    /** [isNotEmpty keyed] returns true if [keyed] contains at
+     *  least one value, otherwise false.
+     */
+
     let keys: (t 'v) => (Set.t k);
+    /** [keys keyed] return a Set view of the keys in [keyed]. */
+
     let toSequence: (t 'v) => (Sequence.t (k, 'v));
+    /* [toSequence keyed] returns an Sequence that can be used to enumerate
+     * the key/value pairs in [keyed] as tuples.
+     */
   };
 
   module type S2 = {
+    /** KeyedCollection module type signature for types with a parametric type arity of 2. */
+
     type t 'k 'v;
 
     include KeyedIterable.S2 with type t 'k 'v := t 'k 'v;
 
     let containsKey: 'k => t 'k 'v => bool;
+    /** [containsKey key keyed] returns true if [keyed] contains an association from [key] to
+     *  one or more values, otherwise false.
+     *
+     *  By contract, [containsKey] is efficient with no worst than O(log N) performance.
+     */
+
     let count: t 'k 'v => int;
+    /** [count keyed] returns number of key/value pairs contained in [keyed]. */
+
     let isEmpty: (t 'k 'v) => bool;
+    /** [isEmpty keyed] returns true if [keyed] is empty, otherwise false. */
+
     let isNotEmpty: (t 'k 'v) => bool;
+    /** [isNotEmpty keyed] returns true if [keyed] contains at
+     *  least one value, otherwise false.
+     */
+
     let keys: (t 'k 'v) => (Set.t 'k);
+    /** [keys keyed] return a Set view of the keys in [keyed]. */
+
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+    /* [toSequence keyed] returns an Sequence that can be used to enumerate
+     * the key/value pairs in [keyed] as tuples.
+     */
   };
 };
 
 let module PersistentKeyedCollection: {
+  /** Module types implemented by KeyedCollections supporting fully persistent mutations.
+   *  Mutation operations on these types do not mutate the underlying collection, but instead
+   *  create a new collection with the mutation applied.
+   */
+
   module type S1 = {
+    /** PersistentKeyedCollection module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
     let remove: k => (t 'v) => (t 'v);
+    /** [remove key keyed] removes all values associated with [key] from [keyed]
+     *
+     *  By contract, [remove] is efficient with no worst than O(log N) performance.
+     */
 
     let removeAll: (t 'v) => (t 'v);
+    /** [removeAll keyed] return an empty PersistentKeyedCollection. Depending on the implementation,
+     *  the new PersistentKeyedCollection may share the same configuration as [keyed]. For instance,
+     *  the HashMap implementation shares the same hash and comparison functions.
+     *
+     *  Computational complexity: O(1)
+     */
   };
 
   module type S2 = {
+    /** PersistentKeyedCollection module type signature for types with a parametric type arity of 2. */
+
     type t 'k 'v;
 
     include KeyedCollection.S2 with  type t 'k 'v := t 'k 'v;
 
     let remove: 'k => (t 'k 'v) => (t 'k 'v);
+    /** [remove key keyed] removes all values associated with [key] from [keyed]
+     *
+     *  By contract, [remove] is efficient with no worst than O(log N) performance.
+     */
 
     let removeAll: (t 'k 'v) => (t 'k 'v);
+    /** [removeAll keyed] return an empty PersistentKeyedCollection. Depending on the implementation,
+     *  the new PersistentKeyedCollection may share the same configuration as [keyed]. For instance,
+     *  the HashMap implementation shares the same hash and comparison functions.
+     *
+     *  Computational complexity: O(1)
+     */
   };
 };
 
 let module TransientKeyedCollection: {
+  /** Module types implemented by transiently mutable KeyedCollections. Transient collections
+  *  are designed to enable fast and efficient batch operations by temporarily enabling mutation
+  *  of an underlying collection type. Unlike PersistentKeyedCollection functions, TransientKeyedCollection
+  *  APIs always return the same value reference passed in as an argument, with mutations applied.
+  *
+  *  By contract, all functions have a computational complexity of O(1), unless otherwise noted.
+  */
+
   module type S1 = {
+    /** TransientKeyedCollection module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
     let containsKey: k => (t 'v) => bool;
+    /** [containsKey key transient] returns true if [transient] contains an association from [key] to
+     *  one or more values, otherwise false.
+     *
+     *  By contract, [containsKey] is efficient with no worst than O(log N) performance.
+     */
 
     let count: (t 'v) => int;
-    /** [count map] returns the number of key/value pairs in [map]. */
+    /** [count transient] returns number of key/value pairs contained in [transient]. */
 
     let isEmpty: (t 'v) => bool;
-    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+    /** [isEmpty transient] returns true if [transient] is empty, otherwise false. */
 
     let isNotEmpty: (t 'v) => bool;
-    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+    /** [isNotEmpty transient] returns true if [transient] contains at
+     *  least one value, otherwise false.
+     */
 
     let remove: k => (t 'v) => (t 'v);
+    /** [remove key transient] removes all values associated with [key] from [transient]
+     *
+     *  By contract, [remove] is efficient with no worst than O(log N) performance.
+     */
 
     let removeAll: (t 'v) => (t 'v);
-    /** [removeAll transient] removes all mappings from [transient].
-     *
-     *  Complexity: O(1)
-     */
+    /** [removeAll transient] removes all key/value pairs from [transient]. */
   };
 
   module type S2 = {
+    /** TransientKeyedCollection module type signature for types with a parametric type arity of 1. */
+
     type t 'k 'v;
 
     let containsKey: 'k => (t 'k 'v) => bool;
+    /** [containsKey key transient] returns true if [transient] contains an association from [key] to
+     *  one or more values, otherwise false.
+     *
+     *  By contract, [containsKey] is efficient with no worst than O(log N) performance.
+     */
 
     let count: (t 'k 'v) => int;
-    /** [count map] returns the number of key/value pairs in [map]. */
+    /** [count transient] returns number of key/value pairs contained in [transient]. */
 
     let isEmpty: (t 'k 'v) => bool;
-    /** [isEmpty map] returns true if [map] contains no key/value pairs. */
+    /** [isEmpty transient] returns true if [transient] is empty, otherwise false. */
 
     let isNotEmpty: (t 'k 'v) => bool;
-    /** [isNotEmpty map] returns true if [map] contains at least one key/value pair. */
+    /** [isNotEmpty transient] returns true if [transient] contains at
+     *  least one value, otherwise false.
+     */
 
     let remove: 'k => (t 'k 'v) => (t 'k 'v);
+    /** [remove key transient] removes all values associated with [key] from [transient]
+     *
+     *  By contract, [remove] is efficient with no worst than O(log N) performance.
+     */
 
     let removeAll: (t 'k 'v) => (t 'k 'v);
-    /** [removeAll transient] removes all mappings from [transient].
-     *
-     *  Complexity: O(1)
-     */
+    /** [removeAll transient] removes all key/value pairs from [transient]. */
   };
 };
 
 let module NavigableKeyedCollection: {
+  /** Module types implemented by KeyedCollections that are ordered or sorted and support
+   *  navigation operations.
+   */
+
   module type S1 = {
+    /** NavigableKeyedCollection module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
@@ -1691,42 +1816,85 @@ let module NavigableKeyedCollection: {
     include KeyedReduceableRight.S1 with type k := k and type t 'v := t 'v;
 
     let first: (t 'v) => (option (k, 'v));
+    /** [first keyed] returns first element in [keyed] or None.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
     let firstOrRaise: (t 'v) => (k, 'v);
+    /** [firstOrRaise keyed] returns first element in [keyed] or raises an exception.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
     let last: (t 'v) => (option (k, 'v));
+    /** [last keyed] returns last element in [keyed] or None.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
     let lastOrRaise: (t 'v) => (k, 'v);
+    /** [lastOrRaise keyed] returns last element in [keyed] or raises an exception.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
     let toIteratorRight: t 'v => Iterator.t (k, 'v);
+    /* [toIteratorRight keyed] returns an Iterator that can be used to iterate over
+     * the key/value pairs in [keyed] as tuples from right to left.
+     */
+
     let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
+    /* [toKeyedIteratorRight keyed] returns an KeyedIterator that can be used to iterate over
+     * the key/value pairs in [keyed] from right to left.
+     */
+
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
+    /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
+     * the key/value pairs in [keyed] as tuples from right to left.
+     */
   };
 };
 
 let module rec Map: {
-  /** A read only view of an underlying set of key/value pairs. The intent of this type is to enable
-   *  interop between alternative concrete implementations such as [SortedMap] and [HashMap].
+  /** A read only view of a mappings keys to values. The intent of this type is to enable
+   *  interop between alternative concrete implementations such as SortedMap and HashMap.
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
    module type S1 = {
+     /** Map module type signature for types with a parametric type arity of 1. */
+
      type k;
      type t 'v;
 
      include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
      let get: k => (t 'v) => (option 'v);
+     /** [get key map] returns the value associated with [key] in [map] or None */
+
      let getOrRaise: k => (t 'v) => 'v;
-     let values: (t 'v) => (Iterator.t 'v);
+     /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
+
      let toMap: (t 'v) => Map.t k 'v;
+     /** [toMap map] returns a Map view of [map] */
    };
 
    module type S2 = {
+     /** Map module type signature for types with a parametric type arity of 1. */
+
      type t 'k 'v;
 
      include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
      let get: 'k => (t 'k 'v) => (option 'v);
+     /** [get key map] returns the value associated with [key] in [map] or None */
+
      let getOrRaise: 'k => (t 'k 'v) => 'v;
-     let values: (t 'k 'v) => (Iterator.t 'v);
+     /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
+
      let toMap: (t 'k 'v) => Map.t 'k 'v;
+     /** [toMap map] returns a Map view of [map] */
    };
 
   type t 'k 'v;
@@ -1738,8 +1906,14 @@ let module rec Map: {
   /** The empty Map. */
 
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+  /** [map f map] returns lazy Map that computes values lazily by applying [f].
+   *
+   *  Note, the results of applying [f] to a given key/value pair are not
+   *  memoized. Therefore [f] must be a pure function.
+   */
 
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+   /* KeyedReducer module for Maps. */
 };
 
 let module PersistentMap: {

@@ -82,9 +82,6 @@ let toMap (map: t 'k 'v): (t 'k 'v) => map;
 let toSequence ({ sequence }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   sequence ();
 
-let values ({ keyedIterator }: t 'k 'v): (Iterator.t 'v) =>
-  keyedIterator () |> KeyedIterator.values;
-
 let module KeyedReducer = KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
   let reduce = reduce;

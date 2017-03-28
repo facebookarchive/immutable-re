@@ -341,10 +341,3 @@ let rec toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | Entry _ entryKey entryValue => Sequence.return (entryKey, entryValue);
   | Empty => Sequence.empty ();
 };
-
-let rec values (map: t 'k 'v): (Iterator.t 'v) => switch map {
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
-  | Collision _ entryMap => AVLTreeMap.values entryMap
-  | Entry _ _ entryValue => Iterator.return entryValue;
-  | Empty => Iterator.empty ();
-};

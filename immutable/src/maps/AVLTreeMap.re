@@ -241,16 +241,6 @@ let rec toSequenceRight (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
     ]
 };
 
-let rec values (tree: t 'k 'v): (Iterator.t 'v) => switch tree {
-  | Empty => Iterator.empty ()
-  | Leaf _ v => Iterator.return v
-  | Node _ left _ v right => Iterator.concat [
-      values left,
-      Iterator.return v,
-      values right,
-    ]
-};
-
 let maxHeightDiff = 2;
 
 let rebalance (left: t 'k 'v) (k: 'k) (v: 'v) (right: t 'k 'v): (t 'k 'v) => {

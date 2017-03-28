@@ -584,7 +584,6 @@ let module Map = {
 
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
-    let values: (t 'v) => (Iterator.t 'v);
     let toMap: (t 'v) => ImmMap.t k 'v;
   };
 
@@ -595,7 +594,6 @@ let module Map = {
 
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
-    let values: (t 'k 'v) => (Iterator.t 'v);
     let toMap: (t 'k 'v) => ImmMap.t 'k 'v;
   };
 };

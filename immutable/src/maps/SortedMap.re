@@ -37,7 +37,6 @@ module type S1 = {
   let toSequence: t 'v => Sequence.t (k, 'v);
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
-  let values: t 'v => Iterator.t 'v;
   let toMap: t 'v => ImmMap.t k 'v;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let empty: unit => t 'v;
@@ -177,9 +176,6 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let toSequenceRight ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
     tree |> AVLTreeMap.toSequenceRight;
-
-  let values ({ tree }: t 'v): (Iterator.t 'v) =>
-    tree |> AVLTreeMap.values;
 
   let toIterator (map: t 'v): (Iterator.t (k, 'v)) =>
     if (isEmpty map) (Iterator.empty ())

@@ -126,9 +126,6 @@ let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
 let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   root |> BitmapTrieMap.toSequence;
 
-let values ({ root }: t 'k 'v): (Iterator.t 'v) =>
-  root |> BitmapTrieMap.values;
-
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   containsKey: fun k => containsKey k map,
   count: (count map),

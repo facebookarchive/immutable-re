@@ -45,7 +45,6 @@ let module HashIntMap: PersistentMap.S1 with type k = int = {
   let toKeyedIterator = HashMap.toKeyedIterator;
   let toMap = HashMap.toMap;
   let toSequence = HashMap.toSequence;
-  let values = HashMap.values;
 };
 
 let badHashFunction i => i mod 100;
@@ -85,7 +84,6 @@ let module BadHashIntMap: PersistentMap.S1 with type k = int = {
   let toKeyedIterator = HashMap.toKeyedIterator;
   let toMap = HashMap.toMap;
   let toSequence = HashMap.toSequence;
-  let values = HashMap.values;
 };
 
 let test = describe "HashMap" [

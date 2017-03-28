@@ -218,9 +218,3 @@ let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
   | Entry entryKey entryValue when key === entryKey => Some entryValue
   | _ => None
 };
-
-let rec values (map: t 'v): (Iterator.t 'v) => switch map {
-  | Entry _ value => Iterator.return value
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toIterator |> Iterator.flatMap values
-  | Empty => Iterator.empty ();
-};

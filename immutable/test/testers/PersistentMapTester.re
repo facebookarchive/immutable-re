@@ -239,13 +239,5 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
           }) 0
         |> Expect.toBeEqualToInt (PersistentMap.count mapHashed);
     }),
-    it "values" (fun () => {
-      PersistentMap.values map
-        |> Iterator.reduce (fun acc v => {
-            map |> PersistentMap.getOrRaise v |> Expect.toBeEqualToInt v;
-            acc + 1;
-          }) 0
-        |> Expect.toBeEqualToInt (PersistentMap.count mapHashed);
-    }),
   ];
 };
