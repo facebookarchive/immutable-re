@@ -1,43 +1,20 @@
 ![Immutable Collections For Reason](/docs/images/logo-800x215.png?raw=true)
 ===========================================================================
-
-**Note for JavaScript developers**: This is the pure [Reason](https://facebook.github.io/reason) implementation of immutable data structures. To use Reason to interoperate with [ImmutableJS](https://github.com/facebook/immutable-js) in JavaScript, see [bs-immutablejs](https://github.com/BuckleTypes/bs-immutablejs.git).
+Pure [Reason](https://facebook.github.io/reason) implementation of persistent immutable data structures.
 
 # Features
+Immutable-re provides a complete set of efficient persistent immutable data
+structures for [Reason](https://facebook.github.io/reason) and [OCaml](http://www.ocaml.org/),
+targeting both OCaml native and byte code compilation modes, as well JavaScript via
+ [BuckleScript](https://github.com/bloomberg/bucklescript) support.
 
-## Views
-  * Seq: Lazy iterators.
-  * Set: Collections of unique values.
-  * Map: Mapped key value pairs.
+The api includes concrete implementations of vectors, sets, and maps. Many
+implementations support [transient mutability](http://clojure.org/reference/transients)
+for efficient batch mutations. Additionally Immutable-re provides lazy
+functional iterators and sequences, along with type definitions for basic operators
+such as equality, comparison, and hashing.
 
-## Concrete Collection Types
-  * CopyOnWriteArray: An opaque wrapper around arrays that provides copy on write operations. Good for small lists of values.
-  * Deque: Double-ended queue, with amortized O(1) appends/prepends and head/tail access.
-  * HashBiMap: Bi-directional maps that maintain a unique key to value relationship.
-  * HashMap: Mapped key value pairs, utilizing key hashing and key comparison or equality for collision handling.
-  * HashMultiset: Collection of values that maintains a count of the number of times a value has been added.
-  * HashSet: Persistent immutable set of values, utilizing value hashing and key comparison or equality for collision handling.
-  * HashSetMultimap: A map of keys to a unique set of values.
-  * IntMap: Immutable mapping of sparse ints to values.
-  * List: Standard functions for working with OCaml list values.
-  * Option: Standard functions for working OCaml option values.
-  * SortedMap: Mapped key value pairs that are sorted using a comparator function on the keys.
-  * SortedSet: Collection of values, sorted using a comparator function.
-  * Stack: A FIFO stack, similar to a list, that maintains a count of items in the stack.
-  * StackMultimap: A map of keys to the a stack of added values.
-  * Table: Sparse tabular data structure for mapping row and columns to values.
-  * Vector: Indexed data-structure with amortized O(1) appends/prepends, and log32 indexed lookups and updates. Vector also
-    supports efficient slicing operation (range, skip, take) that do not leak memory.
-
-## Utilities
-  * Comparator: Functions for comparing two values of a given type.
-  * Equality: Functions for comparing two values for equality.
-  * Hash: Functions for generating unique hash functions.
-  * Ordering: The set of valid return values from a comparator function.
-
-## Transient Mutability
-
-BiMap, Deque, HashMap, HashMultiset, HashSet, IntMap, and Vector support temporary mutability for improved performance. For more details see: http://clojure.org/reference/transients
+For more details see the [API docs](http://facebookincubator.github.com/immutable-re/api.html).
 
 # Installing
 
@@ -78,6 +55,15 @@ git clone git@github.com:facebookincubator/immutable-re.git
 cd immutable-re
 opam pin add -y immutable .
 ```
+
+# Status
+
+Immutable-re is under active development and is not yet production ready. We are
+releasing this early alpha to get community input and contributions. If you are
+interested in contributing please follow the directions [here](https://github.com/facebookincubator/immutable-re/blob/master/CONTRIBUTING.md).
+
+For JavsScript developers needing production ready immutable collections,
+we recommend using the [Reason BuckleScript bindings to Immutable.js](https://github.com/BuckleTypes/bs-immutablejs.git).
 
 License
 -------
