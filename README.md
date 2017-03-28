@@ -14,7 +14,7 @@ for efficient batch mutations. Additionally Immutable-re provides lazy
 functional iterators and sequences, along with type definitions for basic operators
 such as equality, comparison, and hashing.
 
-For more details see the [API docs](http://facebookincubator.github.com/immutable-re/api.html).
+For more details see the [API docs](http://facebookincubator.github.io/immutable-re/api.html).
 
 # Installing
 
