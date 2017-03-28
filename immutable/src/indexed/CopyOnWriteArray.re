@@ -162,24 +162,6 @@ let reduceRightWithIndex
   loop acc arrLastIndex;
 };
 
-let map (f: 'a => 'b) (arr: t 'a): (t 'b) =>
-  if (isNotEmpty arr) {
-    let initialValue = f arr.(0);
-    let retval = Array.make (count arr) initialValue;
-    arr |> reduce (fun acc next => { retval.(acc) = f next; acc + 1 }) 0 |> ignore;
-    retval;
-  }
-  else [||];
-
-let mapWithIndex (f: int => 'a => 'b) (arr: t 'a): (t 'b) =>
-  if (isNotEmpty arr) {
-    let initialValue = f 0 arr.(0);
-    let retval = Array.make (count arr) initialValue;
-    arr |> reduce (fun acc next => { retval.(acc) = f acc next; acc + 1 }) 0 |> ignore;
-    retval;
-  }
-  else [||];
-
 let removeLastOrRaise (arr: t 'a): (t 'a) => {
   let count = count arr;
 

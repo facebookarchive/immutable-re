@@ -274,11 +274,6 @@ let from (iter: Iterator.t 'a): (t 'a) =>
 let fromReverse (iter: Iterator.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
-let map (f: 'a => 'b) (deque: t 'a): (t 'b) => switch deque {
-  | Ascending vector => Ascending (Vector.map f vector)
-  | Descending vector => Descending (Vector.map f vector)
-};
-
 let module ReducerRight = Reducer.Make1 {
   type nonrec t 'a = t 'a;
   let reduce = reduce;

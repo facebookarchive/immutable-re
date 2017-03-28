@@ -974,18 +974,6 @@ let reduceRightWithIndex
   if (predicate === Functions.alwaysTrue3) (reduceRightWithIndexImpl f acc vec)
   else (reduceRightWithIndexWhile predicate f acc vec);
 
-let map (f: 'a => 'b) (vector: t 'a): (t 'b) => vector
-  |> reduce
-    (fun acc next => acc |> TransientVector.addLast @@ f @@ next)
-    (mutate (empty ()))
-  |> TransientVector.persist;
-
-let mapWithIndex (f: int => 'a => 'b) (vector: t 'a): (t 'b) => vector
-  |> reduceWithIndex
-    (fun acc index next => acc |> TransientVector.addLast @@ f index @@ next)
-    (mutate (empty ()))
-  |> TransientVector.persist;
-
 let return (value: 'a): (t 'a) =>
   empty () |> addLast value;
 
