@@ -21,7 +21,7 @@ For more details see the [API docs](http://facebookincubator.github.io/immutable
 ## Installing `immutable` via OPAM
 
 ```bash
-# On OSX, install opam via Homebrew:
+# On macOS, install opam via Homebrew:
 brew update
 brew install opam
 # On Linux, see here (you will need opam >= 1.2.2): http://opam.ocaml.org/doc/Install.html
@@ -39,7 +39,7 @@ opam install immutable
 ## Contributing to development
 
 ```bash
-# On OSX, install opam via Homebrew:
+# On macOS, install opam via Homebrew:
 brew update
 brew install opam
 # On Linux, see here (you will need opam >= 1.2.2): http://opam.ocaml.org/doc/Install.html
