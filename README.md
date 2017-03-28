@@ -54,7 +54,7 @@ opam init
 #   eval $(opam config env)
 
 opam update
-opam switch 4.03.0
+opam switch 4.02.3
 eval $(opam config env)
 opam install immutable
 ```
@@ -72,7 +72,7 @@ opam init
 #   eval $(opam config env)
 
 opam update
-opam switch 4.03.0
+opam switch 4.02.3
 eval $(opam config env)
 git clone git@github.com:facebookincubator/immutable-re.git
 cd immutable-re
