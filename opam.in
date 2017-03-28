@@ -6,10 +6,11 @@ authors: [ "Dave Bordoley <bordoley>" ]
 license: "BSD"
 homepage: "https://github.com/facebookincubator/immutable-re.git"
 dev-repo: "git://github.com/facebookincubator/immutable-re.git"
+bug-reports: "https://github.com/facebookincubator/immutable-re/issues"
 tags: [ "reason" "immutable" ]
 substs: [ "pkg/META" ]
 build: [
-  ["make" "build"]
+  [make "build"]
 ]
 depends: [
   "topkg"       {=  "0.8.1"}
