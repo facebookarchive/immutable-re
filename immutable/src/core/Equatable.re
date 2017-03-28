@@ -6,15 +6,9 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
- 
+
 module type S = {
   type t;
 
   let equals: Equality.t t;
-};
-
-module type S1 = {
-  type t 'a;
-
-  let equals: (Equality.t (t 'a));
 };

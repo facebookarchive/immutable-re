@@ -104,15 +104,6 @@ let module Equatable: {
     let equals: Equality.t t;
     /** An equality function for instances of type [t]. */
   };
-
-  module type S1 = {
-    /* Equatable module type signature for types with a parametric type arity of 1 */
-
-    type t 'a;
-
-    let equals: Equality.t (t 'a);
-    /** An equality function for instances of type [t 'a]. */
-  };
 };
 
 let module Comparable: {
@@ -140,15 +131,6 @@ let module Hashable: {
 
     let hash: Hash.t t;
     /** An hashing function for instances of type [t]. */
-  };
-
-  module type S1 = {
-    /** Hashable module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    let hash: Hash.t (t 'a);
-    /** An hashing function for instances of type [t 'a]. */
   };
 };
 
@@ -971,9 +953,11 @@ let module rec Set: {
     type t 'a;
 
     include Collection.S1 with type t 'a := t 'a;
-    include Equatable.S1 with type t 'a := t 'a;
 
     let contains: 'a => (t 'a) => bool;
+
+    let equals: Equality.t (t 'a);
+    /** An equality function for Set.S1 instances. */
 
     let toSet: (t 'a) => Set.t 'a;
   };
@@ -2261,7 +2245,6 @@ let module rec HashSet: {
   /** The HashSet type. */
 
   include PersistentSet.S1 with type t 'a := t 'a;
-  include Hashable.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
   /** [emptyWith hash comparator] returns an empty HashSet which uses [hash] to hash
@@ -2272,6 +2255,9 @@ let module rec HashSet: {
   /** [fromWith hash comparator iter] returns a HashSet containing all the values in [iter].
    *  The returned HashSet uses [hash] to hash keys, and [comparator] to resolve collisions.
    */
+
+  let hash: Hash.t (t 'a);
+  /** An hashing function for HashSet instances. */
 
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same values as [set]. */

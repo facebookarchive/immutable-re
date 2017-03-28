@@ -25,12 +25,6 @@ let module Hashable = {
 
     let hash: Hash.t t;
   };
-
-  module type S1 = {
-    type t 'a;
-
-    let hash: Hash.t (t 'a);
-  };
 };
 
 let module Reduceable = {
@@ -308,9 +302,9 @@ let module Set = {
     type t 'a;
 
     include Collection.S1 with type t 'a := t 'a;
-    include Equatable.S1 with type t 'a := t 'a;
 
     let contains: 'a => (t 'a) => bool;
+    let equals: Equality.t (t 'a);
     let toSet: (t 'a) => ImmSet.t 'a;
   };
 };
