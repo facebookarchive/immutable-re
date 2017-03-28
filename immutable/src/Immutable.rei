@@ -764,10 +764,10 @@ let module SequentialCollection: {
     include Collection.S with type a := a and type t := t;
 
     let first: t => (option a);
-    /** [first collection] returns first element in [collection] or None. */
+    /** [first collection] returns first value in [collection] or None. */
 
     let firstOrRaise: t => a;
-    /** [firstOrRaise collection] returns the first element in [collection] or throws. */
+    /** [firstOrRaise collection] returns the first value in [collection] or throws. */
   };
 
   module type S1 = {
@@ -777,10 +777,10 @@ let module SequentialCollection: {
     include Collection.S1 with type t 'a := t 'a;
 
     let first: (t 'a) => (option 'a);
-    /** [first collection] returns first element in [collection] or None. */
+    /** [first collection] returns first value in [collection] or None. */
 
     let firstOrRaise: (t 'a) => 'a;
-    /** [firstOrRaise collection] returns the first element in [collection] or throws. */
+    /** [firstOrRaise collection] returns the first value in [collection] or throws. */
   };
 };
 
@@ -814,7 +814,7 @@ let module PersistentSequentialCollection: {
      */
 
     let return: 'a => (t 'a);
-    /** [return value] returns a PersistentSequentialCollection containing a single element, [value]. */
+    /** [return value] returns a PersistentSequentialCollection containing a single value, [value]. */
 
     let removeFirstOrRaise: (t 'a) => (t 'a);
     /** [removeFirstOrRaise collection] returns a PersistentSequentialCollection without
@@ -907,10 +907,10 @@ let module NavigableCollection: {
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let last: (t 'a) => (option 'a);
-    /** [last collection] returns last element in [collection] or None. */
+    /** [last collection] returns last value in [collection] or None. */
 
     let lastOrRaise: (t 'a) => 'a;
-    /** [lastOrRaise collection] returns the first element in [collection] or raises an exception. */
+    /** [lastOrRaise collection] returns the first value in [collection] or raises an exception. */
 
     let toIteratorRight: (t 'a) => (Iterator.t 'a);
     /* [toIteratorRight collection] returns an Iterator that can be used to iterate over
@@ -952,7 +952,7 @@ let module PersistentNavigableCollection: {
     let from: (Iterator.t 'a) => (t 'a);
     /** [from iter] returns a PersistentNavigableCollection containing the values in [iter].
      *
-     * Complexity: O(N) the number of elements in [iter].
+     * Complexity: O(N) the number of values in [iter].
      */
 
     let removeLastOrRaise: (t 'a) => (t 'a);
@@ -1040,17 +1040,17 @@ let module rec Set: {
   /** The empty Set. */
 
   let intersect: (t 'a) => (t 'a) => (Iterator.t 'a);
-  /** [intersect this that] returns an Iterator of unique elements
+  /** [intersect this that] returns an Iterator of unique values
    *  which occur in both [this] and [that].
    */
 
   let subtract: (t 'a) => (t 'a) => (Iterator.t 'a);
-  /** [subtract this that] returns an Iterator of unique element
+  /** [subtract this that] returns an Iterator of unique value
    *  which occur in [this] but not in [that].
    */
 
   let union: (t 'a) => (t 'a) => (Iterator.t 'a);
-  /** [union this that] returns an Iterator of unique elements which occur in either [this] or [that]. */
+  /** [union this that] returns an Iterator of unique values which occur in either [this] or [that]. */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Iterators. */
@@ -1083,7 +1083,7 @@ let module PersistentSet: {
     /** [from iter] returns a PersistentSet with all the values in [iter] */
 
     let intersect: t => t => t;
-    /** [intersect this that] returns a PersistentSet of unique elements
+    /** [intersect this that] returns a PersistentSet of unique values
      *  which occur in both [this] and [that].
      */
 
@@ -1093,12 +1093,12 @@ let module PersistentSet: {
      */
 
     let subtract: t => t => t;
-    /** [subtract this that] returns an PersistentSet of unique element
+    /** [subtract this that] returns an PersistentSet of unique value
      *  which occur in [this] but not in [that].
      */
 
     let union: t => t => t;
-    /** [union this that] returns an PersistentSet of unique elements which occur in either [this] or [that]. */
+    /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
   };
 
   module type S1 = {
@@ -1118,7 +1118,7 @@ let module PersistentSet: {
     /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
 
     let intersect: (t 'a) => (t 'a) => (t 'a);
-    /** [intersect this that] returns a PersistentSet of unique elements
+    /** [intersect this that] returns a PersistentSet of unique values
      *  which occur in both [this] and [that].
      */
 
@@ -1128,12 +1128,12 @@ let module PersistentSet: {
      */
 
     let subtract: (t 'a) => (t 'a) => (t 'a);
-    /** [subtract this that] returns an PersistentSet of unique element
+    /** [subtract this that] returns an PersistentSet of unique values
      *  which occur in [this] but not in [that].
      */
 
     let union: (t 'a) => (t 'a) => (t 'a);
-    /** [union this that] returns an PersistentSet of unique elements which occur in either [this] or [that]. */
+    /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
   };
 };
 
@@ -1816,25 +1816,25 @@ let module NavigableKeyedCollection: {
     include KeyedReduceableRight.S1 with type k := k and type t 'v := t 'v;
 
     let first: (t 'v) => (option (k, 'v));
-    /** [first keyed] returns first element in [keyed] or None.
+    /** [first keyed] returns first value in [keyed] or None.
      *
      *  By contract, no worst than O(log N) performance.
      */
 
     let firstOrRaise: (t 'v) => (k, 'v);
-    /** [firstOrRaise keyed] returns first element in [keyed] or raises an exception.
+    /** [firstOrRaise keyed] returns first value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
      */
 
     let last: (t 'v) => (option (k, 'v));
-    /** [last keyed] returns last element in [keyed] or None.
+    /** [last keyed] returns last value in [keyed] or None.
      *
      *  By contract, no worst than O(log N) performance.
      */
 
     let lastOrRaise: (t 'v) => (k, 'v);
-    /** [lastOrRaise keyed] returns last element in [keyed] or raises an exception.
+    /** [lastOrRaise keyed] returns last value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
      */
@@ -2251,29 +2251,29 @@ let module rec Deque: {
    */
 
   type t 'a;
-  /** The Deque type. */
 
   include PersistentNavigableCollection.S1 with type t 'a := t 'a;
 
   let mutate: (t 'a) => (TransientDeque.t 'a);
-  /** [mutate deque] returns a TransientDeque containing the same elements as [deque].
-   *
-   *  Complexity: O(1)
-   */
+  /** [mutate deque] returns a TransientDeque containing the same values as [deque]. */
 
   let reverse: (t 'a) => (t 'a);
-  /** [reverse deque] returns a new Deque with [deque]'s elements reversed.
+  /** [reverse deque] returns a new Deque with [deque]'s values reversed.
    *
    *  Complexity: O(1)
    */
 
   let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Deques which reduces right. */
+
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Deques. */
 }
 
 and TransientDeque: {
   /** A temporarily mutable Deque. Once persisted, any further operations on a
-   *  TransientDeque instance will throw. Intended for implementing bulk mutation operations efficiently.
+   *  TransientDeque instance will raise exceptions. Intended for implementing bulk
+   *  mutation operations efficiently.
    */
 
   type t 'a;
@@ -2282,67 +2282,76 @@ and TransientDeque: {
   /** The TransientDeque type. */
 
   let persist: (t 'a) => (Deque.t 'a);
-  /** [persist transient] returns a persisted Deque. Further attempts to access or mutate [transient]
-   *  will throw.
+  /** [persist transient] persists [transient] returning a Deque. Further attempts
+   *  to access or mutate [transient] will raise exceptions.
    */
 
   let reverse: (t 'a) => (t 'a);
-  /** [reverse transient] reverse [transient]'s elements.
+  /** [reverse transient] reverse [transient]'s values.
    *
    *  Complexity: O(1)
    */
 };
 
 let module rec HashMap: {
-  /** A hashed Map. */
+  /** A PersistentMap implemented using hashing and a comparator function to resolve hash conflicts.
+   *  HashMap is implemented as a bitmapped trie of AVLTrees. Most map operations have a computational
+   *  complexity of O(log32 N).
+   */
 
   type t 'k 'v;
-  /** The HashMap type. */
 
   include PersistentMap.S2 with type t 'k 'v := t 'k 'v;
 
   let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
-  let fromWith:
-    hash::(Hash.t 'k) =>
-    comparator::(Comparator.t 'k) =>
-    (KeyedIterator.t 'k 'v) =>
-    (HashMap.t 'k 'v);
-
-  let fromEntriesWith:
-    hash::(Hash.t 'k) =>
-    comparator::(Comparator.t 'k) =>
-    (Iterator.t ('k, 'v)) => (t 'k 'v);
-
-  let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
-  /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map].
-   *
-   *  Complexity: O(1)
+  /** [emptyWith hash comparator] returns an empty HashMap which uses [hash] to hash
+   *  keys, and [comparator] to resolve collisions.
    */
 
+  let fromWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (KeyedIterator.t 'k 'v) => (HashMap.t 'k 'v);
+  /** [fromWith hash comparator keyedIter] returns a HashMap containing all the key/value
+   *  pairs in [keyedIter]. The returned HashMap uses [hash] to hash keys, and [comparator]
+   *  to resolve collisions.
+   */
+
+  let fromEntriesWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (Iterator.t ('k, 'v)) => (t 'k 'v);
+  /** [fromEntriesWith hash comparator iter] returns a HashMap containing all the key/value
+   *  pairs in [iter]. The returned HashMap uses [hash] to hash keys, and [comparator]
+   *  to resolve collisions.
+   */
+
+  let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
+  /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map]. */
+
   let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+  /* KeyedReducer module for HashMaps. */
 }
 
 and TransientHashMap: {
   /** A temporarily mutable HashMap. Once persisted, any further operations on a
-   *  TransientHashSet instance will throw. Intended for implementing bulk mutation
+   *  TransientHashMap instance will throw. Intended for implementing bulk mutation
    *  operations efficiently.
    */
 
   type t 'k 'v;
-  /** The TransientHashMap type. */
 
   include TransientMap.S2 with type t 'k 'v := t 'k 'v;
 
   let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (TransientHashMap.t 'k 'v);
+  /** [emptyWith hash comparator ()] returns an empty TransientHashMap which uses [hash] to hash
+   *  keys, and [comparator] to resolve collisions.
+   */
+
   let persist: (t 'k 'v) => (HashMap.t 'k 'v);
-  /** [persist transient] returns a persisted HashMap. Further attempts to access or mutate [transient]
-   *  will throw.
+  /** [persist transient] persists [transient] returning a HashMap. Further attempts
+   *  to access or mutate [transient] will raise exceptions.
    */
 };
 
 let module rec HashSet: {
-  /** A set implementation that utilizes hashing and comparison
-   *  or equality for collision resolution.
+  /** A PersistentSet implemented using hashing and a comparator function to resolve hash conflicts.
+   *  HashSet are implemented as bitmapped tries. Most set operations have a computational
+   *  complexity of O(log32 N).
    */
 
   type t 'a;
@@ -2352,50 +2361,58 @@ let module rec HashSet: {
   include Hashable.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
-  let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
-  let mutate: (t 'a) => (TransientHashSet.t 'a);
-  /** [mutate set] returns a TransientHashSet containing the same elements as [set].
-   *
-   *  Complexity: O(1)
+  /** [emptyWith hash comparator] returns an empty HashSet which uses [hash] to hash
+   *  keys, and [comparator] to resolve collisions.
    */
 
+  let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
+  /** [fromWith hash comparator iter] returns a HashSet containing all the values in [iter].
+   *  The returned HashSet uses [hash] to hash keys, and [comparator] to resolve collisions.
+   */
+
+  let mutate: (t 'a) => (TransientHashSet.t 'a);
+  /** [mutate set] returns a TransientHashSet containing the same values as [set]. */
+
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for HashSets. */
 }
 
 and TransientHashSet: {
   /** A temporarily mutable HashSet. Once persisted, any further operations on a
-   *  TransientHashSet instance will throw. Intended for implementing bulk mutation
+   *  TransientHashMap instance will throw. Intended for implementing bulk mutation
    *  operations efficiently.
    */
 
   type t 'a;
-  /** The TransientHashSet type. */
 
   include TransientSet.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
+  /** [emptyWith hash comparator ()] returns an empty TransientHashSet which uses [hash] to hash
+   *  keys, and [comparator] to resolve collisions.
+   */
+
   let persist: (t 'a) => (HashSet.t 'a);
-  /** [persist transient] returns a persisted HashSet. Further attempts to access or mutate [transient]
-   *  will throw.
+  /** [persist transient] persists [transient] returning a HashSet. Further attempts
+   *  to access or mutate [transient] will raise exceptions.
    */
 };
 
 let module rec IntMap: {
-  /** A Map optimized for integer keys. */
+  /** A Map optimized for integer keys. IntMap is implemented as a bitmapped trie.
+   *  Most map operations have a computational complexity of O(log32 N).
+   */
 
   type k = int;
   type t 'v;
-  /** The IntMap type. */
 
   include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
   let mutate: (t 'v) => (TransientIntMap.t 'v);
-  /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map].
-   *
-   *  Complexity: O(1)
-   */
+  /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map]. */
 
   let module KeyedReducer: KeyedReducer.S1 with type k = k and type t 'v := t 'v;
+  /* KeyedReducer module for IntMaps. */
 }
 
 and TransientIntMap: {
@@ -2405,30 +2422,38 @@ and TransientIntMap: {
   include TransientMap.S1 with type k := k and type t 'v := t 'v;
 
   let persist: (t 'v) => (IntMap.t 'v);
-  /** [persist transient] returns a persisted HashBiMap. Further attempts to access or mutate [transient]
-   *  will throw.
+  /** [persist transient] persists [transient] returning a IntMap. Further attempts
+   *  to access or mutate [transient] will raise exceptions.
    */
 };
 
 let module IntRange: {
-  /** Represents a contiguous Set of discrete integers */
+  /** A contiguous Set of discrete integers */
 
   type a = int;
   type t;
-  /** The IntRange type.*/
 
   include NavigableSet.S with type a := a and type t := t;
   include Comparable.S with type t := t;
   include Hashable.S with type t := t;
 
   let create: start::int => count::int => t;
+  /** [create start count] returns an IntRange startint at [start] with [count].
+   *  [start] may be any positive or negative integer. [count] must be greater
+   *  than or equal to 0.
+   */
 
   let module ReducerRight: Reducer.S with type a := a and type t := t;
+    /* Reducer module for IntRanges which reduces right. */
+
   let module Reducer: Reducer.S with type a := a and type t := t;
+  /* Reducer module for IntRanges. */
 };
 
 let module rec IntSet: {
-  /** A set implementation optimized for storing sparse ints. */
+  /** A PersistentSet optimized for integer values. IntSets are implemented as
+   *  bitmapped tries. Most set operations have a computational complexity of O(log32 N).
+   */
 
   type a = int;
   type t;
@@ -2437,12 +2462,10 @@ let module rec IntSet: {
   include PersistentSet.S with type a := a and type t := t;
 
   let mutate: t => TransientIntSet.t;
-  /** [mutate set] returns a TransientIntSet containing the same elements as [set].
-   *
-   *  Complexity: O(1)
-   */
+  /** [mutate set] returns a TransientIntSet containing the same values as [set]. */
 
   let module Reducer: Reducer.S with type a = a and type t := t;
+  /* Reducer module for IntSets. */
 }
 
 and TransientIntSet: {
@@ -2450,6 +2473,7 @@ and TransientIntSet: {
    *  TransientIntSet instance will throw. Intended for implementing bulk mutation
    *  operations efficiently.
    */
+
   type a = int;
   type t;
   /** The TransientIntSet type. */
@@ -2469,28 +2493,30 @@ let module List: {
   /** OCaml singly-linked list */
 
   type t 'a = list 'a;
-  /** The List type. */
 
   include Iterable.S1 with type t 'a := t 'a;
   include ReverseMappable.S1 with type t 'a := t 'a;
 
   let addFirst: 'a => (t 'a) => (t 'a);
-  /** [addFirst value list] returns a new List with [value] prepended. */
+  /** [addFirst value list] returns a List with [value] prepended.
+   *
+   *  Complexity: O(1)
+   */
 
   let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-  /** [addFirstAll iter list] returns a new List with the values in [iter] prepended. */
+  /** [addFirstAll iter list] returns a List with the values in [iter] prepended. */
 
   let empty: unit => (t 'a);
-  /** The empty List. */
+  /** [empty ()] returns an empty List. */
 
   let first: t 'a => (option 'a);
-  /** [tryFirst seq] returns first element in [seq] or None.
+  /** [first list] returns first value in [list] or None.
    *
    *  Complexity: O(1)
    */
 
   let firstOrRaise: t 'a => 'a;
-  /** [first seq] returns the first element in [seq] or throws.
+  /** [first seq] returns the first value in [list] or raises an exception.
    *
    *  Complexity: O(1)
    */
@@ -2499,7 +2525,7 @@ let module List: {
   /** [fromReverse iter] returns a new List containing the values in [iter]
    *  in reverse order.
    *
-   * Complexity: O(N) the number of elements in [iter].
+   * Complexity: O(N) the number of values in [iter].
    */
 
   let removeAll: (t 'a) => (t 'a);
@@ -2509,22 +2535,23 @@ let module List: {
    */
 
   let removeFirstOrRaise: (t 'a) => (t 'a);
-  /** [removeFirstOrRaise list] returns a new List without the first element.
+  /** [removeFirstOrRaise list] returns a List without the first value.
    *
    *  Complexity: O(1)
    */
 
   let return: 'a => (t 'a);
-  /** [return value] returns a new List containing a single element, [value]. */
+  /** [return value] returns a new List containing a single value, [value]. */
 
   let toSequence: (t 'a) => (Sequence.t 'a);
-  /** [toSequence list] returns a Sequence of the elements in [list] in order. */
+  /** [toSequence list] returns a Sequence of the values in [list] in order. */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Lists. */
 };
 
 let module Option: {
-  /** OCaml option type. Can be considered a set of zero or one elements.
+  /** OCaml option type. Can be considered a set of zero or one values.
    *  All operations have a complexity of O(1).
    */
 
@@ -2536,41 +2563,47 @@ let module Option: {
   include SequentialCollection.S1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
-  /** The empty Option, None. */
+  /** [empty ()] returns the empty Option, None. */
 
   let return: 'a => (t 'a);
   /** [return value] returns [Some value]. */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Options. */
 };
 
 let module ReadOnlyArray: {
   /** Opaque wrapper around an underlying array instance that provides read only semantics */
 
   type t 'a;
-  /** The CopyOnWriteArray type. */
 
   include IndexedCollection.S1 with type t 'a := t 'a;
   include IndexedMappable.S1 with type t 'a := t 'a;
 
   let empty: unit => t 'a;
+  /* [empty ()] returns an empty ReadOnlyArray. */
+
   let init: int => (int => 'a) => (t 'a);
+  /* [init count f] returns a ReadOnlyArray with size [count]. The callback [f] is called
+   * for each index to initialize the value at the respective index.
+   */
+
   let ofUnsafe: (array 'a) => (t 'a);
   /** [unsafe arr] returns a ReadOnlyArray backed by [arr]. Note, it is the caller's
    *  responsibility to ensure that [arr] is not subsequently mutated.
-   *
-   *  Complexity: O(1)
    */
 
   let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for ReadOnlyArray which reduces right. */
+
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for ReadOnlyArrays. */
 };
 
 let module Stack: {
   /** A singly-linked stack with an O(1) count operation. */
 
   type t 'a;
-  /** The Stack type. */
 
   include PersistentSequentialCollection.S1 with type t 'a := t 'a;
 
@@ -2584,10 +2617,14 @@ let module Stack: {
   /** [toList stack] returns the underlying List backing the stack */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Stacks. */
 };
 
 let module SortedMap: {
-  /** AVL tree based Map. */
+  /** Sorted map implemented as an AVL tree. Most set operations
+   *  have a computational complexity of O(log N).
+   */
+
   module type S1 = {
     type k;
 
@@ -2597,52 +2634,116 @@ let module SortedMap: {
     include PersistentNavigableMap.S1 with type k := k and type t 'v := t 'v;
 
     let module KeyedReducerRight: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+    /* KeyedReducer module for SortedMaps which reduces right. */
+
     let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+    /* KeyedReducer module for SortedMaps. */
   };
 
   let module Make1: (Comparable: Comparable.S) => S1 with type k = Comparable.t;
+  /** Module function to create a SortedMap. */
 };
 
 let module SortedSet: {
-  /** AVL tree based Set implementation. */
+  /** Sorted set implemented as an AVL tree. Most set operations
+   *  have a computational complexity of O(log N).
+   */
   module type S = {
     type a;
     type t;
-    /** The SortedSet type */
 
     include Comparable.S with type t := t;
     include PersistentNavigableSet.S with type a := a and type t := t;
 
     let module ReducerRight: Reducer.S with type a:= a and type t:= t;
+    /* Reducer module for SortedSets which reduces right. */
+
     let module Reducer: Reducer.S with type a := a and type t := t;
+    /* Reducer module for SortedSets. */
   };
 
   let module Make: (Comparable: Comparable.S) => S with type a = Comparable.t;
+  /** Module function to create a SortedSet. */
 };
 
 let module rec Vector: {
-  /** An IndexedCollection supporting efficient prepend, appends, indexing, conctentation, and splits.
+  /** An IndexedCollection supporting efficient prepend, appends, indexing, conctentation,
+   *  and splits. Vectors are implemented as relaxed radix balanced trees. Computational
+   *  is O(log32 N) for most operations, with optimizations for effection O(1) access to
+   *  first and last values.
    */
 
   type t 'a;
-  /** The vector type */
 
   include PersistentNavigableCollection.S1 with type t 'a := t 'a;
   include IndexedCollection.S1 with type t 'a := t 'a;
   include IndexedMappable.S1 with type t 'a := t 'a;
 
   let concat: (list (t 'a)) => (t 'a);
+  /** [concat vecs] returns a Vector, concatenating together the Vectors in [vec].
+  *
+  *  WARNING: Not implemented
+  *
+  *  Complexity: O(log32 N * m)
+  */
+
   let init: int => (int => 'a) => (t 'a);
+  /* [init count f] returns a Vector with size [count]. The callback [f] is called
+   * for each index to initialize the value at the respective index.
+   */
+
   let insertAt: int => 'a => (t 'a) => (t 'a);
+  /** [insertAt index value vec] returns a Vector with [value] inserted at [index].
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let removeAt: int => (t 'a) => (t 'a);
+  /** [removeAt index vec] returns a Vector with the value at [index] removed.
+   *
+   *  WARNING: Not implemented
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let skip: int => (t 'a) => (t 'a);
+  /** [skip count vec] returns a new Vector that removes the first [count] values in [vec].
+   *
+   *  WARNING: Known issues for Vectors with count > 1024.
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let slice: start::int? => end_::int? => (t 'a) => (t 'a);
+
   let take: int => (t 'a) => (t 'a);
+  /** [take count vec] returns a Vector that includes the first [count] values in [vec]. */
+
   let update: int => 'a => (t 'a) => (t 'a);
+  /** [update index value cow] returns a Vector with [value]
+   *  replacing the value at [index].
+   *
+   *  Complexity: O(log32 N)
+   */
+
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+  /** [updateAll f vec] returns a Vector updating each value
+   *  in [vec] with result of applying the function [f] to each index/value pair.
+   *
+   *  Complexity: O(N)
+   */
+
   let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+  /** [updateWith index f cow] returns a Vector updating the value
+   *  at [index] with the result of applying the function [f] to the value.
+   *
+   *  Complexity: O(log32 N)
+   */
 
   let mutate: (t 'a) => (TransientVector.t 'a);
+  /** [mutate vector] returns a TransientVector containing the same values as [set]. */
 
   let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
@@ -2650,16 +2751,21 @@ let module rec Vector: {
 
 and TransientVector: {
   /** A temporarily mutable Vector. Once persisted, any further operations on a
-   *  TransientVector instance will throw. Intended for implementing bulk mutation operations efficiently.
+   *  TransientVector instance will throw. Intended for implementing bulk mutation
+   *  operations efficiently.
    */
+
   type t 'a;
-  /** The TransientVector type. */
 
   include TransientNavigableCollection.S1 with type t 'a := t 'a;
 
   let get: int => (t 'a) => (option 'a);
+  /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
 
   let getOrRaise: int => (t 'a) => 'a;
+  /** [getOrRaise index transient] returns the value at [index] or
+   *  raises an exception if [index] is out of bounds.
+   */
 
   let insertAt: int => 'a => (t 'a) => (t 'a);
   /** [insertAt index value transient] inserts value into [transient] at [index].
@@ -2670,7 +2776,7 @@ and TransientVector: {
    */
 
   let removeAt: int => (t 'a) => (t 'a);
-  /** [removeAt index transient] removes the element at [index].
+  /** [removeAt index transient] removes the value at [index].
    *
    *  WARNING: Not implemented
    *
@@ -2678,21 +2784,21 @@ and TransientVector: {
    */
 
   let update: int => 'a => (t 'a) => (t 'a);
-  /** [update index value transient] replaces the element at [index] with [value].
+  /** [update index value transient] replaces the value at [index] with [value].
    *
    *  Complexity: O(log32 N)
    */
 
   let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  /** [updateAll f transient] updates each element in [transient] with result of applying
-   *  the function [f] to each index/element pair.
+  /** [updateAll f transient] updates each value in [transient] with result of applying
+   *  the function [f] to each index/value pair.
    *
    *  Complexity: O(N)
    */
 
   let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-  /** [updateWith index f transient] updates the element at [index] with the result
-   *  of applying the function [f] to the element.
+  /** [updateWith index f transient] updates the value at [index] with the result
+   *  of applying the function [f] to the value.
    *
    *  Complexity: O(log32 N)
    */
