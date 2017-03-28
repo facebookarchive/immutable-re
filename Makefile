@@ -15,6 +15,14 @@ endif
 	$(SUBSTS) $(ROOT_DIR)/package.json.in; \
 	$(SUBSTS) $(ROOT_DIR)/opam.in
 
+release: pre_release
+	git add package.json opam
+	git commit -m "Version $(version)"
+	git tag -a $(version) -m "Version $(version)."
+	# Push first the objects, then the tag.
+	git push "git@github.com:facebookincubator/immutable-re.git"
+	git push "git@github.com:facebookincubator/immutable-re.git" tag $(version)
+
 clean:
 	ocamlbuild -clean
 
