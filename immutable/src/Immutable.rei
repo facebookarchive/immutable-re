@@ -955,11 +955,17 @@ let module rec Set: {
     include Collection.S1 with type t 'a := t 'a;
 
     let contains: 'a => (t 'a) => bool;
-
+    /** [contains value set] returns true if [set] contains at least one instace of [value],
+     *  otherwise false;
+     *
+     *  By contract, an implementation must be efficient, with no worst than O(log N) performance.
+     */
+    
     let equals: Equality.t (t 'a);
     /** An equality function for Set.S1 instances. */
 
     let toSet: (t 'a) => Set.t 'a;
+    /** [toSet set] returns a Set view of [set]. */
   };
 
   type t 'a;
