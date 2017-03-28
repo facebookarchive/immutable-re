@@ -200,6 +200,9 @@ let module TransientIntMap = {
       (transient: t 'v): (t 'v) => iter
     |> KeyedIterator.reduce (fun acc k v => acc |> put k v) transient;
 
+  let putAllEntries (iter: Iterator.t ('k, 'v)) (transient: t 'v): (t 'v) => iter
+    |> Iterator.reduce (fun acc (k, v) => acc |> put k v) transient;
+
   let remove (key: int) (transient: t 'v): (t 'v) =>
     transient |> alter key Functions.alwaysNone;
 
@@ -218,12 +221,10 @@ let putAll (iter: KeyedIterator.t int 'v) (map: t 'v): (t 'v) => map
   |> TransientIntMap.putAll iter
   |> TransientIntMap.persist;
 
-let putAllEntries (iter: Iterator.t ('k, 'v)) (map: t 'v): (t 'v) => iter
-  |> Iterator.reduce
-    (fun acc (k, v) => acc |> TransientIntMap.put k v)
-    (map |> mutate)
+let putAllEntries (iter: Iterator.t ('k, 'v)) (map: t 'v): (t 'v) => map
+  |> mutate
+  |> TransientIntMap.putAllEntries iter
   |> TransientIntMap.persist;
-
 
 let map (f: int => 'v => 'b) (map: t 'v): (t 'b) => map
   |> reduce

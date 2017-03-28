@@ -274,7 +274,7 @@ let module ReverseMappable: {
     let mapReverse: ('a => 'b) => (t 'a) => (t 'b);
     /** [mapReverse f reverseMappable] Returns a  [ReverseMappable] whose values
      *  are the result of applying the function [f] to each value in [reverseMappable]
-     *  and reversing the order of values
+     *  and reversing the order of values.
      */
   };
 };
@@ -541,7 +541,7 @@ let module Sequence: {
   /** [seek count seq] scans forward [count] values in [seq]. It is the eagerly
    *  evaluated equivalent of [skip count seq].
    *
-   *  Computational complexity is O(count).
+   *  Computational complexity: O(count).
    */
 
   let seekWhile: ('a => bool) => (t 'a) => (t 'a);
@@ -549,7 +549,7 @@ let module Sequence: {
    *  the predicate function [f] returns true. It is the eagerly evaluated
    *  equivalent of [skipWhile f seq].
    *
-   *  Computational complexity is O(N).
+   *  Computational complexity: O(N).
    */
 
   let zip: (list (t 'a)) => (t (list 'a));
@@ -1917,7 +1917,13 @@ let module rec Map: {
 };
 
 let module PersistentMap: {
+  /** Module types implemented by Map collections supporting persistent mutations.
+   *
+   */
+
   module type S1 = {
+    /** PersistentMap module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
@@ -1925,85 +1931,170 @@ let module PersistentMap: {
     include Map.S1 with type k := k and type t 'v := t 'v;
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+    /** [alter key f map] return a PersistentMap applying the mutation function to the value
+     *  associated with key or None if no association exists. If [f] returns Some, the value
+     *  associated with key is either added or updated. If [f] returns None,
+     *  the value associated with key is removed if an association previously existed.
+     *
+     *  By contract, [alter] is efficient with no worst than O(log N) performance.
+     */
 
     let empty: unit => (t 'v);
-    /** The empty SortedMap using the structural comparator. */
+    /** [empty ()] Return an empty PersistentMap. */
 
     let from: (KeyedIterator.t k 'v) => (t 'v);
-    /** [from iter] returns a SortedMap including the key/value pairs in [iter]
-     *  using the structural comparison.
+    /** [from keyedIterator] returns a PersistentMap including the key/value pairs in [keyedIterator].
+     *
+     *  By contract, [from] is efficient with no worst than O(N log N) performance.
      */
 
     let fromEntries: (Iterator.t (k, 'v)) => (t 'v);
+    /** [fromEntries iter] returns a PersistentMap including the key/value pairs in [iter].
+     *
+     *  By contract, [fromEntries] is efficient with no worst than O(N log N) performance.
+     */
 
     let map: (k => 'a => 'b) => (t 'a) => (t 'b);
+    /** [map f persistentMap] returns a PersistentMap who whose values are the
+     *  result of applying the function [f] to each value in [persistentMap].
+     *
+     * By contract, [map] is efficient with no worst than O(N) performance.
+     */
 
     let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
+    /** [merge f acc next] return a PersistentMap that is the result of reducing [acc] with [next].
+     *  The callback [f] is applied to the union of keys from [acc] and [next], with the values
+     *  associated with each key, or None. If [f] returns None, the associated key/value pair is
+     *  removed from the accumulator. If [f] returns Some, the associated key/value pair is
+     *  added or update to the accumulator.
+     *
+     *  By contract, [merge] is efficient with no worst than O(N log N) performance.
+     */
 
     let put: k => 'v => (t 'v) => (t 'v);
+    /** [put key value map] returns a PersistentMap with an association
+     *  from [key] to [value] added [map].
+     *
+     *  By contract, [put] is efficient with no worst than O(log N) performance.
+     */
 
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    /** [putAll keyedIter map] returns a PersistentMap, adding associations from all key/value pairs
+     *  in [keyedIter] to [map],
+     *
+     *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
+     */
 
     let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+    /** [putAllEntries iter map] returns a PersistentMap, adding associations from all key/value pairs
+     *  in [iter] to [map].
+     *
+     *  By contract, [putAllEntries] is efficient with no worst than O(N log N) performance.
+     */
   };
 
   module type S2 = {
+    /** PersistentMap module type signature for types with a parametric type arity of 1. */
+
     type t 'k 'v;
 
     include PersistentKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+    /** [alter key f map] return a PersistentMap applying the mutation function to the value
+     *  associated with key or None if no association exists. If [f] returns Some, the value
+     *  associated with key is either added or updated. If [f] returns None,
+     *  the value associated with key is removed if an association previously existed.
+     *
+     *  By contract, [alter] is efficient with no worst than O(log N) performance.
+     */
 
     let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+    /** [map f persistentMap] returns a PersistentMap who whose values are the
+     *  result of applying the function [f] to each value in [persistentMap].
+     *
+     * By contract, [map] is efficient with no worst than O(N) performance.
+     */
 
     let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
+    /** [merge f acc next] return a PersistentMap that is the result of reducing [acc] with [next].
+     *  The callback [f] is applied to the union of keys from [acc] and [next], with the values
+     *  associated with each key, or None. If [f] returns None, the associated key/value pair is
+     *  removed from the accumulator. If [f] returns Some, the associated key/value pair is
+     *  added or update to the accumulator.
+     *
+     *  By contract, [merge] is efficient with no worst than O(N log N) performance.
+     */
 
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+    /** [put key value map] returns a PersistentMap with an association
+     *  from [key] to [value] added [map].
+     *
+     *  By contract, [put] is efficient with no worst than O(log N) performance.
+     */
 
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    /** [putAll keyedIter map] returns a PersistentMap, adding associations from all key/value pairs
+     *  in [keyedIter] to [map],
+     *
+     *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
+     */
 
     let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    /** [putAllEntries iter map] returns a PersistentMap, adding associations from all key/value pairs
+     *  in [iter] to [map].
+     *
+     *  By contract, [putAllEntries] is efficient with no worst than O(N log N) performance.
+     */
   };
 };
 
 let module TransientMap: {
-  module type S1 = {
-    type k;
+  /** Module types implemented by transiently mutable maps. */
 
+  module type S1 = {
+    /** TransientMap module type signature for types with a parametric type arity of 1. */
+
+    type k;
     type t 'v;
 
     include TransientKeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
-    /** [alter key f transient] enables efficient deep updates to an existing
-     *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
-     *  [f] will be called with Some, otherwise it will be called with None.
-     *  If [f] returns None, alter removes any mapping from [key] in [transient].
-     *  If [f] returns Some, alter returns add or updates the mapping
-     *  from [key] in [transient].
+    /** [alter key f transient] applies the mutation function to the value
+     *  associated with key or None if no association exists. If [f] returns Some, the value
+     *  associated with key is either added or updated to [transient]. If [f] returns None,
+     *  the value associated with key is removed if an association previously existed in [transient].
+     *
+     *  By contract, [alter] is efficient with no worst than O(log N) performance.
      */
 
     let empty: unit => (t 'v);
-    /** [empty ()] returns a new empty TransientIntMap. */
+    /** [empty ()] returns a new empty TransientMap. */
 
     let get: k => (t 'v) => (option 'v);
-    /** [tryGet key transient] returns the value associated with [key] or None
-     *
-     *  Complexity: O(log32 N), effectively O(1)
-     */
+    /** [get key transient] returns the value associated with [key] in [transient] or None */
 
     let getOrRaise: k => (t 'v) => 'v;
+    /** [getOrRaise key transient] returns the value associated with [key] in [transient] or raises an exception */
 
     let put: k => 'v => (t 'v) => (t 'v);
-    /** [put key value transient] adds the mapping of [key] to [value] to [transient].
+    /** [put key value transient] adds or replaces an association [key] to [value] in [transient].
      *
-     *  Complexity: O(log32 N), effectively O(1)
+     *  By contract, [put] is efficient with no worst than O(log N) performance.
      */
 
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
-    /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
-     *  Key value pairs in [iter] replace existing mappings in [transient].
+    /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
+     *
+     *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
+     */
+
+    let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+    /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
+     *
+     *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
      */
   };
 
@@ -2013,37 +2104,46 @@ let module TransientMap: {
     include TransientKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
-    /** [alter key f transient] enables efficient deep updates to an existing
-     *  mapping from [key] in [transient]. If [transient] already has a mapping from [key],
-     *  [f] will be called with Some, otherwise it will be called with None.
-     *  If [f] returns None, alter removes any mapping from [key] in [transient].
-     *  If [f] returns Some, alter returns add or updates the mapping
-     *  from [key] in [transient].
+    /** [alter key f transient] applies the mutation function to the value
+     *  associated with key or None if no association exists. If [f] returns Some, the value
+     *  associated with key is either added or updated to [transient]. If [f] returns None,
+     *  the value associated with key is removed if an association previously existed in [transient].
+     *
+     *  By contract, [alter] is efficient with no worst than O(log N) performance.
      */
 
     let get: 'k => (t 'k 'v) => (option 'v);
-    /** [tryGet key transient] returns the value associated with [key] or None
-     *
-     *  Complexity: O(log32 N), effectively O(1)
-     */
+    /** [get key transient] returns the value associated with [key] in [transient] or None */
 
     let getOrRaise: 'k => (t 'k 'v) => 'v;
+    /** [getOrRaise key transient] returns the value associated with [key] in [transient] or raises an exception */
 
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-    /** [put key value transient] adds the mapping of [key] to [value] to [transient].
+    /** [put key value transient] adds or replaces an association [key] to [value] in [transient].
      *
-     *  Complexity: O(log32 N), effectively O(1)
+     *  By contract, [put] is efficient with no worst than O(log N) performance.
      */
 
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-    /** [putAll iter transient] adds the key/value pairs in [iter] to [transient].
-     *  Key value pairs in [iter] replace existing mappings in [transient].
+    /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
+     *
+     *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
+     */
+
+    let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
+     *
+     *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
      */
   };
 };
 
 let module NavigableMap: {
+  /*  Module types implemented by NavigableMap that supports navigation operations. */
+
   module type S1 = {
+    /** NavigableMap module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
@@ -2053,7 +2153,14 @@ let module NavigableMap: {
 };
 
 let module PersistentNavigableMap: {
+  /** Module types implemented by NavigableMaps supporting persistent mutations.
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
+
   module type S1 = {
+    /** PersistentNavigableMap module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
@@ -2061,39 +2168,60 @@ let module PersistentNavigableMap: {
     include PersistentMap.S1 with type k := k and type t 'v := t 'v;
 
     let removeFirstOrRaise: (t 'v) => (t 'v);
-    /** [removeFirstOrRaise map] returns a new SortedMap without the first element.
-     *
-     *  Complexity: O(log N)
+    /** [removeFirstOrRaise map] returns a PersistentNavigableMap without
+     *  the first value or raises an exception if [map] is empty.
      */
 
     let removeLastOrRaise: (t 'v) => (t 'v);
-    /** [removeLastOrRaise map] returns a new SortedMap without the last element.
-     *
-     *  Complexity: O(log N)
+    /** [removeLastOrRaise map] returns a PersistentNavigableMap without
+     *  the last value or raises an exception if [map] is empty.
      */
   };
 };
 
 let module IndexedCollection: {
+  /** Collections that support efficient indexed access to values.
+   *
+   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
+   */
+
   module type S1 = {
+    /** IndexedCollection module type signature for types with a parametric type arity of 1. */
+
     type t 'a;
 
     include NavigableCollection.S1 with type t 'a := t 'a;
 
     let get: int => (t 'a) => (option 'a);
-    /** [tryGet index vec] returns the element at [index] or None if [index] is out of bounds. */
+    /** [get index indexed] returns the value at [index] or None if [index] is out of bounds. */
 
     let getOrRaise: int => (t 'a) => 'a;
+    /** [getOrRaise index indexed] returns the value at [index] or
+     *  raises an exception if [index] is out of bounds.
+     */
 
     let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
+    /** [toKeyedIterator indexed] returns a KeyedIterator that can be used to iterate over
+     *  the index/value pairs in [indexed].
+     */
 
     let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
+    /* [toKeyedIteratorRight indexed] returns an KeyedIterator that can be used to iterate over
+     * the index/value pairs in [indexed] from right to left.
+     */
 
     let toMap: (t 'a) => (Map.t int 'a);
+    /** [toMap indexed] returns a Map view of [indexed]. */
   };
 };
 
 let module IndexedMappable: {
+  /** Module type implemented by modules that support indexed map operations.
+   *  Computational complexity is dependent upon whether the underlying type
+   *  is evaluated eagerly, in which case the operation is O(N), or lazily,
+   *  in which case the operation is O(1).
+   */
+
   module type S1 = {
     type t 'a;
 
@@ -2101,13 +2229,18 @@ let module IndexedMappable: {
     include ReverseMappable.S1 with type t 'a := t 'a;
 
     let mapWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
-    /** [map f vec] returns a new Vector applying the
-     *  function [f] to each index/element pair in [vec].
+    /** [map f indexed] returns a IndexedMappable who whose values are the
+     *  result of applying the function [f] to each value in [indexed].
+     *
+     * By contract, [mapWithIndex] is efficient with no worst than O(N) performance.
      */
 
     let mapReverseWithIndex: (int => 'a => 'b) => (t 'a) => (t 'b);
-    /** [mapReverseWithIndex f vec] returns a new Vector applying the
-     *  function [f] to each index/element pair in [vec], reversing the result.
+    /** [mapReverseWithIndex f indexed] returns a IndexedMappable who whose values are the
+     *  result of applying the function [f] to each value in [indexed]
+     *  and reversing the order of values.
+     *
+     * By contract, [mapReverseWithIndex] is efficient with no worst than O(N) performance.
      */
   };
 };

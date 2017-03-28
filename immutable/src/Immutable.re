@@ -647,6 +647,7 @@ let module TransientMap = {
     let getOrRaise: k => (t 'v) => 'v;
     let put: k => 'v => (t 'v) => (t 'v);
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
   };
 
   module type S2 = {
@@ -659,6 +660,7 @@ let module TransientMap = {
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
   };
 };
 
