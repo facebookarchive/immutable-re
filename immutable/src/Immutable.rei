@@ -2614,7 +2614,13 @@ let module rec Vector: {
 
   let mutate: (t 'a) => (TransientVector.t 'a);
   /** [mutate vector] returns a TransientVector containing the same values as [set]. */
-
+  
+  let map: ('a => 'b) => t 'a => t 'b;
+  /** [map func vector] iterates over [vector] and calls [func] on each element returning a new vector of type [t 'b] composed of elements returned by [func]. */
+  
+  let mapWithIndex: (int => 'a => 'b) => t 'a => t 'b;
+  /** [mapWithIndex func vector] same as [map] but also passes the index of the element to [func]. */
+  
   let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
 }
