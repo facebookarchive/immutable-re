@@ -65,10 +65,6 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator;
 
-let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
-  if (isEmpty set) (Sequence.empty ())
-  else root |> BitmapTrieSet.toSequence;
-
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
@@ -80,6 +76,16 @@ let reduce
 let toIterator (set: t 'a): (Iterator.t 'a) =>
   if (isEmpty set) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
+
+let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
+  if (isEmpty set) (Sequence.empty ())
+  else root |> BitmapTrieSet.toSequence;
+
+let toCollection (set: t 'a): (Collection.t 'a) => {
+  count: count set,
+  iterator: fun () => toIterator set,
+  sequence: fun () => toSequence set,
+};
 
 let toSet (set: t 'a): (ImmSet.t 'a) =>
   if (isEmpty set) (ImmSet.empty ())

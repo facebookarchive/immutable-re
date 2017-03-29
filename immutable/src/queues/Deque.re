@@ -118,6 +118,12 @@ let toSequenceRight (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Descending vector => vector |> Vector.toSequence;
 };
 
+let toCollection (deque: t 'a): (Collection.t 'a) => {
+  count: count deque,
+  iterator: fun () => toIterator deque,
+  sequence: fun () => toSequence deque,
+};
+
 let module TransientDeque = {
   let module TransientVector = Vector.TransientVector;
 

@@ -112,6 +112,8 @@ let module Iterable = {
 let module Sequence = Sequence;
 
 let module Collection = {
+  include Collection;
+
   module type S = {
     type a;
     type t;
@@ -123,6 +125,7 @@ let module Collection = {
     let empty: t;
     let isEmpty: t => bool;
     let isNotEmpty: t => bool;
+    let toCollection: t => Collection.t a;
     let toSequence: t => (Sequence.t a);
   };
 
@@ -134,6 +137,7 @@ let module Collection = {
     let count: (t 'a) => int;
     let isEmpty: (t 'a) => bool;
     let isNotEmpty: (t 'a) => bool;
+    let toCollection: (t 'a) => (Collection.t 'a);
     let toSequence: (t 'a) => (Sequence.t 'a);
   };
 };

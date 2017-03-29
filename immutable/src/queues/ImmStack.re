@@ -82,6 +82,12 @@ let toList ({ list }: t 'a): (list 'a) => list;
 
 let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
 
+let toCollection (set: t 'a): (Collection.t 'a) => {
+  count: count set,
+  iterator: fun () => toIterator set,
+  sequence: fun () => toSequence set,
+};
+
 let module Reducer = Reducer.Make1 {
   type nonrec t 'a = t 'a;
   let reduce = reduce;

@@ -32,6 +32,7 @@ let module HashIntSet: PersistentSet.S with type a = int = {
   let remove = HashSet.remove;
   let removeAll = HashSet.removeAll;
   let subtract = HashSet.subtract;
+  let toCollection = HashSet.toCollection;
   let toIterator = HashSet.toIterator;
   let toSequence = HashSet.toSequence;
   let toSet = HashSet.toSet;
@@ -62,6 +63,7 @@ let module BadHashIntSet: PersistentSet.S with type a = int = {
   let remove = HashSet.remove;
   let removeAll = HashSet.removeAll;
   let subtract = HashSet.subtract;
+  let toCollection = HashSet.toCollection;
   let toIterator = HashSet.toIterator;
   let toSequence = HashSet.toSequence;
   let toSet = HashSet.toSet;

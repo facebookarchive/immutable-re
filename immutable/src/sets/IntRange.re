@@ -117,6 +117,12 @@ let toIteratorRight (set: t): (Iterator.t int) =>
   if (isEmpty set) (Iterator.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
 
+let toCollection (set: t): (Collection.t int) => {
+  count: count set,
+  iterator: fun () => toIterator set,
+  sequence: fun () => toSequence set,
+};
+
 let toSet (set: t): (ImmSet.t int) => {
   contains: fun v => contains v set,
   count: count set,

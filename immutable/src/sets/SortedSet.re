@@ -30,6 +30,7 @@ module type S = {
   let empty: t;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
+  let toCollection: t => Collection.t a;
   let toSequence: t => Sequence.t a;
   let removeAll: t => t;
   let add: a => t => t;
@@ -175,6 +176,12 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toIteratorRight (set: t): (Iterator.t a) =>
     if (isEmpty set) (Iterator.empty ())
     else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
+
+  let toCollection (set: t): (Collection.t a) => {
+    count: count set,
+    iterator: fun () => toIterator set,
+    sequence: fun () => toSequence set,
+  };
 
   let toSet (set: t): (ImmSet.t a) => {
     contains: fun a => contains a set,

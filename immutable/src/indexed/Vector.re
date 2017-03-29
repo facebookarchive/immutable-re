@@ -1089,6 +1089,12 @@ let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence
   CopyOnWriteArray.toSequenceRight left,
 ];
 
+let toCollection (set: t 'a): (Collection.t 'a) => {
+  count: count set,
+  iterator: fun () => toIterator set,
+  sequence: fun () => toSequence set,
+};
+
 let toMap (vec: t 'a): (ImmMap.t int 'a) => {
   containsKey: fun index => index >= 0 && index < count vec,
   count: count vec,

@@ -252,6 +252,12 @@ let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   loop 0;
 };
 
+let toCollection (set: t 'a): (Collection.t 'a) => {
+  count: count set,
+  iterator: fun () => toIterator set,
+  sequence: fun () => toSequence set,
+};
+
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
 

@@ -532,7 +532,7 @@ let module Sequence: {
   /* Reducer module for Sequences. */
 };
 
-let module Collection: {
+let module rec Collection: {
   /** Module types implemented by all immutable value collections.
    *
    *  By contract, all functions have a computational complexity of O(1).
@@ -561,6 +561,8 @@ let module Collection: {
      *  least one value, otherwise false.
      */
 
+    let toCollection: t => (Collection.t a);
+
     let toSequence: t => (Sequence.t a);
     /** [toSequence collection] returns a Sequence that can be used to enumerate the collection. */
   };
@@ -583,9 +585,20 @@ let module Collection: {
      *  least one value, otherwise false.
      */
 
+    let toCollection: (t 'a) => (Collection.t 'a);
+
     let toSequence: (t 'a) => (Sequence.t 'a);
     /** [toSequence collection] returns a Sequence that can be used to enumerate the collection. */
   };
+
+  type t 'a;
+
+  include S1 with type t 'a := t 'a;
+
+  let empty: unit => (t 'a);
+
+  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Iterators. */
 };
 
 let module PersistentCollection: {
@@ -960,7 +973,7 @@ let module rec Set: {
      *
      *  By contract, an implementation must be efficient, with no worst than O(log N) performance.
      */
-    
+
     let equals: Equality.t (t 'a);
     /** An equality function for Set.S1 instances. */
 
