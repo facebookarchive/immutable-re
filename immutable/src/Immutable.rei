@@ -599,7 +599,7 @@ let module rec Collection: {
      */
 
     module type S = {
-      /** PersistentCollection module type signature for types with a parametric type arity of 0. */
+      /** Persistent Collection module type signature for types with a parametric type arity of 0. */
 
       type a;
       type t;
@@ -607,7 +607,7 @@ let module rec Collection: {
       include S with type a := a and type t := t;
 
       let removeAll: t => t;
-      /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
+      /** [removeAll collection] return an empty Persistent Collection. Depending on the implementation,
        *  the new collection may share the same configuration as [collection]. For instance, the HashSet
        *  implementations shares the same hash and comparison functions.
        */
@@ -621,7 +621,7 @@ let module rec Collection: {
       include S1 with type t 'a := t 'a;
 
       let removeAll: t 'a => t 'a;
-      /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
+      /** [removeAll collection] return an empty Persistent Collection. Depending on the implementation,
        *  the new collection may share the same configuration as [collection]. For instance, HashSet
        *  implementations shares the same hash and comparison functions.
        */
@@ -631,14 +631,14 @@ let module rec Collection: {
   let module Transient: {
     /** Module types implemented by transiently mutable Collections. Transient collections
      *  are designed to enable fast and efficient batch operations by temporarily enabling mutation
-     *  of an underlying collection type. Unlike PersistentCollection functions, TransientCollection
+     *  of an underlying collection type. Unlike Persistent Collection functions, Transient Collection
      *  APIs always return the same value reference passed in as an argument, with mutations applied.
      *
      *  By contract, all functions have a computational complexity of O(1).
      */
 
     module type S = {
-      /** TransientCollection module type signature for types with a parametric type arity of 0. */
+      /** Transient Collection module type signature for types with a parametric type arity of 0. */
 
       type a;
       type t;
@@ -661,7 +661,7 @@ let module rec Collection: {
     };
 
     module type S1 = {
-      /** TransientCollection module type signature for types with a parametric type arity of 0. */
+      /** Transient Collection module type signature for types with a parametric type arity of 0. */
 
       type t 'a;
 
@@ -862,16 +862,16 @@ let module NavigableCollection: {
       include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
 
       let addLast: 'a => (t 'a) => (t 'a);
-      /** [addLast value collection] returns a PersistentNavigableCollection with [value] appended.
+      /** [addLast value collection] returns a Persistent NavigableCollection with [value] appended.
        *
        *  Complexity: O(1)
        */
 
       let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      /** [addLastAll iter collection] returns a PersistentNavigableCollection with the values in [iter] appended. */
+      /** [addLastAll iter collection] returns a Persistent NavigableCollection with the values in [iter] appended. */
 
       let from: (Iterable.t 'a) => (t 'a);
-      /** [from iter] returns a PersistentNavigableCollection containing the values in [iter].
+      /** [from iter] returns a Persistent NavigableCollection containing the values in [iter].
        *
        * Complexity: O(N) the number of values in [iter].
        */
@@ -890,7 +890,7 @@ let module NavigableCollection: {
      *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
     module type S1 = {
-      /** TransientNavigableCollection module type signature for types with a parametric type arity of 1. */
+      /** Transient NavigableCollection module type signature for types with a parametric type arity of 1. */
 
       type t 'a;
 
@@ -992,7 +992,7 @@ let module rec Set: {
      */
 
     module type S = {
-      /** PersistentSet module type signature for types with a parametric type arity of 0. */
+      /** Persistent Set module type signature for types with a parametric type arity of 0. */
 
       type a;
       type t;
@@ -1001,37 +1001,37 @@ let module rec Set: {
       include Collection.Persistent.S with type a := a and type t := t;
 
       let add: a => t => t;
-      /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
+      /** [add value set] returns a Persistent Set containing value. If [set] already contains [value],
        *  it is returned unmodified.
        */
 
       let addAll: (Iterable.t a) => t => t;
-      /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
+      /** [addAll iter set] returns a Persistent Set with the values in [iter] and all the values in [set]. */
 
       let from: (Iterable.t a) => t;
-      /** [from iter] returns a PersistentSet with all the values in [iter] */
+      /** [from iter] returns a Persistent Set with all the values in [iter] */
 
       let intersect: t => t => t;
-      /** [intersect this that] returns a PersistentSet of unique values
+      /** [intersect this that] returns a Persistent Set of unique values
        *  which occur in both [this] and [that].
        */
 
       let remove: a => t => t;
-      /** [remove value set] returns a PersistentSet that does not contain [value].
+      /** [remove value set] returns a Persistent Set that does not contain [value].
        *  If [set] does not contain [value], it is returned unmodified.
        */
 
       let subtract: t => t => t;
-      /** [subtract this that] returns an PersistentSet of unique value
+      /** [subtract this that] returns an Persistent Set of unique value
        *  which occur in [this] but not in [that].
        */
 
       let union: t => t => t;
-      /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
+      /** [union this that] returns an Persistent Set of unique values which occur in either [this] or [that]. */
     };
 
     module type S1 = {
-      /** PersistentSet module type signature for types with a parametric type arity of 1. */
+      /** Persistent Set module type signature for types with a parametric type arity of 1. */
 
       type t 'a;
 
@@ -1039,30 +1039,30 @@ let module rec Set: {
       include Collection.Persistent.S1 with type t 'a := t 'a;
 
       let add: 'a => (t 'a) => (t 'a);
-      /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
+      /** [add value set] returns a Persistent Set containing value. If [set] already contains [value],
        *  it is returned unmodified.
        */
 
       let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
+      /** [addAll iter set] returns a Persistent Set with the values in [iter] and all the values in [set]. */
 
       let intersect: (t 'a) => (t 'a) => (t 'a);
-      /** [intersect this that] returns a PersistentSet of unique values
+      /** [intersect this that] returns a Persistent Set of unique values
        *  which occur in both [this] and [that].
        */
 
       let remove: 'a => (t 'a) => (t 'a);
-      /** [remove value set] returns a PersistentSet that does not contain [value].
+      /** [remove value set] returns a Persistent Set that does not contain [value].
        *  If [set] does not contain [value], it is returned unmodified.
        */
 
       let subtract: (t 'a) => (t 'a) => (t 'a);
-      /** [subtract this that] returns an PersistentSet of unique values
+      /** [subtract this that] returns an Persistent Set of unique values
        *  which occur in [this] but not in [that].
        */
 
       let union: (t 'a) => (t 'a) => (t 'a);
-      /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
+      /** [union this that] returns an Persistent Set of unique values which occur in either [this] or [that]. */
     };
   };
 
@@ -1073,7 +1073,7 @@ let module rec Set: {
      */
 
     module type S = {
-      /** TransientSet module type signature for types with a parametric type arity of 0. */
+      /** Transient Set module type signature for types with a parametric type arity of 0. */
 
       type a;
       type t;
@@ -1100,7 +1100,7 @@ let module rec Set: {
     };
 
     module type S1 = {
-      /** TransientSet module type signature for types with a parametric type arity of 0. */
+      /** Transient Set module type signature for types with a parametric type arity of 0. */
 
       type t 'a;
 
@@ -1147,7 +1147,7 @@ let module NavigableSet: {
      */
 
     module type S = {
-      /** PersistentNavigableSet module type signature for types with a parametric type arity of 0. */
+      /** Persistent NavigableSet module type signature for types with a parametric type arity of 0. */
       type a;
       type t;
 
@@ -1155,12 +1155,12 @@ let module NavigableSet: {
       include Set.Persistent.S with type a := a and type t := t;
 
       let removeFirstOrRaise: t => t;
-      /** [removeFirstOrRaise set] returns a PersistentNavigableSet without
+      /** [removeFirstOrRaise set] returns a Persistent NavigableSet without
        *  the first value or raises an exception if [set] is empty.
        */
 
       let removeLastOrRaise: t => t;
-      /** [removeLastOrRaise set] returns a PersistentNavigableSet without
+      /** [removeLastOrRaise set] returns a Persistent NavigableSet without
        *  the last value or raises an exception if [set] is empty.
        */
     };
@@ -1602,7 +1602,7 @@ let module KeyedCollection: {
      */
 
     module type S1 = {
-      /** PersistentKeyedCollection module type signature for types with a parametric type arity of 1. */
+      /** Persistent KeyedCollection module type signature for types with a parametric type arity of 1. */
 
       type k;
       type t 'v;
@@ -1616,8 +1616,8 @@ let module KeyedCollection: {
        */
 
       let removeAll: (t 'v) => (t 'v);
-      /** [removeAll keyed] return an empty PersistentKeyedCollection. Depending on the implementation,
-       *  the new PersistentKeyedCollection may share the same configuration as [keyed]. For instance,
+      /** [removeAll keyed] return an empty Persistent KeyedCollection. Depending on the implementation,
+       *  the new Persistent KeyedCollection may share the same configuration as [keyed]. For instance,
        *  the HashMap implementation shares the same hash and comparison functions.
        *
        *  Computational complexity: O(1)
@@ -1625,7 +1625,7 @@ let module KeyedCollection: {
     };
 
     module type S2 = {
-      /** PersistentKeyedCollection module type signature for types with a parametric type arity of 2. */
+      /** Persistent KeyedCollection module type signature for types with a parametric type arity of 2. */
 
       type t 'k 'v;
 
@@ -1638,8 +1638,8 @@ let module KeyedCollection: {
        */
 
       let removeAll: (t 'k 'v) => (t 'k 'v);
-      /** [removeAll keyed] return an empty PersistentKeyedCollection. Depending on the implementation,
-       *  the new PersistentKeyedCollection may share the same configuration as [keyed]. For instance,
+      /** [removeAll keyed] return an empty Persistent KeyedCollection. Depending on the implementation,
+       *  the new Persistent KeyedCollection may share the same configuration as [keyed]. For instance,
        *  the HashMap implementation shares the same hash and comparison functions.
        *
        *  Computational complexity: O(1)
@@ -1648,16 +1648,16 @@ let module KeyedCollection: {
   };
 
   let module Transient: {
-    /** Module types implemented by transiently mutable KeyedCollections. Transient collections
+    /** Module types implemented by transiently mutable KeyedCollections. Transient Collections
     *  are designed to enable fast and efficient batch operations by temporarily enabling mutation
-    *  of an underlying collection type. Unlike PersistentKeyedCollection functions, TransientKeyedCollection
+    *  of an underlying collection type. Unlike Persistent KeyedCollection functions, Transient KeyedCollection
     *  APIs always return the same value reference passed in as an argument, with mutations applied.
     *
     *  By contract, all functions have a computational complexity of O(1), unless otherwise noted.
     */
 
     module type S1 = {
-      /** TransientKeyedCollection module type signature for types with a parametric type arity of 1. */
+      /** Transient KeyedCollection module type signature for types with a parametric type arity of 1. */
 
       type k;
       type t 'v;
@@ -1691,7 +1691,7 @@ let module KeyedCollection: {
     };
 
     module type S2 = {
-      /** TransientKeyedCollection module type signature for types with a parametric type arity of 1. */
+      /** Transient KeyedCollection module type signature for types with a parametric type arity of 1. */
 
       type t 'k 'v;
 
@@ -1835,7 +1835,7 @@ let module rec Map: {
      */
 
     module type S1 = {
-      /** PersistentMap module type signature for types with a parametric type arity of 1. */
+      /** Persistent Map module type signature for types with a parametric type arity of 1. */
 
       type k;
       type t 'v;
@@ -1844,7 +1844,7 @@ let module rec Map: {
       include S1 with type k := k and type t 'v := t 'v;
 
       let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
-      /** [alter key f map] return a PersistentMap applying the mutation function to the value
+      /** [alter key f map] return a Persistent Map applying the mutation function to the value
        *  associated with key or None if no association exists. If [f] returns Some, the value
        *  associated with key is either added or updated. If [f] returns None,
        *  the value associated with key is removed if an association previously existed.
@@ -1853,22 +1853,22 @@ let module rec Map: {
        */
 
       let empty: unit => (t 'v);
-      /** [empty ()] Return an empty PersistentMap. */
+      /** [empty ()] Return an empty Persistent Map. */
 
       let from: (KeyedIterable.t k 'v) => (t 'v);
-      /** [from keyedIterable] returns a PersistentMap including the key/value pairs in [keyedIterable].
+      /** [from keyedIterable] returns a Persistent Map including the key/value pairs in [keyedIterable].
        *
        *  By contract, [from] is efficient with no worst than O(N log N) performance.
        */
 
       let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
-      /** [fromEntries iter] returns a PersistentMap including the key/value pairs in [iter].
+      /** [fromEntries iter] returns a Persistent Map including the key/value pairs in [iter].
        *
        *  By contract, [fromEntries] is efficient with no worst than O(N log N) performance.
        */
 
       let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
-      /** [merge f acc next] return a PersistentMap that is the result of reducing [acc] with [next].
+      /** [merge f acc next] return a Persistent Map that is the result of reducing [acc] with [next].
        *  The callback [f] is applied to the union of keys from [acc] and [next], with the values
        *  associated with each key, or None. If [f] returns None, the associated key/value pair is
        *  removed from the accumulator. If [f] returns Some, the associated key/value pair is
@@ -1878,21 +1878,21 @@ let module rec Map: {
        */
 
       let put: k => 'v => (t 'v) => (t 'v);
-      /** [put key value map] returns a PersistentMap with an association
+      /** [put key value map] returns a Persistent Map with an association
        *  from [key] to [value] added [map].
        *
        *  By contract, [put] is efficient with no worst than O(log N) performance.
        */
 
       let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
-      /** [putAll keyedIter map] returns a PersistentMap, adding associations from all key/value pairs
+      /** [putAll keyedIter map] returns a Persistent Map, adding associations from all key/value pairs
        *  in [keyedIter] to [map],
        *
        *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
        */
 
       let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
-      /** [putAllEntries iter map] returns a PersistentMap, adding associations from all key/value pairs
+      /** [putAllEntries iter map] returns a Persistent Map, adding associations from all key/value pairs
        *  in [iter] to [map].
        *
        *  By contract, [putAllEntries] is efficient with no worst than O(N log N) performance.
@@ -1900,7 +1900,7 @@ let module rec Map: {
     };
 
     module type S2 = {
-      /** PersistentMap module type signature for types with a parametric type arity of 1. */
+      /** Persistent Map module type signature for types with a parametric type arity of 1. */
 
       type t 'k 'v;
 
@@ -1908,7 +1908,7 @@ let module rec Map: {
       include S2 with type t 'k 'v := t 'k 'v;
 
       let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
-      /** [alter key f map] return a PersistentMap applying the mutation function to the value
+      /** [alter key f map] return a Persistent Map applying the mutation function to the value
        *  associated with key or None if no association exists. If [f] returns Some, the value
        *  associated with key is either added or updated. If [f] returns None,
        *  the value associated with key is removed if an association previously existed.
@@ -1917,7 +1917,7 @@ let module rec Map: {
        */
 
       let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
-      /** [merge f acc next] return a PersistentMap that is the result of reducing [acc] with [next].
+      /** [merge f acc next] return a Persistent Map that is the result of reducing [acc] with [next].
        *  The callback [f] is applied to the union of keys from [acc] and [next], with the values
        *  associated with each key, or None. If [f] returns None, the associated key/value pair is
        *  removed from the accumulator. If [f] returns Some, the associated key/value pair is
@@ -1927,21 +1927,21 @@ let module rec Map: {
        */
 
       let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-      /** [put key value map] returns a PersistentMap with an association
+      /** [put key value map] returns a Persistent Map with an association
        *  from [key] to [value] added [map].
        *
        *  By contract, [put] is efficient with no worst than O(log N) performance.
        */
 
       let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-      /** [putAll keyedIter map] returns a PersistentMap, adding associations from all key/value pairs
+      /** [putAll keyedIter map] returns a Persistent Map, adding associations from all key/value pairs
        *  in [keyedIter] to [map],
        *
        *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
        */
 
       let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-      /** [putAllEntries iter map] returns a PersistentMap, adding associations from all key/value pairs
+      /** [putAllEntries iter map] returns a Persistent Map, adding associations from all key/value pairs
        *  in [iter] to [map].
        *
        *  By contract, [putAllEntries] is efficient with no worst than O(N log N) performance.
@@ -1953,7 +1953,7 @@ let module rec Map: {
     /** Module types implemented by transiently mutable maps. */
 
     module type S1 = {
-      /** TransientMap module type signature for types with a parametric type arity of 1. */
+      /** Transient Map module type signature for types with a parametric type arity of 1. */
 
       type k;
       type t 'v;
@@ -1970,7 +1970,7 @@ let module rec Map: {
        */
 
       let empty: unit => (t 'v);
-      /** [empty ()] returns a new empty TransientMap. */
+      /** [empty ()] returns a new empty Transient Map. */
 
       let get: k => (t 'v) => (option 'v);
       /** [get key transient] returns the value associated with [key] in [transient] or None */
@@ -2058,7 +2058,7 @@ let module NavigableMap: {
      */
 
     module type S1 = {
-      /** PersistentNavigableMap module type signature for types with a parametric type arity of 1. */
+      /** Persistent NavigableMap module type signature for types with a parametric type arity of 1. */
 
       type k;
       type t 'v;
@@ -2067,12 +2067,12 @@ let module NavigableMap: {
       include Map.Persistent.S1 with type k := k and type t 'v := t 'v;
 
       let removeFirstOrRaise: (t 'v) => (t 'v);
-      /** [removeFirstOrRaise map] returns a PersistentNavigableMap without
+      /** [removeFirstOrRaise map] returns a Persistent NavigableMap without
        *  the first value or raises an exception if [map] is empty.
        */
 
       let removeLastOrRaise: (t 'v) => (t 'v);
-      /** [removeLastOrRaise map] returns a PersistentNavigableMap without
+      /** [removeLastOrRaise map] returns a Persistent NavigableMap without
        *  the last value or raises an exception if [map] is empty.
        */
     };
@@ -2138,14 +2138,14 @@ let module rec Deque: {
 
   let module Transient: {
     /** A temporarily mutable Deque. Once persisted, any further operations on a
-     *  TransientDeque instance will raise exceptions. Intended for implementing bulk
+     *  Transient Deque instance will raise exceptions. Intended for implementing bulk
      *  mutation operations efficiently.
      */
 
     type t 'a;
 
     include NavigableCollection.Transient.S1 with type t 'a := t 'a;
-    /** The TransientDeque type. */
+    /** The Transient Deque type. */
 
     let persist: (t 'a) => (Deque.t 'a);
     /** [persist transient] persists [transient] returning a Deque. Further attempts
@@ -2160,11 +2160,11 @@ let module rec Deque: {
   };
 
   let mutate: (t 'a) => (Deque.Transient.t 'a);
-  /** [mutate deque] returns a TransientDeque containing the same values as [deque]. */
+  /** [mutate deque] returns a Transient Deque containing the same values as [deque]. */
 };
 
 let module rec HashMap: {
-  /** A PersistentMap implemented using hashing and a comparator function to resolve hash conflicts.
+  /** A Persistent Map implemented using hashing and a comparator function to resolve hash conflicts.
    *  HashMap is implemented as a bitmapped trie of AVLTrees. Most map operations have a computational
    *  complexity of O(log32 N).
    */
@@ -2192,7 +2192,7 @@ let module rec HashMap: {
 
   let module Transient: {
     /** A temporarily mutable HashMap. Once persisted, any further operations on a
-     *  TransientHashMap instance will throw. Intended for implementing bulk mutation
+     *  Transient HashMap instance will throw. Intended for implementing bulk mutation
      *  operations efficiently.
      */
 
@@ -2201,7 +2201,7 @@ let module rec HashMap: {
     include Map.Transient.S2 with type t 'k 'v := t 'k 'v;
 
     let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (HashMap.Transient.t 'k 'v);
-    /** [emptyWith hash comparator ()] returns an empty TransientHashMap which uses [hash] to hash
+    /** [emptyWith hash comparator ()] returns an empty Transient HashMap which uses [hash] to hash
      *  keys, and [comparator] to resolve collisions.
      */
 
@@ -2212,14 +2212,14 @@ let module rec HashMap: {
   };
 
   let mutate: (t 'k 'v) => (HashMap.Transient.t 'k 'v);
-  /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map]. */
+  /** [mutate map] returns a Transient HashMap containing the same key/values pairs as [map]. */
 
   let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
   /* KeyedReducer module for HashMaps. */
 };
 
 let module rec HashSet: {
-  /** A PersistentSet implemented using hashing and a comparator function to resolve hash conflicts.
+  /** A Persistent Set implemented using hashing and a comparator function to resolve hash conflicts.
    *  HashSet are implemented as bitmapped tries. Most set operations have a computational
    *  complexity of O(log32 N).
    */
@@ -2244,7 +2244,7 @@ let module rec HashSet: {
 
   let module Transient: {
     /** A temporarily mutable HashSet. Once persisted, any further operations on a
-     *  TransientHashMap instance will throw. Intended for implementing bulk mutation
+     *  Transient HashMap instance will throw. Intended for implementing bulk mutation
      *  operations efficiently.
      */
 
@@ -2253,7 +2253,7 @@ let module rec HashSet: {
     include Set.Transient.S1 with type t 'a := t 'a;
 
     let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (t 'a);
-    /** [emptyWith hash comparator ()] returns an empty TransientHashSet which uses [hash] to hash
+    /** [emptyWith hash comparator ()] returns an empty Transient HashSet which uses [hash] to hash
      *  keys, and [comparator] to resolve collisions.
      */
 
@@ -2264,7 +2264,7 @@ let module rec HashSet: {
   };
 
   let mutate: (t 'a) => (HashSet.Transient.t 'a);
-  /** [mutate set] returns a TransientHashSet containing the same values as [set]. */
+  /** [mutate set] returns a Transient HashSet containing the same values as [set]. */
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for HashSets. */
@@ -2293,7 +2293,7 @@ let module rec IntMap: {
   };
 
   let mutate: (t 'v) => (IntMap.Transient.t 'v);
-  /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map]. */
+  /** [mutate map] returns a Transient IntMap containing the same key/values pairs as [map]. */
 
   let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k = k and type t 'v := t 'v;
   /* KeyedReducer module for IntMaps. */
@@ -2323,7 +2323,7 @@ let module IntRange: {
 };
 
 let module rec IntSet: {
-  /** A PersistentSet optimized for integer values. IntSets are implemented as
+  /** A Persistent Set optimized for integer values. IntSets are implemented as
    *  bitmapped tries. Most set operations have a computational complexity of O(log32 N).
    */
 
@@ -2335,18 +2335,18 @@ let module rec IntSet: {
 
   let module Transient: {
     /** A temporarily mutable IntSet. Once persisted, any further operations on a
-     *  TransientIntSet instance will throw. Intended for implementing bulk mutation
+     *  Transient IntSet instance will throw. Intended for implementing bulk mutation
      *  operations efficiently.
      */
 
     type a = int;
     type t;
-    /** The TransientIntSet type. */
+    /** The Transient IntSet type. */
 
     include Set.Transient.S with type a := a and type t := t;
 
     let empty: unit => t;
-    /** [empty ()] return a new empty TransientIntSet. */
+    /** [empty ()] return a new empty Transient IntSet. */
 
     let persist: t => IntSet.t;
     /** [persist transient] returns a persisted IntSet. Further attempts to access or mutate [transient]
@@ -2355,7 +2355,7 @@ let module rec IntSet: {
   };
 
   let mutate: t => IntSet.Transient.t;
-  /** [mutate set] returns a TransientIntSet containing the same values as [set]. */
+  /** [mutate set] returns a Transient IntSet containing the same values as [set]. */
 
   let module Reducer: Iterable.Reducer.S with type a = a and type t := t;
   /* Reducer module for IntSets. */
@@ -2591,7 +2591,7 @@ let module rec Vector: {
 
   let module Transient: {
     /** A temporarily mutable Vector. Once persisted, any further operations on a
-     *  TransientVector instance will throw. Intended for implementing bulk mutation
+     *  Transient Vector instance will throw. Intended for implementing bulk mutation
      *  operations efficiently.
      */
 
@@ -2650,7 +2650,7 @@ let module rec Vector: {
   };
 
   let mutate: (t 'a) => (Transient.t 'a);
-  /** [mutate vector] returns a TransientVector containing the same values as [set]. */
+  /** [mutate vector] returns a Transient Vector containing the same values as [set]. */
 
   let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
