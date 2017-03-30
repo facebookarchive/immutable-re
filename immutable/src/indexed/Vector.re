@@ -1069,12 +1069,12 @@ let toIterableRight (vec: t 'a): (Iterable.t 'a) =>
   if (isEmpty vec) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc vec };
 
-let toKeyedIterator (vec: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty vec) (KeyedIterator.empty ())
+let toKeyedIterable (vec: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty vec) (KeyedIterable.empty ())
   else { reduce: fun predicate f acc => reduceWithIndex while_::predicate f acc vec };
 
-let toKeyedIteratorRight (vec: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty vec) (KeyedIterator.empty ())
+let toKeyedIterableRight (vec: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty vec) (KeyedIterable.empty ())
   else { reduce: fun predicate f acc => reduceRightWithIndex while_::predicate f acc vec };
 
 let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
@@ -1100,7 +1100,7 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
   count: count vec,
   get: fun i => get i vec,
   getOrRaise: fun i => getOrRaise i vec,
-  keyedIterator: fun () => toKeyedIterator vec,
+  keyedIterator: fun () => toKeyedIterable vec,
   sequence: fun () => Sequence.zip2With
     (fun a b => (a, b))
     (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)

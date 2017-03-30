@@ -117,8 +117,8 @@ let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
       acc
   };
 
-let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
-  if (isEmpty map) (KeyedIterator.empty ())
+let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
+  if (isEmpty map) (KeyedIterable.empty ())
   else {
     reduce: fun predicate f acc => map |> reduce while_::predicate f acc
   };
@@ -131,7 +131,7 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   count: (count map),
   get: fun i => get i map,
   getOrRaise: fun i => getOrRaise i map,
-  keyedIterator: fun () => toKeyedIterator map,
+  keyedIterator: fun () => toKeyedIterable map,
   sequence: fun () => toSequence map,
 };
 
@@ -238,8 +238,8 @@ let module TransientHashMap = {
   let put (key: 'k) (value: 'v) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> Transient.update2 putImpl key value;
 
-  let putAll (iter: KeyedIterator.t 'k 'v) (transient: t 'k 'v): (t 'k 'v) =>
-    iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) transient;
+  let putAll (iter: KeyedIterable.t 'k 'v) (transient: t 'k 'v): (t 'k 'v) =>
+    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) transient;
 
   let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'k 'v): (t 'k 'v) => iter
     |> Iterable.reduce (fun acc (k, v) => acc |> put k v) transient;
@@ -258,7 +258,7 @@ let module TransientHashMap = {
 
 let mutate = TransientHashMap.mutate;
 
-let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
 
 let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
@@ -267,7 +267,7 @@ let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
 let fromWith
     hash::(hash: Hash.t 'k)
     comparator::(comparator: Comparator.t 'k)
-    (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
+    (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator |> putAll iter;
 
 let fromEntriesWith
@@ -291,7 +291,10 @@ let merge
     ) (mutate initialValue)
   |> TransientHashMap.persist;
 
-let module KeyedReducer = KeyedReducer.Make2 {
+let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
+
   let reduce = reduce;
+  let toIterable = toIterable;
+  let toKeyedIterable = toKeyedIterable;
 };

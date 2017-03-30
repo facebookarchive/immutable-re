@@ -353,21 +353,21 @@ describe (sprintf "count: %i" count) [
             |> List.fromReverse
         );
   }),
-  it "toKeyedIterator" (fun () => {
+  it "toKeyedIterable" (fun () => {
     IntRange.create start::0 count::count
       |> IntRange.toIterableRight
       |> Vector.from
-      |> Vector.toKeyedIterator
-      |> KeyedIterator.KeyedReducer.forEach (
+      |> Vector.toKeyedIterable
+      |> KeyedIterable.KeyedReducer.forEach (
           fun i v => count - v - 1 |> Expect.toBeEqualToInt i
         );
   }),
-  it "toKeyedIteratorRight" (fun () => {
+  it "toKeyedIterableRight" (fun () => {
     IntRange.create start::0 count::count
       |> IntRange.toIterableRight
       |> Vector.from
-      |> Vector.toKeyedIteratorRight
-      |> KeyedIterator.KeyedReducer.forEach (
+      |> Vector.toKeyedIterableRight
+      |> KeyedIterable.KeyedReducer.forEach (
           fun i v => count - v - 1 |> Expect.toBeEqualToInt i
         );
   }),

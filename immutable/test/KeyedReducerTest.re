@@ -143,8 +143,8 @@ let test = describe "KeyedReducer" [
         IntRange.create start::0 count::5
           |> IntRange.toIterable
           |> Iterable.map (fun i => (i, i))
-          |> KeyedIterator.fromEntries
-          |> KeyedIterator.KeyedReducer.count
+          |> KeyedIterable.fromEntries
+          |> KeyedIterable.KeyedReducer.count
           |> Expect.toBeEqualToInt 5;
     }),
     it "every" (fun () => {

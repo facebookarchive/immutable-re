@@ -33,8 +33,8 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
             if (k mod 2 === 0) (acc |> PersistentMap.alter k (fun _ => Some k))
             else (acc |> PersistentMap.alter k (fun _ => None))
           }) mapHashed
-        |> PersistentMap.toKeyedIterator
-        |> KeyedIterator.KeyedReducer.forEach (fun k v => {
+        |> PersistentMap.toKeyedIterable
+        |> KeyedIterable.KeyedReducer.forEach (fun k v => {
             k === v |> Expect.toBeEqualToTrue;
             k mod 2 === 0 |> Expect.toBeEqualToTrue;
           });
@@ -184,9 +184,9 @@ let test (module PersistentMap: PersistentMap.S1 with type k = int) (count: int)
           }) 0
         |> Expect.toBeEqualToInt (PersistentMap.count mapHashed);
     }),
-    it "toKeyedIterator" (fun () => {
-      PersistentMap.toKeyedIterator map
-        |> KeyedIterator.reduce (fun acc k v => {
+    it "toKeyedIterable" (fun () => {
+      PersistentMap.toKeyedIterable map
+        |> KeyedIterable.reduce (fun acc k v => {
             k === v |> Expect.toBeEqualToTrue;
             acc + 1;
           }) 0

@@ -55,40 +55,22 @@ let module Streamable = {
 let module Iterable = Iterable;
 
 let module IterableRight = {
-  /** Module types implemented by modules that support reducing over
-   *  values in both the left to right, and right to left directions.
-   */
-
   module type S = {
-    /** ReduceableRight module type signature for types with a parametric type arity of 0. */
-
     type a;
     type t;
 
     include Iterable.S with type a := a and type t := t;
 
     let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-
-     let toIterableRight: t => (Iterable.t a);
+    let toIterableRight: t => (Iterable.t a);
   };
 
   module type S1 = {
-    /** ReduceableRight module type signature for types with a parametric type arity of 1. */
-
     type t 'a;
 
     include Iterable.S1 with type t 'a := t 'a;
 
     let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-
     let toIterableRight: t 'a => (Iterable.t 'a);
   };
 };
@@ -376,56 +358,43 @@ let module PersistentNavigableSet = {
   };
 };
 
-let module KeyedReduceable = {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  };
-
+let module KeyedStreamable = {
   module type S2 = {
     type t 'k 'v;
 
-    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let concat: (list (t 'k 'v)) => (t 'k 'v);
+    let defer: (unit => t 'k 'v) => (t 'k 'v);
+    let distinctUntilChangedWith: keyEquals::(Equality.t 'k) => valueEquals::(Equality.t 'v) => (t 'k 'v) => (t 'k 'v);
+    let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
+    let empty: unit => (t 'k 'v);
+    let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+    let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+    let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
+    let map: keyMapper::('kA => 'vA => 'kB) => valueMapper::('kA => 'vA => 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+    let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
+    let mapValues: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+    let return: 'k => 'v => (t 'k 'v);
+    let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterable.t 'acc);
+    let skip: int => (t 'k 'v) => (t 'k 'v);
+    let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+    let startWith: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+    let take: int => (t 'k 'v) => (t 'k 'v);
+    let takeWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
   };
 };
 
-let module KeyedReduceableRight = {
+let module KeyedIterable = KeyedIterable;
+
+let module KeyedIterableRight = {
   module type S1 = {
     type k;
     type t 'v;
 
-    include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
+    include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
 
     let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  };
-};
-
-let module KeyedReducer = KeyedReducer;
-
-let module KeyedIterator = KeyedIterator;
-
-let module KeyedIterable = {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
-
-    let toIterable: t 'v => Iterable.t (k, 'v);
-
-    let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
-
-    let toIterable: t 'k 'v => Iterable.t ('k, 'v);
-
-    let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
+    let toIterableRight: t 'v => Iterable.t (k, 'v);
+    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
   };
 };
 
@@ -514,14 +483,12 @@ let module NavigableKeyedCollection = {
     type t 'v;
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
-    include KeyedReduceableRight.S1 with type k := k and type t 'v := t 'v;
+    include KeyedIterableRight.S1 with type k := k and type t 'v := t 'v;
 
     let first: (t 'v) => (option (k, 'v));
     let firstOrRaise: (t 'v) => (k, 'v);
     let last: (t 'v) => (option (k, 'v));
     let lastOrRaise: (t 'v) => (k, 'v);
-    let toIterableRight: t 'v => Iterable.t (k, 'v);
-    let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
   };
 };
@@ -562,11 +529,11 @@ let module PersistentMap = {
     let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
 
     let empty: unit => (t 'v);
-    let from: (KeyedIterator.t k 'v) => (t 'v);
+    let from: (KeyedIterable.t k 'v) => (t 'v);
     let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
     let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
     let put: k => 'v => (t 'v) => (t 'v);
-    let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
     let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
   };
 
@@ -579,7 +546,7 @@ let module PersistentMap = {
     let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
     let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-    let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
     let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
   };
 };
@@ -597,7 +564,7 @@ let module TransientMap = {
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
     let put: k => 'v => (t 'v) => (t 'v);
-    let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
     let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
   };
 
@@ -610,7 +577,7 @@ let module TransientMap = {
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-    let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
     let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
   };
 };
@@ -646,8 +613,8 @@ let module Indexed = {
 
     let get: int => (t 'a) => (option 'a);
     let getOrRaise: int => (t 'a) => 'a;
-    let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
-    let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
+    let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+    let toKeyedIterableRight: (t 'a) => (KeyedIterable.t int 'a);
     let toMap: (t 'a) => (Map.t int 'a);
   };
 };

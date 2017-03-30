@@ -217,12 +217,12 @@ let toIterableRight (arr: t 'a): (Iterable.t 'a) =>
   if (isEmpty arr) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc arr };
 
-let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty arr) (KeyedIterator.empty ())
+let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty arr) (KeyedIterable.empty ())
   else { reduce: fun predicate f acc => reduceWithIndex while_::predicate f acc arr };
 
-let toKeyedIteratorRight (arr: t 'a): (KeyedIterator.t int 'a) =>
-  if (isEmpty arr) (KeyedIterator.empty ())
+let toKeyedIterableRight (arr: t 'a): (KeyedIterable.t int 'a) =>
+  if (isEmpty arr) (KeyedIterable.empty ())
   else { reduce: fun predicate f acc => reduceRightWithIndex while_::predicate f acc arr };
 
 let toSequenceRight (arr: t 'a): (Sequence.t 'a) =>
@@ -283,7 +283,7 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   count: count arr,
   get: fun i => get i arr,
   getOrRaise: fun index => getOrRaise index arr,
-  keyedIterator: fun () => toKeyedIterator arr,
+  keyedIterator: fun () => toKeyedIterable arr,
   sequence: fun () => toSequenceWithIndex arr,
 };
 

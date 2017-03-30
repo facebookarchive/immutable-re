@@ -89,8 +89,8 @@ let toIterable (map: t 'v): (Iterable.t (int, 'v)) =>
       acc
   };
 
-let toKeyedIterator (map: t 'v): (KeyedIterator.t int 'v) =>
-  if (isEmpty map) (KeyedIterator.empty ())
+let toKeyedIterable (map: t 'v): (KeyedIterable.t int 'v) =>
+  if (isEmpty map) (KeyedIterable.empty ())
   else {
     reduce: fun predicate f acc => reduce while_::predicate f acc map
   };
@@ -103,7 +103,7 @@ let toMap (map: t 'v): (ImmMap.t int 'v) => {
   count: (count map),
   get: fun i => get i map,
   getOrRaise: fun i => getOrRaise i map,
-  keyedIterator: fun () => toKeyedIterator map,
+  keyedIterator: fun () => toKeyedIterable map,
   sequence: fun () =>toSequence map,
 };
 
@@ -196,9 +196,9 @@ let module TransientIntMap = {
     transient |> Transient.update2 putImpl key value;
 
   let putAll
-      (iter: KeyedIterator.t int 'v)
+      (iter: KeyedIterable.t int 'v)
       (transient: t 'v): (t 'v) => iter
-    |> KeyedIterator.reduce (fun acc k v => acc |> put k v) transient;
+    |> KeyedIterable.reduce (fun acc k v => acc |> put k v) transient;
 
   let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'v): (t 'v) => iter
     |> Iterable.reduce (fun acc (k, v) => acc |> put k v) transient;
@@ -216,7 +216,7 @@ let module TransientIntMap = {
 
 let mutate = TransientIntMap.mutate;
 
-let putAll (iter: KeyedIterator.t int 'v) (map: t 'v): (t 'v) => map
+let putAll (iter: KeyedIterable.t int 'v) (map: t 'v): (t 'v) => map
   |> mutate
   |> TransientIntMap.putAll iter
   |> TransientIntMap.persist;
@@ -226,7 +226,7 @@ let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'v): (t 'v) => map
   |> TransientIntMap.putAllEntries iter
   |> TransientIntMap.persist;
 
-let from (iter: KeyedIterator.t int 'v): (t 'v) =>
+let from (iter: KeyedIterable.t int 'v): (t 'v) =>
   empty () |> putAll iter;
 
 let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
@@ -247,8 +247,11 @@ let merge
     ) (mutate initialValue)
   |> TransientIntMap.persist;
 
-let module KeyedReducer = KeyedReducer.Make1 {
+let module KeyedReducer = KeyedIterable.KeyedReducer.Make1 {
   type nonrec k = k;
   type nonrec t 'v = t 'v;
+
   let reduce = reduce;
+  let toIterable = toIterable;
+  let toKeyedIterable = toKeyedIterable;
 };

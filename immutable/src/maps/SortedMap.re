@@ -12,23 +12,19 @@ module type S1 = {
   type k;
   type t +'v;
 
-  let reduceRight:
-    while_::('acc => k => 'v => bool)? =>
-    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let toIterableRight: t 'v => Iterable.t (k, 'v);
+  let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
   let first: t 'v => option (k, 'v);
   let firstOrRaise: t 'v => (k, 'v);
   let last: t 'v => option (k, 'v);
   let lastOrRaise: t 'v => (k, 'v);
-  let toIterableRight: t 'v => Iterable.t (k, 'v);
-  let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
-  let reduce:
-    while_::('acc => k => 'v => bool)? =>
-    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterable: t 'v => Iterable.t (k, 'v);
-  let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
+  let toKeyedIterable: t 'v => KeyedIterable.t k 'v;
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
   let isEmpty: t 'v => bool;
@@ -40,18 +36,18 @@ module type S1 = {
   let toMap: t 'v => ImmMap.t k 'v;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let empty: unit => t 'v;
-  let from: KeyedIterator.t k 'v => t 'v;
+  let from: KeyedIterable.t k 'v => t 'v;
   let fromEntries: Iterable.t (k, 'v) => t 'v;
   let merge:
     (k => option 'vAcc => option 'v => option 'vAcc) =>
     t 'vAcc => t 'v => t 'vAcc;
   let put: k => 'v => t 'v => t 'v;
-  let putAll: KeyedIterator.t k 'v => t 'v => t 'v;
+  let putAll: KeyedIterable.t k 'v => t 'v => t 'v;
   let putAllEntries: Iterable.t (k, 'v) => t 'v => t 'v;
   let removeFirstOrRaise: t 'v => t 'v;
   let removeLastOrRaise: t 'v => t 'v;
-  let module KeyedReducerRight: KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
-  let module KeyedReducer: KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
+  let module KeyedReducerRight: KeyedIterable.KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
 };
 
 let module Make1 = fun (Comparable: Comparable.S) => {
@@ -123,13 +119,13 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     };
   };
 
-  let putAll (iter: KeyedIterator.t k 'v) (map: t 'v): (t 'v) =>
-    iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) map;
+  let putAll (iter: KeyedIterable.t k 'v) (map: t 'v): (t 'v) =>
+    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
 
   let putAllEntries (iter: Iterable.t (k, 'v)) (map: t 'v): (t 'v) =>
     iter |> Iterable.reduce (fun acc (k, v) => acc |> put k v) map;
 
-  let from (iter: KeyedIterator.t k 'v): (t 'v) =>
+  let from (iter: KeyedIterable.t k 'v): (t 'v) =>
     empty () |> putAll iter;
 
   let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
@@ -191,14 +187,14 @@ let module Make1 = fun (Comparable: Comparable.S) => {
         acc
     };
 
-  let toKeyedIterator (map: t 'v): (KeyedIterator.t k 'v) =>
-    if (isEmpty map) (KeyedIterator.empty ())
+  let toKeyedIterable (map: t 'v): (KeyedIterable.t k 'v) =>
+    if (isEmpty map) (KeyedIterable.empty ())
     else {
       reduce: fun predicate f acc => map |> reduce while_::predicate f acc
     };
 
-  let toKeyedIteratorRight (map: t 'v): (KeyedIterator.t k 'v) =>
-    if (isEmpty map) (KeyedIterator.empty ())
+  let toKeyedIterableRight (map: t 'v): (KeyedIterable.t k 'v) =>
+    if (isEmpty map) (KeyedIterable.empty ())
     else {
       reduce: fun predicate f acc => map |> reduceRight while_::predicate f acc
     };
@@ -208,7 +204,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     count: (count map),
     get: fun i => get i map,
     getOrRaise: fun i => getOrRaise i map,
-    keyedIterator: fun () => toKeyedIterator map,
+    keyedIterator: fun () => toKeyedIterable map,
     sequence: fun () => toSequence map,
   };
 
@@ -229,15 +225,21 @@ let module Make1 = fun (Comparable: Comparable.S) => {
         }
       ) acc;
 
-  let module KeyedReducerRight = KeyedReducer.Make1 {
+  let module KeyedReducerRight = KeyedIterable.KeyedReducer.Make1 {
     type nonrec k = k;
     type nonrec t 'v = t 'v;
+
     let reduce = reduceRight;
+    let toIterable = toIterableRight;
+    let toKeyedIterable = toKeyedIterableRight;
   };
 
-  let module KeyedReducer = KeyedReducer.Make1 {
+  let module KeyedReducer = KeyedIterable.KeyedReducer.Make1 {
     type nonrec k = k;
     type nonrec t 'v = t 'v;
+
     let reduce = reduce;
+    let toIterable = toIterable;
+    let toKeyedIterable = toKeyedIterable;
   };
 };
