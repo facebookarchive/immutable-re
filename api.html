@@ -25,9 +25,6 @@
 
 
   <script id="markdown" type="text/markdown" src="index.html">
-
-```
-
 Equality
 ---------------
 ```reason
@@ -64,7 +61,6 @@ let module Equality: {
   /** Equality for strings. */
 };
 ```
-
 Ordering
 ---------------
 ```reason
@@ -78,7 +74,6 @@ let module Ordering: {
   let lessThan: t;
 };
 ```
-
 Comparator
 ---------------
 ```reason
@@ -138,7 +133,6 @@ let module Equatable: {
   };
 };
 ```
-
 Comparable
 ---------------
 ```reason
@@ -157,7 +151,6 @@ let module Comparable: {
   };
 };
 ```
-
 Hashable
 ---------------
 ```reason
@@ -174,7 +167,6 @@ let module Hashable: {
   };
 };
 ```
-
 Streamable
 ---------------
 ```reason
@@ -278,7 +270,6 @@ let module rec Streamable: {
   };
 };
 ```
-
 Iterable
 ---------------
 ```reason
@@ -444,7 +435,6 @@ let module rec Iterable: {
   include S1 with type t 'a := t 'a;
 };
 ```
-
 IterableRight
 ---------------
 ```reason
@@ -487,7 +477,6 @@ let module IterableRight: {
   };
 };
 ```
-
 Sequence
 ---------------
 ```reason
@@ -570,7 +559,6 @@ let module Sequence: {
   /* Reducer module for Sequences. */
 };
 ```
-
 Collection
 ---------------
 ```reason
@@ -652,7 +640,6 @@ let module rec Collection: {
   /* Reducer module for Iterables. */
 };
 ```
-
 PersistentCollection
 ---------------
 ```reason
@@ -694,7 +681,6 @@ let module PersistentCollection: {
   };
 };
 ```
-
 TransientCollection
 ---------------
 ```reason
@@ -751,7 +737,6 @@ let module TransientCollection: {
   };
 };
 ```
-
 SequentialCollection
 ---------------
 ```reason
@@ -791,7 +776,6 @@ let module SequentialCollection: {
   };
 };
 ```
-
 PersistentSequentialCollection
 ---------------
 ```reason
@@ -833,7 +817,6 @@ let module PersistentSequentialCollection: {
   };
 };
 ```
-
 TransientSequentialCollection
 ---------------
 ```reason
@@ -873,7 +856,6 @@ let module TransientSequentialCollection: {
   };
 };
 ```
-
 NavigableCollection
 ---------------
 ```reason
@@ -932,7 +914,6 @@ let module NavigableCollection: {
   };
 };
 ```
-
 PersistentNavigableCollection
 ---------------
 ```reason
@@ -973,7 +954,6 @@ let module PersistentNavigableCollection: {
   };
 };
 ```
-
 TransientNavigableCollection
 ---------------
 ```reason
@@ -1009,7 +989,6 @@ let module TransientNavigableCollection: {
   };
 };
 ```
-
 Set
 ---------------
 ```reason
@@ -1083,7 +1062,6 @@ let module rec Set: {
   /* Reducer module for Iterables. */
 };
 ```
-
 PersistentSet
 ---------------
 ```reason
@@ -1168,7 +1146,6 @@ let module PersistentSet: {
   };
 };
 ```
-
 TransientSet
 ---------------
 ```reason
@@ -1232,7 +1209,6 @@ let module TransientSet: {
   };
 };
 ```
-
 NavigableSet
 ---------------
 ```reason
@@ -1250,7 +1226,6 @@ let module NavigableSet: {
   };
 };
 ```
-
 PersistentNavigableSet
 ---------------
 ```reason
@@ -1280,7 +1255,6 @@ let module PersistentNavigableSet: {
   };
 };
 ```
-
 KeyedStreamable
 ---------------
 ```reason
@@ -1381,7 +1355,6 @@ let module KeyedStreamable: {
   };
 };
 ```
-
 KeyedIterable
 ---------------
 ```reason
@@ -1607,7 +1580,6 @@ let module rec KeyedIterable: {
   /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
 };
 ```
-
 KeyedIterableRight
 ---------------
 ```reason
@@ -1642,7 +1614,6 @@ let module KeyedIterableRight: {
   };
 };
 ```
-
 KeyedCollection
 ---------------
 ```reason
@@ -1725,7 +1696,6 @@ let module KeyedCollection: {
   };
 };
 ```
-
 PersistentKeyedCollection
 ---------------
 ```reason
@@ -1781,7 +1751,6 @@ let module PersistentKeyedCollection: {
   };
 };
 ```
-
 TransientKeyedCollection
 ---------------
 ```reason
@@ -1862,7 +1831,6 @@ let module TransientKeyedCollection: {
   };
 };
 ```
-
 NavigableKeyedCollection
 ---------------
 ```reason
@@ -1911,7 +1879,6 @@ let module NavigableKeyedCollection: {
   };
 };
 ```
-
 Map
 ---------------
 ```reason
@@ -1975,7 +1942,6 @@ let module rec Map: {
    /* KeyedReducer module for Maps. */
 };
 ```
-
 PersistentMap
 ---------------
 ```reason
@@ -2099,7 +2065,6 @@ let module PersistentMap: {
   };
 };
 ```
-
 TransientMap
 ---------------
 ```reason
@@ -2191,7 +2156,6 @@ let module TransientMap: {
   };
 };
 ```
-
 NavigableMap
 ---------------
 ```reason
@@ -2209,7 +2173,6 @@ let module NavigableMap: {
   };
 };
 ```
-
 PersistentNavigableMap
 ---------------
 ```reason
@@ -2240,7 +2203,6 @@ let module PersistentNavigableMap: {
   };
 };
 ```
-
 Indexed
 ---------------
 ```reason
@@ -2280,7 +2242,6 @@ let module Indexed: {
   };
 };
 ```
-
 Deque
 ---------------
 ```reason
@@ -2309,7 +2270,6 @@ let module rec Deque: {
   /* Reducer module for Deques. */
 }
 ```
-
 TransientDeque
 ---------------
 ```reason
@@ -2336,7 +2296,6 @@ and TransientDeque: {
    */
 };
 ```
-
 HashMap
 ---------------
 ```reason
@@ -2374,7 +2333,6 @@ let module rec HashMap: {
   /* KeyedReducer module for HashMaps. */
 }
 ```
-
 TransientHashMap
 ---------------
 ```reason
@@ -2399,7 +2357,6 @@ and TransientHashMap: {
    */
 };
 ```
-
 HashSet
 ---------------
 ```reason
@@ -2434,7 +2391,6 @@ let module rec HashSet: {
   /* Reducer module for HashSets. */
 }
 ```
-
 TransientHashSet
 ---------------
 ```reason
@@ -2459,7 +2415,6 @@ and TransientHashSet: {
    */
 };
 ```
-
 IntMap
 ---------------
 ```reason
@@ -2480,7 +2435,6 @@ let module rec IntMap: {
   /* KeyedReducer module for IntMaps. */
 }
 ```
-
 TransientIntMap
 ---------------
 ```reason
@@ -2496,7 +2450,6 @@ and TransientIntMap: {
    */
 };
 ```
-
 IntRange
 ---------------
 ```reason
@@ -2523,7 +2476,6 @@ let module IntRange: {
   /* Reducer module for IntRanges. */
 };
 ```
-
 IntSet
 ---------------
 ```reason
@@ -2545,7 +2497,6 @@ let module rec IntSet: {
   /* Reducer module for IntSets. */
 }
 ```
-
 TransientIntSet
 ---------------
 ```reason
@@ -2570,7 +2521,6 @@ and TransientIntSet: {
    */
 };
 ```
-
 List
 ---------------
 ```reason
@@ -2634,7 +2584,6 @@ let module List: {
   /* Reducer module for Lists. */
 };
 ```
-
 ReadOnlyArray
 ---------------
 ```reason
@@ -2665,7 +2614,6 @@ let module ReadOnlyArray: {
   /* Reducer module for ReadOnlyArrays. */
 };
 ```
-
 Stack
 ---------------
 ```reason
@@ -2689,7 +2637,6 @@ let module Stack: {
   /* Reducer module for Stacks. */
 };
 ```
-
 SortedMap
 ---------------
 ```reason
@@ -2717,7 +2664,6 @@ let module SortedMap: {
   /** Module function to create a SortedMap. */
 };
 ```
-
 SortedSet
 ---------------
 ```reason
@@ -2743,7 +2689,6 @@ let module SortedSet: {
   /** Module function to create a SortedSet. */
 };
 ```
-
 Vector
 ---------------
 ```reason
@@ -2828,7 +2773,10 @@ let module rec Vector: {
   let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
 }
-
+```
+TransientVector
+---------------
+```reason
 and TransientVector: {
   /** A temporarily mutable Vector. Once persisted, any further operations on a
    *  TransientVector instance will throw. Intended for implementing bulk mutation
