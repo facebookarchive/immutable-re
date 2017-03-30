@@ -139,99 +139,99 @@ let module rec Streamable: {
    *  stream functions. All functions defined in this module are O(1).
    */
 
-   module type S1 = {
-     /** Streamable module type signature for types with a parametric type arity of 1. */
+  module type S1 = {
+    /** Streamable module type signature for types with a parametric type arity of 1. */
 
-     type t 'a;
+    type t 'a;
 
-     let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
-     /** [buffer count skip stream] returns a Streamable that collects values from [stream]
-      *  into list buffers of size [count], skipping [skip] number of values in between the
-      *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
-      *  and values are dropped if [stream] completes before filling the last buffer.
-      */
+    let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
+    /** [buffer count skip stream] returns a Streamable that collects values from [stream]
+     *  into list buffers of size [count], skipping [skip] number of values in between the
+     *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
+     *  and values are dropped if [stream] completes before filling the last buffer.
+     */
 
-     let concat: (list (t 'a)) => (t 'a);
-     /** [concat streams] returns a Streamable that lazily concatenates all the
-      *  Streamables in [streams]. The resulting Streamable returns all the values
-      *  in the first Streamable, followed by all the values in the second Streamable,
-      *  and continues until the last Streamable completes.
-      */
+    let concat: (list (t 'a)) => (t 'a);
+    /** [concat streams] returns a Streamable that lazily concatenates all the
+     *  Streamables in [streams]. The resulting Streamable returns all the values
+     *  in the first Streamable, followed by all the values in the second Streamable,
+     *  and continues until the last Streamable completes.
+     */
 
-     let defer: (unit => t 'a) => (t 'a);
-     /** [defer f] returns a Streamable that invokes the function [f] whenever enumerated. */
+    let defer: (unit => t 'a) => (t 'a);
+    /** [defer f] returns a Streamable that invokes the function [f] whenever enumerated. */
 
-     let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
-     /** [distinctUntilChangedWith equals stream] returns a Streamable that contains only
-      *  distinct contiguous values from [stream] using [equals] to equate values.
-      */
+    let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
+    /** [distinctUntilChangedWith equals stream] returns a Streamable that contains only
+     *  distinct contiguous values from [stream] using [equals] to equate values.
+     */
 
-     let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-     /** [doOnNext f stream] returns a Streamable that applies the side effect
-      *  function [f] to each value in the stream as they are enumerated.
-      */
+    let doOnNext: ('a => unit) => (t 'a) => (t 'a);
+    /** [doOnNext f stream] returns a Streamable that applies the side effect
+     *  function [f] to each value in the stream as they are enumerated.
+     */
 
-     let empty: unit => (t 'a);
-     /** Returns an empty Streamable. */
+    let empty: unit => (t 'a);
+    /** Returns an empty Streamable. */
 
-     let filter: ('a => bool) => (t 'a) => (t 'a);
-     /** [filter f stream] returns a Streamable only including values from [stream]
-      *  for which application of the predicate function [f] returns true.
-      */
+    let filter: ('a => bool) => (t 'a) => (t 'a);
+    /** [filter f stream] returns a Streamable only including values from [stream]
+     *  for which application of the predicate function [f] returns true.
+     */
 
-     let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
-     /** [flatMap mapper stream] applies the mapper to each value in
-      *  [stream], flattening the resulting Streams into a new Stream.
-      */
+    let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
+    /** [flatMap mapper stream] applies the mapper to each value in
+     *  [stream], flattening the resulting Streams into a new Stream.
+     */
 
-     let flatten: (t (t 'a)) => (t 'a);
-     /** [flatten stream] flattens the nested values in [streams] into
-      *  a new [stream].
-      */
+    let flatten: (t (t 'a)) => (t 'a);
+    /** [flatten stream] flattens the nested values in [streams] into
+     *  a new [stream].
+     */
 
-     let generate: ('a => 'a) => 'a => (t 'a);
-     /** [generate f initialValue] generates the infinite Streamable [x, f(x), f(f(x)), ...] */
+    let generate: ('a => 'a) => 'a => (t 'a);
+    /** [generate f initialValue] generates the infinite Streamable [x, f(x), f(f(x)), ...] */
 
-     let map: ('a => 'b) => (t 'a) => (t 'b);
-     /** [map f stream] Returns a Stream whose values are the result of
-      *  applying the function [f] to each value in [stream].
-      */
+    let map: ('a => 'b) => (t 'a) => (t 'b);
+    /** [map f stream] Returns a Stream whose values are the result of
+     *  applying the function [f] to each value in [stream].
+     */
 
-     let return: 'a => (t 'a);
-     /** [return value] returns a single value Streamable containing [value]. */
+    let return: 'a => (t 'a);
+    /** [return value] returns a single value Streamable containing [value]. */
 
-     let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
-     /** [scan f acc stream] returns a Streamable of accumulated values resulting from the
-      *  application of the accumulator function [f] to each value in [stream] with the
-      *  specified initial value [acc].
-      */
+    let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
+    /** [scan f acc stream] returns a Streamable of accumulated values resulting from the
+     *  application of the accumulator function [f] to each value in [stream] with the
+     *  specified initial value [acc].
+     */
 
-     let skip: int => (t 'a) => (t 'a);
-     /** [skip count stream] return a Streamable which skips the first [count]
-      *  values in [stream].
-      */
+    let skip: int => (t 'a) => (t 'a);
+    /** [skip count stream] return a Streamable which skips the first [count]
+     *  values in [stream].
+     */
 
-     let skipWhile: ('a => bool) => (t 'a) => (t 'a);
-     /** [skipWhile f stream] return a Streamable which skips values in [stream]
-      *  while application of the predicate function [f] returns true, and then returns
-      *  the remaining values.
-      */
+    let skipWhile: ('a => bool) => (t 'a) => (t 'a);
+    /** [skipWhile f stream] return a Streamable which skips values in [stream]
+     *  while application of the predicate function [f] returns true, and then returns
+     *  the remaining values.
+     */
 
-     let startWith: 'a => (t 'a) => (t 'a);
-     /** [startWith value stream] returns a Streamable whose first
-      *  value is [value], followed by the values in [stream].
-      */
+    let startWith: 'a => (t 'a) => (t 'a);
+    /** [startWith value stream] returns a Streamable whose first
+     *  value is [value], followed by the values in [stream].
+     */
 
-     let take: int => (t 'a) => (t 'a);
-     /** [take count stream] returns a Streamable with the first [count]
-      *  values in [stream].
-      */
+    let take: int => (t 'a) => (t 'a);
+    /** [take count stream] returns a Streamable with the first [count]
+     *  values in [stream].
+     */
 
-     let takeWhile: ('a => bool) => (t 'a) => (t 'a);
-     /** [takeWhile f stream] returns a Streamable including all values in [stream]
-      *  while application of the predicate function [f] returns true, then completes.
-      */
-   };
+    let takeWhile: ('a => bool) => (t 'a) => (t 'a);
+    /** [takeWhile f stream] returns a Streamable including all values in [stream]
+     *  while application of the predicate function [f] returns true, then completes.
+     */
+  };
 };
 
 let module rec Iterable: {
