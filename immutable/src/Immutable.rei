@@ -134,71 +134,7 @@ let module Hashable: {
   };
 };
 
-let module Reduceable: {
-  /** Module types implemented by modules that support reducing over values. */
-
-  module type S = {
-    /** Reduceable module type signature for types with a parametric type arity of 0. */
-
-    type a;
-    type t;
-
-    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable], while [predicate] returns true,
-     *  accumulating the result.
-     */
-  };
-
-  module type S1 = {
-    /** Reduceable module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable], while [predicate] returns true,
-     *  accumulating the result.
-     */
-  };
-};
-
-let module ReduceableRight: {
-  /** Module types implemented by modules that support reducing over
-   *  values in both the left to right, and right to left directions.
-   */
-
-  module type S = {
-    /** ReduceableRight module type signature for types with a parametric type arity of 0. */
-
-    type a;
-    type t;
-
-    include Reduceable.S with type a := a and type t := t;
-
-    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-  };
-
-  module type S1 = {
-    /** ReduceableRight module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include Reduceable.S1 with type t 'a := t 'a;
-
-    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-  };
-};
-
-let module Streamable: {
+let module rec Streamable: {
   /** Module types implemented by modules that support lazily evaluated
    *  stream functions. All functions defined in this module are O(1).
    */
@@ -298,132 +234,8 @@ let module Streamable: {
   };
 };
 
-let module Reducer: {
-  /** Module functions for generating modules which provide common reduction functions for Reduceables.
-   *  All functions are O(N), unless otherwise noted.
-   */
-
-  module type S = {
-    type a;
-    type t;
-
-    let count: t => int;
-    /** [count reduceable] returns the total number values produced by [reduceable] */
-
-    let every: (a => bool) => t => bool;
-    /** [every f reduceable] returns true if the predicate [f] returns true for all values in [reduceable].
-     *  If [reduceable] is empty, returns [true].
-     */
-
-    let find: (a => bool) => t => (option a);
-    /** [find f reduceable] return the Some of the first value in [reduceable] for which the
-     *  the predicate f returns [true]. Otherwise None.
-     */
-
-    let findOrRaise: (a => bool) => t => a;
-    /** [findOrRaise f reduceable] return the the first value in [reduceable] for which the
-     *  the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let first: t => (option a);
-    /** [first reduceable] returns first value in [reduceable] or None.
-     *
-     *  Computational Complexity: O(1)
-     */
-
-    let firstOrRaise: t => a;
-    /** [firstOrRaise reduceable] returns the first value in [reduceable] or raises an exception.
-     *
-     *  Computational Complexity: O(1)
-     */
-
-    let forEach: while_::(a => bool)? => (a => unit) => t => unit;
-    /** [forEach while_::predicate f reduceable] iterates through [reduceable] applying the
-     *  side effect function [f] to each value, while [predicate] returns true
-     */
-
-    let none: (a => bool) => t => bool;
-    /** [none f reduceable] returns true if the predicate [f] returns false for all values in [reduceable].
-     *  If [reduceable] is empty, returns [true].
-     */
-
-    let some: (a => bool) => t => bool;
-    /** [some f reduceable] returns true if the predicate [f] returns true for at
-     *  least one value in [reduceable]. If [reduceable] is empty, returns [false].
-     */
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    let count: t 'a => int;
-    /** [count reduceable] returns the total number values produced by [reduceable] */
-
-    let every: ('a => bool) => (t 'a) => bool;
-    /** [every f reduceable] returns true if the predicate [f] returns true for all values in [reduceable].
-     *  If [reduceable] is empty, returns [true].
-     */
-
-    let find: ('a => bool) => (t 'a) => (option 'a);
-    /** [find f reduceable] return the Some of the first value in [reduceable] for which the
-     *  the predicate f returns [true]. Otherwise None.
-     */
-
-    let findOrRaise: ('a => bool) => (t 'a) => 'a;
-    /** [findOrRaise f reduceable] return the the first value in [reduceable] for which the
-     *  the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let first: t 'a => (option 'a);
-    /** [first reduceable] returns first value in [reduceable] or None.
-     *
-     *  Computational Complexity: O(1)
-     */
-
-    let firstOrRaise: t 'a => 'a;
-    /** [firstOrRaise reduceable] returns the first value in [reduceable] or raises an exception.
-     *
-     *  Computational Complexity: O(1)
-     */
-
-    let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
-    /** [forEach while_::predicate f reduceable] iterates through [reduceable] applying the
-     *  side effect function [f] to each value, while [predicate] returns true
-     */
-
-    let none: ('a => bool) => (t 'a) => bool;
-    /** [none f reduceable] returns true if the predicate [f] returns false for all values in [reduceable].
-     *  If [reduceable] is empty, returns [true].
-     */
-
-    let some: ('a => bool) => (t 'a) => bool;
-    /** [some f reduceable] returns true if the predicate [f] returns true for at
-     *  least one value in [reduceable]. If [reduceable] is empty, returns [false].
-     */
-  };
-
-  let module Make: (Reduceable: Reduceable.S) => S with type a = Reduceable.a and type t = Reduceable.t;
-  /** Module function to create a Reducer for a specific Reduceable type. */
-
-  let module Make1: (Reduceable: Reduceable.S1) => S1 with type t 'a = Reduceable.t 'a;
-  /** Module function to create a Reducer for a specific Reduceable type
-   *  with a parametric type arity of 1.
-   */
-};
-
-let module Iterator: {
-  /** Functional iterators over a collection of values. Iterators are stateless and can be reused. */
-  type t 'a;
-
-  include Reduceable.S1 with type t 'a := t 'a;
-  include Streamable.S1 with type t 'a := t 'a;
-
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
-  /* Reducer module for Iterators. */
-};
-
-let module Iterable: {
-  /** Module types implemented by modules that supporting iterating over values. */
+let module rec Iterable: {
+  /** Functional iterators over a collection of values. Iterables are stateless and can be reused. */
 
   module type S = {
     /** Iterable module type signature for types with a parametric type arity of 0. */
@@ -431,10 +243,14 @@ let module Iterable: {
     type a;
     type t;
 
-    include Reduceable.S with type a := a and type t := t;
+    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduce while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable], while [predicate] returns true,
+     *  accumulating the result.
+     */
 
-    let toIterator: t => (Iterator.t a);
-    /** [toIterator iterable] returns an Iterator that can be used to iterate over
+    let toIterable: t => (Iterable.t a);
+    /** [toIterable iterable] returns an Iterable that can be used to iterate over
      * the values in [iterable].
      */
   };
@@ -444,12 +260,178 @@ let module Iterable: {
 
     type t 'a;
 
-    include Reduceable.S1 with type t 'a := t 'a;
+    let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduce while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable], while [predicate] returns true,
+     *  accumulating the result.
+     */
 
-    let toIterator: t 'a => (Iterator.t 'a);
-    /** [toIterator iterable] returns an Iterator that can be used to iterate over
+    let toIterable: t 'a => (Iterable.t 'a);
+    /** [toIterable iterable] returns an Iterable that can be used to iterate over
      * the values in [iterable].
      */
+  };
+
+  type t 'a;
+
+  include Streamable.S1 with type t 'a := t 'a;
+
+  let module Reducer: {
+    /** Module functions for generating modules which provide common reduction functions for Iterables.
+     *  All functions are O(N), unless otherwise noted.
+     */
+    module type Iterable = S;
+    module type Iterable1 = S1;
+
+    module type S = {
+      type a;
+      type t;
+
+      let count: t => int;
+      /** [count iterable] returns the total number values produced by [iterable] */
+
+      let every: (a => bool) => t => bool;
+      /** [every f iterable] returns true if the predicate [f] returns true for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
+       */
+
+      let find: (a => bool) => t => (option a);
+      /** [find f iterable] return the Some of the first value in [iterable] for which the
+       *  the predicate f returns [true]. Otherwise None.
+       */
+
+      let findOrRaise: (a => bool) => t => a;
+      /** [findOrRaise f iterable] return the the first value in [iterable] for which the
+       *  the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let first: t => (option a);
+      /** [first iterable] returns first value in [iterable] or None.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let firstOrRaise: t => a;
+      /** [firstOrRaise iterable] returns the first value in [iterable] or raises an exception.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let forEach: while_::(a => bool)? => (a => unit) => t => unit;
+      /** [forEach while_::predicate f iterable] iterates through [iterable] applying the
+       *  side effect function [f] to each value, while [predicate] returns true
+       */
+
+      let none: (a => bool) => t => bool;
+      /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
+       */
+
+      let some: (a => bool) => t => bool;
+      /** [some f iterable] returns true if the predicate [f] returns true for at
+       *  least one value in [iterable]. If [iterable] is empty, returns [false].
+       */
+    };
+
+    module type S1 = {
+      type t 'a;
+
+      let count: t 'a => int;
+      /** [count iterable] returns the total number values produced by [iterable] */
+
+      let every: ('a => bool) => (t 'a) => bool;
+      /** [every f iterable] returns true if the predicate [f] returns true for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
+       */
+
+      let find: ('a => bool) => (t 'a) => (option 'a);
+      /** [find f iterable] return the Some of the first value in [iterable] for which the
+       *  the predicate f returns [true]. Otherwise None.
+       */
+
+      let findOrRaise: ('a => bool) => (t 'a) => 'a;
+      /** [findOrRaise f iterable] return the the first value in [iterable] for which the
+       *  the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let first: t 'a => (option 'a);
+      /** [first iterable] returns first value in [iterable] or None.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let firstOrRaise: t 'a => 'a;
+      /** [firstOrRaise iterable] returns the first value in [iterable] or raises an exception.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
+      /** [forEach while_::predicate f iterable] iterates through [iterable] applying the
+       *  side effect function [f] to each value, while [predicate] returns true
+       */
+
+      let none: ('a => bool) => (t 'a) => bool;
+      /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
+       */
+
+      let some: ('a => bool) => (t 'a) => bool;
+      /** [some f iterable] returns true if the predicate [f] returns true for at
+       *  least one value in [iterable]. If [iterable] is empty, returns [false].
+       */
+    };
+
+    let module Make: (Iterable: Iterable) => S with type a = Iterable.a and type t = Iterable.t;
+    /** Module function to create a Reducer for a specific Iterable type. */
+
+    let module Make1: (Iterable: Iterable1) => S1 with type t 'a = Iterable.t 'a;
+    /** Module function to create a Reducer for a specific Iterable type
+     *  with a parametric type arity of 1.
+     */
+
+    include S1 with type t 'a := t 'a;
+  };
+
+  include S1 with type t 'a := t 'a;
+};
+
+let module IterableRight: {
+  /** Module types implemented by modules that support reducing over
+   *  values in both the left to right, and right to left directions.
+   */
+
+  module type S = {
+    /** IterableRight module type signature for types with a parametric type arity of 0. */
+
+    type a;
+    type t;
+
+    include Iterable.S with type a := a and type t := t;
+
+    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+     let toIterableRight: t => (Iterable.t a);
+  };
+
+  module type S1 = {
+    /** IterableRight module type signature for types with a parametric type arity of 1. */
+
+    type t 'a;
+
+    include Iterable.S1 with type t 'a := t 'a;
+
+    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+    let toIterableRight: t 'a => (Iterable.t 'a);
   };
 };
 
@@ -457,9 +439,9 @@ let module Sequence: {
   /** Functional pull based sequences. Sequences are generally lazy, computing values as
    *  they are pulled. Sequences are reusable and are guaranteed to produce the
    *  same values, in the same order every time they are enumerated. In addition, Sequences
-   *  support eager seeking and zipping. These are their main advantage over Iterators.
+   *  support eager seeking and zipping. These are their main advantage over Iterables.
    *  In general, only use Sequences when you require support for one or both of these features.
-   *  Otherwise Iterators are generally more efficient.
+   *  Otherwise Iterables are generally more efficient.
    */
 
   type t 'a;
@@ -528,11 +510,11 @@ let module Sequence: {
    *  until [first], [second] and [third] all complete.
    */
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Sequences. */
 };
 
-let module Collection: {
+let module rec Collection: {
   /** Module types implemented by all immutable value collections.
    *
    *  By contract, all functions have a computational complexity of O(1).
@@ -561,6 +543,8 @@ let module Collection: {
      *  least one value, otherwise false.
      */
 
+    let toCollection: t => (Collection.t a);
+
     let toSequence: t => (Sequence.t a);
     /** [toSequence collection] returns a Sequence that can be used to enumerate the collection. */
   };
@@ -583,9 +567,29 @@ let module Collection: {
      *  least one value, otherwise false.
      */
 
+    let toCollection: (t 'a) => (Collection.t 'a);
+
     let toSequence: (t 'a) => (Sequence.t 'a);
     /** [toSequence collection] returns a Sequence that can be used to enumerate the collection. */
   };
+
+  type t 'a;
+
+  include S1 with type t 'a := t 'a;
+
+  let empty: unit => (t 'a);
+  /** [empty ()] returns the empty collection */
+
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f collection] Returns a lazy Collection that computes values
+   *  lazily by applying [f].
+   *
+   *  Note, the results of applying [f] to a given key/value pair are not
+   *  memoized. Therefore [f] must be a pure function.
+   */
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Iterables. */
 };
 
 let module PersistentCollection: {
@@ -732,13 +736,13 @@ let module PersistentSequentialCollection: {
     let addFirst: 'a => (t 'a) => (t 'a);
     /** [addFirst value collection] returns a PersistentSequentialCollection with [value] prepended. */
 
-    let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     /** [addFirstAll iter collection] returns a PersistentSequentialCollection with the values in [iter] prepended. */
 
     let empty: unit => (t 'a);
     /** [empty ()] return an empty PersistentSequentialCollection. */
 
-    let fromReverse: (Iterator.t 'a) => (t 'a);
+    let fromReverse: (Iterable.t 'a) => (t 'a);
     /** [fromReverse iter] returns a PersistentSequentialCollection containing the values in [iter]
      *  in reverse order.
      */
@@ -770,7 +774,7 @@ let module TransientSequentialCollection: {
     let addFirst: 'a => (t 'a) => (t 'a);
     /** [addFirst value transient] prepends [value] to [transient]. */
 
-    let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     /** [addFirstAll iter transient] prepends all values in [iter] to [transient]. */
 
     let empty: unit => (t 'a);
@@ -802,7 +806,7 @@ let module NavigableCollection: {
     type a;
     type t;
 
-    include ReduceableRight.S with type a := a and type t := t;
+    include IterableRight.S with type a := a and type t := t;
     include SequentialCollection.S with type a := a and type t := t;
 
     let last: t => (option a);
@@ -817,11 +821,6 @@ let module NavigableCollection: {
      *  By contract, implementations are efficient with no worst than O(log N) performance.
      */
 
-    let toIteratorRight: t => (Iterator.t a);
-    /* [toIteratorRight collection] returns an Iterator that can be used to iterate over
-     * the values in [collection] from right to left.
-     */
-
     let toSequenceRight: t => (Sequence.t a);
     /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
@@ -833,7 +832,7 @@ let module NavigableCollection: {
 
     type t 'a;
 
-    include ReduceableRight.S1 with type t 'a := t 'a;
+    include IterableRight.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let last: (t 'a) => (option 'a);
@@ -841,11 +840,6 @@ let module NavigableCollection: {
 
     let lastOrRaise: (t 'a) => 'a;
     /** [lastOrRaise collection] returns the first value in [collection] or raises an exception. */
-
-    let toIteratorRight: (t 'a) => (Iterator.t 'a);
-    /* [toIteratorRight collection] returns an Iterator that can be used to iterate over
-     * the values in [collection] from right to left.
-     */
 
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
     /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
@@ -875,10 +869,10 @@ let module PersistentNavigableCollection: {
      *  Complexity: O(1)
      */
 
-    let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     /** [addLastAll iter collection] returns a PersistentNavigableCollection with the values in [iter] appended. */
 
-    let from: (Iterator.t 'a) => (t 'a);
+    let from: (Iterable.t 'a) => (t 'a);
     /** [from iter] returns a PersistentNavigableCollection containing the values in [iter].
      *
      * Complexity: O(N) the number of values in [iter].
@@ -960,7 +954,7 @@ let module rec Set: {
      *
      *  By contract, an implementation must be efficient, with no worst than O(log N) performance.
      */
-    
+
     let equals: Equality.t (t 'a);
     /** An equality function for Set.S1 instances. */
 
@@ -976,21 +970,21 @@ let module rec Set: {
   let empty: unit => (t 'a);
   /** The empty Set. */
 
-  let intersect: (t 'a) => (t 'a) => (Iterator.t 'a);
-  /** [intersect this that] returns an Iterator of unique values
+  let intersect: (t 'a) => (t 'a) => (Iterable.t 'a);
+  /** [intersect this that] returns an Iterable of unique values
    *  which occur in both [this] and [that].
    */
 
-  let subtract: (t 'a) => (t 'a) => (Iterator.t 'a);
-  /** [subtract this that] returns an Iterator of unique value
+  let subtract: (t 'a) => (t 'a) => (Iterable.t 'a);
+  /** [subtract this that] returns an Iterable of unique value
    *  which occur in [this] but not in [that].
    */
 
-  let union: (t 'a) => (t 'a) => (Iterator.t 'a);
-  /** [union this that] returns an Iterator of unique values which occur in either [this] or [that]. */
+  let union: (t 'a) => (t 'a) => (Iterable.t 'a);
+  /** [union this that] returns an Iterable of unique values which occur in either [this] or [that]. */
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
-  /* Reducer module for Iterators. */
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Iterables. */
 };
 
 let module PersistentSet: {
@@ -1013,10 +1007,10 @@ let module PersistentSet: {
      *  it is returned unmodified.
      */
 
-    let addAll: (Iterator.t a) => t => t;
+    let addAll: (Iterable.t a) => t => t;
     /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
 
-    let from: (Iterator.t a) => t;
+    let from: (Iterable.t a) => t;
     /** [from iter] returns a PersistentSet with all the values in [iter] */
 
     let intersect: t => t => t;
@@ -1051,7 +1045,7 @@ let module PersistentSet: {
      *  it is returned unmodified.
      */
 
-    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
 
     let intersect: (t 'a) => (t 'a) => (t 'a);
@@ -1093,7 +1087,7 @@ let module TransientSet: {
      *  it is returned unmodified.
      */
 
-    let addAll: (Iterator.t a) => t => t;
+    let addAll: (Iterable.t a) => t => t;
     /** [addAll iter transient] adds all values in [iter] to [transient]. */
 
     let contains: a => t => bool;
@@ -1119,7 +1113,7 @@ let module TransientSet: {
      *  it is returned unmodified.
      */
 
-    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     /** [addAll iter transient] adds all values in [iter] to [transient]. */
 
     let contains: 'a => (t 'a) => bool;
@@ -1174,323 +1168,107 @@ let module PersistentNavigableSet: {
   };
 };
 
-let module KeyedReduceable: {
-  /** Module types implemented by modules that support reducing over key/value pairs. */
-
-  module type S1 = {
-    /** KeyedReduceable module type signature for types with a parametric type arity of 1. */
-
-    type k;
-    type t 'v;
-
-    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each key/value pair in [reduceable], while [predicate] returns true,
-     *  accumulating the result.
-     */
-  };
-
-  module type S2 = {
-    /** KeyedReduceable module type signature for types with a parametric type arity of 2. */
-
-    type t 'k 'v;
-
-    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each key/value pair in [reduceable], while [predicate] returns true,
-     *  accumulating the result.
-     */
-  };
-};
-
-let module KeyedReduceableRight: {
-  /** Module types implemented by modules that support reducing over
-   *  key/value pairs in both the left to right, and right to left directions.
-   */
-
-  module type S1 = {
-    /** KeyedReduceableRight module type signature for types with a parametric type arity of 1. */
-
-    type k;
-    type t 'v;
-
-    include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
-
-    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each key/value pair in [reduceable] while [predicate] returns true, starting
-     *  from the right most key/value pair, accumulating the result.
-     */
-  };
-};
-
-let module KeyedReducer: {
-  /** Module functions for generating modules which provide common reduction functions for Reduceables.
-   *  All functions are O(N), unless otherwise noted.
-   */
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let count: (t 'v) => int;
-    /** [count keyedReduceable] returns the total number key/value pairs produced by [keyedReduceable] */
-
-    let every: (k => 'v => bool) => (t 'v) => bool;
-    /** [every f keyedReduceable] returns true if the predicate [f] returns true for all
-     *  key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
-     */
-
-    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
-    /** [find f keyedReduceable] return the Some of the first key/value pair in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise None.
-     */
-
-    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
-    /** [findOrRaise f keyedReduceable] return the the first key/value pair in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let findKey: (k => 'v => bool) => (t 'v) => (option k);
-    /** [findKey f keyedReduceable] return the Some of the first key in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise None.
-     */
-
-    let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
-    /** [findOrRaise f keyedReduceable] return the the first key in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
-    /** [findValue f keyedReduceable] return the Some of the first value in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise None.
-     */
-
-    let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
-    /** [findOrRaise f keyedReduceable] return the the first value in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let first: (t 'v) => (option (k, 'v));
-    /** [first keyedReduceable] returns first key/value pair in [reduceable] or None.
-     *
-     *  Computational Complexity: O(1)
-     */
-
-    let firstOrRaise: (t 'v) => (k, 'v);
-    /** [firstOrRaise keyedReduceable] returns the first key/value pair in [keyedReduceable] or raises an exception.
-     *
-     *  Computational Complexity: O(1)
-     */
-
-    let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
-    /** [forEach while_::predicate f keyedReduceable] iterates through [keyedReduceable] applying the
-     *  side effect function [f] to each key/value pair, while [predicate] returns true
-     */
-
-    let none: (k => 'v => bool) => (t 'v) => bool;
-    /** [none f keyedReduceable] returns true if the predicate [f] returns false
-     *  for all key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
-     */
-
-    let some: (k => 'v => bool) => (t 'v) => bool;
-    /** [some f keyedReduceable] returns true if the predicate [f] returns true for at least
-     *  one key/value pair in [keyedReduceable]. If [keyedReduceable] is empty, returns [false].
-     */
-  };
-
+let module KeyedStreamable: {
   module type S2 = {
     type t 'k 'v;
 
-    let count: (t 'k 'v) => int;
-    /** [count keyedReduceable] returns the total number key/value pairs produced by [keyedReduceable] */
-
-    let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-    /** [every f keyedReduceable] returns true if the predicate [f] returns true for all
-     *  key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
+    let concat: (list (t 'k 'v)) => (t 'k 'v);
+    /** [concat stream] returns a KeyedStreamable that lazily concatenates all the
+     *  KeyedStreamables in [stream]. The resulting KeyedStreamable returns all the key/value pairs
+     *  in the first KeyedStreamable, followed by all the key/value pairs in the second KeyedStreamable,
+     *  and continues until the last KeyedStreamable completes.
      */
 
-    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-    /** [find f keyedReduceable] return the Some of the first key/value pair in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise None.
+    let defer: (unit => t 'k 'v) => (t 'k 'v);
+    /** [defer f] returns a KeyedStreamable that invokes the function [f] whenever iterated. */
+
+    let distinctUntilChangedWith: keyEquals::(Equality.t 'k) => valueEquals::(Equality.t 'v) => (t 'k 'v) => (t 'k 'v);
+    /** [distinctUntilChangedWith equals stream] returns a KeyedStreamable that contains only
+     *  distinct contiguous key/value pairs from [stream] using [keyEquals] and [valueEquals] to
+     *  equate key/value pairs.
      */
 
-    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-    /** [findOrRaise f keyedReduceable] return the the first key/value pair in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+    let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
+    /** [doOnNext f stream] returns a KeyedStreamable that applies the side effect
+     *  function [f] to each key/value pair they are iterated.
      */
 
-    let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
-    /** [findKey f keyedReduceable] return the Some of the first key in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise None.
+    let empty: unit => (t 'k 'v);
+    /** Returns an empty KeyedStreamable. */
+
+    let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+    /** [filter f stream] returns a KeyedStreamable only including key/value pairs from [stream]
+     *  for which application of the predicate function [f] returns true.
      */
 
-    let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
-    /** [findOrRaise f keyedReduceable] return the the first key in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+    let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+    /** [flatMap mapper stream] returns a KeyedStreamable which applies [mapper] to each value in
+     *  [stream], flattening the results.
      */
 
-    let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
-    /** [findValue f keyedReduceable] return the Some of the first value in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise None.
+    let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
+    /** [generate genKey gen value k v] generates an infinite KeyedStreamable
+     *  where the keys are [k, genKey(k v), genKey(genKey(k v), v1), ...]
+     *  and values are [v, genValue(k, v), genValue(k1, genValue(k, v)), ...]
      */
 
-    let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
-    /** [findOrRaise f keyedReduceable] return the the first value in [keyedReduceable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+    let map: keyMapper::('kA => 'vA => 'kB) => valueMapper::('kA => 'vA => 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
+    /** [map keyMapper::keyMapper valueMapper::valueMapper stream] returns a KeyedStreamable
+     *  whose keys are the result applying [keyMapper] to each key, and whose values are the result
+     *  of applying [valueMapper] to each value in [stream].
      */
 
-    let first: (t 'k 'v) => (option ('k, 'v));
-    /** [first keyedReduceable] returns first key/value pair in [reduceable] or None.
-     *
-     *  Computational Complexity: O(1)
+    let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
+    /** [mapKeys mapper stream] returns a KeyedStreamable with mapper applied
+     *  to each key in [stream].
      */
 
-    let firstOrRaise: (t 'k 'v) => ('k, 'v);
-    /** [firstOrRaise keyedReduceable] returns the first key/value pair in [keyedReduceable] or raises an exception.
-     *
-     *  Computational Complexity: O(1)
+    let mapValues: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+    /** [mapValues mapper stream] returns a KeyedStreamable with mapper applied
+     *  to each value in [stream].
      */
 
-    let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
-    /** [forEach while_::predicate f keyedReduceable] iterates through [keyedReduceable] applying the
-     *  side effect function [f] to each key/value pair, while [predicate] returns true
+    let return: 'k => 'v => (t 'k 'v);
+    /** [return key value] returns a KeyedStreamable containing the pair ([key], [value]). */
+
+    let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterable.t 'acc);
+    /** [scan f acc stream] returns a KeyedStreamable of accumulated values resulting from the
+     *  application of the accumulator function [f] to each value in [stream] with the
+     *  specified initial value [acc].
      */
 
-    let none: ('k => 'v => bool) => (t 'k 'v) => bool;
-    /** [none f keyedReduceable] returns true if the predicate [f] returns false
-     *  for all key/value pairs in [keyedReduceable]. If [keyedReduceable] is empty, returns [true].
+    let skip: int => (t 'k 'v) => (t 'k 'v);
+    /** [skip count stream] return a KeyedStreamable which skips the first [count]
+     *  values in [stream].
      */
 
-    let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-    /** [some f keyedReduceable] returns true if the predicate [f] returns true for at least
-     *  one key/value pair in [keyedReduceable]. If [keyedReduceable] is empty, returns [false].
+    let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+    /** [skipWhile f stream] return a KeyedStreamable which skips key/value pairs in [stream]
+     *  while application of the predicate function [f] returns true, and then returns
+     *  the remaining values.
+     */
+
+    let startWith: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+    /** [startWith key value stream] returns a KeyedStreamable whose first
+     *  pair is (key, value), followed by the key/value pairs in [stream].
+     */
+
+    let take: int => (t 'k 'v) => (t 'k 'v);
+    /** [take count stream] returns a KeyedStreamable with the first [count]
+     *  key/value pairs in [stream].
+     */
+
+    let takeWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
+    /** [takeWhile f stream] returns a KeyedStreamable including all values in [stream]
+     *  while application of the predicate function [f] returns true, then completes.
      */
   };
-
-  let module Make1: (KeyedReduceable: KeyedReduceable.S1) => S1 with type k = KeyedReduceable.k and type t 'v = KeyedReduceable.t 'v;
-  /** Module function to create a KeyedReducer for a specific KeyedReduceable type with a parametric type arity of 1. */
-
-  let module Make2: (KeyedReduceable: KeyedReduceable.S2) => S2 with type t 'k 'v = KeyedReduceable.t 'k 'v;
-  /** Module function to create a KeyedReducer for a specific KeyedReduceable type with a parametric type arity of 2. */
 };
 
-let module KeyedIterator: {
-  /** Functional iterators over a collection of key/value pairs. KeyedIterators are stateless and can be reused.
+let module rec KeyedIterable: {
+  /** Functional iterators over a collection of key/value pairs. KeyedIterable are stateless and can be reused.
    *  All functions defined in this module are O(1).
    */
-  type t 'k 'v;
-
-  include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
-
-  let concat: (list (t 'k 'v)) => (t 'k 'v);
-  /** [concat keyedIters] returns a KeyedIterator that lazily concatenates all the
-   *  KeyedIterators in [keyedIters]. The resulting KeyedIterator returns all the key/value pairs
-   *  in the first KeyedIterator, followed by all the key/value pairs in the second KeyedIterator,
-   *  and continues until the last KeyedIterator completes.
-   */
-
-  let defer: (unit => t 'k 'v) => (t 'k 'v);
-  /** [defer f] returns a KeyedIterator that invokes the function [f] whenever iterated. */
-
-  let distinctUntilChangedWith: keyEquals::(Equality.t 'k) => valueEquals::(Equality.t 'v) => (t 'k 'v) => (t 'k 'v);
-  /** [distinctUntilChangedWith equals keyedIter] returns a KeyedIterator that contains only
-   *  distinct contiguous key/value pairs from [keyedIter] using [keyEquals] and [valueEquals] to
-   *  equate key/value pairs.
-   */
-
-  let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
-  /** [doOnNext f keyedIter] returns a KeyedIterator that applies the side effect
-   *  function [f] to each key/value pair they are iterated.
-   */
-
-  let empty: unit => (t 'k 'v);
-  /** Returns an empty KeyedIterator. */
-
-  let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
-  /** [filter f keyedIter] returns a KeyedIterator only including key/value pairs from [keyedIter]
-   *  for which application of the predicate function [f] returns true.
-   */
-
-  let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
-  /** [flatMap mapper keyedIter] returns a KeyedIterator which applies [mapper] to each value in
-   *  [keyedIter], flattening the results.
-   */
-
-  let fromEntries: Iterator.t ('k, 'v) => (t 'k 'v);
-  /** [fromEntries iter] returns a KeyedIterator view of  key/value tuples in [iter]. */
-
-  let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
-  /** [generate genKey gen value k v] generates an infinite KeyedSequence
-   *  where the keys are [k, genKey(k v), genKey(genKey(k v), v1), ...]
-   *  and values are [v, genValue(k, v), genValue(k1, genValue(k, v)), ...]
-   */
-
-  let keys: (t 'k 'v) => (Iterator.t 'k);
-  /** [keys keyedIter] returns an Iterator view of the keys in [keyedIter] */
-
-  let map: keyMapper::('kA => 'vA => 'kB) => valueMapper::('kA => 'vA => 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
-  /** [map keyMapper::keyMapper valueMapper::valueMapper keyedIter] returns a KeyedIterator
-   *  whose keys are the result applying [keyMapper] to each key, and whose values are the result
-   *  of applying [valueMapper] to each value in [keyedIter].
-   */
-
-  let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
-  /** [mapKeys mapper keyedIter] returns a KeyedIterator with mapper applied
-   *  to each key in [keyedIter].
-   */
-
-  let mapValues: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  /** [mapValues mapper keyedIter] returns a KeyedIterator with mapper applied
-   *  to each value in [keyedIter].
-   */
-
-  let return: 'k => 'v => (t 'k 'v);
-  /** [return key value] returns a KeyedIterator containing the pair ([key], [value]). */
-
-  let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterator.t 'acc);
-  /** [scan f acc keyedIter] returns a KeyedIterator of accumulated values resulting from the
-   *  application of the accumulator function [f] to each value in [keyedIter] with the
-   *  specified initial value [acc].
-   */
-
-  let skip: int => (t 'k 'v) => (t 'k 'v);
-  /** [skip count keyedIter] return a KeyedIterator which skips the first [count]
-   *  values in [keyedIter].
-   */
-
-  let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
-  /** [skipWhile f keyedIter] return a KeyedIterator which skips key/value pairs in [keyedIter]
-   *  while application of the predicate function [f] returns true, and then returns
-   *  the remaining values.
-   */
-
-  let startWith: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-  /** [startWith key value keyedIter] returns a KeyedIterator whose first
-   *  pair is (key, value), followed by the key/value pairs in [keyedIter].
-   */
-
-  let take: int => (t 'k 'v) => (t 'k 'v);
-  /** [take count keyedIter] returns a KeyedIterator with the first [count]
-   *  key/value pairs in [keyedIter].
-   */
-
-  let takeWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
-  /** [takeWhile f keyedIter] returns a KeyedIterator including all values in [keyedIter]
-   *  while application of the predicate function [f] returns true, then completes.
-   */
-
-  let toIterator: (t 'k 'v) => (Iterator.t ('k, 'v));
-  /** [toIterator keyedIter] returns an Iterator view of the key/value pairs in [keyedIter] as tuples. */
-
-  let values: (t 'k 'v) => Iterator.t 'v;
-  /** [values keyedIter] returns an Iterator view of the values in [keyedIter] */
-
-  let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
-   /* KeyedReducer module for KeyedIterators. */
-};
-
-let module KeyedIterable: {
-  /** Module types implemented by modules that supporting iterating over key/value pairs. */
 
   module type S1 = {
     /** KeyedIterable module type signature for types with a parametric type arity of 1. */
@@ -1498,15 +1276,19 @@ let module KeyedIterable: {
     type k;
     type t 'v;
 
-    include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
+    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
+     *  function [f] to each key/value pair in [keyedIterable], while [predicate] returns true,
+     *  accumulating the result.
+     */
 
-    let toIterator: t 'v => Iterator.t (k, 'v);
-    /** [toIterator keyedIterable] returns an Iterator that can be used to iterate over
+    let toIterable: t 'v => Iterable.t (k, 'v);
+    /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
 
-    let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
-    /** [toKeyedIterator keyedIterable] returns a KeyedIterator that can be used to iterate over
+    let toKeyedIterable: t 'v => KeyedIterable.t k 'v;
+    /** [toKeyedIterable keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
   };
@@ -1516,17 +1298,223 @@ let module KeyedIterable: {
 
     type t 'k 'v;
 
-    include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
+    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
+     *  function [f] to each key/value pair in [keyedIterable], while [predicate] returns true,
+     *  accumulating the result.
+     */
 
-    let toIterator: t 'k 'v => Iterator.t ('k, 'v);
-    /** [toIterator keyedIterable] returns an Iterator that can be used to iterate over
+    let toIterable: t 'k 'v => Iterable.t ('k, 'v);
+    /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
 
-    let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
-    /** [toKeyedIterator keyedIterable] returns a KeyedIterator that can be used to iterate over
+    let toKeyedIterable: t 'k 'v => KeyedIterable.t 'k 'v;
+    /** [toKeyedIterable keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
+  };
+
+  type t 'k 'v;
+
+  include KeyedStreamable.S2 with type t 'k 'v := t 'k 'v;
+
+  let module KeyedReducer: {
+    /** Module functions for generating modules which provide common reduction functions for Iterables.
+     *  All functions are O(N), unless otherwise noted.
+     */
+
+    module type KeyedIterable1 = S1;
+    module type KeyedIterable2 = S2;
+
+    module type S1 = {
+      type k;
+      type t 'v;
+
+      let count: (t 'v) => int;
+      /** [count keyedIterable] returns the total number key/value pairs produced by [keyedIterable] */
+
+      let every: (k => 'v => bool) => (t 'v) => bool;
+      /** [every f keyedIterable] returns true if the predicate [f] returns true for all
+       *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+       */
+
+      let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+      /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise None.
+       */
+
+      let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+      /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let findKey: (k => 'v => bool) => (t 'v) => (option k);
+      /** [findKey f keyedIterable] return the Some of the first key in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise None.
+       */
+
+      let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
+      /** [findOrRaise f keyedIterable] return the the first key in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
+      /** [findValue f keyedIterable] return the Some of the first value in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise None.
+       */
+
+      let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+      /** [findOrRaise f keyedIterable] return the the first value in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let first: (t 'v) => (option (k, 'v));
+      /** [first keyedIterable] returns first key/value pair in [keyedIterable] or None.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let firstOrRaise: (t 'v) => (k, 'v);
+      /** [firstOrRaise keyedIterable] returns the first key/value pair in [keyedIterable] or raises an exception.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
+      /** [forEach while_::predicate f keyedIterable] iterates through [keyedIterable] applying the
+       *  side effect function [f] to each key/value pair, while [predicate] returns true
+       */
+
+      let none: (k => 'v => bool) => (t 'v) => bool;
+      /** [none f keyedIterable] returns true if the predicate [f] returns false
+       *  for all key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+       */
+
+      let some: (k => 'v => bool) => (t 'v) => bool;
+      /** [some f keyedIterable] returns true if the predicate [f] returns true for at least
+       *  one key/value pair in [keyedIterable]. If [keyedIterable] is empty, returns [false].
+       */
+    };
+
+    module type S2 = {
+      type t 'k 'v;
+
+      let count: (t 'k 'v) => int;
+      /** [count keyedIterable] returns the total number key/value pairs produced by [keyedIterable] */
+
+      let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+      /** [every f keyedIterable] returns true if the predicate [f] returns true for all
+       *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+       */
+
+      let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+      /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise None.
+       */
+
+      let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+      /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
+      /** [findKey f keyedIterable] return the Some of the first key in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise None.
+       */
+
+      let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
+      /** [findOrRaise f keyedIterable] return the the first key in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
+      /** [findValue f keyedIterable] return the Some of the first value in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise None.
+       */
+
+      let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+      /** [findOrRaise f keyedIterable] return the the first value in [keyedIterable]
+       *  for which the the predicate f returns [true]. Otherwise raises an exception.
+       */
+
+      let first: (t 'k 'v) => (option ('k, 'v));
+      /** [first keyedIterable] returns first key/value pair in [keyedIterable] or None.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let firstOrRaise: (t 'k 'v) => ('k, 'v);
+      /** [firstOrRaise keyedIterable] returns the first key/value pair in [keyedIterable] or raises an exception.
+       *
+       *  Computational Complexity: O(1)
+       */
+
+      let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
+      /** [forEach while_::predicate f keyedIterable] iterates through [keyedIterable] applying the
+       *  side effect function [f] to each key/value pair, while [predicate] returns true
+       */
+
+      let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+      /** [none f keyedIterable] returns true if the predicate [f] returns false
+       *  for all key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+       */
+
+      let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+      /** [some f keyedIterable] returns true if the predicate [f] returns true for at least
+       *  one key/value pair in [keyedIterable]. If [keyedIterable] is empty, returns [false].
+       */
+    };
+
+    let module Make1: (KeyedIterable: KeyedIterable1) => S1 with type k = KeyedIterable.k and type t 'v = KeyedIterable.t 'v;
+    /** Module function to create a KeyedReducer for a specific KeyedIterable type with a parametric type arity of 1. */
+
+    let module Make2: (KeyedIterable: KeyedIterable2) => S2 with type t 'k 'v = KeyedIterable.t 'k 'v;
+    /** Module function to create a KeyedReducer for a specific KeyedIterable type with a parametric type arity of 2. */
+
+    include S2 with type t 'k 'v := t 'k 'v;
+  };
+
+  include S2 with type t 'k 'v := t 'k 'v;
+
+  let fromEntries: Iterable.t ('k, 'v) => (t 'k 'v);
+  /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */
+
+  let keys: (t 'k 'v) => (Iterable.t 'k);
+  /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
+
+  let values: (t 'k 'v) => Iterable.t 'v;
+  /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
+};
+
+let module KeyedIterableRight: {
+  /** Module types implemented by modules that support reducing over
+   *  key/value pairs in both the left to right, and right to left directions.
+   */
+
+  module type S1 = {
+    /** KeyedIterableRight module type signature for types with a parametric type arity of 1. */
+
+    type k;
+    type t 'v;
+
+    include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
+
+    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
+     *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
+     *  from the right most key/value pair, accumulating the result.
+     */
+
+    let toIterableRight: t 'v => Iterable.t (k, 'v);
+    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
+      *  the key/value pairs in [keyedIterable] as tuples.
+      */
+
+    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
+    /** [toKeyedIterableRight keyedIterable] returns a KeyedIterable that can be used to iterate over
+      *  the key/value pairs in [keyedIterable].
+      */
   };
 };
 
@@ -1750,7 +1738,7 @@ let module NavigableKeyedCollection: {
     type t 'v;
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
-    include KeyedReduceableRight.S1 with type k := k and type t 'v := t 'v;
+    include KeyedIterableRight.S1 with type k := k and type t 'v := t 'v;
 
     let first: (t 'v) => (option (k, 'v));
     /** [first keyed] returns first value in [keyed] or None.
@@ -1774,16 +1762,6 @@ let module NavigableKeyedCollection: {
     /** [lastOrRaise keyed] returns last value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
-     */
-
-    let toIteratorRight: t 'v => Iterator.t (k, 'v);
-    /* [toIteratorRight keyed] returns an Iterator that can be used to iterate over
-     * the key/value pairs in [keyed] as tuples from right to left.
-     */
-
-    let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
-    /* [toKeyedIteratorRight keyed] returns an KeyedIterator that can be used to iterate over
-     * the key/value pairs in [keyed] from right to left.
      */
 
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
@@ -1849,7 +1827,7 @@ let module rec Map: {
    *  memoized. Therefore [f] must be a pure function.
    */
 
-  let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
    /* KeyedReducer module for Maps. */
 };
 
@@ -1879,13 +1857,13 @@ let module PersistentMap: {
     let empty: unit => (t 'v);
     /** [empty ()] Return an empty PersistentMap. */
 
-    let from: (KeyedIterator.t k 'v) => (t 'v);
-    /** [from keyedIterator] returns a PersistentMap including the key/value pairs in [keyedIterator].
+    let from: (KeyedIterable.t k 'v) => (t 'v);
+    /** [from keyedIterable] returns a PersistentMap including the key/value pairs in [keyedIterable].
      *
      *  By contract, [from] is efficient with no worst than O(N log N) performance.
      */
 
-    let fromEntries: (Iterator.t (k, 'v)) => (t 'v);
+    let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
     /** [fromEntries iter] returns a PersistentMap including the key/value pairs in [iter].
      *
      *  By contract, [fromEntries] is efficient with no worst than O(N log N) performance.
@@ -1908,14 +1886,14 @@ let module PersistentMap: {
      *  By contract, [put] is efficient with no worst than O(log N) performance.
      */
 
-    let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
     /** [putAll keyedIter map] returns a PersistentMap, adding associations from all key/value pairs
      *  in [keyedIter] to [map],
      *
      *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
      */
 
-    let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+    let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
     /** [putAllEntries iter map] returns a PersistentMap, adding associations from all key/value pairs
      *  in [iter] to [map].
      *
@@ -1957,14 +1935,14 @@ let module PersistentMap: {
      *  By contract, [put] is efficient with no worst than O(log N) performance.
      */
 
-    let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
     /** [putAll keyedIter map] returns a PersistentMap, adding associations from all key/value pairs
      *  in [keyedIter] to [map],
      *
      *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
      */
 
-    let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
     /** [putAllEntries iter map] returns a PersistentMap, adding associations from all key/value pairs
      *  in [iter] to [map].
      *
@@ -2008,13 +1986,13 @@ let module TransientMap: {
      *  By contract, [put] is efficient with no worst than O(log N) performance.
      */
 
-    let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
+    let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
     /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
      *
      *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
      */
 
-    let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+    let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
     /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
      *
      *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
@@ -2047,13 +2025,13 @@ let module TransientMap: {
      *  By contract, [put] is efficient with no worst than O(log N) performance.
      */
 
-    let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+    let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
     /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
      *
      *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
      */
 
-    let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
     /** [putAll keyedIter transient] adds associations from all key/value pairs in [keyedIter] to [transient].
      *
      *  By contract, [putAll] is efficient with no worst than O(N log N) performance.
@@ -2123,13 +2101,13 @@ let module Indexed: {
      *  raises an exception if [index] is out of bounds.
      */
 
-    let toKeyedIterator: (t 'a) => (KeyedIterator.t int 'a);
-    /** [toKeyedIterator indexed] returns a KeyedIterator that can be used to iterate over
+    let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
+    /** [toKeyedIterable indexed] returns a KeyedIterable that can be used to iterate over
      *  the index/value pairs in [indexed].
      */
 
-    let toKeyedIteratorRight: (t 'a) => (KeyedIterator.t int 'a);
-    /* [toKeyedIteratorRight indexed] returns an KeyedIterator that can be used to iterate over
+    let toKeyedIterableRight: (t 'a) => (KeyedIterable.t int 'a);
+    /* [toKeyedIterableRight indexed] returns an KeyedIterable that can be used to iterate over
      * the index/value pairs in [indexed] from right to left.
      */
 
@@ -2156,10 +2134,10 @@ let module rec Deque: {
    *  Complexity: O(1)
    */
 
-  let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
+  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Deques which reduces right. */
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Deques. */
 }
 
@@ -2201,13 +2179,13 @@ let module rec HashMap: {
    *  keys, and [comparator] to resolve collisions.
    */
 
-  let fromWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (KeyedIterator.t 'k 'v) => (HashMap.t 'k 'v);
+  let fromWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (KeyedIterable.t 'k 'v) => (HashMap.t 'k 'v);
   /** [fromWith hash comparator keyedIter] returns a HashMap containing all the key/value
    *  pairs in [keyedIter]. The returned HashMap uses [hash] to hash keys, and [comparator]
    *  to resolve collisions.
    */
 
-  let fromEntriesWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (Iterator.t ('k, 'v)) => (t 'k 'v);
+  let fromEntriesWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (Iterable.t ('k, 'v)) => (t 'k 'v);
   /** [fromEntriesWith hash comparator iter] returns a HashMap containing all the key/value
    *  pairs in [iter]. The returned HashMap uses [hash] to hash keys, and [comparator]
    *  to resolve collisions.
@@ -2216,7 +2194,7 @@ let module rec HashMap: {
   let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
   /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map]. */
 
-  let module KeyedReducer: KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
   /* KeyedReducer module for HashMaps. */
 }
 
@@ -2257,7 +2235,7 @@ let module rec HashSet: {
    *  keys, and [comparator] to resolve collisions.
    */
 
-  let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterator.t 'a) => (HashSet.t 'a);
+  let fromWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (Iterable.t 'a) => (HashSet.t 'a);
   /** [fromWith hash comparator iter] returns a HashSet containing all the values in [iter].
    *  The returned HashSet uses [hash] to hash keys, and [comparator] to resolve collisions.
    */
@@ -2268,7 +2246,7 @@ let module rec HashSet: {
   let mutate: (t 'a) => (TransientHashSet.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same values as [set]. */
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for HashSets. */
 }
 
@@ -2306,7 +2284,7 @@ let module rec IntMap: {
   let mutate: (t 'v) => (TransientIntMap.t 'v);
   /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map]. */
 
-  let module KeyedReducer: KeyedReducer.S1 with type k = k and type t 'v := t 'v;
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k = k and type t 'v := t 'v;
   /* KeyedReducer module for IntMaps. */
 }
 
@@ -2338,10 +2316,10 @@ let module IntRange: {
    *  than or equal to 0.
    */
 
-  let module ReducerRight: Reducer.S with type a := a and type t := t;
+  let module ReducerRight: Iterable.Reducer.S with type a := a and type t := t;
     /* Reducer module for IntRanges which reduces right. */
 
-  let module Reducer: Reducer.S with type a := a and type t := t;
+  let module Reducer: Iterable.Reducer.S with type a := a and type t := t;
   /* Reducer module for IntRanges. */
 };
 
@@ -2359,7 +2337,7 @@ let module rec IntSet: {
   let mutate: t => TransientIntSet.t;
   /** [mutate set] returns a TransientIntSet containing the same values as [set]. */
 
-  let module Reducer: Reducer.S with type a = a and type t := t;
+  let module Reducer: Iterable.Reducer.S with type a = a and type t := t;
   /* Reducer module for IntSets. */
 }
 
@@ -2397,7 +2375,7 @@ let module List: {
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
   /** [addFirstAll iter list] returns a List with the values in [iter] prepended. */
 
   let empty: unit => (t 'a);
@@ -2415,7 +2393,7 @@ let module List: {
    *  Complexity: O(1)
    */
 
-  let fromReverse: (Iterator.t 'a) => (t 'a);
+  let fromReverse: (Iterable.t 'a) => (t 'a);
   /** [fromReverse iter] returns a new List containing the values in [iter]
    *  in reverse order.
    *
@@ -2440,7 +2418,7 @@ let module List: {
   let toSequence: (t 'a) => (Sequence.t 'a);
   /** [toSequence list] returns a Sequence of the values in [list] in order. */
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Lists. */
 };
 
@@ -2464,10 +2442,10 @@ let module ReadOnlyArray: {
    *  responsibility to ensure that [arr] is not subsequently mutated.
    */
 
-  let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
+  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for ReadOnlyArray which reduces right. */
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for ReadOnlyArrays. */
 };
 
@@ -2487,7 +2465,7 @@ let module Stack: {
   let toList: (t 'a) => (list 'a);
   /** [toList stack] returns the underlying List backing the stack */
 
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Stacks. */
 };
 
@@ -2504,10 +2482,10 @@ let module SortedMap: {
 
     include PersistentNavigableMap.S1 with type k := k and type t 'v := t 'v;
 
-    let module KeyedReducerRight: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+    let module KeyedReducerRight: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
     /* KeyedReducer module for SortedMaps which reduces right. */
 
-    let module KeyedReducer: KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+    let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
     /* KeyedReducer module for SortedMaps. */
   };
 
@@ -2526,10 +2504,10 @@ let module SortedSet: {
     include Comparable.S with type t := t;
     include PersistentNavigableSet.S with type a := a and type t := t;
 
-    let module ReducerRight: Reducer.S with type a:= a and type t:= t;
+    let module ReducerRight: Iterable.Reducer.S with type a:= a and type t:= t;
     /* Reducer module for SortedSets which reduces right. */
 
-    let module Reducer: Reducer.S with type a := a and type t := t;
+    let module Reducer: Iterable.Reducer.S with type a := a and type t := t;
     /* Reducer module for SortedSets. */
   };
 
@@ -2615,8 +2593,8 @@ let module rec Vector: {
   let mutate: (t 'a) => (TransientVector.t 'a);
   /** [mutate vector] returns a TransientVector containing the same values as [set]. */
 
-  let module ReducerRight: Reducer.S1 with type t 'a := t 'a;
-  let module Reducer: Reducer.S1 with type t 'a := t 'a;
+  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
 }
 
 and TransientVector: {

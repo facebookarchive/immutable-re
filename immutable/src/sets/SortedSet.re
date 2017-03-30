@@ -12,37 +12,36 @@ module type S = {
   type t;
 
   let compare: Comparator.t t;
-  let reduceRight:
-    while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toIterableRight: t => Iterable.t a;
   let first: t => option a;
   let firstOrRaise: t => a;
   let last: t => option a;
   let lastOrRaise: t => a;
-  let toIteratorRight: t => Iterator.t a;
   let toSequenceRight: t => Sequence.t a;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;
-  let reduce:
-    while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toIterator: t => Iterator.t a;
+  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toIterable: t => Iterable.t a;
   let equals: Equality.t t;
   let count: t => int;
   let empty: t;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
+  let toCollection: t => Collection.t a;
   let toSequence: t => Sequence.t a;
   let removeAll: t => t;
   let add: a => t => t;
-  let addAll: Iterator.t a => t => t;
-  let from: Iterator.t a => t;
+  let addAll: Iterable.t a => t => t;
+  let from: Iterable.t a => t;
   let intersect: t => t => t;
   let remove: a => t => t;
   let subtract: t => t => t;
   let union: t => t => t;
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
-  let module ReducerRight: Reducer.S with type a:= a and type t:= t;
-  let module Reducer: Reducer.S with type a:= a and type t:= t;
+  let module ReducerRight: Iterable.Reducer.S with type a:= a and type t:= t;
+  let module Reducer: Iterable.Reducer.S with type a:= a and type t:= t;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -60,8 +59,8 @@ let module Make = fun (Comparable: Comparable.S) => {
     if (newTree === tree) sortedSet else { count: count + 1, tree: newTree }
   };
 
-  let addAll (iter: Iterator.t a) (sortedSet: t): t => iter
-    |> Iterator.reduce (fun acc next => acc |> add next) sortedSet;
+  let addAll (iter: Iterable.t a) (sortedSet: t): t => iter
+    |> Iterable.reduce (fun acc next => acc |> add next) sortedSet;
 
   let contains (x: a) ({ tree }: t): bool =>
     AVLTreeSet.contains comparator x tree;
@@ -74,7 +73,7 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let isNotEmpty ({ count }: t): bool => count !== 0;
 
-  let from (iter: Iterator.t a): t =>
+  let from (iter: Iterable.t a): t =>
     empty |> addAll iter;
 
   let reduce
@@ -168,18 +167,24 @@ let module Make = fun (Comparable: Comparable.S) => {
   let lastOrRaise ({ tree }: t): a =>
     AVLTreeSet.lastOrRaise tree;
 
-  let toIterator (set: t): (Iterator.t a) =>
-    if (isEmpty set) (Iterator.empty ())
+  let toIterable (set: t): (Iterable.t a) =>
+    if (isEmpty set) (Iterable.empty ())
     else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
-  let toIteratorRight (set: t): (Iterator.t a) =>
-    if (isEmpty set) (Iterator.empty ())
+  let toIterableRight (set: t): (Iterable.t a) =>
+    if (isEmpty set) (Iterable.empty ())
     else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
+
+  let toCollection (set: t): (Collection.t a) => {
+    count: count set,
+    iterable: fun () => toIterable set,
+    sequence: fun () => toSequence set,
+  };
 
   let toSet (set: t): (ImmSet.t a) => {
     contains: fun a => contains a set,
     count: count set,
-    iterator: fun () => toIterator set,
+    iterable: fun () => toIterable set,
     sequence: fun () => toSequence set,
   };
 
@@ -195,17 +200,19 @@ let module Make = fun (Comparable: Comparable.S) => {
     /* FIXME: Improve this implementation */
     ImmSet.union (toSet this) (toSet that) |> from;
 
-  let module ReducerRight = Reducer.Make {
+  let module ReducerRight = Iterable.Reducer.Make {
     type nonrec a = a;
     type nonrec t = t;
 
     let reduce = reduceRight;
+    let toIterable = toIterableRight;
   };
 
-  let module Reducer = Reducer.Make {
+  let module Reducer = Iterable.Reducer.Make {
     type nonrec a = a;
     type nonrec t = t;
 
     let reduce = reduce;
+    let toIterable = toIterable;
   };
 };

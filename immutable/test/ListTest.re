@@ -17,7 +17,7 @@ let test = describe "List" [
   }),
   it "addFirstAll" (fun () => {
     [] |> List.addFirstAll
-        (IntRange.create start::(-10) count::10 |> IntRange.toIterator)
+        (IntRange.create start::(-10) count::10 |> IntRange.toIterable)
       |> Expect.toBeEqualToListOfInt [(-1), (-2), (-3), (-4), (-5), (-6), (-7), (-8), (-9), (-10)];
   }),
   it "first" (fun () => {
@@ -29,7 +29,7 @@ let test = describe "List" [
     List.firstOrRaise [1] |> Expect.toBeEqualToInt 1;
   }),
   it "fromReverse" (fun () => {
-    List.fromReverse (IntRange.create start::(-10) count::10 |> IntRange.toIterator)
+    List.fromReverse (IntRange.create start::(-10) count::10 |> IntRange.toIterable)
       |> Expect.toBeEqualToListOfInt [(-1), (-2), (-3), (-4), (-5), (-6), (-7), (-8), (-9), (-10)];
   }),
   it "reduce" (fun () => {
@@ -53,15 +53,15 @@ let test = describe "List" [
   it "return" (fun () => {
     List.return 1 |> Expect.toBeEqualToListOfInt [1];
   }),
-  it "toIterator" (fun () => {
-    [0, 1, 2, 3, 4, 5] |> List.toIterator |> Iterator.reduce
+  it "toIterable" (fun () => {
+    [0, 1, 2, 3, 4, 5] |> List.toIterable |> Iterable.reduce
         while_::(fun _ i => i < 4) (fun acc i => acc + i) 0
       |> Expect.toBeEqualToInt 6;
   }),
   it "toSequence" (fun () => {
     List.toSequence [1, 2, 3]
-      |> Sequence.toIterator
-      |> Iterator.reduce (fun acc i => acc + i) 0
+      |> Sequence.toIterable
+      |> Iterable.reduce (fun acc i => acc + i) 0
       |> Expect.toBeEqualToInt 6;
   }),
 ];

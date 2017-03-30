@@ -108,8 +108,8 @@ let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
 let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator;
 
-let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
-  if (isEmpty map) (Iterator.empty ())
+let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
+  if (isEmpty map) (Iterable.empty ())
   else {
     reduce: fun predicate f acc => map |> reduce
       while_::(fun acc k v => predicate acc (k, v))
@@ -117,8 +117,8 @@ let toIterator (map: t 'k 'v): (Iterator.t ('k, 'v)) =>
       acc
   };
 
-let toKeyedIterator (map: t 'k 'v): (KeyedIterator.t 'k 'v) =>
-  if (isEmpty map) (KeyedIterator.empty ())
+let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
+  if (isEmpty map) (KeyedIterable.empty ())
   else {
     reduce: fun predicate f acc => map |> reduce while_::predicate f acc
   };
@@ -131,7 +131,7 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
   count: (count map),
   get: fun i => get i map,
   getOrRaise: fun i => getOrRaise i map,
-  keyedIterator: fun () => toKeyedIterator map,
+  keyedIterator: fun () => toKeyedIterable map,
   sequence: fun () => toSequence map,
 };
 
@@ -238,11 +238,11 @@ let module TransientHashMap = {
   let put (key: 'k) (value: 'v) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> Transient.update2 putImpl key value;
 
-  let putAll (iter: KeyedIterator.t 'k 'v) (transient: t 'k 'v): (t 'k 'v) =>
-    iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) transient;
+  let putAll (iter: KeyedIterable.t 'k 'v) (transient: t 'k 'v): (t 'k 'v) =>
+    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) transient;
 
-  let putAllEntries (iter: Iterator.t ('k, 'v)) (transient: t 'k 'v): (t 'k 'v) => iter
-    |> Iterator.reduce (fun acc (k, v) => acc |> put k v) transient;
+  let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'k 'v): (t 'k 'v) => iter
+    |> Iterable.reduce (fun acc (k, v) => acc |> put k v) transient;
 
   let remove (key: 'k) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> alter key Functions.alwaysNone;
@@ -258,29 +258,29 @@ let module TransientHashMap = {
 
 let mutate = TransientHashMap.mutate;
 
-let putAll (iter: KeyedIterator.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
   map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
 
-let putAllEntries (iter: Iterator.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
+let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
   map |> mutate |> TransientHashMap.putAllEntries iter |> TransientHashMap.persist;
 
 let fromWith
     hash::(hash: Hash.t 'k)
     comparator::(comparator: Comparator.t 'k)
-    (iter: KeyedIterator.t 'k 'v): (t 'k 'v) =>
+    (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator |> putAll iter;
 
 let fromEntriesWith
     hash::(hash: Hash.t 'k)
     comparator::(comparator: Comparator.t 'k)
-    (iter: Iterator.t ('k, 'v)): (t 'k 'v) =>
+    (iter: Iterable.t ('k, 'v)): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator |> putAllEntries iter;
 
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (initialValue: t 'k 'vAcc)
     (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keys next) (keys initialValue)
-  |> Iterator.reduce (
+  |> Iterable.reduce (
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);
         switch result {
@@ -291,7 +291,10 @@ let merge
     ) (mutate initialValue)
   |> TransientHashMap.persist;
 
-let module KeyedReducer = KeyedReducer.Make2 {
+let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
+
   let reduce = reduce;
+  let toIterable = toIterable;
+  let toKeyedIterable = toKeyedIterable;
 };

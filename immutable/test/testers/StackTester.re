@@ -29,18 +29,18 @@ let module Make = fun (Stack: PersistentSequentialCollection.S1) (Config: Tester
             acc
           })
           (Stack.empty ())
-        |> Stack.toIterator
+        |> Stack.toIterable
         |> List.fromReverse
-        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableRight testData));
     }),
     it "addFirstAll" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
 
       (Stack.empty ())
-        |> Stack.addFirstAll (IntRange.toIterator testData)
-        |> Stack.toIterator
+        |> Stack.addFirstAll (IntRange.toIterable testData)
+        |> Stack.toIterable
         |> List.fromReverse
-        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableRight testData));
     }),
     it "count" (fun () => {
       (Stack.empty ()) |> Stack.count |> Expect.toBeEqualToInt 0;
@@ -54,11 +54,11 @@ let module Make = fun (Stack: PersistentSequentialCollection.S1) (Config: Tester
     it "fromReverse" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
 
-      IntRange.toIterator testData
+      IntRange.toIterable testData
         |> Stack.fromReverse
-        |> Stack.toIterator
+        |> Stack.toIterable
         |> List.fromReverse
-        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIteratorRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableRight testData));
     }),
     it "isEmpty" (fun () => {
       (Stack.empty ()) |> Stack.isEmpty |> Expect.toBeEqualToTrue;
@@ -68,7 +68,7 @@ let module Make = fun (Stack: PersistentSequentialCollection.S1) (Config: Tester
     }),
     it "reduce" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIteratorRight
+        |> IntRange.toIterableRight
         |> Stack.fromReverse
         |> Stack.reduce
             while_::(fun _ i => i < (Config.count / 2))
@@ -78,7 +78,7 @@ let module Make = fun (Stack: PersistentSequentialCollection.S1) (Config: Tester
     }),
     it "removeAll" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIteratorRight
+        |> IntRange.toIterableRight
         |> Stack.fromReverse
         |> Stack.removeAll
         |> Stack.count
@@ -87,7 +87,7 @@ let module Make = fun (Stack: PersistentSequentialCollection.S1) (Config: Tester
     it "removeFirstOrRaise" (fun () => {
       let range = IntRange.create start::0 count::Config.count;
 
-      let fullStack = range |> IntRange.toIterator |> Stack.fromReverse;
+      let fullStack = range |> IntRange.toIterable |> Stack.fromReverse;
 
       let emptyStack = range |> IntRange.reduceRight
         (fun acc i => {
@@ -106,12 +106,12 @@ let module Make = fun (Stack: PersistentSequentialCollection.S1) (Config: Tester
       stack |> Stack.count |> Expect.toBeEqualToInt 1;
       stack |> Stack.firstOrRaise |> Expect.toBeEqualToInt 1;
     }),
-    it "toIterator" (fun () => {
+    it "toIterable" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIteratorRight
+        |> IntRange.toIterableRight
         |> Stack.fromReverse
-        |> Stack.toIterator
-        |> Iterator.reduce
+        |> Stack.toIterable
+        |> Iterable.reduce
             while_::(fun _ i => i < (Config.count / 2))
             (fun acc _ => acc + 1)
             0
@@ -119,7 +119,7 @@ let module Make = fun (Stack: PersistentSequentialCollection.S1) (Config: Tester
     }),
     it "toSequence" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIteratorRight
+        |> IntRange.toIterableRight
         |> Stack.fromReverse
         |> Stack.toSequence
         |> Sequence.reduce

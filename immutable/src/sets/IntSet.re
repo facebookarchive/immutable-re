@@ -61,16 +61,22 @@ let reduce
   if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
   else (BitmapTrieIntSet.reduceWhile predicate f acc root);
 
-let toIterator (set: t): (Iterator.t int) =>
-  if (isEmpty set) (Iterator.empty ())
+let toIterable (set: t): (Iterable.t int) =>
+  if (isEmpty set) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
+
+let toCollection (set: t): (Collection.t int) => {
+  count: count set,
+  iterable: fun () => toIterable set,
+  sequence: fun () => toSequence set,
+};
 
 let toSet (set: t): (ImmSet.t int) =>
   if (isEmpty set) (ImmSet.empty ())
   else {
     contains: fun v => contains v set,
     count: count set,
-    iterator: fun () => toIterator set,
+    iterable: fun () => toIterable set,
     sequence: fun () => toSequence set,
   };
 
@@ -111,11 +117,11 @@ let module TransientIntSet = {
 
   let addAllImpl
       (owner: Transient.Owner.t)
-      (iter: Iterator.t int)
+      (iter: Iterable.t int)
       ({ count, root } as set: intSet): intSet => {
     let newCount = ref count;
 
-    let newRoot = iter |> Iterator.reduce (fun acc value => {
+    let newRoot = iter |> Iterable.reduce (fun acc value => {
       if (acc |> BitmapTrieIntSet.contains 0 value) acc
       else  {
         let newRoot = acc |> BitmapTrieIntSet.add
@@ -133,7 +139,7 @@ let module TransientIntSet = {
     else { count: !newCount, root: newRoot };
   };
 
-  let addAll (iter: Iterator.t int) (transient: t): t =>
+  let addAll (iter: Iterable.t int) (transient: t): t =>
     transient |> Transient.update1 addAllImpl iter;
 
   let contains (value: int) (transient: t): bool =>
@@ -183,10 +189,10 @@ let module TransientIntSet = {
 
 let mutate = TransientIntSet.mutate;
 
-let addAll (iter: Iterator.t int) (set: t): t =>
+let addAll (iter: Iterable.t int) (set: t): t =>
   set |> mutate |> TransientIntSet.addAll iter |> TransientIntSet.persist;
 
-let from (iter: Iterator.t int): t =>
+let from (iter: Iterable.t int): t =>
   empty |> addAll iter;
 
 let intersect (this: t) (that: t): t =>
@@ -201,9 +207,10 @@ let union (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */
   ImmSet.union (toSet this) (toSet that) |> from;
 
-let module Reducer = Reducer.Make {
-  type a = int;
+let module Reducer = Iterable.Reducer.Make {
+  type nonrec a = a;
   type nonrec t = t;
 
   let reduce = reduce;
+  let toIterable = toIterable;
 };

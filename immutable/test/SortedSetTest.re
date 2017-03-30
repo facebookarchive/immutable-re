@@ -27,7 +27,7 @@ let navigationTests (count: int) => {
     it "first" (fun () => {
       SortedIntSet.empty |> SortedIntSet.first |> Expect.toBeEqualToNoneOfInt;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from
         |> SortedIntSet.first
         |> Expect.toBeEqualToSomeOfInt (-countDiv2);
@@ -35,7 +35,7 @@ let navigationTests (count: int) => {
     it "firstOrRaise" (fun () => {
       (fun () => SortedIntSet.empty |> SortedIntSet.firstOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from
         |> SortedIntSet.firstOrRaise
         |> Expect.toBeEqualToInt (-countDiv2);
@@ -43,7 +43,7 @@ let navigationTests (count: int) => {
     it "last" (fun () => {
       SortedIntSet.empty |> SortedIntSet.last |> Expect.toBeEqualToNoneOfInt;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from
         |> SortedIntSet.last
         |> Expect.toBeEqualToSomeOfInt (countDiv2 - 1);
@@ -51,21 +51,21 @@ let navigationTests (count: int) => {
     it "lastOrRaise" (fun () => {
       (fun () => SortedIntSet.empty |> SortedIntSet.lastOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from
         |> SortedIntSet.lastOrRaise
         |> Expect.toBeEqualToInt (countDiv2 - 1);
     }),
     it "reduceRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from
         |> SortedIntSet.reduceRight while_::(fun acc _ => acc < countDiv2) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv2;
     }),
     it "removeFirstOrRaise" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from;
 
       IntRange.create start::0 count::count
@@ -79,7 +79,7 @@ let navigationTests (count: int) => {
     }),
     it "removeLastOrRaise" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from;
 
       IntRange.create start::0 count::count
@@ -91,17 +91,17 @@ let navigationTests (count: int) => {
 
       (fun () => SortedIntSet.empty |> SortedIntSet.removeLastOrRaise) |> Expect.shouldRaise;
     }),
-    it "toIteratorRight" (fun () => {
+    it "toIterableRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from
-        |> SortedIntSet.toIteratorRight
-        |> Iterator.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
+        |> SortedIntSet.toIterableRight
+        |> Iterable.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toSequenceRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntSet.from
         |> SortedIntSet.toSequenceRight
         |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0

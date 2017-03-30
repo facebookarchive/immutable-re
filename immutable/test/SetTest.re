@@ -61,11 +61,11 @@ let test = describe "Set" [
       |> Set.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
-  it "toIterator" (fun () => {
+  it "toIterable" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toSet
-      |> Set.toIterator
-      |> Iterator.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
+      |> Set.toIterable
+      |> Iterable.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
   it "toSequence" (fun () => {

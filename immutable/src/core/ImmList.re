@@ -81,8 +81,3 @@ let rec take (count: int) (list: t 'a): (t 'a) =>
     | [head, ...tail] => [head, ...(tail |> take (count - 1))]
     | _ => failwith "list too short"
   };
-
-let module Reducer = Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-  let reduce = reduce;
-};

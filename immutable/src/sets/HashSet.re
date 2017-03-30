@@ -65,10 +65,6 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator;
 
-let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
-  if (isEmpty set) (Sequence.empty ())
-  else root |> BitmapTrieSet.toSequence;
-
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
@@ -77,16 +73,26 @@ let reduce
   if (predicate === Functions.alwaysTrue2) (BitmapTrieSet.reduce f acc root)
   else (BitmapTrieSet.reduceWhile predicate f acc root);
 
-let toIterator (set: t 'a): (Iterator.t 'a) =>
-  if (isEmpty set) (Iterator.empty ())
+let toIterable (set: t 'a): (Iterable.t 'a) =>
+  if (isEmpty set) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
+
+let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
+  if (isEmpty set) (Sequence.empty ())
+  else root |> BitmapTrieSet.toSequence;
+
+let toCollection (set: t 'a): (Collection.t 'a) => {
+  count: count set,
+  iterable: fun () => toIterable set,
+  sequence: fun () => toSequence set,
+};
 
 let toSet (set: t 'a): (ImmSet.t 'a) =>
   if (isEmpty set) (ImmSet.empty ())
   else {
     contains: fun v => contains v set,
     count: count set,
-    iterator: fun () => toIterator set,
+    iterable: fun () => toIterable set,
     sequence: fun () => toSequence set,
   };
 
@@ -128,11 +134,11 @@ let module TransientHashSet = {
 
   let addAllImpl
       (owner: Transient.Owner.t)
-      (iter: Iterator.t 'a)
+      (iter: Iterable.t 'a)
       ({ count, root, hash, comparator } as set: hashSet 'a): (hashSet 'a) => {
     let newCount = ref count;
 
-    let newRoot = iter |> Iterator.reduce (fun acc value => {
+    let newRoot = iter |> Iterable.reduce (fun acc value => {
       let keyHash = hash value;
 
       if (acc |> BitmapTrieSet.contains comparator 0 keyHash value) acc
@@ -154,7 +160,7 @@ let module TransientHashSet = {
     else { count: !newCount, root: newRoot, hash, comparator };
   };
 
-  let addAll (iter: Iterator.t 'a) (transient: t 'a): (t 'a) =>
+  let addAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 addAllImpl iter;
 
   let contains (value: 'a) (transient: t 'a): bool =>
@@ -211,14 +217,14 @@ let module TransientHashSet = {
 
 let mutate = TransientHashSet.mutate;
 
-let addAll (iter: Iterator.t 'a) (set: t 'a): (t 'a) =>
+let addAll (iter: Iterable.t 'a) (set: t 'a): (t 'a) =>
   set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
 
 let fromWith
     hash::(hash: Hash.t 'a)
     comparator::(comparator: Comparator.t 'a)
-    (iterator: Iterator.t 'a): (t 'a) =>
-  emptyWith hash::hash comparator::comparator |> addAll iterator;
+    (iterable: Iterable.t 'a): (t 'a) =>
+  emptyWith hash::hash comparator::comparator |> addAll iterable;
 
 let intersect ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
@@ -235,7 +241,9 @@ let union ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator
     |> addAll (ImmSet.union (toSet this) (toSet that));
 
-let module Reducer = Reducer.Make1 {
+let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+  
   let reduce = reduce;
+  let toIterable = toIterable;
 };

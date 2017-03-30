@@ -17,7 +17,7 @@ let hash = Hashtbl.hash;
 
 let generateTests
     (getTestData: unit => 'map)
-    (keys: unit => Iterator.t int)
+    (keys: unit => Iterable.t int)
     (empty: unit => 'map)
     (put: int => int => 'map => 'map)
     (remove: int => 'map => 'map)
@@ -32,26 +32,26 @@ let generateTests
   it (sprintf "map with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToRemove = keys ()
-      |> Iterator.buffer count::1 skip::3
-      |> Iterator.map (fun [i] => i);
+      |> Iterable.buffer count::1 skip::3
+      |> Iterable.map (fun [i] => i);
 
-    keysToRemove |> Iterator.reduce (fun acc i => acc |> remove i) map |> ignore;
+    keysToRemove |> Iterable.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "map with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToUpdate = keys ()
-      |> Iterator.buffer count::1 skip::3
-      |> Iterator.map (fun [i] => i);
+      |> Iterable.buffer count::1 skip::3
+      |> Iterable.map (fun [i] => i);
 
     /* Multiply the updated value to avoid optimizations */
-    keysToUpdate |> Iterator.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
+    keysToUpdate |> Iterable.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
   }),
 
   it (sprintf "get %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> Iterator.Reducer.forEach (fun i => map |> get i |> ignore);
+    keys () |> Iterable.Reducer.forEach (fun i => map |> get i |> ignore);
   }),
 ];
 
@@ -71,9 +71,9 @@ let module SortedIntMap = SortedMap.Make1 {
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = IntRange.create start::0 count::count |> IntRange.toIterator |> Iterator.map hash;
+  let keys = IntRange.create start::0 count::count |> IntRange.toIterable |> Iterable.map hash;
 
-  let camlIntMap = keys |> Iterator.reduce
+  let camlIntMap = keys |> Iterable.reduce
     (fun acc i => acc |> CamlIntMap.add i i)
     CamlIntMap.empty;
 
@@ -84,16 +84,16 @@ let test (n: int) (count: int): Test.t => {
   let (<|) (f: 'a => 'b) (a: 'a): ('b) => f a;
 
   let hashMap = keys
-    |> Iterator.map (fun i => (i, i))
+    |> Iterable.map (fun i => (i, i))
     |> HashMap.putAllEntries
     <| hashMapEmpty;
 
   let intMap = keys
-    |> Iterator.map (fun i => (i, i))
+    |> Iterable.map (fun i => (i, i))
     |> IntMap.fromEntries;
 
   let sortedMap = keys
-    |> Iterator.map (fun i => (i, i))
+    |> Iterable.map (fun i => (i, i))
     |> SortedIntMap.fromEntries;
 
   let testGroup = [
@@ -170,7 +170,7 @@ let test (n: int) (count: int): Test.t => {
   let tests = Sequence.generate (fun i => i) testGroup
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
-    |> Sequence.toIterator
+    |> Sequence.toIterable
     |> List.fromReverse;
   describe (sprintf "MapPerf") tests
 };
