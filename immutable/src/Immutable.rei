@@ -244,8 +244,8 @@ let module rec Iterable: {
     type t;
 
     let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable], while [predicate] returns true,
+    /** [reduce while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable], while [predicate] returns true,
      *  accumulating the result.
      */
 
@@ -261,8 +261,8 @@ let module rec Iterable: {
     type t 'a;
 
     let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduce while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable], while [predicate] returns true,
+    /** [reduce while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable], while [predicate] returns true,
      *  accumulating the result.
      */
 
@@ -277,7 +277,7 @@ let module rec Iterable: {
   include Streamable.S1 with type t 'a := t 'a;
 
   let module Reducer: {
-    /** Module functions for generating modules which provide common reduction functions for Reduceables.
+    /** Module functions for generating modules which provide common reduction functions for Iterables.
      *  All functions are O(N), unless otherwise noted.
      */
     module type Iterable = S;
@@ -288,48 +288,48 @@ let module rec Iterable: {
       type t;
 
       let count: t => int;
-      /** [count reduceable] returns the total number values produced by [reduceable] */
+      /** [count iterable] returns the total number values produced by [iterable] */
 
       let every: (a => bool) => t => bool;
-      /** [every f reduceable] returns true if the predicate [f] returns true for all values in [reduceable].
-       *  If [reduceable] is empty, returns [true].
+      /** [every f iterable] returns true if the predicate [f] returns true for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
        */
 
       let find: (a => bool) => t => (option a);
-      /** [find f reduceable] return the Some of the first value in [reduceable] for which the
+      /** [find f iterable] return the Some of the first value in [iterable] for which the
        *  the predicate f returns [true]. Otherwise None.
        */
 
       let findOrRaise: (a => bool) => t => a;
-      /** [findOrRaise f reduceable] return the the first value in [reduceable] for which the
+      /** [findOrRaise f iterable] return the the first value in [iterable] for which the
        *  the predicate f returns [true]. Otherwise raises an exception.
        */
 
       let first: t => (option a);
-      /** [first reduceable] returns first value in [reduceable] or None.
+      /** [first iterable] returns first value in [iterable] or None.
        *
        *  Computational Complexity: O(1)
        */
 
       let firstOrRaise: t => a;
-      /** [firstOrRaise reduceable] returns the first value in [reduceable] or raises an exception.
+      /** [firstOrRaise iterable] returns the first value in [iterable] or raises an exception.
        *
        *  Computational Complexity: O(1)
        */
 
       let forEach: while_::(a => bool)? => (a => unit) => t => unit;
-      /** [forEach while_::predicate f reduceable] iterates through [reduceable] applying the
+      /** [forEach while_::predicate f iterable] iterates through [iterable] applying the
        *  side effect function [f] to each value, while [predicate] returns true
        */
 
       let none: (a => bool) => t => bool;
-      /** [none f reduceable] returns true if the predicate [f] returns false for all values in [reduceable].
-       *  If [reduceable] is empty, returns [true].
+      /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
        */
 
       let some: (a => bool) => t => bool;
-      /** [some f reduceable] returns true if the predicate [f] returns true for at
-       *  least one value in [reduceable]. If [reduceable] is empty, returns [false].
+      /** [some f iterable] returns true if the predicate [f] returns true for at
+       *  least one value in [iterable]. If [iterable] is empty, returns [false].
        */
     };
 
@@ -337,48 +337,48 @@ let module rec Iterable: {
       type t 'a;
 
       let count: t 'a => int;
-      /** [count reduceable] returns the total number values produced by [reduceable] */
+      /** [count iterable] returns the total number values produced by [iterable] */
 
       let every: ('a => bool) => (t 'a) => bool;
-      /** [every f reduceable] returns true if the predicate [f] returns true for all values in [reduceable].
-       *  If [reduceable] is empty, returns [true].
+      /** [every f iterable] returns true if the predicate [f] returns true for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
        */
 
       let find: ('a => bool) => (t 'a) => (option 'a);
-      /** [find f reduceable] return the Some of the first value in [reduceable] for which the
+      /** [find f iterable] return the Some of the first value in [iterable] for which the
        *  the predicate f returns [true]. Otherwise None.
        */
 
       let findOrRaise: ('a => bool) => (t 'a) => 'a;
-      /** [findOrRaise f reduceable] return the the first value in [reduceable] for which the
+      /** [findOrRaise f iterable] return the the first value in [iterable] for which the
        *  the predicate f returns [true]. Otherwise raises an exception.
        */
 
       let first: t 'a => (option 'a);
-      /** [first reduceable] returns first value in [reduceable] or None.
+      /** [first iterable] returns first value in [iterable] or None.
        *
        *  Computational Complexity: O(1)
        */
 
       let firstOrRaise: t 'a => 'a;
-      /** [firstOrRaise reduceable] returns the first value in [reduceable] or raises an exception.
+      /** [firstOrRaise iterable] returns the first value in [iterable] or raises an exception.
        *
        *  Computational Complexity: O(1)
        */
 
       let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
-      /** [forEach while_::predicate f reduceable] iterates through [reduceable] applying the
+      /** [forEach while_::predicate f iterable] iterates through [iterable] applying the
        *  side effect function [f] to each value, while [predicate] returns true
        */
 
       let none: ('a => bool) => (t 'a) => bool;
-      /** [none f reduceable] returns true if the predicate [f] returns false for all values in [reduceable].
-       *  If [reduceable] is empty, returns [true].
+      /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
+       *  If [iterable] is empty, returns [true].
        */
 
       let some: ('a => bool) => (t 'a) => bool;
-      /** [some f reduceable] returns true if the predicate [f] returns true for at
-       *  least one value in [reduceable]. If [reduceable] is empty, returns [false].
+      /** [some f iterable] returns true if the predicate [f] returns true for at
+       *  least one value in [iterable]. If [iterable] is empty, returns [false].
        */
     };
 
@@ -410,8 +410,8 @@ let module IterableRight: {
     include Iterable.S with type a := a and type t := t;
 
     let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
      *  from the right most value, accumulating the result.
      */
 
@@ -426,8 +426,8 @@ let module IterableRight: {
     include Iterable.S1 with type t 'a := t 'a;
 
     let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
-     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
      *  from the right most value, accumulating the result.
      */
 
