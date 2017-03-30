@@ -18,7 +18,7 @@ let hash = Hashtbl.hash;
 
 let generateTests
     (getTestData: unit => 'set)
-    (keys: unit => Iterator.t int)
+    (keys: unit => Iterable.t int)
     (empty: unit => 'set)
     (add: int => 'set => 'set)
     (remove: int => 'set => 'set)
@@ -35,25 +35,25 @@ let generateTests
   it (sprintf "set with %i elements, remove %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToRemove = keys ()
-      |> Iterator.buffer count::1 skip::3
-      |> Iterator.map (fun [i] => i);
+      |> Iterable.buffer count::1 skip::3
+      |> Iterable.map (fun [i] => i);
 
-    keysToRemove |> Iterator.reduce (fun acc i => acc |> remove i) map |> ignore;
+    keysToRemove |> Iterable.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
   it (sprintf "set with %i elements, update %i elements" n (n / 3)) (fun () => {
     let map = getTestData ();
     let keysToUpdate = keys ()
-      |> Iterator.buffer count::1 skip::3
-      |> Iterator.map (fun [i] => i);
+      |> Iterable.buffer count::1 skip::3
+      |> Iterable.map (fun [i] => i);
 
-    keysToUpdate |> Iterator.reduce (fun acc i => acc |> add i) map |> ignore;
+    keysToUpdate |> Iterable.reduce (fun acc i => acc |> add i) map |> ignore;
   }),
 
   it (sprintf "contains %i values" n) (fun () => {
     let map = getTestData ();
 
-    keys () |> Iterator.Reducer.forEach (fun i => map |> contains i |> ignore);
+    keys () |> Iterable.Reducer.forEach (fun i => map |> contains i |> ignore);
   }),
 ];
 
@@ -73,10 +73,10 @@ let module SortedIntSet = SortedSet.Make {
 };
 
 let test (n: int) (count: int): Test.t => {
-  let keys = IntRange.create start::0 count::count |> IntRange.toIterator |> Iterator.map hash;
+  let keys = IntRange.create start::0 count::count |> IntRange.toIterable |> Iterable.map hash;
 
   let camlIntSet = keys
-    |> Iterator.reduce
+    |> Iterable.reduce
       (fun acc i => acc |> CamlIntSet.add (hash i))
       CamlIntSet.empty;
 
@@ -91,13 +91,13 @@ let test (n: int) (count: int): Test.t => {
     <| hashSetEmpty;
 
   let intSet = keys
-    |> Iterator.reduce
+    |> Iterable.reduce
       (fun acc i => acc |> TransientIntSet.add i)
       (TransientIntSet.empty ())
     |> TransientIntSet.persist;
 
   let sortedSet = keys
-    |> Iterator.reduce
+    |> Iterable.reduce
       (fun acc i => acc |> SortedIntSet.add i)
       SortedIntSet.empty;
 
@@ -172,7 +172,7 @@ let test (n: int) (count: int): Test.t => {
   let tests = Sequence.generate (fun i => i) testGroup
     |> Sequence.take n
     |> Sequence.flatMap List.toSequence
-    |> Sequence.toIterator
+    |> Sequence.toIterable
     |> List.fromReverse;
   describe (sprintf "SetPerf") tests
 };
