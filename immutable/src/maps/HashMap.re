@@ -138,7 +138,7 @@ let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => {
 let keys (map: t 'k 'v): (ImmSet.t 'k) =>
   map |> toMap |> ImmMap.keys;
 
-let module TransientHashMap = {
+let module Transient = {
   type hashMap 'k 'v = t 'k 'v;
 
   type t 'k 'v = Transient.t (hashMap 'k 'v);
@@ -256,13 +256,13 @@ let module TransientHashMap = {
     transient |> Transient.update removeAllImpl;
 };
 
-let mutate = TransientHashMap.mutate;
+let mutate = Transient.mutate;
 
 let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
-  map |> mutate |> TransientHashMap.putAll iter |> TransientHashMap.persist;
+  map |> mutate |> Transient.putAll iter |> Transient.persist;
 
 let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
-  map |> mutate |> TransientHashMap.putAllEntries iter |> TransientHashMap.persist;
+  map |> mutate |> Transient.putAllEntries iter |> Transient.persist;
 
 let fromWith
     hash::(hash: Hash.t 'k)
@@ -284,12 +284,12 @@ let merge
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);
         switch result {
-          | None => acc |> TransientHashMap.remove key
-          | Some value => acc |> TransientHashMap.put key value
+          | None => acc |> Transient.remove key
+          | Some value => acc |> Transient.put key value
         }
       }
     ) (mutate initialValue)
-  |> TransientHashMap.persist;
+  |> Transient.persist;
 
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;

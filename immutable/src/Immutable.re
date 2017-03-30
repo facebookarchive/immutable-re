@@ -106,47 +106,48 @@ let module Collection = {
     let toCollection: (t 'a) => (Collection.t 'a);
     let toSequence: (t 'a) => (Sequence.t 'a);
   };
-};
 
-let module PersistentCollection = {
-  module type S = {
-    type a;
-    type t;
+  let module Persistent = {
+    module type S = {
+      type a;
+      type t;
 
-    include Collection.S with type a := a and type t := t;
+      include S with type a := a and type t := t;
 
-    let removeAll: t => t;
+      let removeAll: t => t;
+    };
+
+    module type S1 = {
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+
+      let removeAll: t 'a => t 'a;
+    };
   };
 
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S = {
+      type a;
+      type t;
 
-    include Collection.S1 with type t 'a := t 'a;
+      let count: t => int;
+      let empty: unit => t;
+      let isEmpty: t => bool;
+      let isNotEmpty: t => bool;
+      let removeAll: t => t;
+    };
 
-    let removeAll: t 'a => t 'a;
+    module type S1 = {
+      type t 'a;
+
+      let count: (t 'a) => int;
+      let isEmpty: (t 'a) => bool;
+      let isNotEmpty: (t 'a) => bool;
+      let removeAll: (t 'a) => (t 'a);
+    };
   };
-};
 
-let module TransientCollection = {
-  module type S = {
-    type a;
-    type t;
-
-    let count: t => int;
-    let empty: unit => t;
-    let isEmpty: t => bool;
-    let isNotEmpty: t => bool;
-    let removeAll: t => t;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    let count: (t 'a) => int;
-    let isEmpty: (t 'a) => bool;
-    let isNotEmpty: (t 'a) => bool;
-    let removeAll: (t 'a) => (t 'a);
-  };
 };
 
 let module SequentialCollection = {
@@ -168,36 +169,36 @@ let module SequentialCollection = {
     let first: (t 'a) => (option 'a);
     let firstOrRaise: (t 'a) => 'a;
   };
-};
 
-let module PersistentSequentialCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Persistent = {
+    module type S1 = {
+      type t 'a;
 
-    include PersistentCollection.S1 with type t 'a := t 'a;
-    include SequentialCollection.S1 with type t 'a := t 'a;
+      include Collection.Persistent.S1 with type t 'a := t 'a;
+      include S1 with type t 'a := t 'a;
 
-    let addFirst: 'a => (t 'a) => (t 'a);
-    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let empty: unit => (t 'a);
-    let fromReverse: (Iterable.t 'a) => (t 'a);
-    let return: 'a => (t 'a);
-    let removeFirstOrRaise: (t 'a) => (t 'a);
+      let addFirst: 'a => (t 'a) => (t 'a);
+      let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let empty: unit => (t 'a);
+      let fromReverse: (Iterable.t 'a) => (t 'a);
+      let return: 'a => (t 'a);
+      let removeFirstOrRaise: (t 'a) => (t 'a);
+    };
   };
-};
 
-let module TransientSequentialCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S1 = {
+      type t 'a;
 
-    include TransientCollection.S1 with type t 'a := t 'a;
+      include Collection.Transient.S1 with type t 'a := t 'a;
 
-    let addFirst: 'a => (t 'a) => (t 'a);
-    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let empty: unit => (t 'a);
-    let first: (t 'a) => option 'a;
-    let firstOrRaise: (t 'a) => 'a;
-    let removeFirstOrRaise: (t 'a) => (t 'a);
+      let addFirst: 'a => (t 'a) => (t 'a);
+      let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let empty: unit => (t 'a);
+      let first: (t 'a) => option 'a;
+      let firstOrRaise: (t 'a) => 'a;
+      let removeFirstOrRaise: (t 'a) => (t 'a);
+    };
   };
 };
 
@@ -224,33 +225,34 @@ let module NavigableCollection = {
     let lastOrRaise: (t 'a) => 'a;
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
   };
-};
 
-let module PersistentNavigableCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Persistent = {
+    module type S1 = {
+      type t 'a;
 
-    include NavigableCollection.S1 with type t 'a := t 'a;
-    include PersistentSequentialCollection.S1 with type t 'a := t 'a;
+      include S1 with type t 'a := t 'a;
+      include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
 
-    let addLast: 'a => (t 'a) => (t 'a);
-    let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let from: (Iterable.t 'a) => (t 'a);
-    let removeLastOrRaise: (t 'a) => (t 'a);
+      let addLast: 'a => (t 'a) => (t 'a);
+      let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let from: (Iterable.t 'a) => (t 'a);
+      let removeLastOrRaise: (t 'a) => (t 'a);
+    };
   };
-};
 
-let module TransientNavigableCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S1 = {
+      type t 'a;
 
-    include TransientSequentialCollection.S1 with type t 'a := t 'a;
+      include SequentialCollection.Transient.S1 with type t 'a := t 'a;
 
-    let addLast: 'a => (t 'a) => (t 'a);
-    let last: (t 'a) => option 'a;
-    let lastOrRaise: (t 'a) => 'a;
-    let removeLastOrRaise: (t 'a) => (t 'a);
+      let addLast: 'a => (t 'a) => (t 'a);
+      let last: (t 'a) => option 'a;
+      let lastOrRaise: (t 'a) => 'a;
+      let removeLastOrRaise: (t 'a) => (t 'a);
+    };
   };
+
 };
 
 let module Set = {
@@ -275,62 +277,62 @@ let module Set = {
     let equals: Equality.t (t 'a);
     let toSet: (t 'a) => ImmSet.t 'a;
   };
-};
 
-let module PersistentSet = {
-  module type S = {
-    type a;
-    type t;
+  let module Persistent = {
+    module type S = {
+      type a;
+      type t;
 
-    include Set.S with type a := a and type t := t;
-    include PersistentCollection.S with type a := a and type t := t;
+      include S with type a := a and type t := t;
+      include Collection.Persistent.S with type a := a and type t := t;
 
-    let add: a => t => t;
-    let addAll: (Iterable.t a) => t => t;
-    let from: (Iterable.t a) => t;
-    let intersect: t => t => t;
-    let remove: a => t => t;
-    let subtract: t => t => t;
-    let union: t => t => t;
+      let add: a => t => t;
+      let addAll: (Iterable.t a) => t => t;
+      let from: (Iterable.t a) => t;
+      let intersect: t => t => t;
+      let remove: a => t => t;
+      let subtract: t => t => t;
+      let union: t => t => t;
+    };
+
+    module type S1 = {
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+      include Collection.Persistent.S1 with type t 'a := t 'a;
+
+      let add: 'a => (t 'a) => (t 'a);
+      let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let intersect: (t 'a) => (t 'a) => (t 'a);
+      let remove: 'a => (t 'a) => (t 'a);
+      let subtract: (t 'a) => (t 'a) => (t 'a);
+      let union: (t 'a) => (t 'a) => (t 'a);
+    };
   };
 
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S = {
+      type a;
+      type t;
 
-    include Set.S1 with type t 'a := t 'a;
-    include PersistentCollection.S1 with type t 'a := t 'a;
+      include Collection.Transient.S with type a := a and type t := t;
 
-    let add: 'a => (t 'a) => (t 'a);
-    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let intersect: (t 'a) => (t 'a) => (t 'a);
-    let remove: 'a => (t 'a) => (t 'a);
-    let subtract: (t 'a) => (t 'a) => (t 'a);
-    let union: (t 'a) => (t 'a) => (t 'a);
-  };
-};
+      let add: a => t => t;
+      let addAll: (Iterable.t a) => t => t;
+      let contains: a => t => bool;
+      let remove: a => t => t;
+    };
 
-let module TransientSet = {
-  module type S = {
-    type a;
-    type t;
+    module type S1 = {
+      type t 'a;
 
-    include TransientCollection.S with type a := a and type t := t;
+      include Collection.Transient.S1 with type t 'a := t 'a;
 
-    let add: a => t => t;
-    let addAll: (Iterable.t a) => t => t;
-    let contains: a => t => bool;
-    let remove: a => t => t;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include TransientCollection.S1 with type t 'a := t 'a;
-
-    let add: 'a => (t 'a) => (t 'a);
-    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let contains: 'a => (t 'a) => bool;
-    let remove: 'a => (t 'a) => (t 'a);
+      let add: 'a => (t 'a) => (t 'a);
+      let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let contains: 'a => (t 'a) => bool;
+      let remove: 'a => (t 'a) => (t 'a);
+    };
   };
 };
 
@@ -342,20 +344,21 @@ let module NavigableSet = {
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
   };
-};
 
-let module PersistentNavigableSet = {
-  module type S = {
-    type a;
-    type t;
+  let module Persistent = {
+    module type S = {
+      type a;
+      type t;
 
-    include NavigableSet.S with type a := a and type t := t;
-    include PersistentSet.S with type a := a and type t := t;
+      include S with type a := a and type t := t;
+      include Set.Persistent.S with type a := a and type t := t;
 
-    let removeFirstOrRaise: t => t;
+      let removeFirstOrRaise: t => t;
 
-    let removeLastOrRaise: t => t;
+      let removeLastOrRaise: t => t;
+    };
   };
+
 };
 
 let module KeyedStreamable = {
@@ -425,56 +428,56 @@ let module KeyedCollection = {
     let keys: (t 'k 'v) => (Set.t 'k);
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
-};
+  let module Persistent = {
+    module type S1 = {
+      type k;
+      type t 'v;
 
-let module PersistentKeyedCollection = {
-  module type S1 = {
-    type k;
-    type t 'v;
+      include S1 with type k := k and type t 'v := t 'v;
 
-    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
+      let remove: k => (t 'v) => (t 'v);
 
-    let remove: k => (t 'v) => (t 'v);
+      let removeAll: (t 'v) => (t 'v);
+    };
 
-    let removeAll: (t 'v) => (t 'v);
+    module type S2 = {
+      type t 'k 'v;
+
+      include S2 with  type t 'k 'v := t 'k 'v;
+
+      let remove: 'k => (t 'k 'v) => (t 'k 'v);
+
+      let removeAll: (t 'k 'v) => (t 'k 'v);
+    };
   };
 
-  module type S2 = {
-    type t 'k 'v;
+  let module Transient = {
+    module type S1 = {
+      type k;
+      type t 'v;
 
-    include KeyedCollection.S2 with  type t 'k 'v := t 'k 'v;
+      let containsKey: k => (t 'v) => bool;
 
-    let remove: 'k => (t 'k 'v) => (t 'k 'v);
+      let count: (t 'v) => int;
+      let isEmpty: (t 'v) => bool;
+      let isNotEmpty: (t 'v) => bool;
+      let remove: k => (t 'v) => (t 'v);
+      let removeAll: (t 'v) => (t 'v);
+    };
 
-    let removeAll: (t 'k 'v) => (t 'k 'v);
+    module type S2 = {
+      type t 'k 'v;
+
+      let containsKey: 'k => (t 'k 'v) => bool;
+
+      let count: (t 'k 'v) => int;
+      let isEmpty: (t 'k 'v) => bool;
+      let isNotEmpty: (t 'k 'v) => bool;
+      let remove: 'k => (t 'k 'v) => (t 'k 'v);
+      let removeAll: (t 'k 'v) => (t 'k 'v);
+    };
   };
-};
 
-let module TransientKeyedCollection = {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let containsKey: k => (t 'v) => bool;
-
-    let count: (t 'v) => int;
-    let isEmpty: (t 'v) => bool;
-    let isNotEmpty: (t 'v) => bool;
-    let remove: k => (t 'v) => (t 'v);
-    let removeAll: (t 'v) => (t 'v);
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    let containsKey: 'k => (t 'k 'v) => bool;
-
-    let count: (t 'k 'v) => int;
-    let isEmpty: (t 'k 'v) => bool;
-    let isNotEmpty: (t 'k 'v) => bool;
-    let remove: 'k => (t 'k 'v) => (t 'k 'v);
-    let removeAll: (t 'k 'v) => (t 'k 'v);
-  };
 };
 
 let module NavigableKeyedCollection = {
@@ -516,70 +519,71 @@ let module Map = {
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let toMap: (t 'k 'v) => ImmMap.t 'k 'v;
   };
-};
 
-let module PersistentMap = {
-  module type S1 = {
-    type k;
-    type t 'v;
+  let module Persistent = {
+    module type S1 = {
+      type k;
+      type t 'v;
 
-    include PersistentKeyedCollection.S1 with type k := k and type t 'v := t 'v;
-    include Map.S1 with type k := k and type t 'v := t 'v;
+      include KeyedCollection.Persistent.S1 with type k := k and type t 'v := t 'v;
+      include S1 with type k := k and type t 'v := t 'v;
 
-    let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+      let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
 
-    let empty: unit => (t 'v);
-    let from: (KeyedIterable.t k 'v) => (t 'v);
-    let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
-    let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
-    let put: k => 'v => (t 'v) => (t 'v);
-    let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
-    let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
+      let empty: unit => (t 'v);
+      let from: (KeyedIterable.t k 'v) => (t 'v);
+      let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
+      let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
+      let put: k => 'v => (t 'v) => (t 'v);
+      let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
+      let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
+    };
+
+    module type S2 = {
+      type t 'k 'v;
+
+      include KeyedCollection.Persistent.S2 with type t 'k 'v := t 'k 'v;
+      include S2 with type t 'k 'v := t 'k 'v;
+
+      let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+      let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
+      let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+      let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+      let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    };
   };
 
-  module type S2 = {
-    type t 'k 'v;
+  let module Transient = {
+    module type S1 = {
+      type k;
 
-    include PersistentKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
-    include Map.S2 with type t 'k 'v := t 'k 'v;
+      type t 'v;
 
-    let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
-    let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
-    let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-    let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-    let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+      include KeyedCollection.Transient.S1 with type k := k and type t 'v := t 'v;
+
+      let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
+      let empty: unit => (t 'v);
+      let get: k => (t 'v) => (option 'v);
+      let getOrRaise: k => (t 'v) => 'v;
+      let put: k => 'v => (t 'v) => (t 'v);
+      let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
+      let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
+    };
+
+    module type S2 = {
+      type t 'k 'v;
+
+      include KeyedCollection.Transient.S2 with type t 'k 'v := t 'k 'v;
+
+      let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
+      let get: 'k => (t 'k 'v) => (option 'v);
+      let getOrRaise: 'k => (t 'k 'v) => 'v;
+      let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
+      let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
+      let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    };
   };
-};
 
-let module TransientMap = {
-  module type S1 = {
-    type k;
-
-    type t 'v;
-
-    include TransientKeyedCollection.S1 with type k := k and type t 'v := t 'v;
-
-    let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
-    let empty: unit => (t 'v);
-    let get: k => (t 'v) => (option 'v);
-    let getOrRaise: k => (t 'v) => 'v;
-    let put: k => 'v => (t 'v) => (t 'v);
-    let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
-    let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include TransientKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
-
-    let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
-    let get: 'k => (t 'k 'v) => (option 'v);
-    let getOrRaise: 'k => (t 'k 'v) => 'v;
-    let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
-    let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-    let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
-  };
 };
 
 let module NavigableMap = {
@@ -590,19 +594,20 @@ let module NavigableMap = {
     include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
   };
-};
 
-let module PersistentNavigableMap = {
-  module type S1 = {
-    type k;
-    type t 'v;
+  let module Persistent = {
+    module type S1 = {
+      type k;
+      type t 'v;
 
-    include NavigableMap.S1 with type k := k and type t 'v := t 'v;
-    include PersistentMap.S1 with type k := k and type t 'v := t 'v;
+      include S1 with type k := k and type t 'v := t 'v;
+      include Map.Persistent.S1 with type k := k and type t 'v := t 'v;
 
-    let removeFirstOrRaise: (t 'v) => (t 'v);
-    let removeLastOrRaise: (t 'v) => (t 'v);
+      let removeFirstOrRaise: (t 'v) => (t 'v);
+      let removeLastOrRaise: (t 'v) => (t 'v);
+    };
   };
+
 };
 
 let module Indexed = {
@@ -621,25 +626,15 @@ let module Indexed = {
 
 let module Deque = Deque;
 
-let module TransientDeque = Deque.TransientDeque;
-
 let module HashMap = HashMap;
-
-let module TransientHashMap = HashMap.TransientHashMap;
 
 let module HashSet = HashSet;
 
-let module TransientHashSet = HashSet.TransientHashSet;
-
 let module IntMap = IntMap;
-
-let module TransientIntMap = IntMap.TransientIntMap;
 
 let module IntRange = IntRange;
 
 let module IntSet = IntSet;
-
-let module TransientIntSet = IntSet.TransientIntSet;
 
 let module List = {
   include ImmList;
@@ -661,5 +656,3 @@ let module SortedSet = SortedSet;
 let module Stack = ImmStack;
 
 let module Vector = Vector;
-
-let module TransientVector = Vector.TransientVector;

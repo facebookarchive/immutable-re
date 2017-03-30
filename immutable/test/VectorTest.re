@@ -12,23 +12,23 @@ open Printf;
 open ReUnit;
 open ReUnit.Test;
 
-let module Tester10 = DequeTester.Make (Vector: PersistentNavigableCollection.S1) ({
+let module Tester10 = DequeTester.Make (Vector: NavigableCollection.Persistent.S1) ({
   let count = 10;
 });
 
-let module Tester50 = DequeTester.Make (Vector: PersistentNavigableCollection.S1) ({
+let module Tester50 = DequeTester.Make (Vector: NavigableCollection.Persistent.S1) ({
   let count = 50;
 });
 
-let module Tester200 = DequeTester.Make (Vector: PersistentNavigableCollection.S1) ({
+let module Tester200 = DequeTester.Make (Vector: NavigableCollection.Persistent.S1) ({
   let count = 200;
 });
 
-let module Tester2000 = DequeTester.Make (Vector: PersistentNavigableCollection.S1) ({
+let module Tester2000 = DequeTester.Make (Vector: NavigableCollection.Persistent.S1) ({
   let count = 2000;
 });
 
-let module Tester50000 = DequeTester.Make (Vector: PersistentNavigableCollection.S1) ({
+let module Tester50000 = DequeTester.Make (Vector: NavigableCollection.Persistent.S1) ({
   let count = 50000;
 });
 

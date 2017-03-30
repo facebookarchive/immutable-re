@@ -92,9 +92,9 @@ let test (n: int) (count: int): Test.t => {
 
   let intSet = keys
     |> Iterable.reduce
-      (fun acc i => acc |> TransientIntSet.add i)
-      (TransientIntSet.empty ())
-    |> TransientIntSet.persist;
+      (fun acc i => acc |> IntSet.Transient.add i)
+      (IntSet.Transient.empty ())
+    |> IntSet.Transient.persist;
 
   let sortedSet = keys
     |> Iterable.reduce
@@ -135,14 +135,14 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "TransientHashSet" (
+    describe "HashSet.Transient" (
       generateTests
         (fun () => hashSet |> HashSet.mutate)
         (fun () => keys)
         (fun () => hashSetEmpty |> HashSet.mutate)
-        TransientHashSet.add
-        TransientHashSet.remove
-        TransientHashSet.contains
+        HashSet.Transient.add
+        HashSet.Transient.remove
+        HashSet.Transient.contains
         count
     ),
 
@@ -157,14 +157,14 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "TransientIntSet" (
+    describe "IntSet.Transient" (
       generateTests
         (fun () => intSet |> IntSet.mutate)
         (fun () => keys)
         (fun () => IntSet.empty |> IntSet.mutate)
-        TransientIntSet.add
-        TransientIntSet.remove
-        TransientIntSet.contains
+        IntSet.Transient.add
+        IntSet.Transient.remove
+        IntSet.Transient.contains
         count
     ),
   ];

@@ -124,14 +124,12 @@ let toCollection (deque: t 'a): (Collection.t 'a) => {
   sequence: fun () => toSequence deque,
 };
 
-let module TransientDeque = {
-  let module TransientVector = Vector.TransientVector;
-
+let module Transient = {
   type deque 'a = t 'a;
 
   type transientDequeImpl 'a =
-    | Ascending (TransientVector.t 'a)
-    | Descending (TransientVector.t 'a);
+    | Ascending (Vector.Transient.t 'a)
+    | Descending (Vector.Transient.t 'a);
 
   type t 'a = Transient.t (transientDequeImpl 'a);
 
@@ -146,10 +144,10 @@ let module TransientDeque = {
       (value: 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.addFirst value vector |> ignore;
+        Vector.Transient.addFirst value vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.addLast value vector |> ignore;
+        Vector.Transient.addLast value vector |> ignore;
         transient;
   };
 
@@ -157,10 +155,10 @@ let module TransientDeque = {
       (iter: Iterable.t 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        vector |> TransientVector.addFirstAll iter |> ignore;
+        vector |> Vector.Transient.addFirstAll iter |> ignore;
         transient;
     | Descending vector =>
-        vector |> TransientVector.addLastAll iter |> ignore;
+        vector |> Vector.Transient.addLastAll iter |> ignore;
         transient;
   };
 
@@ -168,10 +166,10 @@ let module TransientDeque = {
       (value: 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.addLast value vector |> ignore;
+        Vector.Transient.addLast value vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.addFirst value vector |> ignore;
+        Vector.Transient.addFirst value vector |> ignore;
         transient;
   };
 
@@ -179,29 +177,29 @@ let module TransientDeque = {
       (iter: Iterable.t 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        vector |> TransientVector.addLastAll iter |> ignore;
+        vector |> Vector.Transient.addLastAll iter |> ignore;
         transient;
     | Descending vector =>
-        vector |> TransientVector.addFirstAll iter |> ignore;
+        vector |> Vector.Transient.addFirstAll iter |> ignore;
         transient;
   };
 
   let count (transient: t 'a): int => switch (Transient.get transient) {
     | Ascending vector
-    | Descending vector => TransientVector.count vector
+    | Descending vector => Vector.Transient.count vector
   };
 
   let empty (): (t 'a) =>
     empty () |> mutate;
 
   let first (transient: t 'a): (option 'a) => switch (Transient.get transient) {
-    | Ascending vector => vector |> TransientVector.first
-    | Descending vector => vector |> TransientVector.last
+    | Ascending vector => vector |> Vector.Transient.first
+    | Descending vector => vector |> Vector.Transient.last
   };
 
   let firstOrRaise (transient: t 'a): 'a => switch (Transient.get transient) {
-    | Ascending vector => TransientVector.firstOrRaise vector
-    | Descending vector => TransientVector.lastOrRaise vector
+    | Ascending vector => Vector.Transient.firstOrRaise vector
+    | Descending vector => Vector.Transient.lastOrRaise vector
   };
 
   let isEmpty (transient: t 'a): bool =>
@@ -211,43 +209,43 @@ let module TransientDeque = {
     transient |> count !== 0;
 
   let last (transient: t 'a): (option 'a) => switch (Transient.get transient) {
-    | Ascending vector => vector |> TransientVector.last
-    | Descending vector => vector |> TransientVector.first
+    | Ascending vector => vector |> Vector.Transient.last
+    | Descending vector => vector |> Vector.Transient.first
   };
 
   let lastOrRaise (transient: t 'a): 'a => switch (Transient.get transient)  {
-    | Ascending vector => TransientVector.lastOrRaise vector
-    | Descending vector => TransientVector.firstOrRaise vector
+    | Ascending vector => Vector.Transient.lastOrRaise vector
+    | Descending vector => Vector.Transient.firstOrRaise vector
   };
 
   let persist (transient: t 'a): (deque 'a) => switch (Transient.persist transient) {
-    | Ascending vector => Ascending (TransientVector.persist vector)
-    | Descending vector => Descending (TransientVector.persist vector)
+    | Ascending vector => Ascending (Vector.Transient.persist vector)
+    | Descending vector => Descending (Vector.Transient.persist vector)
   };
 
   let removeAllImpl
       (_: Transient.Owner.t)
       (_: transientDequeImpl 'a): (transientDequeImpl 'a) =>
-    Ascending (TransientVector.empty ());
+    Ascending (Vector.Transient.empty ());
 
   let removeAll (transient: t 'a): (t 'a) =>
     transient |> Transient.update removeAllImpl;
 
   let removeFirstOrRaise (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.removeFirstOrRaise vector |> ignore;
+        Vector.Transient.removeFirstOrRaise vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.removeLastOrRaise vector |> ignore;
+        Vector.Transient.removeLastOrRaise vector |> ignore;
         transient;
   };
 
   let removeLastOrRaise (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
-        TransientVector.removeLastOrRaise vector |> ignore;
+        Vector.Transient.removeLastOrRaise vector |> ignore;
         transient;
     | Descending vector =>
-        TransientVector.removeFirstOrRaise vector |> ignore;
+        Vector.Transient.removeFirstOrRaise vector |> ignore;
         transient;
   };
 
@@ -262,17 +260,17 @@ let module TransientDeque = {
     transient |> Transient.update reverseImpl;
 };
 
-let mutate = TransientDeque.mutate;
+let mutate = Transient.mutate;
 
 let addFirstAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
   |> mutate
-  |> TransientDeque.addFirstAll iter
-  |> TransientDeque.persist;
+  |> Transient.addFirstAll iter
+  |> Transient.persist;
 
 let addLastAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
   |> mutate
-  |> TransientDeque.addLastAll iter
-  |> TransientDeque.persist;
+  |> Transient.addLastAll iter
+  |> Transient.persist;
 
 let from (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addLastAll iter;

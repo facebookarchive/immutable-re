@@ -10,7 +10,7 @@
 open Immutable;
 open ReUnit.Test;
 
-let module HashIntSet: PersistentSet.S with type a = int = {
+let module HashIntSet: Set.Persistent.S with type a = int = {
   type a = int;
   type t = HashSet.t a;
 
@@ -41,7 +41,7 @@ let module HashIntSet: PersistentSet.S with type a = int = {
 
 let badHashFunction i => i mod 100;
 
-let module BadHashIntSet: PersistentSet.S with type a = int = {
+let module BadHashIntSet: Set.Persistent.S with type a = int = {
   type a = int;
   type t = HashSet.t a;
 

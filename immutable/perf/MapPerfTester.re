@@ -133,14 +133,14 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "TransientHashMap" (
+    describe "HashMap.Transient" (
       generateTests
         (fun () => hashMap |> HashMap.mutate)
         (fun () => keys)
         (fun () => hashMapEmpty |> HashMap.mutate)
-        TransientHashMap.put
-        TransientHashMap.remove
-        TransientHashMap.get
+        HashMap.Transient.put
+        HashMap.Transient.remove
+        HashMap.Transient.get
         count
     ),
 
@@ -155,14 +155,14 @@ let test (n: int) (count: int): Test.t => {
         count
     ),
 
-    describe "TransientIntMap" (
+    describe "IntMap.Transient" (
       generateTests
         (fun () => intMap |> IntMap.mutate)
         (fun () => keys)
-        TransientIntMap.empty
-        TransientIntMap.put
-        TransientIntMap.remove
-        TransientIntMap.get
+        IntMap.Transient.empty
+        IntMap.Transient.put
+        IntMap.Transient.remove
+        IntMap.Transient.get
         count
     ),
   ];

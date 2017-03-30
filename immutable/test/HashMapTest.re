@@ -10,7 +10,7 @@
 open Immutable;
 open ReUnit.Test;
 
-let module HashIntMap: PersistentMap.S1 with type k = int = {
+let module HashIntMap: Map.Persistent.S1 with type k = int = {
   type k = int;
   type t 'v = HashMap.t k 'v;
 
@@ -48,7 +48,7 @@ let module HashIntMap: PersistentMap.S1 with type k = int = {
 
 let badHashFunction i => i mod 100;
 
-let module BadHashIntMap: PersistentMap.S1 with type k = int = {
+let module BadHashIntMap: Map.Persistent.S1 with type k = int = {
   type k = int;
   type t 'v = HashMap.t k 'v;
 
@@ -85,8 +85,8 @@ let module BadHashIntMap: PersistentMap.S1 with type k = int = {
 };
 
 let test = describe "HashMap" [
-  PersistentMapTester.test (module HashIntMap: PersistentMap.S1 with type k = HashIntMap.k) 100,
-  PersistentMapTester.test (module HashIntMap: PersistentMap.S1 with type k = HashIntMap.k) 10000,
+  PersistentMapTester.test (module HashIntMap: Map.Persistent.S1 with type k = HashIntMap.k) 100,
+  PersistentMapTester.test (module HashIntMap: Map.Persistent.S1 with type k = HashIntMap.k) 10000,
 
   describe "with bad hash function" [
     PersistentMapTester.test (module BadHashIntMap) 100,

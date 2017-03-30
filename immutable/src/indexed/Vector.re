@@ -628,9 +628,11 @@ let removeLastOrRaise vector => PersistentVector.removeLastOrRaise Transient.Own
 let update index => PersistentVector.update Transient.Owner.none index;
 let updateWith index => PersistentVector.updateWith Transient.Owner.none index;
 
-module TransientVector = {
+module Transient = {
   type vector 'a = t 'a;
   type t 'a = Transient.t (TransientVectorImpl.t 'a);
+
+  let module Owner = Transient.Owner;
 
   let mutate ({ left, middle, right }: vector 'a): (t 'a) => Transient.create {
     left: if (CopyOnWriteArray.count left > 0) (tailCopyAndExpand left) else [||],
@@ -771,17 +773,17 @@ module TransientVector = {
     failwith "Not Implemented";
 };
 
-let mutate = TransientVector.mutate;
+let mutate = Transient.mutate;
 
 let addFirstAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
-  |> TransientVector.addFirstAll iter
-  |> TransientVector.persist;
+  |> Transient.addFirstAll iter
+  |> Transient.persist;
 
 let addLastAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
-  |> TransientVector.addLastAll iter
-  |> TransientVector.persist;
+  |> Transient.addLastAll iter
+  |> Transient.persist;
 
 let from (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addLastAll iter;
@@ -791,9 +793,9 @@ let fromReverse (iter: Iterable.t 'a): (t 'a) =>
 
 let init (count: int) (f: int => 'a): (t 'a) => IntRange.create start::0 count::count
   |> IntRange.reduce (fun acc next =>
-      acc |> TransientVector.addLast (f next)) (mutate (empty ())
+      acc |> Transient.addLast (f next)) (mutate (empty ())
     )
-  |> TransientVector.persist;
+  |> Transient.persist;
 
 let reduceImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = left |> CopyOnWriteArray.reduce f acc;
@@ -1109,8 +1111,8 @@ let toMap (vec: t 'a): (ImmMap.t int 'a) => {
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
-  |> TransientVector.updateAll f
-  |> TransientVector.persist;
+  |> Transient.updateAll f
+  |> Transient.persist;
 
 /* Unimplemented functions */
 let concat (vectors: list (t 'a)): (t 'a) =>

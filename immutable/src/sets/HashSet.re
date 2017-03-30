@@ -102,7 +102,7 @@ let equals (this: t 'a) (that: t 'a): bool =>
 let hash ({ hash, comparator } as set: t 'a): int =>
   set |> reduce (fun acc next => acc + hash next) 0;
 
-let module TransientHashSet = {
+let module Transient = {
   type hashSet 'a = t 'a;
 
   type t 'a = Transient.t (hashSet 'a);
@@ -215,10 +215,10 @@ let module TransientHashSet = {
     transient |> Transient.update removeAllImpl;
 };
 
-let mutate = TransientHashSet.mutate;
+let mutate = Transient.mutate;
 
 let addAll (iter: Iterable.t 'a) (set: t 'a): (t 'a) =>
-  set |> mutate |> TransientHashSet.addAll iter |> TransientHashSet.persist;
+  set |> mutate |> Transient.addAll iter |> Transient.persist;
 
 let fromWith
     hash::(hash: Hash.t 'a)
@@ -243,7 +243,7 @@ let union ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
 
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
-  
+
   let reduce = reduce;
   let toIterable = toIterable;
 };
