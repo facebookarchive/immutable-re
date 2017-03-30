@@ -188,4 +188,189 @@ let test = describe "Iterable" [
     Pervasives.(===) (Iterable.takeWhile (fun _ => true) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
+  describe "Reducer" [
+    describe "S" [
+      it "count" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.count
+          |> Expect.toBeEqualToInt 5;
+      }),
+      it "every" (fun () => {
+        IntRange.Reducer.every (fun _ => false) IntRange.empty |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.every (fun i => i >= 0)
+          |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.every (fun i => i < 3)
+          |> Expect.toBeEqualToFalse;
+      }),
+      it "find" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.find (fun i => i ===2)
+          |> Expect.toBeEqualToSomeOfInt 2;
+
+        IntRange.empty
+          |> IntRange.Reducer.find (fun i => i ===2)
+          |> Expect.toBeEqualToNoneOfInt;
+
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.find (fun i => i ===5)
+          |> Expect.toBeEqualToNoneOfInt;
+      }),
+      it "findOrRaise" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.findOrRaise (fun i => i ===2)
+          |> Expect.toBeEqualToInt 2;
+
+        (fun () => IntRange.empty |> IntRange.Reducer.findOrRaise (fun i => i ===2))
+          |> Expect.shouldRaise;
+      }),
+      it "first" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.first
+          |> Expect.toBeEqualToSomeOfInt 0;
+
+        IntRange.empty
+          |> IntRange.Reducer.first
+          |> Expect.toBeEqualToNoneOfInt;
+      }),
+      it "firstOrRaise" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.firstOrRaise
+          |> Expect.toBeEqualToInt 0;
+
+        (fun () => IntRange.empty |> IntRange.Reducer.firstOrRaise) |> Expect.shouldRaise;
+      }),
+      it "forEach" (fun () => {
+        let last = ref 0;
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.forEach while_::(fun i => i < 3) (fun i => { last := i });
+        !last |> Expect.toBeEqualToInt 2;
+      }),
+      it "none" (fun () => {
+        IntRange.Reducer.none (fun _ => false) IntRange.empty |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.none (fun i => i >= 2)
+          |> Expect.toBeEqualToFalse;
+
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.none (fun i => i < 0)
+          |> Expect.toBeEqualToTrue;
+      }),
+      it "some" (fun () => {
+        IntRange.Reducer.some (fun _ => false) IntRange.empty |> Expect.toBeEqualToFalse;
+
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.some (fun i => i >= 2)
+          |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.Reducer.some (fun i => i < 0)
+          |> Expect.toBeEqualToFalse;
+      }),
+    ],
+    describe "S1" [
+      it "count" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.count
+          |> Expect.toBeEqualToInt 5;
+      }),
+      it "every" (fun () => {
+        Iterable.Reducer.every (fun _ => false) (Iterable.empty ()) |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.every (fun i => i >= 0)
+          |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.every (fun i => i < 3)
+          |> Expect.toBeEqualToFalse;
+      }),
+      it "find" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.find (fun i => i ===2)
+          |> Expect.toBeEqualToSomeOfInt 2;
+
+        (Iterable.empty ())
+          |> Iterable.Reducer.find (fun i => i ===2)
+          |> Expect.toBeEqualToNoneOfInt;
+
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.find (fun i => i ===5)
+          |> Expect.toBeEqualToNoneOfInt;
+      }),
+      it "findOrRaise" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.findOrRaise (fun i => i ===2)
+          |> Expect.toBeEqualToInt 2;
+
+        (fun () => (Iterable.empty ()) |> Iterable.Reducer.findOrRaise (fun i => i ===2))
+          |> Expect.shouldRaise;
+      }),
+      it "first" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.first
+          |> Expect.toBeEqualToSomeOfInt 0;
+
+        IntRange.empty
+          |> IntRange.toIterable
+          |> Iterable.Reducer.first
+          |> Expect.toBeEqualToNoneOfInt;
+      }),
+      it "firstOrRaise" (fun () => {
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.firstOrRaise
+          |> Expect.toBeEqualToInt 0;
+
+        (fun () => IntRange.empty
+          |> IntRange.toIterable
+          |> Iterable.Reducer.firstOrRaise
+        ) |> Expect.shouldRaise;
+      }),
+      it "forEach" (fun () => {
+        let last = ref 0;
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.forEach while_::(fun i => i < 3) (fun i => { last := i });
+        !last |> Expect.toBeEqualToInt 2;
+      }),
+      it "none" (fun () => {
+        Iterable.Reducer.none (fun _ => false) (Iterable.empty ()) |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.none (fun i => i >= 2)
+          |> Expect.toBeEqualToFalse;
+
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.none (fun i => i < 0)
+          |> Expect.toBeEqualToTrue;
+      }),
+      it "some" (fun () => {
+        Iterable.Reducer.some (fun _ => false) (Iterable.empty ()) |> Expect.toBeEqualToFalse;
+
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.some (fun i => i >= 2)
+          |> Expect.toBeEqualToTrue;
+
+        IntRange.create start::0 count::5
+          |> IntRange.toIterable
+          |> Iterable.Reducer.some (fun i => i < 0)
+          |> Expect.toBeEqualToFalse;
+      }),
+    ],
+  ],
 ];
