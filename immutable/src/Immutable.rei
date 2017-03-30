@@ -1,4 +1,4 @@
-/**
+Iterables/**
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -267,7 +267,7 @@ let module rec Iterable: {
      */
 
     let toIterable: t 'a => (Iterable.t 'a);
-    /** [toIterable iterable] returns an Iterator that can be used to iterate over
+    /** [toIterable iterable] returns an Iterable that can be used to iterate over
      * the values in [iterable].
      */
   };
@@ -586,7 +586,7 @@ let module rec Collection: {
    */
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
-  /* Reducer module for Iterators. */
+  /* Reducer module for Iterables. */
 };
 
 let module PersistentCollection: {
@@ -1280,7 +1280,7 @@ let module rec KeyedIterable: {
      */
 
     let toIterable: t 'v => Iterable.t (k, 'v);
-    /** [toIterable keyedIterable] returns an Iterator that can be used to iterate over
+    /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
 
@@ -1478,10 +1478,10 @@ let module rec KeyedIterable: {
   /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */
 
   let keys: (t 'k 'v) => (Iterable.t 'k);
-  /** [keys keyedIter] returns an Iterator view of the keys in [keyedIter] */
+  /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
 
   let values: (t 'k 'v) => Iterable.t 'v;
-  /** [values keyedIter] returns an Iterator view of the values in [keyedIter] */
+  /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
 };
 
 let module KeyedIterableRight: {
@@ -1504,7 +1504,7 @@ let module KeyedIterableRight: {
      */
 
     let toIterableRight: t 'v => Iterable.t (k, 'v);
-    /** [toIterableRight keyedIterable] returns an Iterator that can be used to iterate over
+    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
       *  the key/value pairs in [keyedIterable] as tuples.
       */
 
@@ -1855,7 +1855,7 @@ let module PersistentMap: {
     /** [empty ()] Return an empty PersistentMap. */
 
     let from: (KeyedIterable.t k 'v) => (t 'v);
-    /** [from keyedIterator] returns a PersistentMap including the key/value pairs in [keyedIterator].
+    /** [from keyedIterable] returns a PersistentMap including the key/value pairs in [keyedIterable].
      *
      *  By contract, [from] is efficient with no worst than O(N log N) performance.
      */
