@@ -12,7 +12,7 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) => {
+let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int) => {
   let countDiv2 = count / 2;
   let countDiv4 = count / 4;
 

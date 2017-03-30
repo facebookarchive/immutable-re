@@ -277,62 +277,62 @@ let module Set = {
     let equals: Equality.t (t 'a);
     let toSet: (t 'a) => ImmSet.t 'a;
   };
-};
 
-let module PersistentSet = {
-  module type S = {
-    type a;
-    type t;
+  let module Persistent = {
+    module type S = {
+      type a;
+      type t;
 
-    include Set.S with type a := a and type t := t;
-    include Collection.Persistent.S with type a := a and type t := t;
+      include S with type a := a and type t := t;
+      include Collection.Persistent.S with type a := a and type t := t;
 
-    let add: a => t => t;
-    let addAll: (Iterable.t a) => t => t;
-    let from: (Iterable.t a) => t;
-    let intersect: t => t => t;
-    let remove: a => t => t;
-    let subtract: t => t => t;
-    let union: t => t => t;
+      let add: a => t => t;
+      let addAll: (Iterable.t a) => t => t;
+      let from: (Iterable.t a) => t;
+      let intersect: t => t => t;
+      let remove: a => t => t;
+      let subtract: t => t => t;
+      let union: t => t => t;
+    };
+
+    module type S1 = {
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+      include Collection.Persistent.S1 with type t 'a := t 'a;
+
+      let add: 'a => (t 'a) => (t 'a);
+      let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let intersect: (t 'a) => (t 'a) => (t 'a);
+      let remove: 'a => (t 'a) => (t 'a);
+      let subtract: (t 'a) => (t 'a) => (t 'a);
+      let union: (t 'a) => (t 'a) => (t 'a);
+    };
   };
 
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S = {
+      type a;
+      type t;
 
-    include Set.S1 with type t 'a := t 'a;
-    include Collection.Persistent.S1 with type t 'a := t 'a;
+      include Collection.Transient.S with type a := a and type t := t;
 
-    let add: 'a => (t 'a) => (t 'a);
-    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let intersect: (t 'a) => (t 'a) => (t 'a);
-    let remove: 'a => (t 'a) => (t 'a);
-    let subtract: (t 'a) => (t 'a) => (t 'a);
-    let union: (t 'a) => (t 'a) => (t 'a);
-  };
-};
+      let add: a => t => t;
+      let addAll: (Iterable.t a) => t => t;
+      let contains: a => t => bool;
+      let remove: a => t => t;
+    };
 
-let module TransientSet = {
-  module type S = {
-    type a;
-    type t;
+    module type S1 = {
+      type t 'a;
 
-    include Collection.Transient.S with type a := a and type t := t;
+      include Collection.Transient.S1 with type t 'a := t 'a;
 
-    let add: a => t => t;
-    let addAll: (Iterable.t a) => t => t;
-    let contains: a => t => bool;
-    let remove: a => t => t;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include Collection.Transient.S1 with type t 'a := t 'a;
-
-    let add: 'a => (t 'a) => (t 'a);
-    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let contains: 'a => (t 'a) => bool;
-    let remove: 'a => (t 'a) => (t 'a);
+      let add: 'a => (t 'a) => (t 'a);
+      let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let contains: 'a => (t 'a) => bool;
+      let remove: 'a => (t 'a) => (t 'a);
+    };
   };
 };
 
@@ -344,20 +344,21 @@ let module NavigableSet = {
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
   };
-};
 
-let module PersistentNavigableSet = {
-  module type S = {
-    type a;
-    type t;
+  let module Persistent = {
+    module type S = {
+      type a;
+      type t;
 
-    include NavigableSet.S with type a := a and type t := t;
-    include PersistentSet.S with type a := a and type t := t;
+      include S with type a := a and type t := t;
+      include Set.Persistent.S with type a := a and type t := t;
 
-    let removeFirstOrRaise: t => t;
+      let removeFirstOrRaise: t => t;
 
-    let removeLastOrRaise: t => t;
+      let removeLastOrRaise: t => t;
+    };
   };
+
 };
 
 let module KeyedStreamable = {

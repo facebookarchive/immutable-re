@@ -984,146 +984,146 @@ let module rec Set: {
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Iterables. */
-};
 
-let module PersistentSet: {
-  /** Module types implemented by Set collections supporting persistent mutations.
-   *
-   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
-   */
-
-  module type S = {
-    /** PersistentSet module type signature for types with a parametric type arity of 0. */
-
-    type a;
-    type t;
-
-    include Set.S with type a := a and type t := t;
-    include Collection.Persistent.S with type a := a and type t := t;
-
-    let add: a => t => t;
-    /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
-     *  it is returned unmodified.
+  let module Persistent: {
+    /** Module types implemented by Set collections supporting persistent mutations.
+     *
+     *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
 
-    let addAll: (Iterable.t a) => t => t;
-    /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
+    module type S = {
+      /** PersistentSet module type signature for types with a parametric type arity of 0. */
 
-    let from: (Iterable.t a) => t;
-    /** [from iter] returns a PersistentSet with all the values in [iter] */
+      type a;
+      type t;
 
-    let intersect: t => t => t;
-    /** [intersect this that] returns a PersistentSet of unique values
-     *  which occur in both [this] and [that].
-     */
+      include S with type a := a and type t := t;
+      include Collection.Persistent.S with type a := a and type t := t;
 
-    let remove: a => t => t;
-    /** [remove value set] returns a PersistentSet that does not contain [value].
-     *  If [set] does not contain [value], it is returned unmodified.
-     */
+      let add: a => t => t;
+      /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
+       *  it is returned unmodified.
+       */
 
-    let subtract: t => t => t;
-    /** [subtract this that] returns an PersistentSet of unique value
-     *  which occur in [this] but not in [that].
-     */
+      let addAll: (Iterable.t a) => t => t;
+      /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
 
-    let union: t => t => t;
-    /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
+      let from: (Iterable.t a) => t;
+      /** [from iter] returns a PersistentSet with all the values in [iter] */
+
+      let intersect: t => t => t;
+      /** [intersect this that] returns a PersistentSet of unique values
+       *  which occur in both [this] and [that].
+       */
+
+      let remove: a => t => t;
+      /** [remove value set] returns a PersistentSet that does not contain [value].
+       *  If [set] does not contain [value], it is returned unmodified.
+       */
+
+      let subtract: t => t => t;
+      /** [subtract this that] returns an PersistentSet of unique value
+       *  which occur in [this] but not in [that].
+       */
+
+      let union: t => t => t;
+      /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
+    };
+
+    module type S1 = {
+      /** PersistentSet module type signature for types with a parametric type arity of 1. */
+
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+      include Collection.Persistent.S1 with type t 'a := t 'a;
+
+      let add: 'a => (t 'a) => (t 'a);
+      /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
+       *  it is returned unmodified.
+       */
+
+      let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
+
+      let intersect: (t 'a) => (t 'a) => (t 'a);
+      /** [intersect this that] returns a PersistentSet of unique values
+       *  which occur in both [this] and [that].
+       */
+
+      let remove: 'a => (t 'a) => (t 'a);
+      /** [remove value set] returns a PersistentSet that does not contain [value].
+       *  If [set] does not contain [value], it is returned unmodified.
+       */
+
+      let subtract: (t 'a) => (t 'a) => (t 'a);
+      /** [subtract this that] returns an PersistentSet of unique values
+       *  which occur in [this] but not in [that].
+       */
+
+      let union: (t 'a) => (t 'a) => (t 'a);
+      /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
+    };
   };
 
-  module type S1 = {
-    /** PersistentSet module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include Set.S1 with type t 'a := t 'a;
-    include Collection.Persistent.S1 with type t 'a := t 'a;
-
-    let add: 'a => (t 'a) => (t 'a);
-    /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
-     *  it is returned unmodified.
+  let module Transient: {
+    /** Module types implemented by transiently mutable sets.
+     *
+     *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
 
-    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    /** [addAll iter set] returns a PersistentSet with the values in [iter] and all the values in [set]. */
+    module type S = {
+      /** TransientSet module type signature for types with a parametric type arity of 0. */
 
-    let intersect: (t 'a) => (t 'a) => (t 'a);
-    /** [intersect this that] returns a PersistentSet of unique values
-     *  which occur in both [this] and [that].
-     */
+      type a;
+      type t;
 
-    let remove: 'a => (t 'a) => (t 'a);
-    /** [remove value set] returns a PersistentSet that does not contain [value].
-     *  If [set] does not contain [value], it is returned unmodified.
-     */
+      include Collection.Transient.S with type a := a and type t := t;
 
-    let subtract: (t 'a) => (t 'a) => (t 'a);
-    /** [subtract this that] returns an PersistentSet of unique values
-     *  which occur in [this] but not in [that].
-     */
+      let add: a => t => t;
+      /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
+       *  it is returned unmodified.
+       */
 
-    let union: (t 'a) => (t 'a) => (t 'a);
-    /** [union this that] returns an PersistentSet of unique values which occur in either [this] or [that]. */
-  };
-};
+      let addAll: (Iterable.t a) => t => t;
+      /** [addAll iter transient] adds all values in [iter] to [transient]. */
 
-let module TransientSet: {
-  /** Module types implemented by transiently mutable sets.
-   *
-   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
-   */
+      let contains: a => t => bool;
+      /** [contains value set] returns true if [set] contains at least one instace of [value],
+       *  otherwise false;
+       */
 
-  module type S = {
-    /** TransientSet module type signature for types with a parametric type arity of 0. */
+      let remove: a => t => t;
+      /** [remove value transient] removes [value] from [transient].
+       *  If [transient] does not contain [value], it is returned unmodified.
+       */
+    };
 
-    type a;
-    type t;
+    module type S1 = {
+      /** TransientSet module type signature for types with a parametric type arity of 0. */
 
-    include Collection.Transient.S with type a := a and type t := t;
+      type t 'a;
 
-    let add: a => t => t;
-    /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
-     *  it is returned unmodified.
-     */
+      include Collection.Transient.S1 with type t 'a := t 'a;
 
-    let addAll: (Iterable.t a) => t => t;
-    /** [addAll iter transient] adds all values in [iter] to [transient]. */
+      let add: 'a => (t 'a) => (t 'a);
+      /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
+       *  it is returned unmodified.
+       */
 
-    let contains: a => t => bool;
-    /** [contains value set] returns true if [set] contains at least one instace of [value],
-     *  otherwise false;
-     */
+      let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      /** [addAll iter transient] adds all values in [iter] to [transient]. */
 
-    let remove: a => t => t;
-    /** [remove value transient] removes [value] from [transient].
-     *  If [transient] does not contain [value], it is returned unmodified.
-     */
-  };
+      let contains: 'a => (t 'a) => bool;
+      /** [contains value set] returns true if [set] contains at least one instace of [value],
+       *  otherwise false;
+       */
 
-  module type S1 = {
-    /** TransientSet module type signature for types with a parametric type arity of 0. */
-
-    type t 'a;
-
-    include Collection.Transient.S1 with type t 'a := t 'a;
-
-    let add: 'a => (t 'a) => (t 'a);
-    /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
-     *  it is returned unmodified.
-     */
-
-    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    /** [addAll iter transient] adds all values in [iter] to [transient]. */
-
-    let contains: 'a => (t 'a) => bool;
-    /** [contains value set] returns true if [set] contains at least one instace of [value],
-     *  otherwise false;
-     */
-
-    let remove: 'a => (t 'a) => (t 'a);
-    /** [remove value transient] removes [value] from [transient].
-     *  If [transient] does not contain [value], it is returned unmodified.
-     */
+      let remove: 'a => (t 'a) => (t 'a);
+      /** [remove value transient] removes [value] from [transient].
+       *  If [transient] does not contain [value], it is returned unmodified.
+       */
+    };
   };
 };
 
@@ -1139,32 +1139,33 @@ let module NavigableSet: {
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
   };
-};
 
-let module PersistentNavigableSet: {
-  /** Module types implemented by NavigableSet collections supporting persistent mutations.
-   *
-   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
-   */
-
-  module type S = {
-    /** PersistentNavigableSet module type signature for types with a parametric type arity of 0. */
-    type a;
-    type t;
-
-    include NavigableSet.S with type a := a and type t := t;
-    include PersistentSet.S with type a := a and type t := t;
-
-    let removeFirstOrRaise: t => t;
-    /** [removeFirstOrRaise set] returns a PersistentNavigableSet without
-     *  the first value or raises an exception if [set] is empty.
+  let module Persistent: {
+    /** Module types implemented by NavigableSet collections supporting persistent mutations.
+     *
+     *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
 
-    let removeLastOrRaise: t => t;
-    /** [removeLastOrRaise set] returns a PersistentNavigableSet without
-     *  the last value or raises an exception if [set] is empty.
-     */
+    module type S = {
+      /** PersistentNavigableSet module type signature for types with a parametric type arity of 0. */
+      type a;
+      type t;
+
+      include S with type a := a and type t := t;
+      include Set.Persistent.S with type a := a and type t := t;
+
+      let removeFirstOrRaise: t => t;
+      /** [removeFirstOrRaise set] returns a PersistentNavigableSet without
+       *  the first value or raises an exception if [set] is empty.
+       */
+
+      let removeLastOrRaise: t => t;
+      /** [removeLastOrRaise set] returns a PersistentNavigableSet without
+       *  the last value or raises an exception if [set] is empty.
+       */
+    };
   };
+
 };
 
 let module KeyedStreamable: {
@@ -2227,7 +2228,7 @@ let module rec HashSet: {
   type t 'a;
   /** The HashSet type. */
 
-  include PersistentSet.S1 with type t 'a := t 'a;
+  include Set.Persistent.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
   /** [emptyWith hash comparator] returns an empty HashSet which uses [hash] to hash
@@ -2257,7 +2258,7 @@ and TransientHashSet: {
 
   type t 'a;
 
-  include TransientSet.S1 with type t 'a := t 'a;
+  include Set.Transient.S1 with type t 'a := t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
   /** [emptyWith hash comparator ()] returns an empty TransientHashSet which uses [hash] to hash
@@ -2331,7 +2332,7 @@ let module rec IntSet: {
   type t;
   /** The IntSet type. */
 
-  include PersistentSet.S with type a := a and type t := t;
+  include Set.Persistent.S with type a := a and type t := t;
 
   let mutate: t => TransientIntSet.t;
   /** [mutate set] returns a TransientIntSet containing the same values as [set]. */
@@ -2350,7 +2351,7 @@ and TransientIntSet: {
   type t;
   /** The TransientIntSet type. */
 
-  include TransientSet.S with type a := a and type t := t;
+  include Set.Transient.S with type a := a and type t := t;
 
   let empty: unit => t;
   /** [empty ()] return a new empty TransientIntSet. */
@@ -2501,7 +2502,7 @@ let module SortedSet: {
     type t;
 
     include Comparable.S with type t := t;
-    include PersistentNavigableSet.S with type a := a and type t := t;
+    include NavigableSet.Persistent.S with type a := a and type t := t;
 
     let module ReducerRight: Iterable.Reducer.S with type a:= a and type t:= t;
     /* Reducer module for SortedSets which reduces right. */
