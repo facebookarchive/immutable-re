@@ -581,8 +581,11 @@ let module rec Collection: {
   /** [empty ()] returns the empty collection */
 
   let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map f collection] Returns a Collection whose values are the result of
-   *  applying the function [f] to each value in [collection].
+  /** [map f collection] Returns a lazy Collection that computes values
+   *  lazily by applying [f].
+   *
+   *  Note, the results of applying [f] to a given key/value pair are not
+   *  memoized. Therefore [f] must be a pure function.
    */
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
