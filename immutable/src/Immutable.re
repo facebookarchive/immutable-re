@@ -106,47 +106,48 @@ let module Collection = {
     let toCollection: (t 'a) => (Collection.t 'a);
     let toSequence: (t 'a) => (Sequence.t 'a);
   };
-};
 
-let module PersistentCollection = {
-  module type S = {
-    type a;
-    type t;
+  let module Persistent = {
+    module type S = {
+      type a;
+      type t;
 
-    include Collection.S with type a := a and type t := t;
+      include S with type a := a and type t := t;
 
-    let removeAll: t => t;
+      let removeAll: t => t;
+    };
+
+    module type S1 = {
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+
+      let removeAll: t 'a => t 'a;
+    };
   };
 
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S = {
+      type a;
+      type t;
 
-    include Collection.S1 with type t 'a := t 'a;
+      let count: t => int;
+      let empty: unit => t;
+      let isEmpty: t => bool;
+      let isNotEmpty: t => bool;
+      let removeAll: t => t;
+    };
 
-    let removeAll: t 'a => t 'a;
+    module type S1 = {
+      type t 'a;
+
+      let count: (t 'a) => int;
+      let isEmpty: (t 'a) => bool;
+      let isNotEmpty: (t 'a) => bool;
+      let removeAll: (t 'a) => (t 'a);
+    };
   };
-};
 
-let module TransientCollection = {
-  module type S = {
-    type a;
-    type t;
-
-    let count: t => int;
-    let empty: unit => t;
-    let isEmpty: t => bool;
-    let isNotEmpty: t => bool;
-    let removeAll: t => t;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    let count: (t 'a) => int;
-    let isEmpty: (t 'a) => bool;
-    let isNotEmpty: (t 'a) => bool;
-    let removeAll: (t 'a) => (t 'a);
-  };
 };
 
 let module SequentialCollection = {
@@ -168,36 +169,36 @@ let module SequentialCollection = {
     let first: (t 'a) => (option 'a);
     let firstOrRaise: (t 'a) => 'a;
   };
-};
 
-let module PersistentSequentialCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Persistent = {
+    module type S1 = {
+      type t 'a;
 
-    include PersistentCollection.S1 with type t 'a := t 'a;
-    include SequentialCollection.S1 with type t 'a := t 'a;
+      include Collection.Persistent.S1 with type t 'a := t 'a;
+      include S1 with type t 'a := t 'a;
 
-    let addFirst: 'a => (t 'a) => (t 'a);
-    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let empty: unit => (t 'a);
-    let fromReverse: (Iterable.t 'a) => (t 'a);
-    let return: 'a => (t 'a);
-    let removeFirstOrRaise: (t 'a) => (t 'a);
+      let addFirst: 'a => (t 'a) => (t 'a);
+      let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let empty: unit => (t 'a);
+      let fromReverse: (Iterable.t 'a) => (t 'a);
+      let return: 'a => (t 'a);
+      let removeFirstOrRaise: (t 'a) => (t 'a);
+    };
   };
-};
 
-let module TransientSequentialCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S1 = {
+      type t 'a;
 
-    include TransientCollection.S1 with type t 'a := t 'a;
+      include Collection.Transient.S1 with type t 'a := t 'a;
 
-    let addFirst: 'a => (t 'a) => (t 'a);
-    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let empty: unit => (t 'a);
-    let first: (t 'a) => option 'a;
-    let firstOrRaise: (t 'a) => 'a;
-    let removeFirstOrRaise: (t 'a) => (t 'a);
+      let addFirst: 'a => (t 'a) => (t 'a);
+      let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let empty: unit => (t 'a);
+      let first: (t 'a) => option 'a;
+      let firstOrRaise: (t 'a) => 'a;
+      let removeFirstOrRaise: (t 'a) => (t 'a);
+    };
   };
 };
 
@@ -231,7 +232,7 @@ let module PersistentNavigableCollection = {
     type t 'a;
 
     include NavigableCollection.S1 with type t 'a := t 'a;
-    include PersistentSequentialCollection.S1 with type t 'a := t 'a;
+    include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
 
     let addLast: 'a => (t 'a) => (t 'a);
     let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
@@ -244,7 +245,7 @@ let module TransientNavigableCollection = {
   module type S1 = {
     type t 'a;
 
-    include TransientSequentialCollection.S1 with type t 'a := t 'a;
+    include SequentialCollection.Transient.S1 with type t 'a := t 'a;
 
     let addLast: 'a => (t 'a) => (t 'a);
     let last: (t 'a) => option 'a;
@@ -283,7 +284,7 @@ let module PersistentSet = {
     type t;
 
     include Set.S with type a := a and type t := t;
-    include PersistentCollection.S with type a := a and type t := t;
+    include Collection.Persistent.S with type a := a and type t := t;
 
     let add: a => t => t;
     let addAll: (Iterable.t a) => t => t;
@@ -298,7 +299,7 @@ let module PersistentSet = {
     type t 'a;
 
     include Set.S1 with type t 'a := t 'a;
-    include PersistentCollection.S1 with type t 'a := t 'a;
+    include Collection.Persistent.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
     let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
@@ -314,7 +315,7 @@ let module TransientSet = {
     type a;
     type t;
 
-    include TransientCollection.S with type a := a and type t := t;
+    include Collection.Transient.S with type a := a and type t := t;
 
     let add: a => t => t;
     let addAll: (Iterable.t a) => t => t;
@@ -325,7 +326,7 @@ let module TransientSet = {
   module type S1 = {
     type t 'a;
 
-    include TransientCollection.S1 with type t 'a := t 'a;
+    include Collection.Transient.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
     let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);

@@ -590,96 +590,95 @@ let module rec Collection: {
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Iterables. */
-};
+  let module Persistent: {
+    /** Module types implemented by collections supporting fully persistent mutations.
+     *  Mutation operations on these types do not mutate the underlying collection, but instead
+     *  create a new collection, with the mutation applied.
 
-let module PersistentCollection: {
-  /** Module types implemented by collections supporting fully persistent mutations.
-   *  Mutation operations on these types do not mutate the underlying collection, but instead
-   *  create a new collection, with the mutation applied.
-
-   *  By contract, all functions have a computational complexity of O(1).
-   */
-
-  module type S = {
-    /** PersistentCollection module type signature for types with a parametric type arity of 0. */
-
-    type a;
-    type t;
-
-    include Collection.S with type a := a and type t := t;
-
-    let removeAll: t => t;
-    /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
-     *  the new collection may share the same configuration as [collection]. For instance, the HashSet
-     *  implementations shares the same hash and comparison functions.
+     *  By contract, all functions have a computational complexity of O(1).
      */
+
+    module type S = {
+      /** PersistentCollection module type signature for types with a parametric type arity of 0. */
+
+      type a;
+      type t;
+
+      include S with type a := a and type t := t;
+
+      let removeAll: t => t;
+      /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
+       *  the new collection may share the same configuration as [collection]. For instance, the HashSet
+       *  implementations shares the same hash and comparison functions.
+       */
+    };
+
+    module type S1 = {
+      /** PersistentCollection module type signature for types with a parametric type arity of 1. */
+
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+
+      let removeAll: t 'a => t 'a;
+      /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
+       *  the new collection may share the same configuration as [collection]. For instance, HashSet
+       *  implementations shares the same hash and comparison functions.
+       */
+    };
   };
 
-  module type S1 = {
-    /** PersistentCollection module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include Collection.S1 with type t 'a := t 'a;
-
-    let removeAll: t 'a => t 'a;
-    /** [removeAll collection] return an empty PersistentCollection. Depending on the implementation,
-     *  the new collection may share the same configuration as [collection]. For instance, HashSet
-     *  implementations shares the same hash and comparison functions.
-     */
-  };
-};
-
-let module TransientCollection: {
-  /** Module types implemented by transiently mutable Collections. Transient collections
-   *  are designed to enable fast and efficient batch operations by temporarily enabling mutation
-   *  of an underlying collection type. Unlike PersistentCollection functions, TransientCollection
-   *  APIs always return the same value reference passed in as an argument, with mutations applied.
-   *
-   *  By contract, all functions have a computational complexity of O(1).
-   */
-
-  module type S = {
-    /** TransientCollection module type signature for types with a parametric type arity of 0. */
-
-    type a;
-    type t;
-
-    let count: t => int;
-    /** [count transient] returns number of values contained in [transient]. */
-
-    let empty: unit => t;
-
-    let isEmpty: t => bool;
-    /** [isEmpty transient] returns true if [transient] is empty, otherwise false. */
-
-    let isNotEmpty: t => bool;
-    /** [isNotEmpty transient] returns true if [collection] contains at
-     *  least one value, otherwise false.
+  let module Transient: {
+    /** Module types implemented by transiently mutable Collections. Transient collections
+     *  are designed to enable fast and efficient batch operations by temporarily enabling mutation
+     *  of an underlying collection type. Unlike PersistentCollection functions, TransientCollection
+     *  APIs always return the same value reference passed in as an argument, with mutations applied.
+     *
+     *  By contract, all functions have a computational complexity of O(1).
      */
 
-    let removeAll: t => t;
-    /** [removeAll transient] removes all values from [transient]. */
-  };
+    module type S = {
+      /** TransientCollection module type signature for types with a parametric type arity of 0. */
 
-  module type S1 = {
-    /** TransientCollection module type signature for types with a parametric type arity of 0. */
+      type a;
+      type t;
 
-    type t 'a;
+      let count: t => int;
+      /** [count transient] returns number of values contained in [transient]. */
 
-    let count: (t 'a) => int;
-    /** [count transient] returns number of values contained in [transient]. */
+      let empty: unit => t;
 
-    let isEmpty: (t 'a) => bool;
-    /** [isEmpty transient] returns true if [transient] is empty, otherwise false. */
+      let isEmpty: t => bool;
+      /** [isEmpty transient] returns true if [transient] is empty, otherwise false. */
 
-    let isNotEmpty: (t 'a) => bool;
-    /** [isNotEmpty transient] returns true if [collection] contains at
-     *  least one value, otherwise false.
-     */
+      let isNotEmpty: t => bool;
+      /** [isNotEmpty transient] returns true if [collection] contains at
+       *  least one value, otherwise false.
+       */
 
-    let removeAll: (t 'a) => (t 'a);
-    /** [removeAll transient] removes all values from [transient]. */
+      let removeAll: t => t;
+      /** [removeAll transient] removes all values from [transient]. */
+    };
+
+    module type S1 = {
+      /** TransientCollection module type signature for types with a parametric type arity of 0. */
+
+      type t 'a;
+
+      let count: (t 'a) => int;
+      /** [count transient] returns number of values contained in [transient]. */
+
+      let isEmpty: (t 'a) => bool;
+      /** [isEmpty transient] returns true if [transient] is empty, otherwise false. */
+
+      let isNotEmpty: (t 'a) => bool;
+      /** [isNotEmpty transient] returns true if [collection] contains at
+       *  least one value, otherwise false.
+       */
+
+      let removeAll: (t 'a) => (t 'a);
+      /** [removeAll transient] removes all values from [transient]. */
+    };
   };
 };
 
@@ -717,79 +716,79 @@ let module SequentialCollection: {
     let firstOrRaise: (t 'a) => 'a;
     /** [firstOrRaise collection] returns the first value in [collection] or throws. */
   };
-};
 
-let module PersistentSequentialCollection: {
-  /** Module types implemented by collections supporting persistent mutations to left
-   *  side of the collection.
-   *
-   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
-   */
-  module type S1 = {
-    /** PersistentSequentialCollection module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include PersistentCollection.S1 with type t 'a := t 'a;
-    include SequentialCollection.S1 with type t 'a := t 'a;
-
-    let addFirst: 'a => (t 'a) => (t 'a);
-    /** [addFirst value collection] returns a PersistentSequentialCollection with [value] prepended. */
-
-    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    /** [addFirstAll iter collection] returns a PersistentSequentialCollection with the values in [iter] prepended. */
-
-    let empty: unit => (t 'a);
-    /** [empty ()] return an empty PersistentSequentialCollection. */
-
-    let fromReverse: (Iterable.t 'a) => (t 'a);
-    /** [fromReverse iter] returns a PersistentSequentialCollection containing the values in [iter]
-     *  in reverse order.
+  let module Persistent: {
+    /** Module types implemented by collections supporting persistent mutations to left
+     *  side of the collection.
+     *
+     *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
+    module type S1 = {
+      /** SequentialCollection.Persistent module type signature for types with a parametric type arity of 1. */
 
-    let return: 'a => (t 'a);
-    /** [return value] returns a PersistentSequentialCollection containing a single value, [value]. */
+      type t 'a;
 
-    let removeFirstOrRaise: (t 'a) => (t 'a);
-    /** [removeFirstOrRaise collection] returns a PersistentSequentialCollection without
-     *  the first value or raises an exception if [collection] is empty.
-     */
+      include Collection.Persistent.S1 with type t 'a := t 'a;
+      include S1 with type t 'a := t 'a;
+
+      let addFirst: 'a => (t 'a) => (t 'a);
+      /** [addFirst value collection] returns a SequentialCollection.Persistent with [value] prepended. */
+
+      let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      /** [addFirstAll iter collection] returns a SequentialCollection.Persistent with the values in [iter] prepended. */
+
+      let empty: unit => (t 'a);
+      /** [empty ()] return an empty SequentialCollection.Persistent. */
+
+      let fromReverse: (Iterable.t 'a) => (t 'a);
+      /** [fromReverse iter] returns a SequentialCollection.Persistent containing the values in [iter]
+       *  in reverse order.
+       */
+
+      let return: 'a => (t 'a);
+      /** [return value] returns a SequentialCollection.Persistent containing a single value, [value]. */
+
+      let removeFirstOrRaise: (t 'a) => (t 'a);
+      /** [removeFirstOrRaise collection] returns a SequentialCollection.Persistent without
+       *  the first value or raises an exception if [collection] is empty.
+       */
+    };
   };
-};
 
-let module TransientSequentialCollection: {
-  /** Module types implemented by transient collections supporting transient mutations to left
-   *  side of the collection.
-   *
-   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
-   */
-
-  module type S1 = {
-    /** TransientSequentialCollection module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include TransientCollection.S1 with type t 'a := t 'a;
-
-    let addFirst: 'a => (t 'a) => (t 'a);
-    /** [addFirst value transient] prepends [value] to [transient]. */
-
-    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    /** [addFirstAll iter transient] prepends all values in [iter] to [transient]. */
-
-    let empty: unit => (t 'a);
-    /** [empty ()] returns a new empty TransientSequentialCollection. */
-
-    let first: (t 'a) => option 'a;
-    /** [first transient] returns first value in [transient] or None. */
-
-    let firstOrRaise: (t 'a) => 'a;
-    /** [firstOrRaise transient] returns the first value in [transient] or raises an exception. */
-
-    let removeFirstOrRaise: (t 'a) => (t 'a);
-    /** [removeFirstOrRaise transient] removes the first value from [transient] or raises
-     *  an exception if [transient] is empty.
+  let module Transient: {
+    /** Module types implemented by transient collections supporting transient mutations to left
+     *  side of the collection.
+     *
+     *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
+
+    module type S1 = {
+      /** SequentialCollection.Transient module type signature for types with a parametric type arity of 1. */
+
+      type t 'a;
+
+      include Collection.Transient.S1 with type t 'a := t 'a;
+
+      let addFirst: 'a => (t 'a) => (t 'a);
+      /** [addFirst value transient] prepends [value] to [transient]. */
+
+      let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      /** [addFirstAll iter transient] prepends all values in [iter] to [transient]. */
+
+      let empty: unit => (t 'a);
+      /** [empty ()] returns a new empty SequentialCollection.Transient. */
+
+      let first: (t 'a) => option 'a;
+      /** [first transient] returns first value in [transient] or None. */
+
+      let firstOrRaise: (t 'a) => 'a;
+      /** [firstOrRaise transient] returns the first value in [transient] or raises an exception. */
+
+      let removeFirstOrRaise: (t 'a) => (t 'a);
+      /** [removeFirstOrRaise transient] removes the first value from [transient] or raises
+       *  an exception if [transient] is empty.
+       */
+    };
   };
 };
 
@@ -861,7 +860,7 @@ let module PersistentNavigableCollection: {
     type t 'a;
 
     include NavigableCollection.S1 with type t 'a := t 'a;
-    include PersistentSequentialCollection.S1 with type t 'a := t 'a;
+    include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
 
     let addLast: 'a => (t 'a) => (t 'a);
     /** [addLast value collection] returns a PersistentNavigableCollection with [value] appended.
@@ -879,7 +878,7 @@ let module PersistentNavigableCollection: {
      */
 
     let removeLastOrRaise: (t 'a) => (t 'a);
-    /** [removeLastOrRaise collection] returns a PersistentSequentialCollection without
+    /** [removeLastOrRaise collection] returns a SequentialCollection.Persistent without
      *  the last value or raises an exception if [collection] is empty.
      */
   };
@@ -896,7 +895,7 @@ let module TransientNavigableCollection: {
 
     type t 'a;
 
-    include TransientSequentialCollection.S1 with type t 'a := t 'a;
+    include SequentialCollection.Transient.S1 with type t 'a := t 'a;
 
     let addLast: 'a => (t 'a) => (t 'a);
     /** [addLast value transient] appends [value] to [transient].
@@ -1000,7 +999,7 @@ let module PersistentSet: {
     type t;
 
     include Set.S with type a := a and type t := t;
-    include PersistentCollection.S with type a := a and type t := t;
+    include Collection.Persistent.S with type a := a and type t := t;
 
     let add: a => t => t;
     /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
@@ -1038,7 +1037,7 @@ let module PersistentSet: {
     type t 'a;
 
     include Set.S1 with type t 'a := t 'a;
-    include PersistentCollection.S1 with type t 'a := t 'a;
+    include Collection.Persistent.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
     /** [add value set] returns a PersistentSet containing value. If [set] already contains [value],
@@ -1080,7 +1079,7 @@ let module TransientSet: {
     type a;
     type t;
 
-    include TransientCollection.S with type a := a and type t := t;
+    include Collection.Transient.S with type a := a and type t := t;
 
     let add: a => t => t;
     /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
@@ -1106,7 +1105,7 @@ let module TransientSet: {
 
     type t 'a;
 
-    include TransientCollection.S1 with type t 'a := t 'a;
+    include Collection.Transient.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
     /** [add value transient] adds [value] to [transient]. If [transient] already contains [value],
@@ -2454,7 +2453,7 @@ let module Stack: {
 
   type t 'a;
 
-  include PersistentSequentialCollection.S1 with type t 'a := t 'a;
+  include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
 
   let fromList: (list 'a) => (t 'a);
   /** [fromList list] returns a Stack backed by [list].
