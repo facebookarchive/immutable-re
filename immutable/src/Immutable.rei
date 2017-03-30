@@ -596,6 +596,12 @@ let module rec Collection: {
   include S1 with type t 'a := t 'a;
 
   let empty: unit => (t 'a);
+  /** [empty ()] returns the empty collection */
+
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f collection] Returns a Collection whose values are the result of
+   *  applying the function [f] to each value in [collection].
+   */
 
   let module Reducer: Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Iterators. */

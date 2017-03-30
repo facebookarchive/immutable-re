@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
+
 type t 'a = {
   count: int,
   iterator: unit => (Iterator.t 'a),
@@ -26,6 +28,13 @@ let isEmpty ({ count }: t 'a): bool =>
 
 let isNotEmpty ({ count }: t 'a): bool =>
   count !== 0;
+
+let map (f: 'a => 'b) ({ count, iterator, sequence } as collection: t 'a): (t 'b) =>
+  if (iterator === Iterator.empty) (empty ()) else {
+    count,
+    iterator: iterator >> Iterator.map f,
+    sequence: sequence >> Sequence.map f,
+  };
 
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
