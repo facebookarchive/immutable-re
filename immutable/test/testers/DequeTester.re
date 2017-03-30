@@ -12,7 +12,7 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let module Make = fun (Deque: PersistentNavigableCollection.S1) (Config: TesterConfig.S) => {
+let module Make = fun (Deque: NavigableCollection.Persistent.S1) (Config: TesterConfig.S) => {
   let module StackTester = StackTester.Make (Deque: SequentialCollection.Persistent.S1) Config;
 
   let tests = [

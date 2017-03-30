@@ -225,33 +225,34 @@ let module NavigableCollection = {
     let lastOrRaise: (t 'a) => 'a;
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
   };
-};
 
-let module PersistentNavigableCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Persistent = {
+    module type S1 = {
+      type t 'a;
 
-    include NavigableCollection.S1 with type t 'a := t 'a;
-    include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
+      include S1 with type t 'a := t 'a;
+      include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
 
-    let addLast: 'a => (t 'a) => (t 'a);
-    let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    let from: (Iterable.t 'a) => (t 'a);
-    let removeLastOrRaise: (t 'a) => (t 'a);
+      let addLast: 'a => (t 'a) => (t 'a);
+      let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      let from: (Iterable.t 'a) => (t 'a);
+      let removeLastOrRaise: (t 'a) => (t 'a);
+    };
   };
-};
 
-let module TransientNavigableCollection = {
-  module type S1 = {
-    type t 'a;
+  let module Transient = {
+    module type S1 = {
+      type t 'a;
 
-    include SequentialCollection.Transient.S1 with type t 'a := t 'a;
+      include SequentialCollection.Transient.S1 with type t 'a := t 'a;
 
-    let addLast: 'a => (t 'a) => (t 'a);
-    let last: (t 'a) => option 'a;
-    let lastOrRaise: (t 'a) => 'a;
-    let removeLastOrRaise: (t 'a) => (t 'a);
+      let addLast: 'a => (t 'a) => (t 'a);
+      let last: (t 'a) => option 'a;
+      let lastOrRaise: (t 'a) => 'a;
+      let removeLastOrRaise: (t 'a) => (t 'a);
+    };
   };
+
 };
 
 let module Set = {

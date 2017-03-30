@@ -845,74 +845,74 @@ let module NavigableCollection: {
      * the values in [collection] from right to left.
      */
   };
-};
 
-let module PersistentNavigableCollection: {
-  /** Module types implemented by collections supporting persistent mutations to both the left
-   *  and right side of the collection.
-   *
-   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
-   */
-
-  module type S1 = {
-    /** PersistentNavigableCollection module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include NavigableCollection.S1 with type t 'a := t 'a;
-    include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
-
-    let addLast: 'a => (t 'a) => (t 'a);
-    /** [addLast value collection] returns a PersistentNavigableCollection with [value] appended.
+  let module Persistent: {
+    /** Module types implemented by collections supporting persistent mutations to both the left
+     *  and right side of the collection.
      *
-     *  Complexity: O(1)
+     *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
 
-    let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-    /** [addLastAll iter collection] returns a PersistentNavigableCollection with the values in [iter] appended. */
+    module type S1 = {
+      /** PersistentNavigableCollection module type signature for types with a parametric type arity of 1. */
 
-    let from: (Iterable.t 'a) => (t 'a);
-    /** [from iter] returns a PersistentNavigableCollection containing the values in [iter].
-     *
-     * Complexity: O(N) the number of values in [iter].
-     */
+      type t 'a;
 
-    let removeLastOrRaise: (t 'a) => (t 'a);
-    /** [removeLastOrRaise collection] returns a SequentialCollection.Persistent without
-     *  the last value or raises an exception if [collection] is empty.
-     */
+      include S1 with type t 'a := t 'a;
+      include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
+
+      let addLast: 'a => (t 'a) => (t 'a);
+      /** [addLast value collection] returns a PersistentNavigableCollection with [value] appended.
+       *
+       *  Complexity: O(1)
+       */
+
+      let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+      /** [addLastAll iter collection] returns a PersistentNavigableCollection with the values in [iter] appended. */
+
+      let from: (Iterable.t 'a) => (t 'a);
+      /** [from iter] returns a PersistentNavigableCollection containing the values in [iter].
+       *
+       * Complexity: O(N) the number of values in [iter].
+       */
+
+      let removeLastOrRaise: (t 'a) => (t 'a);
+      /** [removeLastOrRaise collection] returns a SequentialCollection.Persistent without
+       *  the last value or raises an exception if [collection] is empty.
+       */
+    };
   };
-};
 
-let module TransientNavigableCollection: {
-  /** Module types implemented by transient collections supporting transient mutations to both
-   *  the left and rights sides of the collection.
-   *
-   *  By contract, all functions must be efficient, with no worst than O(log N) performance.
-   */
-  module type S1 = {
-    /** TransientNavigableCollection module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include SequentialCollection.Transient.S1 with type t 'a := t 'a;
-
-    let addLast: 'a => (t 'a) => (t 'a);
-    /** [addLast value transient] appends [value] to [transient].
+  let module Transient: {
+    /** Module types implemented by transient collections supporting transient mutations to both
+     *  the left and rights sides of the collection.
      *
-     *  Complexity: O(1)
+     *  By contract, all functions must be efficient, with no worst than O(log N) performance.
      */
+    module type S1 = {
+      /** TransientNavigableCollection module type signature for types with a parametric type arity of 1. */
 
-    let last: (t 'a) => option 'a;
-    /** [tryLast transient] returns the last value in [transient] or None. */
+      type t 'a;
 
-    let lastOrRaise: (t 'a) => 'a;
-    /** [last transient] returns the last value in [transient] or raises an exception. */
+      include SequentialCollection.Transient.S1 with type t 'a := t 'a;
 
-    let removeLastOrRaise: (t 'a) => (t 'a);
-    /** [removeLastOrRaise transient] removes the last value from [transient] or raises
-     *  an exception if [transient] is empty.
-     */
+      let addLast: 'a => (t 'a) => (t 'a);
+      /** [addLast value transient] appends [value] to [transient].
+       *
+       *  Complexity: O(1)
+       */
+
+      let last: (t 'a) => option 'a;
+      /** [tryLast transient] returns the last value in [transient] or None. */
+
+      let lastOrRaise: (t 'a) => 'a;
+      /** [last transient] returns the last value in [transient] or raises an exception. */
+
+      let removeLastOrRaise: (t 'a) => (t 'a);
+      /** [removeLastOrRaise transient] removes the last value from [transient] or raises
+       *  an exception if [transient] is empty.
+       */
+    };
   };
 };
 
@@ -2122,7 +2122,7 @@ let module rec Deque: {
 
   type t 'a;
 
-  include PersistentNavigableCollection.S1 with type t 'a := t 'a;
+  include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
 
   let mutate: (t 'a) => (TransientDeque.t 'a);
   /** [mutate deque] returns a TransientDeque containing the same values as [deque]. */
@@ -2148,7 +2148,7 @@ and TransientDeque: {
 
   type t 'a;
 
-  include TransientNavigableCollection.S1 with type t 'a := t 'a;
+  include NavigableCollection.Transient.S1 with type t 'a := t 'a;
   /** The TransientDeque type. */
 
   let persist: (t 'a) => (Deque.t 'a);
@@ -2523,7 +2523,7 @@ let module rec Vector: {
 
   type t 'a;
 
-  include PersistentNavigableCollection.S1 with type t 'a := t 'a;
+  include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
   include Indexed.S1 with type t 'a := t 'a;
 
   let concat: (list (t 'a)) => (t 'a);
@@ -2604,7 +2604,7 @@ and TransientVector: {
 
   type t 'a;
 
-  include TransientNavigableCollection.S1 with type t 'a := t 'a;
+  include NavigableCollection.Transient.S1 with type t 'a := t 'a;
 
   let get: int => (t 'a) => (option 'a);
   /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
