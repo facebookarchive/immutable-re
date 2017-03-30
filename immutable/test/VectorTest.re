@@ -41,16 +41,16 @@ describe (sprintf "count: %i" count) [
       let firstRange = IntRange.create start::0 count::segmentCount;
       let secondRange = IntRange.create start::segmentCount count::segmentCount;
 
-      let firstVector = firstRange |> IntRange.toIterator |> Vector.from;
-      let secondVector = secondRange |> IntRange.toIterator |> Vector.from;
+      let firstVector = firstRange |> IntRange.toIterable |> Vector.from;
+      let secondVector = secondRange |> IntRange.toIterable |> Vector.from;
 
       Vector.concat [firstVector, secondVector]
-        |> Vector.toIterator
+        |> Vector.toIterable
         |> List.fromReverse
         |> Expect.toBeEqualToListOfInt (
-            Iterator.concat [
-              firstRange |> IntRange.toIterator,
-              secondRange |> IntRange.toIterator,
+            Iterable.concat [
+              firstRange |> IntRange.toIterable,
+              secondRange |> IntRange.toIterable,
             ] |> List.fromReverse
           );
     }),
@@ -61,16 +61,16 @@ describe (sprintf "count: %i" count) [
       let firstRange = IntRange.create start::0 count::firstSegmentCount;
       let secondRange = IntRange.create start::firstSegmentCount count::secondSegmentCount;
 
-      let firstVector = firstRange |> IntRange.toIterator |> Vector.from;
-      let secondVector = secondRange |> IntRange.toIterator |> Vector.from;
+      let firstVector = firstRange |> IntRange.toIterable |> Vector.from;
+      let secondVector = secondRange |> IntRange.toIterable |> Vector.from;
 
       Vector.concat [firstVector, secondVector]
-        |> Vector.toIterator
+        |> Vector.toIterable
         |> List.fromReverse
         |> Expect.toBeEqualToListOfInt (
-            Iterator.concat [
-              firstRange |> IntRange.toIterator,
-              secondRange |> IntRange.toIterator,
+            Iterable.concat [
+              firstRange |> IntRange.toIterable,
+              secondRange |> IntRange.toIterable,
             ] |> List.fromReverse
           );
     }),
@@ -81,23 +81,23 @@ describe (sprintf "count: %i" count) [
       let firstRange = IntRange.create start::0 count::firstSegmentCount;
       let secondRange = IntRange.create start::firstSegmentCount count::secondSegmentCount;
 
-      let firstVector = firstRange |> IntRange.toIterator |> Vector.from;
-      let secondVector = secondRange |> IntRange.toIterator |> Vector.from;
+      let firstVector = firstRange |> IntRange.toIterable |> Vector.from;
+      let secondVector = secondRange |> IntRange.toIterable |> Vector.from;
 
       Vector.concat [firstVector, secondVector]
-        |> Vector.toIterator
+        |> Vector.toIterable
         |> List.fromReverse
         |> Expect.toBeEqualToListOfInt (
-            Iterator.concat [
-              firstRange |> IntRange.toIterator,
-              secondRange |> IntRange.toIterator,
+            Iterable.concat [
+              firstRange |> IntRange.toIterable,
+              secondRange |> IntRange.toIterable,
             ] |> List.fromReverse
           );
     }),
   ],
   it "get" (fun () => {
     let vector = IntRange.create start::0 count::count
-      |> IntRange.toIterator
+      |> IntRange.toIterable
       |> Vector.from;
 
     vector |> Vector.get (-1) |> Expect.toBeEqualToNoneOfInt;
@@ -109,7 +109,7 @@ describe (sprintf "count: %i" count) [
   }),
   it "getOrRaise" (fun () => {
     let vector = IntRange.create start::0 count::count
-      |> IntRange.toIterator
+      |> IntRange.toIterable
       |> Vector.from;
 
     (fun () => vector |> Vector.getOrRaise (-1)) |> Expect.shouldRaise;
@@ -126,42 +126,42 @@ describe (sprintf "count: %i" count) [
     });
   }),
   it "insertAt" (fun () => {
-    let zeroedVectorOfSizeCount = Iterator.generate (fun i => i) 0
-      |> Iterator.take count
+    let zeroedVectorOfSizeCount = Iterable.generate (fun i => i) 0
+      |> Iterable.take count
       |> Vector.from;
 
     let alternatingOneZeroVectorOfSizeTwoTimesCount = IntRange.create start::0 count::count
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => i * 2)
-      |> Iterator.reduce (fun acc i => acc |> Vector.insertAt i 1) zeroedVectorOfSizeCount;
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => i * 2)
+      |> Iterable.reduce (fun acc i => acc |> Vector.insertAt i 1) zeroedVectorOfSizeCount;
 
     alternatingOneZeroVectorOfSizeTwoTimesCount
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.generate (fun i => i) [1, 0]
-            |> Iterator.take count
-            |> Iterator.flatMap List.toIterator
+          Iterable.generate (fun i => i) [1, 0]
+            |> Iterable.take count
+            |> Iterable.flatMap List.toIterable
             |> List.fromReverse
         );
   }),
   it "removeAt" (fun () => {
-    let vector = Iterator.generate (fun i => i) [0, 1]
-      |> Iterator.take (count / 2)
-      |> Iterator.flatMap List.toIterator
+    let vector = Iterable.generate (fun i => i) [0, 1]
+      |> Iterable.take (count / 2)
+      |> Iterable.flatMap List.toIterable
       |> Vector.from;
 
     IntRange.create start::0 count::(count / 2)
       |> IntRange.reduce (fun acc i => acc |> Vector.removeAt i) vector
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.generate (fun i => i) 1 |> Iterator.take (count / 2) |> List.fromReverse
+          Iterable.generate (fun i => i) 1 |> Iterable.take (count / 2) |> List.fromReverse
         );
   }),
   it "slice" (fun () => {
     let vector = IntRange.create start::0 count::count
-      |> IntRange.toIterator
+      |> IntRange.toIterable
       |> Vector.from;
 
     vector
@@ -179,81 +179,81 @@ describe (sprintf "count: %i" count) [
 
     vector
       |> Vector.slice start::countDiv4
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::countDiv4 count::(count - countDiv4)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.slice start::(-countDiv4)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::(count - countDiv4) count::countDiv4
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.slice end_::countDiv4
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::0 count::countDiv4
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.slice end_::(-countDiv4)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::0 count::(count - countDiv4)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.slice start::countDiv4 end_::(-countDiv4)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::countDiv4 count::(count - countDiv4 - countDiv4)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.slice start::(-count) end_::count
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::0 count::count
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.slice start::(-count) end_::(count - countDiv4)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::0 count::(count - countDiv4)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.slice start::(-count + countDiv4) end_::(count - countDiv4)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::countDiv4 count::(count - countDiv4 - countDiv4)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
   }),
@@ -262,7 +262,7 @@ describe (sprintf "count: %i" count) [
     let countDiv2 = count / 2;
 
     let vector = IntRange.create start::0 count::count
-      |> IntRange.toIterator
+      |> IntRange.toIterable
       |> Vector.from;
 
     vector
@@ -277,31 +277,31 @@ describe (sprintf "count: %i" count) [
 
     vector
       |> Vector.skip countDiv4
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::countDiv4 count::(count - countDiv4)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.skip countDiv2
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::countDiv2 count::(count - countDiv2)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.skip (count - countDiv4)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::(count - countDiv4) count::countDiv4
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
   }),
@@ -310,7 +310,7 @@ describe (sprintf "count: %i" count) [
     let countDiv2 = count / 2;
 
     let vector = IntRange.create start::0 count::count
-      |> IntRange.toIterator
+      |> IntRange.toIterable
       |> Vector.from;
 
     vector
@@ -325,37 +325,37 @@ describe (sprintf "count: %i" count) [
 
     vector
       |> Vector.take countDiv4
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::0 count::countDiv4
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.take countDiv2
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::0 count::(count - countDiv2)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
 
     vector
       |> Vector.take (count - countDiv4)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
           IntRange.create start::0 count::(count - countDiv4)
-            |> IntRange.toIterator
+            |> IntRange.toIterable
             |> List.fromReverse
         );
   }),
   it "toKeyedIterator" (fun () => {
     IntRange.create start::0 count::count
-      |> IntRange.toIteratorRight
+      |> IntRange.toIterableRight
       |> Vector.from
       |> Vector.toKeyedIterator
       |> KeyedIterator.KeyedReducer.forEach (
@@ -364,7 +364,7 @@ describe (sprintf "count: %i" count) [
   }),
   it "toKeyedIteratorRight" (fun () => {
     IntRange.create start::0 count::count
-      |> IntRange.toIteratorRight
+      |> IntRange.toIterableRight
       |> Vector.from
       |> Vector.toKeyedIteratorRight
       |> KeyedIterator.KeyedReducer.forEach (
@@ -373,7 +373,7 @@ describe (sprintf "count: %i" count) [
   }),
   it "toMap" (fun () => {
     let map = IntRange.create start::0 count::count
-      |> IntRange.toIterator
+      |> IntRange.toIterable
       |> Vector.from
       |> Vector.toMap;
 
@@ -411,55 +411,55 @@ describe (sprintf "count: %i" count) [
       |> Expect.toBeEqualToInt countDiv4;
   }),
   it "update" (fun () => {
-    let vector = Iterator.generate (fun i => i) 0
-      |> Iterator.take count
+    let vector = Iterable.generate (fun i => i) 0
+      |> Iterable.take count
       |> Vector.from;
 
     IntRange.create start::0 count::count
       |> IntRange.reduce (
           fun vec i => vec  |> Vector.update i (if (i mod 2 === 0) 0 else 1)
         ) vector
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.generate (fun i => i) [0, 1]
-            |> Iterator.take (count / 2)
-            |> Iterator.flatMap List.toIterator
+          Iterable.generate (fun i => i) [0, 1]
+            |> Iterable.take (count / 2)
+            |> Iterable.flatMap List.toIterable
             |> List.fromReverse
         );
   }),
   it "updateAll" (fun () => {
-    let vector = Iterator.generate (fun i => i) 0
-      |> Iterator.take count
+    let vector = Iterable.generate (fun i => i) 0
+      |> Iterable.take count
       |> Vector.from;
 
     vector
       |> Vector.updateAll (fun i _ => if (i mod 2 === 0) 0 else 1)
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.generate (fun i => i) [0, 1]
-            |> Iterator.take (count / 2)
-            |> Iterator.flatMap List.toIterator
+          Iterable.generate (fun i => i) [0, 1]
+            |> Iterable.take (count / 2)
+            |> Iterable.flatMap List.toIterable
             |> List.fromReverse
         );
   }),
   it "updateWith" (fun () => {
-    let vector = Iterator.generate (fun i => i) [0, 1]
-      |> Iterator.take (count / 2)
-      |> Iterator.flatMap List.toIterator
+    let vector = Iterable.generate (fun i => i) [0, 1]
+      |> Iterable.take (count / 2)
+      |> Iterable.flatMap List.toIterable
       |> Vector.from;
 
     IntRange.create start::0 count::count
       |> IntRange.reduce (fun acc i =>
           acc |> Vector.updateWith i (fun v => if (v ===0) 1 else 0)
         ) vector
-      |> Vector.toIterator
+      |> Vector.toIterable
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt (
-          Iterator.generate (fun i => i) [1, 0]
-            |> Iterator.take (count / 2)
-            |> Iterator.flatMap List.toIterator
+          Iterable.generate (fun i => i) [1, 0]
+            |> Iterable.take (count / 2)
+            |> Iterable.flatMap List.toIterable
             |> List.fromReverse
         );
   }),
@@ -476,7 +476,7 @@ let test = [
   [testVector 2000],
   Tester50000.tests,
   [testVector 50000],
-] |> List.toIterator
-  |> Iterator.flatMap List.toIterator
+] |> List.toIterable
+  |> Iterable.flatMap List.toIterable
   |> List.fromReverse
   |> describe "Vector";

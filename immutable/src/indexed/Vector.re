@@ -51,13 +51,13 @@ let module VectorImpl = {
   let module Make = fun (X: VectorBase) => {
     type t 'a = X.t 'a;
 
-    let addFirstAll (owner: Transient.Owner.t) (iter: Iterator.t 'a) (vector: t 'a): (t 'a) => iter
-      |> Iterator.reduce
+    let addFirstAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
+      |> Iterable.reduce
         (fun acc next => acc |> X.addFirst owner next)
         vector;
 
-    let addLastAll (owner: Transient.Owner.t) (iter: Iterator.t 'a) (vector: t 'a): (t 'a) => iter
-      |> Iterator.reduce
+    let addLastAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
+      |> Iterable.reduce
         (fun acc next => acc |> X.addLast owner next)
         vector;
 
@@ -643,13 +643,13 @@ module TransientVector = {
   let addFirst (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addFirst value;
 
-  let addFirstAll (iter: Iterator.t 'a) (transient: t 'a): (t 'a) =>
+  let addFirstAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addFirstAll iter;
 
   let addLast (value: 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addLast value;
 
-  let addLastAll (iter: Iterator.t 'a) (transient: t 'a): (t 'a) =>
+  let addLastAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
     transient |> Transient.update1 TransientVectorImpl.addLastAll iter;
 
   let count (transient: t 'a): int =>
@@ -773,20 +773,20 @@ module TransientVector = {
 
 let mutate = TransientVector.mutate;
 
-let addFirstAll (iter: Iterator.t 'a) (vec: t 'a): (t 'a) => vec
+let addFirstAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
   |> TransientVector.addFirstAll iter
   |> TransientVector.persist;
 
-let addLastAll (iter: Iterator.t 'a) (vec: t 'a): (t 'a) => vec
+let addLastAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
   |> TransientVector.addLastAll iter
   |> TransientVector.persist;
 
-let from (iter: Iterator.t 'a): (t 'a) =>
+let from (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addLastAll iter;
 
-let fromReverse (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
 let init (count: int) (f: int => 'a): (t 'a) => IntRange.create start::0 count::count
@@ -1061,12 +1061,12 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) =
   else vec |> skip skipCount |> take takeCount;
 };
 
-let toIterator (vec: t 'a): (Iterator.t 'a) =>
-  if (isEmpty vec) (Iterator.empty ())
+let toIterable (vec: t 'a): (Iterable.t 'a) =>
+  if (isEmpty vec) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc vec };
 
-let toIteratorRight (vec: t 'a): (Iterator.t 'a) =>
-  if (isEmpty vec) (Iterator.empty ())
+let toIterableRight (vec: t 'a): (Iterable.t 'a) =>
+  if (isEmpty vec) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc vec };
 
 let toKeyedIterator (vec: t 'a): (KeyedIterator.t int 'a) =>
@@ -1091,7 +1091,7 @@ let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence
 
 let toCollection (set: t 'a): (Collection.t 'a) => {
   count: count set,
-  iterator: fun () => toIterator set,
+  iterable: fun () => toIterable set,
   sequence: fun () => toSequence set,
 };
 
@@ -1122,12 +1122,16 @@ let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) =>
 let removeAt (index: int) (vec: t 'a): (t 'a) =>
   failwith "Not Implemented";
 
-let module ReducerRight = Reducer.Make1 {
+let module ReducerRight = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+
   let reduce = reduceRight;
+  let toIterable = toIterableRight;
 };
 
-let module Reducer = Reducer.Make1 {
+let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+
   let reduce = reduce;
+  let toIterable = toIterable;
 };

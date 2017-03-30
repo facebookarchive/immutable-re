@@ -132,16 +132,16 @@ let test = describe "IntRange" [
       |> IntRange.reduceRight while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),
-  it "toIterator"  (fun () => {
+  it "toIterable"  (fun () => {
     IntRange.create start::1 count::20
-      |> IntRange.toIterator
-      |> Iterator.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
+      |> IntRange.toIterable
+      |> Iterable.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
-  it "toIteratorRight"  (fun () => {
+  it "toIterableRight"  (fun () => {
     IntRange.create start::1 count::20
-      |> IntRange.toIteratorRight
-      |> Iterator.reduce while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
+      |> IntRange.toIterableRight
+      |> Iterable.reduce while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),
   it "toMap"  (fun () => ()),

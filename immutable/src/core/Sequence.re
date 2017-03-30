@@ -105,7 +105,7 @@ let scan
   fun () => Next acc (recurse reducer acc seq);
 };
 
-let toIterator (seq: t 'a): (Iterator.t 'a) => {
+let toIterable (seq: t 'a): (Iterable.t 'a) => {
   reduce: fun predicate f acc =>
     reduce while_::predicate f acc seq
 };
@@ -316,7 +316,9 @@ let rec zipLongest3With
   | _ => Completed
 };
 
-let module Reducer = Reducer.Make1 {
+let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+  
   let reduce = reduce;
+  let toIterable = toIterable;
 };

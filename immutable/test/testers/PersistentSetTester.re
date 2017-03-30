@@ -19,32 +19,32 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
   describe (sprintf "count: %i" count) [
     it "add" (fun () => {
       let values = IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash;
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash;
 
       let set = values
-        |> Iterator.reduce (fun acc i => acc |> PersistentSet.add i) PersistentSet.empty;
+        |> Iterable.reduce (fun acc i => acc |> PersistentSet.add i) PersistentSet.empty;
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
-      values |> Iterator.Reducer.forEach (fun i => {
+      values |> Iterable.Reducer.forEach (fun i => {
         set |> PersistentSet.contains i |> Expect.toBeEqualToTrue;
       });
     }),
     it "addAll" (fun () => {
       let values = IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash;
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash;
 
       let set = PersistentSet.empty |> PersistentSet.addAll values;
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
-      values |> Iterator.Reducer.forEach (fun i => {
+      values |> Iterable.Reducer.forEach (fun i => {
         set |> PersistentSet.contains i |> Expect.toBeEqualToTrue;
       });
     }),
     it "contains" (fun () => {
       let range = IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from;
 
       range |> PersistentSet.contains (-1) |> Expect.toBeEqualToFalse;
@@ -56,28 +56,28 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
     }),
     it "equals" (fun () => {
       let set1 = IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from;
 
       PersistentSet.equals set1 set1
         |> Expect.toBeEqualToTrue;
 
       let setEqualToPersistentSet1 = IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from;
 
       PersistentSet.equals set1 setEqualToPersistentSet1
         |> Expect.toBeEqualToTrue;
 
       let setSameCountDifferentStartThanPersistentSet1 = IntRange.create start::(-countDiv4) count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from;
 
       PersistentSet.equals set1 setSameCountDifferentStartThanPersistentSet1
         |> Expect.toBeEqualToFalse;
 
       let setDifferentCountSameStartAsPersistentSet1 = IntRange.create start::0 count::(count - 1)
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from;
 
       PersistentSet.equals set1 setDifferentCountSameStartAsPersistentSet1
@@ -86,20 +86,20 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
     it "from" (fun () => ()),
     it "intersect" (fun () => {
       let set1 = IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash
         |> PersistentSet.from;
 
       let set2 = IntRange.create start::countDiv4 count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash
         |> PersistentSet.from;
 
       PersistentSet.intersect set1 set2
         |> PersistentSet.equals (
             IntRange.create start::countDiv4 count::(count - countDiv4)
-              |> IntRange.toIterator
-              |> Iterator.map Hashtbl.hash
+              |> IntRange.toIterable
+              |> Iterable.map Hashtbl.hash
               |> PersistentSet.from
           )
         |> Expect.toBeEqualToTrue;
@@ -108,8 +108,8 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
       PersistentSet.empty |> PersistentSet.isEmpty |> Expect.toBeEqualToTrue;
 
       IntRange.create start::(-countDiv2) count::count
-       |> IntRange.toIterator
-       |> Iterator.map Hashtbl.hash
+       |> IntRange.toIterable
+       |> Iterable.map Hashtbl.hash
        |> PersistentSet.from
        |> PersistentSet.isEmpty
        |> Expect.toBeEqualToFalse;
@@ -118,37 +118,37 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
       PersistentSet.empty |> PersistentSet.isNotEmpty |> Expect.toBeEqualToFalse;
 
       IntRange.create start::(-countDiv2) count::count
-       |> IntRange.toIterator
-       |> Iterator.map Hashtbl.hash
+       |> IntRange.toIterable
+       |> Iterable.map Hashtbl.hash
        |> PersistentSet.from
        |> PersistentSet.isNotEmpty
        |> Expect.toBeEqualToTrue;
     }),
     it "reduce" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from
         |> PersistentSet.reduce while_::(fun acc _ => acc < countDiv2) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv2;
     }),
     it "remove" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from;
 
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.reduce (fun acc i =>
+        |> IntRange.toIterable
+        |> Iterable.reduce (fun acc i =>
             if (i mod 2 ===0) (acc |> PersistentSet.remove i)
             else acc
           ) set
-        |> PersistentSet.toIterator
-        |> Iterator.Reducer.every (fun i => i mod 2 != 0)
+        |> PersistentSet.toIterable
+        |> Iterable.Reducer.every (fun i => i mod 2 != 0)
         |> Expect.toBeEqualToTrue;
     }),
     it "removeAll" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from
         |> PersistentSet.removeAll
         |> PersistentSet.isEmpty
@@ -156,35 +156,35 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
     }),
     it "subtract" (fun () => {
       let set1 = IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash
         |> PersistentSet.from;
       let set2 = IntRange.create start::countDiv4 count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash
         |> PersistentSet.from;
 
       PersistentSet.subtract set1 set2
         |> PersistentSet.equals (
             IntRange.create start::0 count::countDiv4
-              |> IntRange.toIterator
-              |> Iterator.map Hashtbl.hash
+              |> IntRange.toIterable
+              |> Iterable.map Hashtbl.hash
               |> PersistentSet.from
           )
         |> Expect.toBeEqualToTrue;
     }),
-    it "toIterator" (fun () => {
+    it "toIterable" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from
-        |> PersistentSet.toIterator
-        |> Iterator.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
+        |> PersistentSet.toIterable
+        |> Iterable.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toMap" (fun () => ()),
     it "toSequence" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from
         |> PersistentSet.toSequence
         |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
@@ -192,7 +192,7 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
     }),
     it "toSet" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> PersistentSet.from
         |> PersistentSet.toSet;
 
@@ -212,20 +212,20 @@ let test (module PersistentSet: PersistentSet.S with type a = int) (count: int) 
     }),
     it "union" (fun () => {
       let set1 = IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash
         |> PersistentSet.from;
 
       let set2 = IntRange.create start::countDiv4 count::count
-        |> IntRange.toIterator
-        |> Iterator.map Hashtbl.hash
+        |> IntRange.toIterable
+        |> Iterable.map Hashtbl.hash
         |> PersistentSet.from;
 
       PersistentSet.union set1 set2
         |> PersistentSet.equals (
             IntRange.create start::0 count::(count + countDiv4)
-              |> IntRange.toIterator
-              |> Iterator.map Hashtbl.hash
+              |> IntRange.toIterable
+              |> Iterable.map Hashtbl.hash
               |> PersistentSet.from
           )
         |> Expect.toBeEqualToTrue;

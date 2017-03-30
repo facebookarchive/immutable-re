@@ -28,8 +28,8 @@ let navigationTests (count: int) => {
       SortedIntMap.empty () |> SortedIntMap.first |> Option.map fst |> Expect.toBeEqualToNoneOfInt;
 
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
         |> SortedIntMap.first
         |> Option.map fst
@@ -38,8 +38,8 @@ let navigationTests (count: int) => {
     it "firstOrRaise" (fun () => {
       (fun () => SortedIntMap.empty () |> SortedIntMap.firstOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
         |> SortedIntMap.firstOrRaise
         |> fst
@@ -49,8 +49,8 @@ let navigationTests (count: int) => {
       SortedIntMap.empty () |> SortedIntMap.last |> Option.map fst |> Expect.toBeEqualToNoneOfInt;
 
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
         |> SortedIntMap.last
         |> Option.map fst
@@ -59,8 +59,8 @@ let navigationTests (count: int) => {
     it "lastOrRaise" (fun () => {
       (fun () => SortedIntMap.empty () |> SortedIntMap.lastOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
         |> SortedIntMap.lastOrRaise
         |> fst
@@ -68,15 +68,15 @@ let navigationTests (count: int) => {
     }),/*
     it "reduceRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
+        |> IntRange.toIterable
         |> SortedIntMap.from
         |> SortedIntMap.reduceRight while_::(fun acc i => acc < countDiv2) (fun acc i => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv2;
     }),*/
     it "removeFirstOrRaise" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries;
 
       IntRange.create start::0 count::count
@@ -90,8 +90,8 @@ let navigationTests (count: int) => {
     }),
     it "removeLastOrRaise" (fun () => {
       let set = IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries;
 
       IntRange.create start::0 count::count
@@ -103,19 +103,19 @@ let navigationTests (count: int) => {
 
       (fun () => SortedIntMap.empty () |> SortedIntMap.removeLastOrRaise) |> Expect.shouldRaise;
     }),
-    it "toIteratorRight" (fun () => {
+    it "toIterableRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
-        |> SortedIntMap.toIteratorRight
-        |> Iterator.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
+        |> SortedIntMap.toIterableRight
+        |> Iterable.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toSequenceRight" (fun () => {
       IntRange.create start::0 count::count
-        |> IntRange.toIterator
-        |> Iterator.map (fun i => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
         |> SortedIntMap.toSequenceRight
         |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0

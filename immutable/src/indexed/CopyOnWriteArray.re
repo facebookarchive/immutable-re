@@ -209,12 +209,12 @@ let take (newCount: int) (arr: t 'a): (t 'a) => {
   else Array.sub arr 0 newCount;
 };
 
-let toIterator (arr: t 'a): (Iterator.t 'a) =>
-  if (isEmpty arr) (Iterator.empty ())
+let toIterable (arr: t 'a): (Iterable.t 'a) =>
+  if (isEmpty arr) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc arr };
 
-let toIteratorRight (arr: t 'a): (Iterator.t 'a) =>
-  if (isEmpty arr) (Iterator.empty ())
+let toIterableRight (arr: t 'a): (Iterable.t 'a) =>
+  if (isEmpty arr) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc arr };
 
 let toKeyedIterator (arr: t 'a): (KeyedIterator.t int 'a) =>
@@ -254,7 +254,7 @@ let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
 
 let toCollection (set: t 'a): (Collection.t 'a) => {
   count: count set,
-  iterator: fun () => toIterator set,
+  iterable: fun () => toIterable set,
   sequence: fun () => toSequence set,
 };
 
@@ -287,12 +287,16 @@ let toMap (arr: t 'a): (ImmMap.t int 'a) => {
   sequence: fun () => toSequenceWithIndex arr,
 };
 
-let module ReducerRight = Reducer.Make1 {
+let module ReducerRight = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+
   let reduce = reduceRight;
+  let toIterable = toIterableRight;
 };
 
-let module Reducer = Reducer.Make1 {
+let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+
   let reduce = reduce;
+  let toIterable = toIterable;
 };

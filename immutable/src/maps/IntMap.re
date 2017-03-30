@@ -80,8 +80,8 @@ let remove (key: int) (map: t 'v): (t 'v) =>
 
 let removeAll (_: t 'v): (t 'v) => empty ();
 
-let toIterator (map: t 'v): (Iterator.t (int, 'v)) =>
-  if (isEmpty map) (Iterator.empty ())
+let toIterable (map: t 'v): (Iterable.t (int, 'v)) =>
+  if (isEmpty map) (Iterable.empty ())
   else {
     reduce: fun predicate f acc => map |> reduce
       while_::(fun acc k v => predicate acc (k, v))
@@ -200,8 +200,8 @@ let module TransientIntMap = {
       (transient: t 'v): (t 'v) => iter
     |> KeyedIterator.reduce (fun acc k v => acc |> put k v) transient;
 
-  let putAllEntries (iter: Iterator.t ('k, 'v)) (transient: t 'v): (t 'v) => iter
-    |> Iterator.reduce (fun acc (k, v) => acc |> put k v) transient;
+  let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'v): (t 'v) => iter
+    |> Iterable.reduce (fun acc (k, v) => acc |> put k v) transient;
 
   let remove (key: int) (transient: t 'v): (t 'v) =>
     transient |> alter key Functions.alwaysNone;
@@ -221,7 +221,7 @@ let putAll (iter: KeyedIterator.t int 'v) (map: t 'v): (t 'v) => map
   |> TransientIntMap.putAll iter
   |> TransientIntMap.persist;
 
-let putAllEntries (iter: Iterator.t ('k, 'v)) (map: t 'v): (t 'v) => map
+let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'v): (t 'v) => map
   |> mutate
   |> TransientIntMap.putAllEntries iter
   |> TransientIntMap.persist;
@@ -229,14 +229,14 @@ let putAllEntries (iter: Iterator.t ('k, 'v)) (map: t 'v): (t 'v) => map
 let from (iter: KeyedIterator.t int 'v): (t 'v) =>
   empty () |> putAll iter;
 
-let fromEntries (iter: Iterator.t (k, 'v)): (t 'v) =>
+let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
   empty () |> putAllEntries iter;
 
 let merge
     (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (initialValue: t 'vAcc)
     (next: t 'v): (t 'vAcc) => ImmSet.union (keys next) (keys initialValue)
-  |> Iterator.reduce (
+  |> Iterable.reduce (
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);
         switch result {

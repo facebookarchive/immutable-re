@@ -109,35 +109,39 @@ let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
   recurse (start + count - 1) count
 };
 
-let toIterator (set: t): (Iterator.t int) =>
-  if (isEmpty set) (Iterator.empty ())
+let toIterable (set: t): (Iterable.t int) =>
+  if (isEmpty set) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
 
-let toIteratorRight (set: t): (Iterator.t int) =>
-  if (isEmpty set) (Iterator.empty ())
+let toIterableRight (set: t): (Iterable.t int) =>
+  if (isEmpty set) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
 
 let toCollection (set: t): (Collection.t int) => {
   count: count set,
-  iterator: fun () => toIterator set,
+  iterable: fun () => toIterable set,
   sequence: fun () => toSequence set,
 };
 
 let toSet (set: t): (ImmSet.t int) => {
   contains: fun v => contains v set,
   count: count set,
-  iterator: fun () => toIterator set,
+  iterable: fun () => toIterable set,
   sequence: fun () => toSequence set,
 };
 
-let module ReducerRight = Reducer.Make {
-  type a = int;
+let module ReducerRight = Iterable.Reducer.Make {
+  type nonrec a = a;
   type nonrec t = t;
+
   let reduce = reduceRight;
+  let toIterable = toIterableRight;
 };
 
-let module Reducer = Reducer.Make {
-  type a = int;
+let module Reducer = Iterable.Reducer.Make {
+  type nonrec a = a;
   type nonrec t = t;
+
   let reduce = reduce;
+  let toIterable = toIterable;
 };

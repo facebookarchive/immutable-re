@@ -19,7 +19,7 @@ module type S1 = {
   let firstOrRaise: t 'v => (k, 'v);
   let last: t 'v => option (k, 'v);
   let lastOrRaise: t 'v => (k, 'v);
-  let toIteratorRight: t 'v => Iterator.t (k, 'v);
+  let toIterableRight: t 'v => Iterable.t (k, 'v);
   let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
   let remove: k => t 'v => t 'v;
@@ -27,7 +27,7 @@ module type S1 = {
   let reduce:
     while_::('acc => k => 'v => bool)? =>
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let toIterator: t 'v => Iterator.t (k, 'v);
+  let toIterable: t 'v => Iterable.t (k, 'v);
   let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
@@ -41,13 +41,13 @@ module type S1 = {
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let empty: unit => t 'v;
   let from: KeyedIterator.t k 'v => t 'v;
-  let fromEntries: Iterator.t (k, 'v) => t 'v;
+  let fromEntries: Iterable.t (k, 'v) => t 'v;
   let merge:
     (k => option 'vAcc => option 'v => option 'vAcc) =>
     t 'vAcc => t 'v => t 'vAcc;
   let put: k => 'v => t 'v => t 'v;
   let putAll: KeyedIterator.t k 'v => t 'v => t 'v;
-  let putAllEntries: Iterator.t (k, 'v) => t 'v => t 'v;
+  let putAllEntries: Iterable.t (k, 'v) => t 'v => t 'v;
   let removeFirstOrRaise: t 'v => t 'v;
   let removeLastOrRaise: t 'v => t 'v;
   let module KeyedReducerRight: KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
@@ -126,13 +126,13 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let putAll (iter: KeyedIterator.t k 'v) (map: t 'v): (t 'v) =>
     iter |> KeyedIterator.reduce (fun acc k v => acc |> put k v) map;
 
-  let putAllEntries (iter: Iterator.t (k, 'v)) (map: t 'v): (t 'v) =>
-    iter |> Iterator.reduce (fun acc (k, v) => acc |> put k v) map;
+  let putAllEntries (iter: Iterable.t (k, 'v)) (map: t 'v): (t 'v) =>
+    iter |> Iterable.reduce (fun acc (k, v) => acc |> put k v) map;
 
   let from (iter: KeyedIterator.t k 'v): (t 'v) =>
     empty () |> putAll iter;
 
-  let fromEntries (iter: Iterator.t (k, 'v)): (t 'v) =>
+  let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
     empty () |> putAllEntries iter;
 
   let reduce
@@ -173,8 +173,8 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let toSequenceRight ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
     tree |> AVLTreeMap.toSequenceRight;
 
-  let toIterator (map: t 'v): (Iterator.t (k, 'v)) =>
-    if (isEmpty map) (Iterator.empty ())
+  let toIterable (map: t 'v): (Iterable.t (k, 'v)) =>
+    if (isEmpty map) (Iterable.empty ())
     else {
       reduce: fun predicate f acc => map |> reduce
         while_::(fun acc k v => predicate acc (k, v))
@@ -182,8 +182,8 @@ let module Make1 = fun (Comparable: Comparable.S) => {
         acc
     };
 
-  let toIteratorRight (map: t 'v): (Iterator.t (k, 'v)) =>
-    if (isEmpty map) (Iterator.empty ())
+  let toIterableRight (map: t 'v): (Iterable.t (k, 'v)) =>
+    if (isEmpty map) (Iterable.empty ())
     else {
       reduce: fun predicate f acc => map |> reduceRight
         while_::(fun acc k v => predicate acc (k, v))
@@ -219,7 +219,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
       (acc: t 'vAcc)
       (next: t 'v): (t 'vAcc) =>  ImmSet.union (keys next) (keys acc)
-    |> Iterator.reduce (
+    |> Iterable.reduce (
         fun acc key => {
           let result = f key (acc |> get key) (next |> get key);
           switch result {

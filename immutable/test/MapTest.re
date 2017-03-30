@@ -21,8 +21,8 @@ let module SortedIntMap = SortedMap.Make1 {
 let test = describe "Map" [
   it "containsKey" (fun () => {
     let range = IntRange.create start::0 count::200
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap;
     range |> Map.containsKey (-1) |> Expect.toBeEqualToFalse;
@@ -31,8 +31,8 @@ let test = describe "Map" [
   }),
   it "count" (fun () => {
     IntRange.create start::0 count::200
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
       |> Map.count
@@ -40,8 +40,8 @@ let test = describe "Map" [
   }),
   it "get" (fun () => {
     let map = IntRange.create start::0 count::200
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap;
 
@@ -50,8 +50,8 @@ let test = describe "Map" [
   }),
   it "getOrRaise" (fun () => {
     let map = IntRange.create start::0 count::200
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap;
 
@@ -61,8 +61,8 @@ let test = describe "Map" [
   it "isEmpty" (fun () => {
     (Map.empty ()) |> Map.isEmpty |> Expect.toBeEqualToTrue;
     IntRange.create start::0 count::199
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
       |> Map.isEmpty
@@ -71,8 +71,8 @@ let test = describe "Map" [
   it "isNotEmpty" (fun () => {
     (Map.empty ()) |> Map.isNotEmpty |> Expect.toBeEqualToFalse;
     IntRange.create start::0 count::199
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
       |> Map.isNotEmpty
@@ -80,8 +80,8 @@ let test = describe "Map" [
   }),
   it "keys" (fun () => {
     IntRange.create start::0 count::200
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
       |> Map.keys
@@ -92,22 +92,22 @@ let test = describe "Map" [
   }),
   it "reduce" (fun () => {
     IntRange.create start::0 count::200
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
       |> Map.reduce while_::(fun _ k _ => k < 5) (fun acc k _ => k + acc) 0
       |> Expect.toBeEqualToInt 10;
 
     IntRange.create start::0 count::200
-      |> IntRange.toIterator
-      |> Iterator.map (fun i => (i, i))
+      |> IntRange.toIterable
+      |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
       |> Map.reduce while_::(fun _ _ v => v < 5) (fun acc _ v => v + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
-  it "toIterator" (fun () => ()),
+  it "toIterable" (fun () => ()),
   it "toKeyedIterator" (fun () => ()),
   it "map" (fun () => ()),
   it "toSequence" (fun () => ()),

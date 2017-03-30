@@ -100,12 +100,12 @@ let reduceRight
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
-let toIterator (deque: t 'a): (Iterator.t 'a) =>
- if (isEmpty deque) (Iterator.empty ())
+let toIterable (deque: t 'a): (Iterable.t 'a) =>
+ if (isEmpty deque) (Iterable.empty ())
  else { reduce: fun predicate f acc => reduce while_::predicate f acc deque };
 
-let toIteratorRight (deque: t 'a): (Iterator.t 'a) =>
-  if (isEmpty deque) (Iterator.empty ())
+let toIterableRight (deque: t 'a): (Iterable.t 'a) =>
+  if (isEmpty deque) (Iterable.empty ())
   else { reduce: fun predicate f acc => reduceRight while_::predicate f acc deque };
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
@@ -120,7 +120,7 @@ let toSequenceRight (deque: t 'a): (Sequence.t 'a) => switch deque {
 
 let toCollection (deque: t 'a): (Collection.t 'a) => {
   count: count deque,
-  iterator: fun () => toIterator deque,
+  iterable: fun () => toIterable deque,
   sequence: fun () => toSequence deque,
 };
 
@@ -154,7 +154,7 @@ let module TransientDeque = {
   };
 
   let addFirstAll
-      (iter: Iterator.t 'a)
+      (iter: Iterable.t 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
         vector |> TransientVector.addFirstAll iter |> ignore;
@@ -176,7 +176,7 @@ let module TransientDeque = {
   };
 
   let addLastAll
-      (iter: Iterator.t 'a)
+      (iter: Iterable.t 'a)
       (transient: t 'a): (t 'a) => switch (Transient.get transient) {
     | Ascending vector =>
         vector |> TransientVector.addLastAll iter |> ignore;
@@ -264,28 +264,32 @@ let module TransientDeque = {
 
 let mutate = TransientDeque.mutate;
 
-let addFirstAll (iter: Iterator.t 'a) (deque: t 'a): (t 'a) => deque
+let addFirstAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
   |> mutate
   |> TransientDeque.addFirstAll iter
   |> TransientDeque.persist;
 
-let addLastAll (iter: Iterator.t 'a) (deque: t 'a): (t 'a) => deque
+let addLastAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
   |> mutate
   |> TransientDeque.addLastAll iter
   |> TransientDeque.persist;
 
-let from (iter: Iterator.t 'a): (t 'a) =>
+let from (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addLastAll iter;
 
-let fromReverse (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
-let module ReducerRight = Reducer.Make1 {
+let module ReducerRight = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
-  let reduce = reduce;
+
+  let reduce = reduceRight;
+  let toIterable = toIterableRight;
 };
 
-let module Reducer = Reducer.Make1 {
+let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+
   let reduce = reduce;
+  let toIterable = toIterable;
 };

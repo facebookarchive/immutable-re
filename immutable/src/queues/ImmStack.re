@@ -17,10 +17,10 @@ let addFirst (value: 'a) ({ count, list }: t 'a): (t 'a) => ({
   list: [value, ...list],
 });
 
-let addFirstAll (values: Iterator.t 'a) ({ count, list }: t 'a): (t 'a) => {
+let addFirstAll (values: Iterable.t 'a) ({ count, list }: t 'a): (t 'a) => {
   let newCount = ref count;
 
-  let newList = values |> Iterator.reduce
+  let newList = values |> Iterable.reduce
     (fun acc next => {
       newCount := !newCount + 1;
       [next, ...acc]
@@ -44,7 +44,7 @@ let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
 
-let fromReverse (iter: Iterator.t 'a): (t 'a) =>
+let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
 let isEmpty ({ list }: t 'a): bool =>
@@ -75,8 +75,8 @@ let return (value: 'a): (t 'a) => {
   list: [value],
 };
 
-let toIterator ({ list }: t 'a): (Iterator.t 'a) =>
-  Iterator.ofList list;
+let toIterable ({ list }: t 'a): (Iterable.t 'a) =>
+  Iterable.ofList list;
 
 let toList ({ list }: t 'a): (list 'a) => list;
 
@@ -84,11 +84,13 @@ let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
 
 let toCollection (set: t 'a): (Collection.t 'a) => {
   count: count set,
-  iterator: fun () => toIterator set,
+  iterable: fun () => toIterable set,
   sequence: fun () => toSequence set,
 };
 
-let module Reducer = Reducer.Make1 {
+let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
+  
   let reduce = reduce;
+  let toIterable = toIterable;
 };

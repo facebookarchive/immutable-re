@@ -27,40 +27,6 @@ let module Hashable = {
   };
 };
 
-let module Reduceable = {
-  module type S = {
-    type a;
-    type t;
-
-    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  };
-};
-
-let module ReduceableRight = {
-  module type S = {
-    type a;
-    type t;
-
-    include Reduceable.S with type a := a and type t := t;
-
-    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include Reduceable.S1 with type t 'a := t 'a;
-
-    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  };
-};
-
 let module Streamable = {
   module type S1 = {
     type t 'a;
@@ -86,26 +52,44 @@ let module Streamable = {
   };
 };
 
-let module Reducer = Reducer;
+let module Iterable = Iterable;
 
-let module Iterator = Iterator;
+let module IterableRight = {
+  /** Module types implemented by modules that support reducing over
+   *  values in both the left to right, and right to left directions.
+   */
 
-let module Iterable = {
   module type S = {
+    /** ReduceableRight module type signature for types with a parametric type arity of 0. */
+
     type a;
     type t;
 
-    include Reduceable.S with type a := a and type t := t;
+    include Iterable.S with type a := a and type t := t;
 
-    let toIterator: t => (Iterator.t a);
+    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+     let toIterableRight: t => (Iterable.t a);
   };
 
   module type S1 = {
+    /** ReduceableRight module type signature for types with a parametric type arity of 1. */
+
     type t 'a;
 
-    include Reduceable.S1 with type t 'a := t 'a;
+    include Iterable.S1 with type t 'a := t 'a;
 
-    let toIterator: t 'a => (Iterator.t 'a);
+    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduceRight while_::predicate initialValue f reduceable] applies the accumulator
+     *  function [f] to each value in [reduceable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+    let toIterableRight: t 'a => (Iterable.t 'a);
   };
 };
 
@@ -212,9 +196,9 @@ let module PersistentSequentialCollection = {
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let addFirst: 'a => (t 'a) => (t 'a);
-    let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     let empty: unit => (t 'a);
-    let fromReverse: (Iterator.t 'a) => (t 'a);
+    let fromReverse: (Iterable.t 'a) => (t 'a);
     let return: 'a => (t 'a);
     let removeFirstOrRaise: (t 'a) => (t 'a);
   };
@@ -227,7 +211,7 @@ let module TransientSequentialCollection = {
     include TransientCollection.S1 with type t 'a := t 'a;
 
     let addFirst: 'a => (t 'a) => (t 'a);
-    let addFirstAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     let empty: unit => (t 'a);
     let first: (t 'a) => option 'a;
     let firstOrRaise: (t 'a) => 'a;
@@ -240,24 +224,22 @@ let module NavigableCollection = {
     type a;
     type t;
 
-    include ReduceableRight.S with type a := a and type t := t;
+    include IterableRight.S with type a := a and type t := t;
     include SequentialCollection.S with type a := a and type t := t;
 
     let last: t => (option a);
     let lastOrRaise: t => a;
-    let toIteratorRight: t => (Iterator.t a);
     let toSequenceRight: t => (Sequence.t a);
   };
 
   module type S1 = {
     type t 'a;
 
-    include ReduceableRight.S1 with type t 'a := t 'a;
+    include IterableRight.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let last: (t 'a) => (option 'a);
     let lastOrRaise: (t 'a) => 'a;
-    let toIteratorRight: (t 'a) => (Iterator.t 'a);
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
   };
 };
@@ -270,8 +252,8 @@ let module PersistentNavigableCollection = {
     include PersistentSequentialCollection.S1 with type t 'a := t 'a;
 
     let addLast: 'a => (t 'a) => (t 'a);
-    let addLastAll: (Iterator.t 'a) => (t 'a) => (t 'a);
-    let from: (Iterator.t 'a) => (t 'a);
+    let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+    let from: (Iterable.t 'a) => (t 'a);
     let removeLastOrRaise: (t 'a) => (t 'a);
   };
 };
@@ -322,8 +304,8 @@ let module PersistentSet = {
     include PersistentCollection.S with type a := a and type t := t;
 
     let add: a => t => t;
-    let addAll: (Iterator.t a) => t => t;
-    let from: (Iterator.t a) => t;
+    let addAll: (Iterable.t a) => t => t;
+    let from: (Iterable.t a) => t;
     let intersect: t => t => t;
     let remove: a => t => t;
     let subtract: t => t => t;
@@ -337,7 +319,7 @@ let module PersistentSet = {
     include PersistentCollection.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
-    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     let intersect: (t 'a) => (t 'a) => (t 'a);
     let remove: 'a => (t 'a) => (t 'a);
     let subtract: (t 'a) => (t 'a) => (t 'a);
@@ -353,7 +335,7 @@ let module TransientSet = {
     include TransientCollection.S with type a := a and type t := t;
 
     let add: a => t => t;
-    let addAll: (Iterator.t a) => t => t;
+    let addAll: (Iterable.t a) => t => t;
     let contains: a => t => bool;
     let remove: a => t => t;
   };
@@ -364,7 +346,7 @@ let module TransientSet = {
     include TransientCollection.S1 with type t 'a := t 'a;
 
     let add: 'a => (t 'a) => (t 'a);
-    let addAll: (Iterator.t 'a) => (t 'a) => (t 'a);
+    let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
     let contains: 'a => (t 'a) => bool;
     let remove: 'a => (t 'a) => (t 'a);
   };
@@ -431,7 +413,7 @@ let module KeyedIterable = {
 
     include KeyedReduceable.S1 with type k := k and type t 'v := t 'v;
 
-    let toIterator: t 'v => Iterator.t (k, 'v);
+    let toIterable: t 'v => Iterable.t (k, 'v);
 
     let toKeyedIterator: t 'v => KeyedIterator.t k 'v;
   };
@@ -441,7 +423,7 @@ let module KeyedIterable = {
 
     include KeyedReduceable.S2 with type t 'k 'v := t 'k 'v;
 
-    let toIterator: t 'k 'v => Iterator.t ('k, 'v);
+    let toIterable: t 'k 'v => Iterable.t ('k, 'v);
 
     let toKeyedIterator: t 'k 'v => KeyedIterator.t 'k 'v;
   };
@@ -538,7 +520,7 @@ let module NavigableKeyedCollection = {
     let firstOrRaise: (t 'v) => (k, 'v);
     let last: (t 'v) => (option (k, 'v));
     let lastOrRaise: (t 'v) => (k, 'v);
-    let toIteratorRight: t 'v => Iterator.t (k, 'v);
+    let toIterableRight: t 'v => Iterable.t (k, 'v);
     let toKeyedIteratorRight: t 'v => KeyedIterator.t k 'v;
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
   };
@@ -581,11 +563,11 @@ let module PersistentMap = {
 
     let empty: unit => (t 'v);
     let from: (KeyedIterator.t k 'v) => (t 'v);
-    let fromEntries: (Iterator.t (k, 'v)) => (t 'v);
+    let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
     let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
     let put: k => 'v => (t 'v) => (t 'v);
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
-    let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+    let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
   };
 
   module type S2 = {
@@ -598,7 +580,7 @@ let module PersistentMap = {
     let merge: ('k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'k 'vAcc) => (t 'k 'v) => (t 'k 'vAcc);
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-    let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
   };
 };
 
@@ -616,7 +598,7 @@ let module TransientMap = {
     let getOrRaise: k => (t 'v) => 'v;
     let put: k => 'v => (t 'v) => (t 'v);
     let putAll: (KeyedIterator.t k 'v) => (t 'v) => (t 'v);
-    let putAllEntries: (Iterator.t (k, 'v)) => (t 'v) => (t 'v);
+    let putAllEntries: (Iterable.t (k, 'v)) => (t 'v) => (t 'v);
   };
 
   module type S2 = {
@@ -629,7 +611,7 @@ let module TransientMap = {
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
     let putAll: (KeyedIterator.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
-    let putAllEntries: (Iterator.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
+    let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
   };
 };
 
@@ -695,10 +677,12 @@ let module TransientIntSet = IntSet.TransientIntSet;
 let module List = {
   include ImmList;
 
-  let addFirstAll = Iterator.listAddFirstAll;
-  let fromReverse = Iterator.listFromReverse;
-  let toIterator = Iterator.ofList;
+  let addFirstAll = Iterable.listAddFirstAll;
+  let fromReverse = Iterable.listFromReverse;
+  let toIterable = Iterable.ofList;
   let toSequence = Sequence.ofList;
+
+  let module Reducer = Iterable.ListReducer;
 };
 
 let module ReadOnlyArray = CopyOnWriteArray;

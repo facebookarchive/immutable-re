@@ -11,7 +11,7 @@ open Functions.Operators;
 
 type t 'a = {
   count: int,
-  iterator: unit => (Iterator.t 'a),
+  iterable: unit => (Iterable.t 'a),
   sequence: unit => (Sequence.t 'a),
 };
 
@@ -19,7 +19,7 @@ let count ({ count }: t 'a): int => count;
 
 let empty (): (t 'a) => {
   count: 0,
-  iterator: Iterator.empty,
+  iterable: Iterable.empty,
   sequence: Sequence.empty,
 };
 
@@ -29,10 +29,10 @@ let isEmpty ({ count }: t 'a): bool =>
 let isNotEmpty ({ count }: t 'a): bool =>
   count !== 0;
 
-let map (f: 'a => 'b) ({ count, iterator, sequence } as collection: t 'a): (t 'b) =>
-  if (iterator === Iterator.empty) (empty ()) else {
+let map (f: 'a => 'b) ({ count, iterable, sequence } as collection: t 'a): (t 'b) =>
+  if (iterable === Iterable.empty) (empty ()) else {
     count,
-    iterator: iterator >> Iterator.map f,
+    iterable: iterable >> Iterable.map f,
     sequence: sequence >> Sequence.map f,
   };
 
@@ -40,19 +40,20 @@ let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    ({ iterator }: t 'a): 'acc =>
-  iterator () |> Iterator.reduce while_::predicate f acc;
+    ({ iterable }: t 'a): 'acc =>
+  iterable () |> Iterable.reduce while_::predicate f acc;
 
 let toCollection (collection: t 'a): (t 'a) =>
   collection;
 
-let toIterator ({ iterator }: t 'a): (Iterator.t 'a) =>
-  iterator ();
+let toIterable ({ iterable }: t 'a): (Iterable.t 'a) =>
+  iterable ();
 
 let toSequence ({ sequence }: t 'a): (Sequence.t 'a) =>
   sequence ();
 
-let module Reducer = Reducer.Make1 {
+let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
   let reduce = reduce;
+  let toIterable = toIterable;
 };

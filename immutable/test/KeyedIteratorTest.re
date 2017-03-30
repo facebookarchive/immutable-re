@@ -17,16 +17,16 @@ let test = describe "KeyedIterator" [
   it "concat" (fun () => {
     KeyedIterator.concat [
       IntRange.create start::0 count::2
-        |> IntRange.toIterator
-        |> Iterator.map (fun i: (int, int) => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i: (int, int) => (i, i))
         |> KeyedIterator.fromEntries,
       IntRange.create start::2 count::2
-        |> IntRange.toIterator
-        |> Iterator.map (fun i: (int, int) => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i: (int, int) => (i, i))
         |> KeyedIterator.fromEntries,
       IntRange.create start::4 count::2
-        |> IntRange.toIterator
-        |> Iterator.map (fun i: (int, int) => (i, i))
+        |> IntRange.toIterable
+        |> Iterable.map (fun i: (int, int) => (i, i))
         |> KeyedIterator.fromEntries,
     ] |> KeyedIterator.take 5
       |> KeyedIterator.keys
@@ -183,7 +183,7 @@ let test = describe "KeyedIterator" [
   it "scan" (fun () => {
     KeyedIterator.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterator.scan (fun _ k v => k + v) 0
-      |> Iterator.take 5
+      |> Iterable.take 5
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [5, 5, 5, 5, 0];
   }),

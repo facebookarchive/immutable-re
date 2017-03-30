@@ -131,14 +131,14 @@ let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) =>
     }
   };
 
-let fromEntries (iter: Iterator.t ('k, 'v)): (t 'k 'v) =>
-  if (iter.reduce === Iterator.emptyReducer) (empty ())
+let fromEntries (iter: Iterable.t ('k, 'v)): (t 'k 'v) =>
+  if (iter.reduce === Iterable.emptyReducer) (empty ())
   else {
     reduce: fun predicate f acc => {
       let predicate acc (k, v) => predicate acc k v;
       let f acc (k, v) => f acc k v;
 
-      iter |> Iterator.reduce while_::predicate f acc;
+      iter |> Iterable.reduce while_::predicate f acc;
     }
   };
 
@@ -167,8 +167,8 @@ let generate
 };
 
 
-let keys (iter: t 'k 'v): (Iterator.t 'k) =>
-  if (iter.reduce === emptyReducer) (Iterator.empty ())
+let keys (iter: t 'k 'v): (Iterable.t 'k) =>
+  if (iter.reduce === emptyReducer) (Iterable.empty ())
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::(fun acc k _ => predicate acc k)
@@ -257,7 +257,7 @@ let return (key: 'k) (value: 'v): (t 'k 'v) => {
 let scan
     (reducer: 'acc => 'k => 'v => 'acc)
     (initialValue: 'acc)
-    (iter: t 'k 'v): (Iterator.t 'acc) => if (iter.reduce === emptyReducer) (Iterator.empty ()) else {
+    (iter: t 'k 'v): (Iterable.t 'acc) => if (iter.reduce === emptyReducer) (Iterable.empty ()) else {
   reduce: fun predicate f acc =>
     if (predicate acc initialValue)  {
       let result = ref (f acc initialValue);
@@ -362,8 +362,8 @@ let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) =>
     }
   };
 
-let values (iter: t 'k 'v): (Iterator.t 'v) =>
-  if (iter.reduce === emptyReducer ) (Iterator.empty ())
+let values (iter: t 'k 'v): (Iterable.t 'v) =>
+  if (iter.reduce === emptyReducer ) (Iterable.empty ())
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::(fun acc _ v => predicate acc v)
@@ -371,8 +371,8 @@ let values (iter: t 'k 'v): (Iterator.t 'v) =>
       acc
   };
 
-let toIterator (iter: t 'k 'v): (Iterator.t ('k, 'v)) =>
-  if (iter.reduce === emptyReducer ) (Iterator.empty ())
+let toIterable (iter: t 'k 'v): (Iterable.t ('k, 'v)) =>
+  if (iter.reduce === emptyReducer ) (Iterable.empty ())
   else {
     reduce: fun predicate f acc => iter |> reduce
       while_::(fun acc k v => predicate acc (k, v))

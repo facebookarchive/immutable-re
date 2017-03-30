@@ -48,7 +48,7 @@ let isNotEmpty ({ count }: t 'k 'v): bool =>
 let keys (map: t 'k 'v): (ImmSet.t 'k) => {
   contains: fun k => map |> containsKey k,
   count: map.count,
-  iterator: map.keyedIterator >> KeyedIterator.keys,
+  iterable: map.keyedIterator >> KeyedIterator.keys,
   sequence: map.sequence >> Sequence.map (fun (k, _) => k),
 };
 
@@ -59,8 +59,8 @@ let reduce
     ({ keyedIterator }: t 'k 'v): 'acc =>
   keyedIterator () |> KeyedIterator.reduce while_::predicate f acc;
 
-let toIterator ({ keyedIterator }: t 'k 'v): (Iterator.t ('k, 'v)) =>
-  keyedIterator () |> KeyedIterator.toIterator;
+let toIterable ({ keyedIterator }: t 'k 'v): (Iterable.t ('k, 'v)) =>
+  keyedIterator () |> KeyedIterator.toIterable;
 
 let toKeyedIterator ({ keyedIterator }: t 'k 'v): (KeyedIterator.t 'k 'v) =>
   keyedIterator ();
