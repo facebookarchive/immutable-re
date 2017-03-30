@@ -1165,7 +1165,6 @@ let module NavigableSet: {
        */
     };
   };
-
 };
 
 let module KeyedStreamable: {
