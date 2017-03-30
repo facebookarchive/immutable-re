@@ -2125,9 +2125,6 @@ let module rec Deque: {
 
   include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
 
-  let mutate: (t 'a) => (TransientDeque.t 'a);
-  /** [mutate deque] returns a TransientDeque containing the same values as [deque]. */
-
   let reverse: (t 'a) => (t 'a);
   /** [reverse deque] returns a new Deque with [deque]'s values reversed.
    *
@@ -2139,29 +2136,32 @@ let module rec Deque: {
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Deques. */
-}
 
-and TransientDeque: {
-  /** A temporarily mutable Deque. Once persisted, any further operations on a
-   *  TransientDeque instance will raise exceptions. Intended for implementing bulk
-   *  mutation operations efficiently.
-   */
+  let module Transient: {
+    /** A temporarily mutable Deque. Once persisted, any further operations on a
+     *  TransientDeque instance will raise exceptions. Intended for implementing bulk
+     *  mutation operations efficiently.
+     */
 
-  type t 'a;
+    type t 'a;
 
-  include NavigableCollection.Transient.S1 with type t 'a := t 'a;
-  /** The TransientDeque type. */
+    include NavigableCollection.Transient.S1 with type t 'a := t 'a;
+    /** The TransientDeque type. */
 
-  let persist: (t 'a) => (Deque.t 'a);
-  /** [persist transient] persists [transient] returning a Deque. Further attempts
-   *  to access or mutate [transient] will raise exceptions.
-   */
+    let persist: (t 'a) => (Deque.t 'a);
+    /** [persist transient] persists [transient] returning a Deque. Further attempts
+     *  to access or mutate [transient] will raise exceptions.
+     */
 
-  let reverse: (t 'a) => (t 'a);
-  /** [reverse transient] reverse [transient]'s values.
-   *
-   *  Complexity: O(1)
-   */
+    let reverse: (t 'a) => (t 'a);
+    /** [reverse transient] reverse [transient]'s values.
+     *
+     *  Complexity: O(1)
+     */
+  };
+
+  let mutate: (t 'a) => (Deque.Transient.t 'a);
+  /** [mutate deque] returns a TransientDeque containing the same values as [deque]. */
 };
 
 let module rec HashMap: {
@@ -2191,32 +2191,32 @@ let module rec HashMap: {
    *  to resolve collisions.
    */
 
-  let mutate: (t 'k 'v) => (TransientHashMap.t 'k 'v);
+  let module Transient: {
+    /** A temporarily mutable HashMap. Once persisted, any further operations on a
+     *  TransientHashMap instance will throw. Intended for implementing bulk mutation
+     *  operations efficiently.
+     */
+
+    type t 'k 'v;
+
+    include Map.Transient.S2 with type t 'k 'v := t 'k 'v;
+
+    let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (HashMap.Transient.t 'k 'v);
+    /** [emptyWith hash comparator ()] returns an empty TransientHashMap which uses [hash] to hash
+     *  keys, and [comparator] to resolve collisions.
+     */
+
+    let persist: (t 'k 'v) => (HashMap.t 'k 'v);
+    /** [persist transient] persists [transient] returning a HashMap. Further attempts
+     *  to access or mutate [transient] will raise exceptions.
+     */
+  };
+
+  let mutate: (t 'k 'v) => (HashMap.Transient.t 'k 'v);
   /** [mutate map] returns a TransientHashMap containing the same key/values pairs as [map]. */
 
   let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
   /* KeyedReducer module for HashMaps. */
-}
-
-and TransientHashMap: {
-  /** A temporarily mutable HashMap. Once persisted, any further operations on a
-   *  TransientHashMap instance will throw. Intended for implementing bulk mutation
-   *  operations efficiently.
-   */
-
-  type t 'k 'v;
-
-  include Map.Transient.S2 with type t 'k 'v := t 'k 'v;
-
-  let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => unit => (TransientHashMap.t 'k 'v);
-  /** [emptyWith hash comparator ()] returns an empty TransientHashMap which uses [hash] to hash
-   *  keys, and [comparator] to resolve collisions.
-   */
-
-  let persist: (t 'k 'v) => (HashMap.t 'k 'v);
-  /** [persist transient] persists [transient] returning a HashMap. Further attempts
-   *  to access or mutate [transient] will raise exceptions.
-   */
 };
 
 let module rec HashSet: {
@@ -2243,32 +2243,32 @@ let module rec HashSet: {
   let hash: Hash.t (t 'a);
   /** An hashing function for HashSet instances. */
 
-  let mutate: (t 'a) => (TransientHashSet.t 'a);
+  let module Transient: {
+    /** A temporarily mutable HashSet. Once persisted, any further operations on a
+     *  TransientHashMap instance will throw. Intended for implementing bulk mutation
+     *  operations efficiently.
+     */
+
+    type t 'a;
+
+    include Set.Transient.S1 with type t 'a := t 'a;
+
+    let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (t 'a);
+    /** [emptyWith hash comparator ()] returns an empty TransientHashSet which uses [hash] to hash
+     *  keys, and [comparator] to resolve collisions.
+     */
+
+    let persist: (t 'a) => (HashSet.t 'a);
+    /** [persist transient] persists [transient] returning a HashSet. Further attempts
+     *  to access or mutate [transient] will raise exceptions.
+     */
+  };
+
+  let mutate: (t 'a) => (HashSet.Transient.t 'a);
   /** [mutate set] returns a TransientHashSet containing the same values as [set]. */
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for HashSets. */
-}
-
-and TransientHashSet: {
-  /** A temporarily mutable HashSet. Once persisted, any further operations on a
-   *  TransientHashMap instance will throw. Intended for implementing bulk mutation
-   *  operations efficiently.
-   */
-
-  type t 'a;
-
-  include Set.Transient.S1 with type t 'a := t 'a;
-
-  let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (TransientHashSet.t 'a);
-  /** [emptyWith hash comparator ()] returns an empty TransientHashSet which uses [hash] to hash
-   *  keys, and [comparator] to resolve collisions.
-   */
-
-  let persist: (t 'a) => (HashSet.t 'a);
-  /** [persist transient] persists [transient] returning a HashSet. Further attempts
-   *  to access or mutate [transient] will raise exceptions.
-   */
 };
 
 let module rec IntMap: {
@@ -2281,23 +2281,23 @@ let module rec IntMap: {
 
   include Map.Persistent.S1 with type k := k and type t 'v := t 'v;
 
-  let mutate: (t 'v) => (TransientIntMap.t 'v);
+  let module Transient: {
+    type k = int;
+    type t 'v;
+
+    include Map.Transient.S1 with type k := k and type t 'v := t 'v;
+
+    let persist: (t 'v) => (IntMap.t 'v);
+    /** [persist transient] persists [transient] returning a IntMap. Further attempts
+     *  to access or mutate [transient] will raise exceptions.
+     */
+  };
+
+  let mutate: (t 'v) => (IntMap.Transient.t 'v);
   /** [mutate map] returns a TransientIntMap containing the same key/values pairs as [map]. */
 
   let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k = k and type t 'v := t 'v;
   /* KeyedReducer module for IntMaps. */
-}
-
-and TransientIntMap: {
-  type k = int;
-  type t 'v;
-
-  include Map.Transient.S1 with type k := k and type t 'v := t 'v;
-
-  let persist: (t 'v) => (IntMap.t 'v);
-  /** [persist transient] persists [transient] returning a IntMap. Further attempts
-   *  to access or mutate [transient] will raise exceptions.
-   */
 };
 
 let module IntRange: {
@@ -2334,32 +2334,32 @@ let module rec IntSet: {
 
   include Set.Persistent.S with type a := a and type t := t;
 
-  let mutate: t => TransientIntSet.t;
+  let module Transient: {
+    /** A temporarily mutable IntSet. Once persisted, any further operations on a
+     *  TransientIntSet instance will throw. Intended for implementing bulk mutation
+     *  operations efficiently.
+     */
+
+    type a = int;
+    type t;
+    /** The TransientIntSet type. */
+
+    include Set.Transient.S with type a := a and type t := t;
+
+    let empty: unit => t;
+    /** [empty ()] return a new empty TransientIntSet. */
+
+    let persist: t => IntSet.t;
+    /** [persist transient] returns a persisted IntSet. Further attempts to access or mutate [transient]
+     *  will throw.
+     */
+  };
+
+  let mutate: t => IntSet.Transient.t;
   /** [mutate set] returns a TransientIntSet containing the same values as [set]. */
 
   let module Reducer: Iterable.Reducer.S with type a = a and type t := t;
   /* Reducer module for IntSets. */
-}
-
-and TransientIntSet: {
-  /** A temporarily mutable IntSet. Once persisted, any further operations on a
-   *  TransientIntSet instance will throw. Intended for implementing bulk mutation
-   *  operations efficiently.
-   */
-
-  type a = int;
-  type t;
-  /** The TransientIntSet type. */
-
-  include Set.Transient.S with type a := a and type t := t;
-
-  let empty: unit => t;
-  /** [empty ()] return a new empty TransientIntSet. */
-
-  let persist: t => IntSet.t;
-  /** [persist transient] returns a persisted IntSet. Further attempts to access or mutate [transient]
-   *  will throw.
-   */
 };
 
 let module List: {
@@ -2590,69 +2590,69 @@ let module rec Vector: {
    *  Complexity: O(log32 N)
    */
 
-  let mutate: (t 'a) => (TransientVector.t 'a);
+  let module Transient: {
+    /** A temporarily mutable Vector. Once persisted, any further operations on a
+     *  TransientVector instance will throw. Intended for implementing bulk mutation
+     *  operations efficiently.
+     */
+
+    type t 'a;
+
+    include NavigableCollection.Transient.S1 with type t 'a := t 'a;
+
+    let get: int => (t 'a) => (option 'a);
+    /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
+
+    let getOrRaise: int => (t 'a) => 'a;
+    /** [getOrRaise index transient] returns the value at [index] or
+     *  raises an exception if [index] is out of bounds.
+     */
+
+    let insertAt: int => 'a => (t 'a) => (t 'a);
+    /** [insertAt index value transient] inserts value into [transient] at [index].
+     *
+     *  WARNING: Not implemented
+     *
+     *  Complexity: O(log32 N)
+     */
+
+    let removeAt: int => (t 'a) => (t 'a);
+    /** [removeAt index transient] removes the value at [index].
+     *
+     *  WARNING: Not implemented
+     *
+     *  Complexity: O(log32 N)
+     */
+
+    let update: int => 'a => (t 'a) => (t 'a);
+    /** [update index value transient] replaces the value at [index] with [value].
+     *
+     *  Complexity: O(log32 N)
+     */
+
+    let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+    /** [updateAll f transient] updates each value in [transient] with result of applying
+     *  the function [f] to each index/value pair.
+     *
+     *  Complexity: O(N)
+     */
+
+    let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+    /** [updateWith index f transient] updates the value at [index] with the result
+     *  of applying the function [f] to the value.
+     *
+     *  Complexity: O(log32 N)
+     */
+
+    let persist: (t 'a) => (Vector.t 'a);
+    /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
+    *  will throw.
+    */
+  };
+
+  let mutate: (t 'a) => (Transient.t 'a);
   /** [mutate vector] returns a TransientVector containing the same values as [set]. */
 
   let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
-}
-
-and TransientVector: {
-  /** A temporarily mutable Vector. Once persisted, any further operations on a
-   *  TransientVector instance will throw. Intended for implementing bulk mutation
-   *  operations efficiently.
-   */
-
-  type t 'a;
-
-  include NavigableCollection.Transient.S1 with type t 'a := t 'a;
-
-  let get: int => (t 'a) => (option 'a);
-  /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
-
-  let getOrRaise: int => (t 'a) => 'a;
-  /** [getOrRaise index transient] returns the value at [index] or
-   *  raises an exception if [index] is out of bounds.
-   */
-
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  /** [insertAt index value transient] inserts value into [transient] at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let removeAt: int => (t 'a) => (t 'a);
-  /** [removeAt index transient] removes the value at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let update: int => 'a => (t 'a) => (t 'a);
-  /** [update index value transient] replaces the value at [index] with [value].
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  /** [updateAll f transient] updates each value in [transient] with result of applying
-   *  the function [f] to each index/value pair.
-   *
-   *  Complexity: O(N)
-   */
-
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-  /** [updateWith index f transient] updates the value at [index] with the result
-   *  of applying the function [f] to the value.
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let persist: (t 'a) => (Vector.t 'a);
-  /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
-  *  will throw.
-  */
 };

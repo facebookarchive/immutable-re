@@ -86,7 +86,7 @@ let equals (this: t) (that: t): bool =>
 let hash (set: t): int => set
   |> reduce (fun acc next => acc + next) 0;
 
-let module TransientIntSet = {
+let module Transient = {
   type a = int;
 
   type intSet = t;
@@ -187,10 +187,10 @@ let module TransientIntSet = {
     transient |> Transient.update removeAllImpl;
 };
 
-let mutate = TransientIntSet.mutate;
+let mutate = Transient.mutate;
 
 let addAll (iter: Iterable.t int) (set: t): t =>
-  set |> mutate |> TransientIntSet.addAll iter |> TransientIntSet.persist;
+  set |> mutate |> Transient.addAll iter |> Transient.persist;
 
 let from (iter: Iterable.t int): t =>
   empty |> addAll iter;

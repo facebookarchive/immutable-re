@@ -626,25 +626,15 @@ let module Indexed = {
 
 let module Deque = Deque;
 
-let module TransientDeque = Deque.TransientDeque;
-
 let module HashMap = HashMap;
-
-let module TransientHashMap = HashMap.TransientHashMap;
 
 let module HashSet = HashSet;
 
-let module TransientHashSet = HashSet.TransientHashSet;
-
 let module IntMap = IntMap;
-
-let module TransientIntMap = IntMap.TransientIntMap;
 
 let module IntRange = IntRange;
 
 let module IntSet = IntSet;
-
-let module TransientIntSet = IntSet.TransientIntSet;
 
 let module List = {
   include ImmList;
@@ -666,5 +656,3 @@ let module SortedSet = SortedSet;
 let module Stack = ImmStack;
 
 let module Vector = Vector;
-
-let module TransientVector = Vector.TransientVector;

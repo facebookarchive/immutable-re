@@ -49,8 +49,8 @@ let test (n: int) (count: int): Test.t => {
   let list = indexes |> IntRange.toIterable |> List.fromReverse;
   let stack = indexes |> IntRange.toIterable |> Stack.fromReverse;
   let vector = indexes
-    |> IntRange.reduce (fun acc i => acc |> TransientVector.addLast i) (TransientVector.empty ())
-    |> TransientVector.persist;
+    |> IntRange.reduce (fun acc i => acc |> Vector.Transient.addLast i) (Vector.Transient.empty ())
+    |> Vector.Transient.persist;
 
   let mutableArray = Array.init count (fun i => i);
 
@@ -98,14 +98,14 @@ let test (n: int) (count: int): Test.t => {
         Vector.get
         count
     ),
-    describe "TransientVector" (
+    describe "Vector.Transient" (
       generateTests
         (fun () => vector |> Vector.mutate)
         (fun () => Vector.empty () |> Vector.mutate)
-        TransientVector.addLast
-        TransientVector.update
-        TransientVector.removeLastOrRaise
-        TransientVector.get
+        Vector.Transient.addLast
+        Vector.Transient.update
+        Vector.Transient.removeLastOrRaise
+        Vector.Transient.get
         count
     ),
   ];
