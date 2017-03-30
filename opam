@@ -1,7 +1,7 @@
 
 opam-version: "1.2"
 name: "immutable"
-version: "0.0.2"
+version: "0.0.3"
 maintainer: "Dave Bordoley <bordoley>"
 authors: [ "Dave Bordoley <bordoley>" ]
 license: "BSD"
