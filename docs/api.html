@@ -112,14 +112,20 @@ let module Comparator: {
   let toEquality: (t 'a) => (Equality.t 'a);
   /** Converts a Comparator function to an Equality function. */
 };
-
+```
+Hash
+---------------
+```reason
 let module Hash: {
   /** Hash functions for common types. */
 
   type t 'a = 'a => int;
   /** The Hash function type. */
 };
-
+```
+Equatable
+---------------
+```reason
 let module Equatable: {
   /** Module types implemented by modules that support testing values for equality. */
 
