@@ -9,8 +9,9 @@ version=0.0.1 make release
 
 # Now you need to go to https://github.com/facebookincubator/immutable-re/releases
 # and find the latest .tar.gz from the release.
+mkdir -p _build && cd _build
 opam-publish prepare $THAT_URL
-opam-publish submit immutable-re.0.0.1 # Or whatever version
+opam-publish submit immutable.0.0.1 # Or whatever version
 
 # Now make sure that PR to opam-repository goes through and enjoy your release.
 ```
