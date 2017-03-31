@@ -805,7 +805,7 @@ let reduceImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t '
 };
 
 let reduceWhile
-    (predicate: 'acc => 'a => bool)
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     ({ left, middle, right }: t 'a): 'acc => {
@@ -846,7 +846,7 @@ let reduce
     (acc: 'acc)
     (vec: t 'a): 'acc =>
   if (predicate === Functions.alwaysTrue2) (reduceImpl f acc vec)
-  else (reduceWhile predicate f acc vec);
+  else (reduceWhile while_::predicate f acc vec);
 
 let reduceWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
@@ -861,7 +861,7 @@ let reduceWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 
 };
 
 let reduceWithIndexWhile
-    (predicate: 'acc => int => 'a => bool)
+    while_::(predicate: 'acc => int => 'a => bool)
     (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
     (vec: t 'a): 'acc => {
@@ -875,7 +875,7 @@ let reduceWithIndexWhile
 
   let predicate acc next => predicate acc !index next;
 
-  reduceWhile predicate reducer acc vec;
+  reduceWhile while_::predicate reducer acc vec;
 };
 
 let reduceWithIndex
@@ -884,7 +884,7 @@ let reduceWithIndex
     (acc: 'acc)
     (vec: t 'a): 'acc =>
   if (predicate === Functions.alwaysTrue3) (reduceWithIndexImpl f acc vec)
-  else (reduceWithIndexWhile predicate f acc vec);
+  else (reduceWithIndexWhile while_::predicate f acc vec);
 
 let reduceRightImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduceRight f acc;
@@ -894,7 +894,7 @@ let reduceRightImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }
 };
 
 let reduceRightWhile
-    (predicate: 'acc => 'a => bool)
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     ({ left, middle, right }: t 'a): 'acc => {
@@ -935,7 +935,7 @@ let reduceRight
     (acc: 'acc)
     (vec: t 'a): 'acc =>
   if (predicate === Functions.alwaysTrue2) (reduceRightImpl f acc vec)
-  else (reduceRightWhile predicate f acc vec);
+  else (reduceRightWhile while_::predicate f acc vec);
 
 let reduceRightWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
@@ -950,7 +950,7 @@ let reduceRightWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 
 };
 
 let reduceRightWithIndexWhile
-    (predicate: 'acc => int => 'a => bool)
+    while_::(predicate: 'acc => int => 'a => bool)
     (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
     (vec: t 'a): 'acc => {
@@ -965,7 +965,7 @@ let reduceRightWithIndexWhile
   let predicate acc next =>
     predicate acc !index next;
 
-  reduceRightWhile predicate reducer acc vec;
+  reduceRightWhile while_::predicate reducer acc vec;
 };
 
 let reduceRightWithIndex
@@ -974,7 +974,7 @@ let reduceRightWithIndex
     (acc: 'acc)
     (vec: t 'a): 'acc =>
   if (predicate === Functions.alwaysTrue3) (reduceRightWithIndexImpl f acc vec)
-  else (reduceRightWithIndexWhile predicate f acc vec);
+  else (reduceRightWithIndexWhile while_::predicate f acc vec);
 
 let return (value: 'a): (t 'a) =>
   empty () |> addLast value;
@@ -1063,21 +1063,29 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) =
   else vec |> skip skipCount |> take takeCount;
 };
 
+let iterator: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceWhile };
+
 let toIterable (vec: t 'a): (Iterable.t 'a) =>
   if (isEmpty vec) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduce while_::predicate f acc vec };
+  else Iterable.Iterable vec iterator;
+
+let iteratorRight: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceRightWhile };
 
 let toIterableRight (vec: t 'a): (Iterable.t 'a) =>
   if (isEmpty vec) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduceRight while_::predicate f acc vec };
+  else Iterable.Iterable vec iteratorRight;
+
+let keyedIterator: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceWithIndexWhile };
 
 let toKeyedIterable (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
-  else { reduce: fun predicate f acc => reduceWithIndex while_::predicate f acc vec };
+  else KeyedIterable.KeyedIterable vec keyedIterator;
+
+let keyedIteratorRight: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceRightWithIndexWhile };
 
 let toKeyedIterableRight (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
-  else { reduce: fun predicate f acc => reduceRightWithIndex while_::predicate f acc vec };
+  else KeyedIterable.KeyedIterable vec keyedIterator;
 
 let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
   CopyOnWriteArray.toSequence left,

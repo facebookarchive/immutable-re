@@ -80,8 +80,8 @@ let reverse (deque: t 'a): (t 'a) => switch deque {
   | Descending vector => Ascending vector
 };
 
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+let reduceImpl
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (deque: t 'a): 'acc => switch deque {
@@ -89,8 +89,15 @@ let reduce
   | Descending vector => vector |> Vector.reduceRight while_::predicate f acc;
 };
 
-let reduceRight
+let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (deque: t 'a): 'acc =>
+  reduceImpl while_::predicate f acc deque;
+
+let reduceRightImpl
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (deque: t 'a): 'acc => switch deque {
@@ -98,15 +105,27 @@ let reduceRight
   | Descending vector => vector |> Vector.reduce while_::predicate f acc;
 };
 
+let reduceRight
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (deque: t 'a): 'acc =>
+  reduceRightImpl while_::predicate f acc deque;
+
 let removeAll (_: t 'a): (t 'a) => empty ();
+
+
+let iterator: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceImpl };
 
 let toIterable (deque: t 'a): (Iterable.t 'a) =>
  if (isEmpty deque) (Iterable.empty ())
- else { reduce: fun predicate f acc => reduce while_::predicate f acc deque };
+ else Iterable.Iterable deque iterator;
+
+let iteratorRight: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceRightImpl };
 
 let toIterableRight (deque: t 'a): (Iterable.t 'a) =>
   if (isEmpty deque) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduceRight while_::predicate f acc deque };
+  else Iterable.Iterable deque iteratorRight;
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequence

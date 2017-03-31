@@ -80,16 +80,22 @@ let ofOption (opt: option 'a): (t 'a) => switch opt {
   | None => (empty ())
 };
 
-let rec reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+let rec reduceImpl
+    while_::(predicate: 'acc => 'a => bool)
     (reducer: 'acc => 'a => 'acc)
     (acc: 'acc)
     (seq: t 'a): 'acc => switch (seq ()) {
   | Next value next when predicate acc value =>
       let acc = reducer acc value;
-      reduce while_::predicate reducer acc next
+      reduceImpl while_::predicate reducer acc next
   | _ => acc
 };
+
+let rec reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+    (reducer: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (seq: t 'a): 'acc => reduceImpl while_::predicate reducer acc seq;
 
 let scan
     (reducer: 'acc => 'a => 'acc)
@@ -105,10 +111,12 @@ let scan
   fun () => Next acc (recurse reducer acc seq);
 };
 
-let toIterable (seq: t 'a): (Iterable.t 'a) => {
-  reduce: fun predicate f acc =>
-    reduce while_::predicate f acc seq
+let sequenceIterator: Iterable.Iterator.t 'acc (t 'a) = {
+  reduce: reduceImpl
 };
+
+let toIterable (seq: t 'a): (Iterable.t 'a) =>
+  Iterable.Iterable seq sequenceIterator;
 
 let buffer
     count::(count: int)
@@ -318,7 +326,7 @@ let rec zipLongest3With
 
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
-  
+
   let reduce = reduce;
   let toIterable = toIterable;
 };
