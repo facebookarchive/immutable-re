@@ -48,18 +48,24 @@ let firstOrRaise (list: t 'a): 'a => switch list {
   | [] => failwith "empty"
 };
 
-let rec reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+let rec reduceImpl
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc )
     (acc: 'acc)
     (list: t 'a): 'acc => switch list {
   | [head, ...tail] =>
       if (predicate acc head) {
         let acc = f acc head;
-        reduce while_::predicate f acc tail
+        reduceImpl while_::predicate f acc tail
       } else acc
   | [] => acc
 };
+
+let rec reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+    (f: 'acc => 'a => 'acc )
+    (acc: 'acc)
+    (list: t 'a): 'acc => reduceImpl while_::predicate f acc list;
 
 let removeAll (_: t 'a): (t 'a) => [];
 

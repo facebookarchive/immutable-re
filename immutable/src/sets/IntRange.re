@@ -62,8 +62,8 @@ let lastOrRaise ({ count, start }: t): int =>
   if (count === 0) (failwith "empty")
   else start + count - 1;
 
-let reduce
-    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
+let reduceImpl
+    while_::(predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     ({ count, start }: t): 'acc => {
@@ -77,8 +77,15 @@ let reduce
   recurse predicate f start count acc;
 };
 
-let reduceRight
+let reduce
     while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    (set : t): 'acc =>
+  reduceImpl while_::predicate f acc set;
+
+let reduceRightImpl
+    while_::(predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     ({ count, start }: t): 'acc => {
@@ -91,6 +98,13 @@ let reduceRight
     };
   recurse predicate f (start + count - 1) count acc;
 };
+
+let reduceRight
+    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    (set: t): 'acc =>
+  reduceRightImpl while_::predicate f acc set;
 
 let hash ({ start, count }: t): int =>
   start + count;
@@ -109,14 +123,18 @@ let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
   recurse (start + count - 1) count
 };
 
+let iterator: Iterable.Iterator.t int t = { reduce: reduceImpl };
+
 let toIterable (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
+  else Iterable.Iterable set iterator;
+
+let iteratorRight: Iterable.Iterator.t int t = { reduce: reduceRightImpl };
 
 let toIterableRight (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduceRight while_::predicate f acc set };
-
+  else Iterable.Iterable set iteratorRight;
+  
 let toCollection (set: t): (Collection.t int) => {
   count: count set,
   iterable: fun () => toIterable set,

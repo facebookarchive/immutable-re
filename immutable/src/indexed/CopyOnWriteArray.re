@@ -78,8 +78,8 @@ let isNotEmpty (arr: t 'a): bool => (count arr) !== 0;
 
 let ofUnsafe (arr: array 'a): (t 'a) => arr;
 
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+let reduceImpl
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (arr: t 'a): 'acc => {
@@ -99,8 +99,15 @@ let reduce
   loop acc 0;
 };
 
-let reduceWithIndex
-    while_::(predicate: 'acc => int => 'a => bool)=Functions.alwaysTrue3
+let reduce
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc =>
+  reduceImpl while_::predicate f acc arr;
+
+let reduceWithIndexImpl
+    while_::(predicate: 'acc => int => 'a => bool)
     (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
     (arr: t 'a): 'acc => {
@@ -120,8 +127,14 @@ let reduceWithIndex
   loop acc 0;
 };
 
-let reduceRight
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+let reduceWithIndex
+    while_::(predicate: 'acc => int => 'a => bool)=Functions.alwaysTrue3
+    (f: 'acc => int => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc => reduceWithIndexImpl while_::predicate f acc arr;
+
+let reduceRightImpl
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (arr: t 'a): 'acc => {
@@ -141,8 +154,15 @@ let reduceRight
   loop acc (arrCount - 1);
 };
 
-let reduceRightWithIndex
-    while_::(predicate: 'acc => int => 'a => bool)=Functions.alwaysTrue3
+let reduceRight
+    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc =>
+  reduceRightImpl while_::predicate f acc arr;
+
+let reduceRightWithIndexImpl
+    while_::(predicate: 'acc => int => 'a => bool)
     (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
     (arr: t 'a): 'acc => {
@@ -161,6 +181,13 @@ let reduceRightWithIndex
 
   loop acc arrLastIndex;
 };
+
+let reduceRightWithIndex
+    while_::(predicate: 'acc => int => 'a => bool)=Functions.alwaysTrue3
+    (f: 'acc => int => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc =>
+  reduceRightWithIndexImpl while_::predicate f acc arr;
 
 let removeLastOrRaise (arr: t 'a): (t 'a) => {
   let count = count arr;
@@ -209,21 +236,29 @@ let take (newCount: int) (arr: t 'a): (t 'a) => {
   else Array.sub arr 0 newCount;
 };
 
+let iterator: Iterable.Iterator.t 'a (array 'a) = { reduce: reduceImpl };
+
 let toIterable (arr: t 'a): (Iterable.t 'a) =>
   if (isEmpty arr) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduce while_::predicate f acc arr };
+  else Iterable.Iterable arr iterator;
+
+let iteratorRight: Iterable.Iterator.t 'a (array 'a) = { reduce: reduceRightImpl };
 
 let toIterableRight (arr: t 'a): (Iterable.t 'a) =>
   if (isEmpty arr) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduceRight while_::predicate f acc arr };
+  else Iterable.Iterable arr iteratorRight;
+
+let keyedIterator: KeyedIterable.KeyedIterator.t int 'a (array 'a) = { reduce: reduceWithIndexImpl };
 
 let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) (KeyedIterable.empty ())
-  else { reduce: fun predicate f acc => reduceWithIndex while_::predicate f acc arr };
+  else KeyedIterable.KeyedIterable arr keyedIterator;
+
+let keyedIteratorRight: KeyedIterable.KeyedIterator.t int 'a (array 'a) = { reduce: reduceRightWithIndexImpl };
 
 let toKeyedIterableRight (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) (KeyedIterable.empty ())
-  else { reduce: fun predicate f acc => reduceRightWithIndex while_::predicate f acc arr };
+  else KeyedIterable.KeyedIterable arr keyedIteratorRight;
 
 let toSequenceRight (arr: t 'a): (Sequence.t 'a) =>
   if (isEmpty arr) (Sequence.empty ())

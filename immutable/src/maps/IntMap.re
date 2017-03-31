@@ -67,33 +67,42 @@ let put (key: int) (value: 'v) ({ count, root } as map: t 'v): (t 'v) => {
   }
 };
 
-let reduce
-    while_::(predicate: 'acc => int => 'v => bool)=Functions.alwaysTrue3
+let reduceImpl
+    while_::(predicate: 'acc => int => 'v => bool)
     (f: 'acc => int => 'v => 'acc)
     (acc: 'acc)
     ({ root }: t 'v): 'acc =>
   if (predicate === Functions.alwaysTrue3) (BitmapTrieIntMap.reduce f acc root)
   else (BitmapTrieIntMap.reduceWhile predicate f acc root);
 
+let reduce
+    while_::(predicate: 'acc => int => 'v => bool)=Functions.alwaysTrue3
+    (f: 'acc => int => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'v): 'acc =>
+  reduceImpl while_::predicate f acc map;
+
 let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;
 
 let removeAll (_: t 'v): (t 'v) => empty ();
 
+let iterator: Iterable.Iterator.t (int, 'v) (t 'v) = {
+  reduce: fun while_::predicate f acc map => map |> reduce
+    while_::(fun acc k v => predicate acc (k, v))
+    (fun acc k v => f acc (k, v))
+    acc
+};
+
 let toIterable (map: t 'v): (Iterable.t (int, 'v)) =>
   if (isEmpty map) (Iterable.empty ())
-  else {
-    reduce: fun predicate f acc => map |> reduce
-      while_::(fun acc k v => predicate acc (k, v))
-      (fun acc k v => f acc (k, v))
-      acc
-  };
+  else Iterable.Iterable map iterator;
+
+let keyedIterator: KeyedIterable.KeyedIterator.t int 'v (t 'v) = { reduce: reduceImpl };
 
 let toKeyedIterable (map: t 'v): (KeyedIterable.t int 'v) =>
   if (isEmpty map) (KeyedIterable.empty ())
-  else {
-    reduce: fun predicate f acc => reduce while_::predicate f acc map
-  };
+  else KeyedIterable.KeyedIterable map keyedIterator;
 
 let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
   root |> BitmapTrieIntMap.toSequence;

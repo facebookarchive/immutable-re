@@ -53,17 +53,26 @@ let removeAll (_: t): t =>
 let toSequence ({ root }: t): (Sequence.t int) =>
   root |> BitmapTrieIntSet.toSequence;
 
-let reduce
-    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
+let reduceImpl
+    while_::(predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     ({ root }: t): 'acc =>
   if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
   else (BitmapTrieIntSet.reduceWhile predicate f acc root);
 
+let reduce
+    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    (set: t): 'acc =>
+  reduceImpl while_::predicate f acc set;
+
+let iterator: Iterable.Iterator.t 'a t = { reduce: reduceImpl };
+
 let toIterable (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
-  else { reduce: fun predicate f acc => reduce while_::predicate f acc set };
+  else Iterable.Iterable set iterator;
 
 let toCollection (set: t): (Collection.t int) => {
   count: count set,

@@ -84,15 +84,15 @@ let put (key: 'k) (value: 'v) ({ count, root, comparator, hash } as map: t 'k 'v
     value;
 
   switch !alterResult {
-  | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
-  | AlterResult.NoChange => map
-  | AlterResult.Replace => { count, root: newRoot, comparator, hash }
-  | AlterResult.Removed => failwith "invalid state"
+    | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
+    | AlterResult.NoChange => map
+    | AlterResult.Replace => { count, root: newRoot, comparator, hash }
+    | AlterResult.Removed => failwith "invalid state"
   };
 };
 
-let reduce
-    while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
+let reduceImpl
+    while_::(predicate: 'acc => 'k => 'v => bool)
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
     ({ root }: t 'k 'v): 'acc =>
@@ -102,26 +102,36 @@ let reduce
   if (predicate === Functions.alwaysTrue3) (root |> BitmapTrieMap.reduce f acc)
   else root |> BitmapTrieMap.reduceWhile predicate f acc;
 
+let reduce
+    while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc =>
+  reduceImpl while_::predicate f acc map;
+
 let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;
 
 let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator;
 
+
+let iterator: Iterable.Iterator.t ('k, 'v) (t 'k 'v) = {
+  reduce: fun while_::predicate f acc map => map |> reduce
+    while_::(fun acc k v => predicate acc (k, v))
+    (fun acc k v => f acc (k, v))
+    acc
+};
+
 let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
   if (isEmpty map) (Iterable.empty ())
-  else {
-    reduce: fun predicate f acc => map |> reduce
-      while_::(fun acc k v => predicate acc (k, v))
-      (fun acc k v => f acc (k, v))
-      acc
-  };
+  else Iterable.Iterable map iterator;
+
+let keyedIterator: KeyedIterable.KeyedIterator.t 'k 'v (t 'k 'v) = { reduce: reduceImpl };
 
 let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
   if (isEmpty map) (KeyedIterable.empty ())
-  else {
-    reduce: fun predicate f acc => map |> reduce while_::predicate f acc
-  };
+  else KeyedIterable.KeyedIterable map keyedIterator;
 
 let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   root |> BitmapTrieMap.toSequence;

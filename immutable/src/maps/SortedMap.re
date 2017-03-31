@@ -131,21 +131,35 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
     empty () |> putAllEntries iter;
 
-  let reduce
-      while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
+  let reduceImpl
+      while_::(predicate: 'acc => k => 'v => bool)
       (f: 'acc => k => 'v => 'acc)
       (acc: 'acc)
       ({ tree }: t 'v): 'acc =>
     if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduce f acc tree)
     else (AVLTreeMap.reduceWhile predicate f acc tree);
 
-  let reduceRight
+  let reduce
       while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
+      (f: 'acc => k => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc =>
+    reduceImpl while_::predicate f acc map;
+
+  let reduceRightImpl
+      while_::(predicate: 'acc => k => 'v => bool)
       (f: 'acc => k => 'v => 'acc)
       (acc: 'acc)
       ({ tree }: t 'v): 'acc =>
     if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduceRight f acc tree)
     else (AVLTreeMap.reduceRightWhile predicate f acc tree);
+
+  let reduceRight
+      while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
+      (f: 'acc => k => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc =>
+    reduceRightImpl while_::predicate f acc map;
 
   let remove (key: k) (map: t 'v): (t 'v) =>
     map |> alter key Functions.alwaysNone;
@@ -169,35 +183,39 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let toSequenceRight ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
     tree |> AVLTreeMap.toSequenceRight;
 
+  let iterator: Iterable.Iterator.t (k, 'v) (t 'v) = {
+    reduce: fun while_::predicate f acc map => map |> reduce
+      while_::(fun acc k v => predicate acc (k, v))
+      (fun acc k v => f acc (k, v))
+      acc
+  };
+
   let toIterable (map: t 'v): (Iterable.t (k, 'v)) =>
     if (isEmpty map) (Iterable.empty ())
-    else {
-      reduce: fun predicate f acc => map |> reduce
-        while_::(fun acc k v => predicate acc (k, v))
-        (fun acc k v => f acc (k, v))
-        acc
-    };
+    else Iterable.Iterable map iterator;
+
+  let iteratorRight: Iterable.Iterator.t (k, 'v) (t 'v) = {
+    reduce: fun while_::predicate f acc map => map |> reduceRight
+      while_::(fun acc k v => predicate acc (k, v))
+      (fun acc k v => f acc (k, v))
+      acc
+  };
 
   let toIterableRight (map: t 'v): (Iterable.t (k, 'v)) =>
     if (isEmpty map) (Iterable.empty ())
-    else {
-      reduce: fun predicate f acc => map |> reduceRight
-        while_::(fun acc k v => predicate acc (k, v))
-        (fun acc k v => f acc (k, v))
-        acc
-    };
+    else Iterable.Iterable map iteratorRight;
+
+  let keyedIterator: KeyedIterable.KeyedIterator.t k 'v (t 'v) = { reduce: reduceImpl };
 
   let toKeyedIterable (map: t 'v): (KeyedIterable.t k 'v) =>
     if (isEmpty map) (KeyedIterable.empty ())
-    else {
-      reduce: fun predicate f acc => map |> reduce while_::predicate f acc
-    };
+    else KeyedIterable.KeyedIterable map keyedIterator;
+
+  let keyedIteratorRight: KeyedIterable.KeyedIterator.t k 'v (t 'v) = { reduce: reduceRightImpl };
 
   let toKeyedIterableRight (map: t 'v): (KeyedIterable.t k 'v) =>
     if (isEmpty map) (KeyedIterable.empty ())
-    else {
-      reduce: fun predicate f acc => map |> reduceRight while_::predicate f acc
-    };
+    else KeyedIterable.KeyedIterable map keyedIteratorRight;
 
   let toMap (map: t 'v): (ImmMap.t k 'v) => {
     containsKey: fun k => containsKey k map,
