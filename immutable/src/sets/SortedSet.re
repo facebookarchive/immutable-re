@@ -21,6 +21,7 @@ module type S = {
   let toIterableRight: t => Iterable.t a;
   let toNavigableCollection: t => NavigableCollection.t a;
   let toSequenceRight: t => Sequence.t a;
+  let toNavigableSet: t => NavigableSet.t a;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;
   let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -247,6 +248,26 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toSet (set: t): (ImmSet.t a) =>
     if (isEmpty set) (ImmSet.empty ())
     else ImmSet.Set set setOps;
+
+  let navigableSetOps: NavigableSet.Ops.t a t = {
+    contains,
+    count,
+    first,
+    firstOrRaise,
+    last,
+    lastOrRaise,
+    toCollection,
+    toIterable,
+    toIterableRight,
+    toNavigableCollection,
+    toSequence,
+    toSequenceRight,
+    toSequentialCollection,
+  };
+
+  let toNavigableSet (set: t): (NavigableSet.t a) =>
+    if (isEmpty set) (NavigableSet.empty ())
+    else NavigableSet.NavigableSet set navigableSetOps;
 
   let intersect (this: t) (that: t): t =>
     /* FIXME: Improve this implementation */

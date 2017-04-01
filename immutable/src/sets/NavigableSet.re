@@ -14,24 +14,32 @@ let module Ops = {
   type t 'a 'set = {
     contains: 'a => 'set => bool,
     count: 'set => int,
+    first: 'set => (option 'a),
+    firstOrRaise: 'set => 'a,
+    last: 'set => (option 'a),
+    lastOrRaise: 'set => 'a,
     toCollection: 'set => Collection.t 'a,
+    toSequentialCollection: 'set => SequentialCollection.t 'a,
     toIterable: 'set => Iterable.t 'a,
+    toIterableRight: 'set => Iterable.t 'a,
+    toNavigableCollection: 'set => NavigableCollection.t 'a,
     toSequence: 'set => Sequence.t 'a,
+    toSequenceRight: 'set => Sequence.t 'a,
   };
 };
 
 type t 'a =
   | Empty
-  | Set 'set (Ops.t 'a 'set): t 'a;
+  | NavigableSet 'set (Ops.t 'a 'set): t 'a;
 
 let contains (value: 'a) (set: t 'a): bool => switch set {
   | Empty => false
-  | Set set { contains } => contains value set
+  | NavigableSet set { contains } => contains value set
 };
 
 let count (set: t 'a): int => switch set {
   | Empty => 0
-  | Set set { count } => count set
+  | NavigableSet set { count } => count set
 };
 
 let empty (): (t 'a) => Empty;
@@ -44,23 +52,30 @@ let isNotEmpty (set: t 'a): bool =>
 
 let toCollection (set: t 'a): (Collection.t 'a) => switch set {
   | Empty => Collection.empty ()
-  | Set set { toCollection } => toCollection set
+  | NavigableSet set { toCollection } => toCollection set
 };
 
 let toIterable (set: t 'a): (Iterable.t 'a) => switch set {
   | Empty => Iterable.empty ()
-  | Set set { toIterable } => toIterable set
+  | NavigableSet set { toIterable } => toIterable set
 };
+
+let toNavigableCollection (set: t 'a): (NavigableCollection.t 'a) => switch set {
+  | Empty => NavigableCollection.empty ()
+  | NavigableSet set { toNavigableCollection } => toNavigableCollection set
+};
+
+let toNavigableSet (set: t 'a): (t 'a) => set;
 
 let toSequence (set: t 'a): (Sequence.t 'a) => switch set {
   | Empty => Sequence.empty ()
-  | Set set { toSequence } => toSequence set
+  | NavigableSet set { toSequence } => toSequence set
 };
 
 let toSet (set: t 'a): (t 'a) => set;
 
 let equals (this: t 'a) (that: t 'a): bool => switch (this, that) {
-  | (Set _ _, Set _ _) =>
+  | (NavigableSet _ _, NavigableSet _ _) =>
       if (this === that) true
       else if ((count this) !== (count that)) false
       else this |> toIterable |> Iterable.Reducer.every (flip contains that)
