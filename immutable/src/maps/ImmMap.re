@@ -67,15 +67,25 @@ let toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | Map map { toSequence } => toSequence map
 };
 
-let keySetOps (): ImmSet.Ops.t 'k (t 'k 'v) => {
-  contains: containsKey,
+let keyCollectionOps (): Collection.Ops.t 'k (t 'k 'v) => {
   count,
   toIterable: toKeyedIterable >> KeyedIterable.keys,
   toSequence: toSequence >> Sequence.map (fun (k, _) => k),
 };
 
+let keySetOps (): ImmSet.Ops.t 'k (t 'k 'v) => {
+  contains: containsKey,
+  count,
+  toCollection: fun map =>
+    if (isEmpty map) (Collection.empty ())
+    else Collection.Collection map (keyCollectionOps ()),
+  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toSequence: toSequence >> Sequence.map (fun (k, _) => k),
+};
+
 let keys (map: t 'k 'v): (ImmSet.t 'k) =>
-  ImmSet.Set map (keySetOps ());
+  if (isEmpty map) (ImmSet.empty ())
+  else ImmSet.Set map (keySetOps ());
 
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3

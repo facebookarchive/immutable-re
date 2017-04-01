@@ -12,13 +12,14 @@ module type S = {
   type t;
 
   let compare: Comparator.t t;
-  let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toIterableRight: t => Iterable.t a;
   let first: t => option a;
   let firstOrRaise: t => a;
   let toSequentialCollection: t => SequentialCollection.t a;
   let last: t => option a;
   let lastOrRaise: t => a;
+  let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toIterableRight: t => Iterable.t a;
+  let toNavigableCollection: t => NavigableCollection.t a;
   let toSequenceRight: t => Sequence.t a;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;
@@ -208,6 +209,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     count,
     first,
     firstOrRaise,
+    toCollection,
     toIterable,
     toSequence,
   };
@@ -216,9 +218,28 @@ let module Make = fun (Comparable: Comparable.S) => {
     if (isEmpty set) (SequentialCollection.empty ())
     else SequentialCollection.SequentialCollection set seqCollectionOps;
 
+  let navCollectionOps: NavigableCollection.Ops.t a t = {
+    count,
+    first,
+    firstOrRaise,
+    last,
+    lastOrRaise,
+    toCollection,
+    toSequentialCollection,
+    toIterable,
+    toIterableRight,
+    toSequence,
+    toSequenceRight,
+  };
+
+  let toNavigableCollection (set: t): (NavigableCollection.t a) =>
+    if (isEmpty set) (NavigableCollection.empty ())
+    else NavigableCollection.NavigableCollection set navCollectionOps;
+
   let setOps: ImmSet.Ops.t a t = {
     contains,
     count,
+    toCollection,
     toIterable,
     toSequence,
   };

@@ -54,27 +54,6 @@ let module Streamable = {
 
 let module Iterable = Iterable;
 
-let module IterableRight = {
-  module type S = {
-    type a;
-    type t;
-
-    include Iterable.S with type a := a and type t := t;
-
-    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    let toIterableRight: t => (Iterable.t a);
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include Iterable.S1 with type t 'a := t 'a;
-
-    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let toIterableRight: t 'a => (Iterable.t 'a);
-  };
-};
-
 let module Sequence = Sequence;
 
 let module Collection = {
@@ -207,26 +186,32 @@ let module SequentialCollection = {
 };
 
 let module NavigableCollection = {
+  include NavigableCollection;
+
   module type S = {
     type a;
     type t;
 
-    include IterableRight.S with type a := a and type t := t;
     include SequentialCollection.S with type a := a and type t := t;
 
     let last: t => (option a);
     let lastOrRaise: t => a;
+    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    let toIterableRight: t => (Iterable.t a);
+    let toNavigableCollection: t => (NavigableCollection.t a);
     let toSequenceRight: t => (Sequence.t a);
   };
 
   module type S1 = {
     type t 'a;
 
-    include IterableRight.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let last: (t 'a) => (option 'a);
     let lastOrRaise: (t 'a) => 'a;
+    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let toIterableRight: t 'a => (Iterable.t 'a);
+    let toNavigableCollection: (t 'a) => (NavigableCollection.t 'a);
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
   };
 

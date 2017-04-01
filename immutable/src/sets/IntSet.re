@@ -87,6 +87,7 @@ let toCollection (set: t): (Collection.t int) =>
 let setOps: ImmSet.Ops.t int t = {
   contains,
   count,
+  toCollection,
   toIterable,
   toSequence,
 };

@@ -88,17 +88,18 @@ let collectionOps: Collection.Ops.t 'a (t 'a) = {
   toSequence,
 };
 
+let toCollection (stack: t 'a): (Collection.t 'a) =>
+  if (isEmpty stack) (Collection.empty ())
+  else Collection.Collection stack collectionOps;
+
 let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
   count,
   first,
   firstOrRaise,
+  toCollection,
   toIterable,
   toSequence,
 };
-
-let toCollection (stack: t 'a): (Collection.t 'a) =>
-  if (isEmpty stack) (Collection.empty ())
-  else Collection.Collection stack collectionOps;
 
 let toSequentialCollection (set: t 'a): (SequentialCollection.t 'a) =>
   if (isEmpty set) (SequentialCollection.empty ())

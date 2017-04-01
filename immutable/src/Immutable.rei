@@ -396,45 +396,6 @@ let module rec Iterable: {
   include S1 with type t 'a := t 'a;
 };
 
-let module IterableRight: {
-  /** Module types implemented by modules that support reducing over
-   *  values in both the left to right, and right to left directions.
-   */
-
-  module type S = {
-    /** IterableRight module type signature for types with a parametric type arity of 0. */
-
-    type a;
-    type t;
-
-    include Iterable.S with type a := a and type t := t;
-
-    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
-     *  function [f] to each value in [iterable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-
-     let toIterableRight: t => (Iterable.t a);
-  };
-
-  module type S1 = {
-    /** IterableRight module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include Iterable.S1 with type t 'a := t 'a;
-
-    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
-     *  function [f] to each value in [iterable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-
-    let toIterableRight: t 'a => (Iterable.t 'a);
-  };
-};
-
 let module Sequence: {
   /** Functional pull based sequences. Sequences are generally lazy, computing values as
    *  they are pulled. Sequences are reusable and are guaranteed to produce the
@@ -811,7 +772,7 @@ let module rec SequentialCollection: {
   };
 };
 
-let module NavigableCollection: {
+let module rec NavigableCollection: {
   /** Module types implemented by Collections that are ordered or sorted and support
    *  navigation operations.
    *
@@ -824,7 +785,6 @@ let module NavigableCollection: {
     type a;
     type t;
 
-    include IterableRight.S with type a := a and type t := t;
     include SequentialCollection.S with type a := a and type t := t;
 
     let last: t => (option a);
@@ -839,6 +799,16 @@ let module NavigableCollection: {
      *  By contract, implementations are efficient with no worst than O(log N) performance.
      */
 
+    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+    let toIterableRight: t => (Iterable.t a);
+
+    let toNavigableCollection: t => (NavigableCollection.t a);
+
     let toSequenceRight: t => (Sequence.t a);
     /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
@@ -850,7 +820,6 @@ let module NavigableCollection: {
 
     type t 'a;
 
-    include IterableRight.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let last: (t 'a) => (option 'a);
@@ -859,11 +828,36 @@ let module NavigableCollection: {
     let lastOrRaise: (t 'a) => 'a;
     /** [lastOrRaise collection] returns the first value in [collection] or raises an exception. */
 
+    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+    let toIterableRight: t 'a => (Iterable.t 'a);
+
+    let toNavigableCollection: (t 'a) => (NavigableCollection.t 'a);
+
     let toSequenceRight: (t 'a) => (Sequence.t 'a);
     /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
      */
   };
+
+  type t 'a;
+
+  include S1 with type t 'a := t 'a;
+
+  let empty: unit => (t 'a);
+  /** [empty ()] returns the empty NavigableCollection */
+
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f collection] Returns a lazy NavigableCollection that computes values
+   *  lazily by applying [f].
+   *
+   *  Note, the results of applying [f] to a value are not
+   *  memoized. Therefore [f] must be a pure function.
+   */
 
   let module Persistent: {
     /** Module types implemented by collections supporting persistent mutations to both the left
