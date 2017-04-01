@@ -335,6 +335,13 @@ let reduceWhile
   reduceWhileWithResult shouldContinue predicate f acc map;
 };
 
+let rec toKeySequence (map: t 'k 'v): (Sequence.t 'k) => switch map {
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toKeySequence
+  | Collision _ entryMap => AVLTreeMap.toKeySequence entryMap
+  | Entry _ entryKey _ => Sequence.return entryKey;
+  | Empty => Sequence.empty ();
+};
+
 let rec toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
   | Collision _ entryMap => AVLTreeMap.toSequence entryMap

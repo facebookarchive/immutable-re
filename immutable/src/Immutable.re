@@ -381,6 +381,8 @@ let module KeyedStreamable = {
 let module KeyedIterable = KeyedIterable;
 
 let module KeyedCollection = {
+  include KeyedCollection;
+
   module type S1 = {
     type k;
     type t 'v;
@@ -392,6 +394,7 @@ let module KeyedCollection = {
     let isEmpty: (t 'v) => bool;
     let isNotEmpty: (t 'v) => bool;
     let keys: (t 'v) => (Set.t k);
+    let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
     let toSequence: (t 'v) => (Sequence.t (k, 'v));
   };
 
@@ -405,8 +408,10 @@ let module KeyedCollection = {
     let isEmpty: (t 'k 'v) => bool;
     let isNotEmpty: (t 'k 'v) => bool;
     let keys: (t 'k 'v) => (Set.t 'k);
+    let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
+
   let module Persistent = {
     module type S1 = {
       type k;
@@ -456,7 +461,6 @@ let module KeyedCollection = {
       let removeAll: (t 'k 'v) => (t 'k 'v);
     };
   };
-
 };
 
 let module NavigableKeyedCollection = {
@@ -599,6 +603,7 @@ let module Indexed = {
 
     let get: int => (t 'a) => (option 'a);
     let getOrRaise: int => (t 'a) => 'a;
+    let toKeyedCollection: (t 'a) => (KeyedCollection.t int 'a);
     let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
     let toKeyedIterableRight: (t 'a) => (KeyedIterable.t int 'a);
     let toMap: (t 'a) => (Map.t int 'a);

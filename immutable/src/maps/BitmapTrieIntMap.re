@@ -202,6 +202,12 @@ let reduceWhile
   reduceWhileWithResult shouldContinue predicate f acc map;
 };
 
+let rec toKeySequence (map: t 'v): (Sequence.t int) => switch map {
+  | Entry key value => Sequence.return key
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toKeySequence
+  | Empty => Sequence.empty ();
+};
+
 let rec toSequence (map: t 'v): (Sequence.t (int, 'v)) => switch map {
   | Entry key value => Sequence.return (key, value)
   | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence

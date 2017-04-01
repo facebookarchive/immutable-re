@@ -41,6 +41,7 @@ let module HashIntMap: Map.Persistent.S1 with type k = int = {
   let remove = HashMap.remove;
   let removeAll = HashMap.removeAll;
   let toIterable = HashMap.toIterable;
+  let toKeyedCollection = HashMap.toKeyedCollection;
   let toKeyedIterable = HashMap.toKeyedIterable;
   let toMap = HashMap.toMap;
   let toSequence = HashMap.toSequence;
@@ -79,6 +80,7 @@ let module BadHashIntMap: Map.Persistent.S1 with type k = int = {
   let remove = HashMap.remove;
   let removeAll = HashMap.removeAll;
   let toIterable = HashMap.toIterable;
+  let toKeyedCollection = HashMap.toKeyedCollection;
   let toKeyedIterable = HashMap.toKeyedIterable;
   let toMap = HashMap.toMap;
   let toSequence = HashMap.toSequence;

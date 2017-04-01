@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
 open Option.Operators;
 
 let module VectorImpl = {
@@ -1086,6 +1087,8 @@ let keyedIteratorRight: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: 
 let toKeyedIterableRight (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
   else KeyedIterable.KeyedIterable vec keyedIterator;
+  let containsKey (index: int) (arr: t 'a): bool =>
+    index >= 0 && index < count arr;
 
 let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
   CopyOnWriteArray.toSequence left,
@@ -1098,6 +1101,11 @@ let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence
   IndexedTrie.toSequenceRight middle,
   CopyOnWriteArray.toSequenceRight left,
 ];
+
+let toSequenceWithIndex (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
+  (fun a b => (a, b))
+  (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)
+  (toSequence vec);
 
 let collectionOps: Collection.Ops.t 'a (t 'a) = {
   count,
@@ -1140,16 +1148,30 @@ let toNavigableCollection (set: (t 'a)): (NavigableCollection.t 'a) =>
   if (isEmpty set) (NavigableCollection.empty ())
   else NavigableCollection.NavigableCollection set navCollectionOps;
 
+let keys (arr: t 'a): (ImmSet.t int) =>
+  IntRange.create start::0 count::(count arr) |> IntRange.toSet;
+
+let keyedCollectionOps (): KeyedCollection.Ops.t int 'a (t 'a) => {
+  containsKey,
+  count,
+  keys,
+  toIterable: toKeyedIterable >> KeyedIterable.toIterable,
+  toKeyedIterable,
+  toSequence: toSequenceWithIndex,
+};
+
+let toKeyedCollection (arr: t 'a): (KeyedCollection.t int 'a) =>
+  if (isEmpty arr) (KeyedCollection.empty ())
+  else KeyedCollection.KeyedCollection arr (keyedCollectionOps ());
+
 let mapOps: ImmMap.Ops.t int 'a (t 'a) = {
   containsKey: fun index arr => index >= 0 && index < count arr,
   count,
   get,
   getOrRaise,
+  toKeyedCollection,
   toKeyedIterable,
-  toSequence: fun vec => Sequence.zip2With
-    (fun a b => (a, b))
-    (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)
-    (toSequence vec),
+  toSequence: toSequenceWithIndex,
 };
 
 let toMap (vec: t 'a): (ImmMap.t int 'a) =>

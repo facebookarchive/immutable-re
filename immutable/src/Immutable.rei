@@ -1518,7 +1518,7 @@ let module rec KeyedIterable: {
   /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
 };
 
-let module KeyedCollection: {
+let module rec KeyedCollection: {
   /** Module types implemented by all immutable keyed collections. This module
    *  signature does not impose any restrictions on the relationship between
    *  keys and associated values.
@@ -1556,6 +1556,9 @@ let module KeyedCollection: {
     let keys: (t 'v) => (Set.t k);
     /** [keys keyed] return a Set view of the keys in [keyed]. */
 
+    let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
+    /* [toKeyedCollection keyed] returns KeyedCollection view. */
+
     let toSequence: (t 'v) => (Sequence.t (k, 'v));
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples.
@@ -1590,11 +1593,25 @@ let module KeyedCollection: {
     let keys: (t 'k 'v) => (Set.t 'k);
     /** [keys keyed] return a Set view of the keys in [keyed]. */
 
+    let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
+    /* [toKeyedCollection keyed] returns KeyedCollection view. */
+
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples.
      */
   };
+
+  type t 'k 'v;
+
+  include S2 with type t 'k 'v := t 'k 'v;
+
+  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
+  /** [map f map] returns lazy KeyedCollection that computes values lazily by applying [f].
+   *
+   *  Note, the results of applying [f] to a given key/value pair are not
+   *  memoized. Therefore [f] must be a pure function.
+   */
 
   let module Persistent: {
     /** Module types implemented by KeyedCollections supporting fully persistent mutations.
@@ -1647,6 +1664,9 @@ let module KeyedCollection: {
        */
     };
   };
+
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+   /* KeyedReducer module for KeyedCollections. */
 
   let module Transient: {
     /** Module types implemented by transiently mutable KeyedCollections. Transient Collections
@@ -2114,6 +2134,11 @@ let module Indexed: {
     let getOrRaise: int => (t 'a) => 'a;
     /** [getOrRaise index indexed] returns the value at [index] or
      *  raises an exception if [index] is out of bounds.
+     */
+
+    let toKeyedCollection: (t 'a) => (KeyedCollection.t int 'a);
+    /** [toKeyedCollection indexed] returns a KeyedCollection view of
+     *  the index/value pairs in [indexed].
      */
 
     let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);

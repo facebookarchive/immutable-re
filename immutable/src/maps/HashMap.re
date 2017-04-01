@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+ open Functions.Operators;
+
 type t 'k 'v = {
   count: int,
   root: BitmapTrieMap.t 'k 'v,
@@ -115,7 +117,6 @@ let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
 let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator;
 
-
 let iterator: Iterable.Iterator.t ('k, 'v) (t 'k 'v) = {
   reduce: fun while_::predicate f acc map => map |> reduce
     while_::(fun acc k v => predicate acc (k, v))
@@ -133,14 +134,53 @@ let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) =>
   if (isEmpty map) (KeyedIterable.empty ())
   else KeyedIterable.KeyedIterable map keyedIterator;
 
+let toKeySequence ({ root }: t 'k 'v): (Sequence.t 'k) =>
+  root |> BitmapTrieMap.toKeySequence;
+
 let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
   root |> BitmapTrieMap.toSequence;
+
+let keyCollectionOps (): Collection.Ops.t 'k (t 'k _) => {
+  count: count,
+  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toSequence: toKeySequence,
+};
+
+let toKeyCollection (map: t 'k _): Collection.t 'k =>
+  if (isEmpty map) (Collection.empty ())
+  else (Collection.Collection map (keyCollectionOps ()));
+
+let keySetOps (): ImmSet.Ops.t 'k (t 'k _) => {
+  contains: containsKey,
+  count,
+  toCollection: toKeyCollection,
+  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toSequence: toKeySequence,
+};
+
+let keys (map: t 'k 'v): (ImmSet.t 'k) =>
+  if (isEmpty map) (ImmSet.empty ())
+  else ImmSet.Set map (keySetOps ());
+
+let keyedCollectionOps: KeyedCollection.Ops.t 'k 'v (t 'k 'v) = {
+  containsKey,
+  count,
+  keys,
+  toIterable,
+  toKeyedIterable,
+  toSequence,
+};
+
+let toKeyedCollection (map: t 'k 'v): (KeyedCollection.t 'k 'v) =>
+  if (isEmpty map) (KeyedCollection.empty ())
+  else KeyedCollection.KeyedCollection map keyedCollectionOps;
 
 let mapOps: ImmMap.Ops.t 'k 'v (t 'k 'v) = {
   containsKey,
   count,
   get,
   getOrRaise,
+  toKeyedCollection,
   toKeyedIterable,
   toSequence,
 };
@@ -148,9 +188,6 @@ let mapOps: ImmMap.Ops.t 'k 'v (t 'k 'v) = {
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) =>
   if (isEmpty map) (ImmMap.empty ())
   else ImmMap.Map map mapOps;
-
-let keys (map: t 'k 'v): (ImmSet.t 'k) =>
-  map |> toMap |> ImmMap.keys;
 
 let module Transient = {
   type hashMap 'k 'v = t 'k 'v;
