@@ -82,15 +82,19 @@ let toList ({ list }: t 'a): (list 'a) => list;
 
 let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
 
-let toCollection (set: t 'a): (Collection.t 'a) => {
-  count: count set,
-  iterable: fun () => toIterable set,
-  sequence: fun () => toSequence set,
+let collectionOps: Collection.Ops.t 'a (t 'a) = {
+  count,
+  toIterable,
+  toSequence,
 };
+
+let toCollection (stack: t 'a): (Collection.t 'a) =>
+  if (isEmpty stack) (Collection.empty ())
+  else Collection.Collection stack collectionOps;
 
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
-  
+
   let reduce = reduce;
   let toIterable = toIterable;
 };

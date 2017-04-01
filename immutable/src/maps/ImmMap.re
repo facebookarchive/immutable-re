@@ -7,80 +7,99 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions;
 open Functions.Operators;
 open Option.Operators;
 
-type t 'k 'v = {
-  containsKey: 'k => bool,
-  count: int,
-  get: 'k => (option 'v),
-  getOrRaise: 'k => 'v,
-  keyedIterator: unit => (KeyedIterable.t 'k 'v),
-  sequence: unit => (Sequence.t ('k, 'v)),
+let module Ops = {
+  type t 'k 'v 'map = {
+    containsKey: 'k => 'map => bool,
+    count: 'map => int,
+    get: 'k => 'map => (option 'v),
+    getOrRaise: 'k => 'map => 'v,
+    toKeyedIterable: 'map => (KeyedIterable.t 'k 'v),
+    toSequence: 'map => (Sequence.t ('k, 'v)),
+  };
 };
 
-let containsKey (key: 'k) ({ containsKey }: t 'k 'v): bool =>
-  containsKey key;
+type t 'k 'v =
+  | Empty
+  | Map 'map (Ops.t 'k 'v 'map): t 'k 'v;
 
-let count ({ count }: t 'k 'v) => count;
-
-let empty (): (t 'k 'v) => {
-  containsKey: fun _ => false,
-  count: 0,
-  get: fun _ => None,
-  getOrRaise: fun _ => failwith "empty",
-  keyedIterator: KeyedIterable.empty,
-  sequence: Sequence.empty,
+let containsKey (key: 'k) (map: t 'k 'v): bool => switch map {
+  | Empty => false
+  | Map map { containsKey } => containsKey key map
 };
 
-let get (key: 'k) ({ get }: t 'k 'v): (option 'v) =>
-  get key;
-
-let getOrRaise (key: 'k) ({ getOrRaise }: t 'k 'v): 'v =>
-  getOrRaise key;
-
-let isEmpty ({ count }: t 'k 'v): bool =>
-  count === 0;
-
-let isNotEmpty ({ count }: t 'k 'v): bool =>
-  count !== 0;
-
-let keys (map: t 'k 'v): (ImmSet.t 'k) => {
-  contains: fun k => map |> containsKey k,
-  count: map.count,
-  iterable: map.keyedIterator >> KeyedIterable.keys,
-  sequence: map.sequence >> Sequence.map (fun (k, _) => k),
+let count (map: t 'k 'v): int => switch map {
+  | Empty => 0
+  | Map map { count } => count map
 };
+
+let empty (): (t 'k 'v) => Empty;
+
+let get (key: 'k) (map: t 'k 'v): (option 'v) => switch map {
+  | Empty => None
+  | Map map { get } => get key map
+};
+
+let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {
+  | Empty => failwith "not found"
+  | Map map { getOrRaise } => getOrRaise key map
+};
+
+let isEmpty (map: t 'k 'v): bool =>
+  (count map) === 0;
+
+let isNotEmpty (map: t 'k 'v): bool =>
+  (count map) !== 0;
+
+let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) => switch map {
+  | Empty => KeyedIterable.empty ()
+  | Map map { toKeyedIterable } => toKeyedIterable map
+};
+
+let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
+  map |> toKeyedIterable |> KeyedIterable.toIterable;
+
+let toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
+  | Empty => Sequence.empty ()
+  | Map map { toSequence } => toSequence map
+};
+
+let keySetOps (): ImmSet.Ops.t 'k (t 'k 'v) => {
+  contains: containsKey,
+  count,
+  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toSequence: toSequence >> Sequence.map (fun (k, _) => k),
+};
+
+let keys (map: t 'k 'v): (ImmSet.t 'k) =>
+  ImmSet.Set map (keySetOps ());
 
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
-    ({ keyedIterator }: t 'k 'v): 'acc =>
-  keyedIterator () |> KeyedIterable.reduce while_::predicate f acc;
+    (map: t 'k 'v): 'acc =>
+  map |> toKeyedIterable |> KeyedIterable.reduce while_::predicate f acc;
 
-let toIterable ({ keyedIterator }: t 'k 'v): (Iterable.t ('k, 'v)) =>
-  keyedIterator () |> KeyedIterable.toIterable;
-
-let toKeyedIterable ({ keyedIterator }: t 'k 'v): (KeyedIterable.t 'k 'v) =>
-  keyedIterator ();
-
-let map (m: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => {
-  containsKey: map.containsKey,
-  count: map.count,
-  get: fun k => map.get k >>| m k,
-  getOrRaise: fun k => {
-    let v = map.getOrRaise k;
-    m k v;
-  },
-  keyedIterator: map.keyedIterator >> KeyedIterable.mapValues m,
-  sequence: map.sequence >> Sequence.map (fun (k, v) => (k, m k v)),
+let map (mapValues: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => switch map {
+  | Empty => Empty
+  | Map map ops => Map map {
+      containsKey: ops.containsKey,
+      count: ops.count,
+      get: fun k map => ops.get k map >>| mapValues k,
+      getOrRaise: fun k map => {
+        let v = map |> ops.getOrRaise k;
+        mapValues k v;
+      },
+      toKeyedIterable: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues,
+      toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, mapValues k v)),
+    }
 };
 
 let toMap (map: t 'k 'v): (t 'k 'v) => map;
-
-let toSequence ({ sequence }: t 'k 'v): (Sequence.t ('k, 'v)) =>
-  sequence ();
 
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;

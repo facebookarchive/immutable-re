@@ -90,20 +90,26 @@ let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
   if (isEmpty set) (Sequence.empty ())
   else root |> BitmapTrieSet.toSequence;
 
-let toCollection (set: t 'a): (Collection.t 'a) => {
-  count: count set,
-  iterable: fun () => toIterable set,
-  sequence: fun () => toSequence set,
+let collectionOps: Collection.Ops.t 'a (t 'a) = {
+  count,
+  toIterable,
+  toSequence,
+};
+
+let toCollection (set: t 'a): (Collection.t 'a) =>
+  if (isEmpty set) (Collection.empty ())
+  else Collection.Collection set collectionOps;
+
+let setOps: ImmSet.Ops.t 'a (t 'a) = {
+  contains,
+  count,
+  toIterable,
+  toSequence,
 };
 
 let toSet (set: t 'a): (ImmSet.t 'a) =>
   if (isEmpty set) (ImmSet.empty ())
-  else {
-    contains: fun v => contains v set,
-    count: count set,
-    iterable: fun () => toIterable set,
-    sequence: fun () => toSequence set,
-  };
+  else ImmSet.Set set setOps;
 
 let equals (this: t 'a) (that: t 'a): bool =>
   ImmSet.equals (toSet this) (toSet that);

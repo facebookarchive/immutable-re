@@ -137,11 +137,15 @@ let toSequenceRight (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Descending vector => vector |> Vector.toSequence;
 };
 
-let toCollection (deque: t 'a): (Collection.t 'a) => {
-  count: count deque,
-  iterable: fun () => toIterable deque,
-  sequence: fun () => toSequence deque,
+let collectionOps: Collection.Ops.t 'a (t 'a) = {
+  count,
+  toIterable,
+  toSequence,
 };
+
+let toCollection (deque: t 'a): (Collection.t 'a) =>
+  if (isEmpty deque) (Collection.empty ())
+  else Collection.Collection deque collectionOps;
 
 let module Transient = {
   type deque 'a = t 'a;

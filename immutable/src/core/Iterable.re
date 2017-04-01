@@ -241,7 +241,7 @@ let scan
     }
 };
 
-let skip (count: int) (iter: t 'a): (t 'a) => if (count ===0) Empty else switch iter {
+let skip (count: int) (iter: t 'a): (t 'a) => if (count === 0) iter else switch iter {
   | Empty => Empty
   | Iterable iter { reduce } => Iterable iter {
       reduce: fun while_::predicate f acc iter => {

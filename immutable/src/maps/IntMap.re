@@ -107,14 +107,18 @@ let toKeyedIterable (map: t 'v): (KeyedIterable.t int 'v) =>
 let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
   root |> BitmapTrieIntMap.toSequence;
 
-let toMap (map: t 'v): (ImmMap.t int 'v) => {
-  containsKey: fun k => containsKey k map,
-  count: (count map),
-  get: fun i => get i map,
-  getOrRaise: fun i => getOrRaise i map,
-  keyedIterator: fun () => toKeyedIterable map,
-  sequence: fun () =>toSequence map,
+let mapOps: ImmMap.Ops.t int 'v (t 'v) = {
+  containsKey,
+  count,
+  get,
+  getOrRaise,
+  toKeyedIterable,
+  toSequence,
 };
+
+let toMap (map: t 'v): (ImmMap.t int 'v) =>
+  if (isEmpty map) (ImmMap.empty ())
+  else ImmMap.Map map mapOps;
 
 let keys (map: t 'v): (ImmSet.t int) =>
   map |> toMap |> ImmMap.keys;
