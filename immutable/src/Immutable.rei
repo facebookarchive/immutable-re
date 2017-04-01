@@ -1499,37 +1499,6 @@ let module rec KeyedIterable: {
   /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
 };
 
-let module KeyedIterableRight: {
-  /** Module types implemented by modules that support reducing over
-   *  key/value pairs in both the left to right, and right to left directions.
-   */
-
-  module type S1 = {
-    /** KeyedIterableRight module type signature for types with a parametric type arity of 1. */
-
-    type k;
-    type t 'v;
-
-    include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
-
-    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
-     *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
-     *  from the right most key/value pair, accumulating the result.
-     */
-
-    let toIterableRight: t 'v => Iterable.t (k, 'v);
-    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
-      *  the key/value pairs in [keyedIterable] as tuples.
-      */
-
-    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
-    /** [toKeyedIterableRight keyedIterable] returns a KeyedIterable that can be used to iterate over
-      *  the key/value pairs in [keyedIterable].
-      */
-  };
-};
-
 let module KeyedCollection: {
   /** Module types implemented by all immutable keyed collections. This module
    *  signature does not impose any restrictions on the relationship between
@@ -1750,7 +1719,6 @@ let module NavigableKeyedCollection: {
     type t 'v;
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
-    include KeyedIterableRight.S1 with type k := k and type t 'v := t 'v;
 
     let first: (t 'v) => (option (k, 'v));
     /** [first keyed] returns first value in [keyed] or None.
@@ -1774,6 +1742,22 @@ let module NavigableKeyedCollection: {
     /** [lastOrRaise keyed] returns last value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
+     */
+
+    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
+     *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
+     *  from the right most key/value pair, accumulating the result.
+     */
+
+    let toIterableRight: t 'v => Iterable.t (k, 'v);
+    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable] as tuples.
+     */
+
+    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
+    /** [toKeyedIterableRight keyedIterable] returns a KeyedIterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable].
      */
 
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
