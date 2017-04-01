@@ -1113,6 +1113,7 @@ let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
   count,
   first,
   firstOrRaise,
+  toCollection,
   toIterable,
   toSequence,
 };
@@ -1120,6 +1121,24 @@ let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
 let toSequentialCollection (vector: t 'a): (SequentialCollection.t 'a) =>
   if (isEmpty vector) (SequentialCollection.empty ())
   else SequentialCollection.SequentialCollection vector seqCollectionOps;
+
+let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  last,
+  lastOrRaise,
+  toCollection,
+  toSequentialCollection,
+  toIterable,
+  toIterableRight,
+  toSequence,
+  toSequenceRight,
+};
+
+let toNavigableCollection (set: (t 'a)): (NavigableCollection.t 'a) =>
+  if (isEmpty set) (NavigableCollection.empty ())
+  else NavigableCollection.NavigableCollection set navCollectionOps;
 
 let mapOps: ImmMap.Ops.t int 'a (t 'a) = {
   containsKey: fun index arr => index >= 0 && index < count arr,

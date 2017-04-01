@@ -14,6 +14,7 @@ let module Ops = {
     count: 'collection => int,
     first: 'collection => (option 'a),
     firstOrRaise: 'collection => 'a,
+    toCollection: 'collection => Collection.t 'a,
     toIterable: 'collection => Iterable.t 'a,
     toSequence: 'collection => Sequence.t 'a,
   };
@@ -46,6 +47,11 @@ let isEmpty (collection: t 'a): bool =>
 let isNotEmpty (collection: t 'a): bool =>
   (count collection) !== 0;
 
+let toCollection (collection: t 'a): (Collection.t 'a) => switch collection {
+  | Empty => Collection.empty ()
+  | SequentialCollection collection { toCollection } => toCollection collection
+};
+
 let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
   | Empty => Iterable.empty ()
   | SequentialCollection collection { toIterable } => toIterable collection
@@ -63,16 +69,6 @@ let reduce
     (collection: t 'a): 'acc =>
   collection |> toIterable |> Iterable.reduce while_::predicate f acc;
 
-let collectionOps: Collection.Ops.t 'a (t 'a) = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (collection: t 'a): (Collection.t 'a) =>
-  if (isEmpty collection) (Collection.empty ())
-  else Collection.Collection collection collectionOps;
-
 let toSequentialCollection (collection: t 'a): (t 'a) =>
   collection;
 
@@ -82,6 +78,7 @@ let map (f: 'a => 'b) (collection: t 'a): (t 'b) => switch collection {
       count: ops.count,
       first: ops.first >> Option.map f,
       firstOrRaise: ops.firstOrRaise >> f,
+      toCollection: ops.toCollection >> Collection.map f,
       toIterable: ops.toIterable >> Iterable.map f,
       toSequence: ops.toSequence >> Sequence.map f,
     }

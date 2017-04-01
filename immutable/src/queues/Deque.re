@@ -146,17 +146,36 @@ let toCollection (deque: t 'a): (Collection.t 'a) =>
   if (isEmpty deque) (Collection.empty ())
   else Collection.Collection deque collectionOps;
 
-  let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
-    count,
-    first,
-    firstOrRaise,
-    toIterable,
-    toSequence,
-  };
+let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  toCollection,
+  toIterable,
+  toSequence,
+};
 
-  let toSequentialCollection (deque: t 'a): (SequentialCollection.t 'a) =>
-    if (isEmpty deque) (SequentialCollection.empty ())
-    else SequentialCollection.SequentialCollection deque seqCollectionOps;
+let toSequentialCollection (deque: t 'a): (SequentialCollection.t 'a) =>
+  if (isEmpty deque) (SequentialCollection.empty ())
+  else SequentialCollection.SequentialCollection deque seqCollectionOps;
+
+let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  last,
+  lastOrRaise,
+  toCollection,
+  toSequentialCollection,
+  toIterable,
+  toIterableRight,
+  toSequence,
+  toSequenceRight,
+};
+
+let toNavigableCollection (deque: t 'a): (NavigableCollection.t 'a) =>
+  if (isEmpty deque) (NavigableCollection.empty ())
+  else NavigableCollection.NavigableCollection deque navCollectionOps;
 
 let module Transient = {
   type deque 'a = t 'a;

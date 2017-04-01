@@ -301,6 +301,7 @@ let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
   count,
   first,
   firstOrRaise,
+  toCollection,
   toIterable,
   toSequence,
 };
@@ -308,6 +309,24 @@ let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
 let toSequentialCollection (arr: t 'a): (SequentialCollection.t 'a) =>
   if (isEmpty arr) (SequentialCollection.empty ())
   else SequentialCollection.SequentialCollection arr seqCollectionOps;
+
+let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  last,
+  lastOrRaise,
+  toCollection,
+  toSequentialCollection,
+  toIterable,
+  toIterableRight,
+  toSequence,
+  toSequenceRight,
+};
+
+let toNavigableCollection (arr: t 'a): (NavigableCollection.t 'a) =>
+  if (isEmpty arr) (NavigableCollection.empty ())
+  else NavigableCollection.NavigableCollection arr navCollectionOps;
 
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;

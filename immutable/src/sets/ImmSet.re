@@ -14,6 +14,7 @@ let module Ops = {
   type t 'a 'set = {
     contains: 'a => 'set => bool,
     count: 'set => int,
+    toCollection: 'set => Collection.t 'a,
     toIterable: 'set => Iterable.t 'a,
     toSequence: 'set => Sequence.t 'a,
   };
@@ -41,6 +42,11 @@ let isEmpty (set: t 'a): bool =>
 let isNotEmpty (set: t 'a): bool =>
   (count set) !== 0;
 
+let toCollection (set: t 'a): (Collection.t 'a) => switch set {
+  | Empty => Collection.empty ()
+  | Set set { toCollection } => toCollection set
+};
+
 let toIterable (set: t 'a): (Iterable.t 'a) => switch set {
   | Empty => Iterable.empty ()
   | Set set { toIterable } => toIterable set
@@ -65,17 +71,6 @@ let reduce
     (acc: 'acc)
     (set: t 'a): 'acc =>
   set |> toIterable |> Iterable.reduce while_::predicate f acc;
-
-let collectionOps: Collection.Ops.t 'a (t 'a) = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (set: t 'a): (Collection.t 'a) => switch set {
-  | Empty => Collection.empty ()
-  | Set _ _ => Collection.Collection set collectionOps
-};
 
 let toSet (set: t 'a): (t 'a) => set;
 
