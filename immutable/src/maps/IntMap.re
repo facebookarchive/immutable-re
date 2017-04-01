@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
+
 type k = int;
 
 type t 'v = {
@@ -104,14 +106,54 @@ let toKeyedIterable (map: t 'v): (KeyedIterable.t int 'v) =>
   if (isEmpty map) (KeyedIterable.empty ())
   else KeyedIterable.KeyedIterable map keyedIterator;
 
+let toKeySequence ({ root }: t 'v): (Sequence.t int) =>
+  root |> BitmapTrieIntMap.toKeySequence;
+
 let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
   root |> BitmapTrieIntMap.toSequence;
+
+let keyCollectionOps (): Collection.Ops.t int (t 'v) => {
+  count: count,
+  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toSequence: toKeySequence,
+};
+
+let toKeyCollection (map: t 'v): Collection.t int =>
+  if (isEmpty map) (Collection.empty ())
+  else (Collection.Collection map (keyCollectionOps ()));
+
+let keySetOps (): ImmSet.Ops.t int (t 'v) => {
+  contains: containsKey,
+  count,
+  toCollection: toKeyCollection,
+  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toSequence: toKeySequence,
+};
+
+let keys (map: t 'v): (ImmSet.t int) =>
+  if (isEmpty map) (ImmSet.empty ())
+  else ImmSet.Set map (keySetOps ());
+
+let keyedCollectionOps: KeyedCollection.Ops.t int 'v (t 'v) = {
+  containsKey,
+  count,
+  keys,
+  toIterable,
+  toKeyedIterable,
+  toSequence,
+};
+
+let toKeyedCollection (map: t 'v): (KeyedCollection.t int 'v) =>
+  if (isEmpty map) (KeyedCollection.empty ())
+  else KeyedCollection.KeyedCollection map keyedCollectionOps;
+
 
 let mapOps: ImmMap.Ops.t int 'v (t 'v) = {
   containsKey,
   count,
   get,
   getOrRaise,
+  toKeyedCollection,
   toKeyedIterable,
   toSequence,
 };

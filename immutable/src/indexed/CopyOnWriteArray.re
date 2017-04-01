@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
+
 type t 'a = array 'a;
 
 let count (arr: t 'a): int => Array.length arr;
@@ -310,6 +312,39 @@ let toSequentialCollection (arr: t 'a): (SequentialCollection.t 'a) =>
   if (isEmpty arr) (SequentialCollection.empty ())
   else SequentialCollection.SequentialCollection arr seqCollectionOps;
 
+let containsKey (index: int) (arr: t 'a): bool =>
+  index >= 0 && index < count arr;
+
+let keys (arr: t 'a): (ImmSet.t int) =>
+  IntRange.create start::0 count::(count arr) |> IntRange.toSet;
+
+let keyedCollectionOps (): KeyedCollection.Ops.t int 'a (t 'a) => {
+  containsKey,
+  count,
+  keys,
+  toIterable: toKeyedIterable >> KeyedIterable.toIterable,
+  toKeyedIterable,
+  toSequence: toSequenceWithIndex,
+};
+
+let toKeyedCollection (arr: t 'a): (KeyedCollection.t int 'a) =>
+  if (isEmpty arr) (KeyedCollection.empty ())
+  else KeyedCollection.KeyedCollection arr (keyedCollectionOps ());
+
+let mapOps: ImmMap.Ops.t int 'v (t 'v) = {
+  containsKey,
+  count,
+  get,
+  getOrRaise,
+  toKeyedCollection,
+  toKeyedIterable,
+  toSequence: toSequenceWithIndex,
+};
+
+let toMap (arr: t 'a): (ImmMap.t int 'a) =>
+  if (isEmpty arr) (ImmMap.empty ())
+  else ImmMap.Map arr mapOps;
+
 let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
   count,
   first,
@@ -347,19 +382,6 @@ let updateWith (index: int) (f: 'a => 'a) (arr: t 'a): (t 'a) => {
   clone.(index) = f arr.(index);
   clone
 };
-
-let mapOps: ImmMap.Ops.t int 'v (t 'v) = {
-  containsKey: fun index arr => index >= 0 && index < count arr,
-  count,
-  get,
-  getOrRaise,
-  toKeyedIterable,
-  toSequence: toSequenceWithIndex,
-};
-
-let toMap (arr: t 'a): (ImmMap.t int 'a) =>
-  if (isEmpty arr) (ImmMap.empty ())
-  else ImmMap.Map arr mapOps;
 
 let module ReducerRight = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;

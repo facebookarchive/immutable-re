@@ -221,6 +221,16 @@ let reduceRightWhile
   reduceRightWhileWithResult shouldContinue predicate f acc tree;
 };
 
+let rec toKeySequence (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
+  | Empty => Sequence.empty ()
+  | Leaf k v => Sequence.return k
+  | Node _ left k _ right => Sequence.concat [
+      Sequence.defer(fun () => toKeySequence left),
+      Sequence.return k,
+      Sequence.defer(fun () => toKeySequence right),
+    ]
+};
+
 let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
   | Empty => Sequence.empty ()
   | Leaf k v => Sequence.return (k, v)

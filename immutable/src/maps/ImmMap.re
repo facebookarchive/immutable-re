@@ -18,6 +18,7 @@ let module Ops = {
     get: 'k => 'map => (option 'v),
     getOrRaise: 'k => 'map => 'v,
     toKeyedIterable: 'map => (KeyedIterable.t 'k 'v),
+    toKeyedCollection: 'map => (KeyedCollection.t 'k 'v),
     toSequence: 'map => (Sequence.t ('k, 'v)),
   };
 };
@@ -54,6 +55,12 @@ let isEmpty (map: t 'k 'v): bool =>
 let isNotEmpty (map: t 'k 'v): bool =>
   (count map) !== 0;
 
+
+let toKeyedCollection (map: t 'k 'v): (KeyedCollection.t 'k 'v) => switch map {
+  | Empty => KeyedCollection.empty ()
+  | Map map { toKeyedCollection } => toKeyedCollection map
+};
+
 let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) => switch map {
   | Empty => KeyedIterable.empty ()
   | Map map { toKeyedIterable } => toKeyedIterable map
@@ -61,6 +68,8 @@ let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) => switch map {
 
 let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
   map |> toKeyedIterable |> KeyedIterable.toIterable;
+
+let toMap (map: t 'k 'v): (t 'k 'v) => map;
 
 let toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | Empty => Sequence.empty ()
@@ -104,12 +113,11 @@ let map (mapValues: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => switch map {
         let v = map |> ops.getOrRaise k;
         mapValues k v;
       },
+      toKeyedCollection: ops.toKeyedCollection >> KeyedCollection.map mapValues,
       toKeyedIterable: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues,
       toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, mapValues k v)),
     }
 };
-
-let toMap (map: t 'k 'v): (t 'k 'v) => map;
 
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;

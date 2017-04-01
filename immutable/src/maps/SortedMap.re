@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
+
  /** AVL tree based Map. */
 module type S1 = {
   type k;
@@ -30,6 +32,7 @@ module type S1 = {
   let isEmpty: t 'v => bool;
   let isNotEmpty: t 'v => bool;
   let keys: t 'v => ImmSet.t k;
+  let toKeyedCollection: t 'v => KeyedCollection.t k 'v;
   let toSequence: t 'v => Sequence.t (k, 'v);
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
@@ -177,6 +180,9 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     { count: count - 1, tree: newTree }
   };
 
+  let toKeySequence ({ tree }: t 'v): (Sequence.t k) =>
+    tree |> AVLTreeMap.toKeySequence;
+
   let toSequence ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
     tree |> AVLTreeMap.toSequence;
 
@@ -217,11 +223,47 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     if (isEmpty map) (KeyedIterable.empty ())
     else KeyedIterable.KeyedIterable map keyedIteratorRight;
 
+  let keyCollectionOps (): Collection.Ops.t 'k (t 'v) => {
+    count: count,
+    toIterable: toKeyedIterable >> KeyedIterable.keys,
+    toSequence: toKeySequence,
+  };
+
+  let toKeyCollection (map: t _): Collection.t k =>
+    if (isEmpty map) (Collection.empty ())
+    else (Collection.Collection map (keyCollectionOps ()));
+
+  let keySetOps (): ImmSet.Ops.t k (t 'v) => {
+    contains: containsKey,
+    count,
+    toCollection: toKeyCollection,
+    toIterable: toKeyedIterable >> KeyedIterable.keys,
+    toSequence: toKeySequence,
+  };
+
+  let keys (map: t 'v): (ImmSet.t k) =>
+    if (isEmpty map) (ImmSet.empty ())
+    else ImmSet.Set map (keySetOps ());
+
+  let keyedCollectionOps: KeyedCollection.Ops.t k 'v (t 'v) = {
+    containsKey,
+    count,
+    keys,
+    toIterable,
+    toKeyedIterable,
+    toSequence,
+  };
+
+  let toKeyedCollection (map: t 'v): (KeyedCollection.t k 'v) =>
+    if (isEmpty map) (KeyedCollection.empty ())
+    else KeyedCollection.KeyedCollection map keyedCollectionOps;
+
   let mapOps: ImmMap.Ops.t k 'v (t 'v) = {
     containsKey,
     count,
     get,
     getOrRaise,
+    toKeyedCollection,
     toKeyedIterable,
     toSequence,
   };
@@ -229,9 +271,6 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let toMap (map: t 'v): (ImmMap.t k 'v) =>
     if (isEmpty map) (ImmMap.empty ())
     else ImmMap.Map map mapOps;
-
-  let keys (map: t 'v): (ImmSet.t k) =>
-    map |> toMap |> ImmMap.keys;
 
   let merge
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
