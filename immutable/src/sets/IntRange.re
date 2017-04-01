@@ -189,6 +189,26 @@ let toSet (set: t): (ImmSet.t int) =>
   if (isEmpty set) (ImmSet.empty ())
   else ImmSet.Set set setOps;
 
+let navigableSetOps: NavigableSet.Ops.t int t = {
+  contains,
+  count,
+  first,
+  firstOrRaise,
+  last,
+  lastOrRaise,
+  toCollection,
+  toSequentialCollection,
+  toIterable,
+  toIterableRight,
+  toNavigableCollection,
+  toSequence,
+  toSequenceRight,
+};
+
+let toNavigableSet (set: t): (NavigableSet.t int) =>
+  if (isEmpty set) (NavigableSet.empty ())
+  else NavigableSet.NavigableSet set navigableSetOps;
+
 let module ReducerRight = Iterable.Reducer.Make {
   type nonrec a = a;
   type nonrec t = t;

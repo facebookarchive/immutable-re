@@ -549,8 +549,6 @@ let module rec Collection: {
    *  memoized. Therefore [f] must be a pure function.
    */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
-  /* Reducer module for Iterables. */
   let module Persistent: {
     /** Module types implemented by collections supporting fully persistent mutations.
      *  Mutation operations on these types do not mutate the underlying collection, but instead
@@ -588,6 +586,9 @@ let module rec Collection: {
        */
     };
   };
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Collections. */
 
   let module Transient: {
     /** Module types implemented by transiently mutable Collections. Transient collections
@@ -734,6 +735,9 @@ let module rec SequentialCollection: {
        */
     };
   };
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for SequentialCollections. */
 
   let module Transient: {
     /** Module types implemented by transient collections supporting transient mutations to left
@@ -896,6 +900,9 @@ let module rec NavigableCollection: {
     };
   };
 
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for NavigableCollections. */
+
   let module Transient: {
     /** Module types implemented by transient collections supporting transient mutations to both
      *  the left and rights sides of the collection.
@@ -995,9 +1002,6 @@ let module rec Set: {
   let union: (t 'a) => (t 'a) => (Iterable.t 'a);
   /** [union this that] returns an Iterable of unique values which occur in either [this] or [that]. */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
-  /* Reducer module for Iterables. */
-
   let module Persistent: {
     /** Module types implemented by Set collections supporting persistent mutations.
      *
@@ -1079,6 +1083,9 @@ let module rec Set: {
     };
   };
 
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for Iterables. */
+
   let module Transient: {
     /** Module types implemented by transiently mutable sets.
      *
@@ -1140,7 +1147,7 @@ let module rec Set: {
   };
 };
 
-let module NavigableSet: {
+let module rec NavigableSet: {
   /*  Module types implemented by Sets that supports navigation operations. */
 
   module type S = {
@@ -1151,7 +1158,16 @@ let module NavigableSet: {
 
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
+
+    let toNavigableSet: t => NavigableSet.t a;
+    /** [toNavigableSet set] returns a NavigableSet view of [set]. */
   };
+
+  type t 'a;
+  /** The Set type. */
+
+  let empty: unit => (t 'a);
+  /** The empty Set. */
 
   let module Persistent: {
     /** Module types implemented by NavigableSet collections supporting persistent mutations.
@@ -1178,6 +1194,9 @@ let module NavigableSet: {
        */
     };
   };
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  /* Reducer module for NavigableSets. */
 };
 
 let module KeyedStreamable: {

@@ -326,12 +326,16 @@ let module Set = {
 };
 
 let module NavigableSet = {
+  include NavigableSet;
+
   module type S = {
     type a;
     type t;
 
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
+
+    let toNavigableSet: t => NavigableSet.t a;
   };
 
   let module Persistent = {
@@ -347,7 +351,6 @@ let module NavigableSet = {
       let removeLastOrRaise: t => t;
     };
   };
-
 };
 
 let module KeyedStreamable = {
