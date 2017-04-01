@@ -377,19 +377,6 @@ let module KeyedStreamable = {
 
 let module KeyedIterable = KeyedIterable;
 
-let module KeyedIterableRight = {
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
-
-    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let toIterableRight: t 'v => Iterable.t (k, 'v);
-    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
-  };
-};
-
 let module KeyedCollection = {
   module type S1 = {
     type k;
@@ -475,12 +462,14 @@ let module NavigableKeyedCollection = {
     type t 'v;
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
-    include KeyedIterableRight.S1 with type k := k and type t 'v := t 'v;
 
     let first: (t 'v) => (option (k, 'v));
     let firstOrRaise: (t 'v) => (k, 'v);
     let last: (t 'v) => (option (k, 'v));
     let lastOrRaise: (t 'v) => (k, 'v);
+    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let toIterableRight: t 'v => Iterable.t (k, 'v);
+    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
   };
 };

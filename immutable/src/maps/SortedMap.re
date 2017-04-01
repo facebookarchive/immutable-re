@@ -12,13 +12,13 @@ module type S1 = {
   type k;
   type t +'v;
 
-  let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let toIterableRight: t 'v => Iterable.t (k, 'v);
-  let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
   let first: t 'v => option (k, 'v);
   let firstOrRaise: t 'v => (k, 'v);
   let last: t 'v => option (k, 'v);
   let lastOrRaise: t 'v => (k, 'v);
+  let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let toIterableRight: t 'v => Iterable.t (k, 'v);
+  let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
