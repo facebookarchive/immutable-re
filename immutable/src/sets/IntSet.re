@@ -74,20 +74,26 @@ let toIterable (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
   else Iterable.Iterable set iterator;
 
-let toCollection (set: t): (Collection.t int) => {
-  count: count set,
-  iterable: fun () => toIterable set,
-  sequence: fun () => toSequence set,
+let collectionOps: Collection.Ops.t int t = {
+  count,
+  toIterable,
+  toSequence,
+};
+
+let toCollection (set: t): (Collection.t int) =>
+  if (isEmpty set) (Collection.empty ())
+  else Collection.Collection set collectionOps;
+
+let setOps: ImmSet.Ops.t int t = {
+  contains,
+  count,
+  toIterable,
+  toSequence,
 };
 
 let toSet (set: t): (ImmSet.t int) =>
   if (isEmpty set) (ImmSet.empty ())
-  else {
-    contains: fun v => contains v set,
-    count: count set,
-    iterable: fun () => toIterable set,
-    sequence: fun () => toSequence set,
-  };
+  else ImmSet.Set set setOps;
 
 let equals (this: t) (that: t): bool =>
   ImmSet.equals (toSet this) (toSet that);

@@ -217,14 +217,18 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     if (isEmpty map) (KeyedIterable.empty ())
     else KeyedIterable.KeyedIterable map keyedIteratorRight;
 
-  let toMap (map: t 'v): (ImmMap.t k 'v) => {
-    containsKey: fun k => containsKey k map,
-    count: (count map),
-    get: fun i => get i map,
-    getOrRaise: fun i => getOrRaise i map,
-    keyedIterator: fun () => toKeyedIterable map,
-    sequence: fun () => toSequence map,
+  let mapOps: ImmMap.Ops.t k 'v (t 'v) = {
+    containsKey,
+    count,
+    get,
+    getOrRaise,
+    toKeyedIterable,
+    toSequence,
   };
+
+  let toMap (map: t 'v): (ImmMap.t k 'v) =>
+    if (isEmpty map) (ImmMap.empty ())
+    else ImmMap.Map map mapOps;
 
   let keys (map: t 'v): (ImmSet.t k) =>
     map |> toMap |> ImmMap.keys;

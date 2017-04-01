@@ -193,18 +193,26 @@ let module Make = fun (Comparable: Comparable.S) => {
     if (isEmpty set) (Iterable.empty ())
     else Iterable.Iterable set iteratorRight;
 
-  let toCollection (set: t): (Collection.t a) => {
-    count: count set,
-    iterable: fun () => toIterable set,
-    sequence: fun () => toSequence set,
+  let collectionOps: Collection.Ops.t a t = {
+    count,
+    toIterable,
+    toSequence,
   };
 
-  let toSet (set: t): (ImmSet.t a) => {
-    contains: fun a => contains a set,
-    count: count set,
-    iterable: fun () => toIterable set,
-    sequence: fun () => toSequence set,
+  let toCollection (set: t): (Collection.t a) =>
+    if (isEmpty set) (Collection.empty ())
+    else Collection.Collection set collectionOps;
+
+  let setOps: ImmSet.Ops.t a t = {
+    contains,
+    count,
+    toIterable,
+    toSequence,
   };
+
+  let toSet (set: t): (ImmSet.t a) =>
+    if (isEmpty set) (ImmSet.empty ())
+    else ImmSet.Set set setOps;
 
   let intersect (this: t) (that: t): t =>
     /* FIXME: Improve this implementation */

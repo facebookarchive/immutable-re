@@ -9,48 +9,59 @@
 
 open Functions.Operators;
 
-type t 'a = {
-  count: int,
-  iterable: unit => (Iterable.t 'a),
-  sequence: unit => (Sequence.t 'a),
-};
-
-let count ({ count }: t 'a): int => count;
-
-let empty (): (t 'a) => {
-  count: 0,
-  iterable: Iterable.empty,
-  sequence: Sequence.empty,
-};
-
-let isEmpty ({ count }: t 'a): bool =>
-  count === 0;
-
-let isNotEmpty ({ count }: t 'a): bool =>
-  count !== 0;
-
-let map (f: 'a => 'b) ({ count, iterable, sequence } as collection: t 'a): (t 'b) =>
-  if (iterable === Iterable.empty) (empty ()) else {
-    count,
-    iterable: iterable >> Iterable.map f,
-    sequence: sequence >> Sequence.map f,
+let module Ops = {
+  type t 'a 'collection = {
+    count: 'collection => int,
+    toIterable: 'collection => Iterable.t 'a,
+    toSequence: 'collection => Sequence.t 'a,
   };
+};
+
+type t 'a =
+  | Empty
+  | Collection 'collection (Ops.t 'a 'collection): t 'a;
+
+let count (collection: t 'a): int => switch collection {
+  | Empty => 0
+  | Collection collection { count } => count collection
+};
+
+let empty (): (t 'a) => Empty;
+
+let isEmpty (collection: t 'a): bool =>
+  (count collection) === 0;
+
+let isNotEmpty (collection: t 'a): bool =>
+  (count collection) !== 0;
+
+let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
+  | Empty => Iterable.empty ()
+  | Collection collection { toIterable } => toIterable collection
+};
+
+let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
+  | Empty => Sequence.empty ()
+  | Collection collection { toSequence } => toSequence collection
+};
 
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    ({ iterable }: t 'a): 'acc =>
-  iterable () |> Iterable.reduce while_::predicate f acc;
+    (collection: t 'a): 'acc =>
+  collection |> toIterable |> Iterable.reduce while_::predicate f acc;
 
 let toCollection (collection: t 'a): (t 'a) =>
   collection;
 
-let toIterable ({ iterable }: t 'a): (Iterable.t 'a) =>
-  iterable ();
-
-let toSequence ({ sequence }: t 'a): (Sequence.t 'a) =>
-  sequence ();
+let map (f: 'a => 'b) (collection: t 'a): (t 'b) => switch collection {
+  | Empty => Empty
+  | Collection collection ops => Collection collection {
+      count: (ops.count),
+      toIterable: (ops.toIterable) >> Iterable.map f,
+      toSequence: (ops.toSequence) >> Sequence.map f,
+    }
+};
 
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;

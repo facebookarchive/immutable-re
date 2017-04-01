@@ -1099,23 +1099,31 @@ let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence
   CopyOnWriteArray.toSequenceRight left,
 ];
 
-let toCollection (set: t 'a): (Collection.t 'a) => {
-  count: count set,
-  iterable: fun () => toIterable set,
-  sequence: fun () => toSequence set,
+let collectionOps: Collection.Ops.t 'a (t 'a) = {
+  count,
+  toIterable,
+  toSequence,
 };
 
-let toMap (vec: t 'a): (ImmMap.t int 'a) => {
-  containsKey: fun index => index >= 0 && index < count vec,
-  count: count vec,
-  get: fun i => get i vec,
-  getOrRaise: fun i => getOrRaise i vec,
-  keyedIterator: fun () => toKeyedIterable vec,
-  sequence: fun () => Sequence.zip2With
+let toCollection (vec: t 'a): (Collection.t 'a) =>
+  if (isEmpty vec) (Collection.empty ())
+  else Collection.Collection vec collectionOps;
+
+let mapOps: ImmMap.Ops.t int 'a (t 'a) = {
+  containsKey: fun index arr => index >= 0 && index < count arr,
+  count,
+  get,
+  getOrRaise,
+  toKeyedIterable,
+  toSequence: fun vec => Sequence.zip2With
     (fun a b => (a, b))
     (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)
     (toSequence vec),
 };
+
+let toMap (vec: t 'a): (ImmMap.t int 'a) =>
+  if (isEmpty vec) (ImmMap.empty ())
+  else ImmMap.Map vec mapOps;
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> mutate

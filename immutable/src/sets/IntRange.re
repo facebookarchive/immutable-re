@@ -134,19 +134,27 @@ let iteratorRight: Iterable.Iterator.t int t = { reduce: reduceRightImpl };
 let toIterableRight (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
   else Iterable.Iterable set iteratorRight;
-  
-let toCollection (set: t): (Collection.t int) => {
-  count: count set,
-  iterable: fun () => toIterable set,
-  sequence: fun () => toSequence set,
+
+let collectionOps: Collection.Ops.t int t = {
+  count,
+  toIterable,
+  toSequence,
 };
 
-let toSet (set: t): (ImmSet.t int) => {
-  contains: fun v => contains v set,
-  count: count set,
-  iterable: fun () => toIterable set,
-  sequence: fun () => toSequence set,
+let toCollection (set: t): (Collection.t int) =>
+  if (isEmpty set) (Collection.empty ())
+  else Collection.Collection set collectionOps;
+
+let setOps: ImmSet.Ops.t int t = {
+  contains,
+  count,
+  toIterable,
+  toSequence,
 };
+
+let toSet (set: t): (ImmSet.t int) =>
+  if (isEmpty set) (ImmSet.empty ())
+  else ImmSet.Set set setOps;
 
 let module ReducerRight = Iterable.Reducer.Make {
   type nonrec a = a;

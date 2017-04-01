@@ -287,11 +287,15 @@ let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   loop 0;
 };
 
-let toCollection (set: t 'a): (Collection.t 'a) => {
-  count: count set,
-  iterable: fun () => toIterable set,
-  sequence: fun () => toSequence set,
+let collectionOps: Collection.Ops.t 'a (t 'a) = {
+  count,
+  toIterable,
+  toSequence,
 };
+
+let toCollection (arr: t 'a): (Collection.t 'a) =>
+  if (isEmpty arr) (Collection.empty ())
+  else Collection.Collection arr collectionOps;
 
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
@@ -313,14 +317,18 @@ let updateWith (index: int) (f: 'a => 'a) (arr: t 'a): (t 'a) => {
   clone
 };
 
-let toMap (arr: t 'a): (ImmMap.t int 'a) => {
-  containsKey: fun index => index >= 0 && index < count arr,
-  count: count arr,
-  get: fun i => get i arr,
-  getOrRaise: fun index => getOrRaise index arr,
-  keyedIterator: fun () => toKeyedIterable arr,
-  sequence: fun () => toSequenceWithIndex arr,
+let mapOps: ImmMap.Ops.t int 'v (t 'v) = {
+  containsKey: fun index arr => index >= 0 && index < count arr,
+  count,
+  get,
+  getOrRaise,
+  toKeyedIterable,
+  toSequence: toSequenceWithIndex,
 };
+
+let toMap (arr: t 'a): (ImmMap.t int 'a) =>
+  if (isEmpty arr) (ImmMap.empty ())
+  else ImmMap.Map arr mapOps;
 
 let module ReducerRight = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;

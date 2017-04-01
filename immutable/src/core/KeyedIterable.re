@@ -316,7 +316,7 @@ let scan
 };
 
 
-let skip (count: int) (iter: t 'k 'v): (t 'k 'v) => switch iter {
+let skip (count: int) (iter: t 'k 'v): (t 'k 'v) => if (count === 0) iter else switch iter {
   | Empty => Empty
   | KeyedIterable iter { reduce } => KeyedIterable iter {
       reduce: fun while_::predicate f acc iter => {
