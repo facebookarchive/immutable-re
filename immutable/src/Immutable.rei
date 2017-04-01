@@ -584,7 +584,7 @@ let module rec Collection: {
   /** [map f collection] Returns a lazy Collection that computes values
    *  lazily by applying [f].
    *
-   *  Note, the results of applying [f] to a given key/value pair are not
+   *  Note, the results of applying [f] to a given value are not
    *  memoized. Therefore [f] must be a pure function.
    */
 
@@ -682,7 +682,7 @@ let module rec Collection: {
   };
 };
 
-let module SequentialCollection: {
+let module rec SequentialCollection: {
   /** Module types implemented by collections that support sequential access to
    *  the left most contained values. Concrete implementations include [Stack] and [SortedSet].
    *
@@ -702,6 +702,8 @@ let module SequentialCollection: {
 
     let firstOrRaise: t => a;
     /** [firstOrRaise collection] returns the first value in [collection] or throws. */
+
+    let toSequentialCollection: t => (SequentialCollection.t a);
   };
 
   module type S1 = {
@@ -715,7 +717,24 @@ let module SequentialCollection: {
 
     let firstOrRaise: (t 'a) => 'a;
     /** [firstOrRaise collection] returns the first value in [collection] or throws. */
+
+    let toSequentialCollection: (t 'a) => (SequentialCollection.t 'a);
   };
+
+  type t 'a;
+
+  include S1 with type t 'a := t 'a;
+
+  let empty: unit => (t 'a);
+  /** [empty ()] returns the empty SequentialCollection */
+
+  let map: ('a => 'b) => (t 'a) => (t 'b);
+  /** [map f collection] Returns a lazy SequentialCollection that computes values
+   *  lazily by applying [f].
+   *
+   *  Note, the results of applying [f] to a value are not
+   *  memoized. Therefore [f] must be a pure function.
+   */
 
   let module Persistent: {
     /** Module types implemented by collections supporting persistent mutations to left

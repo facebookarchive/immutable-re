@@ -16,6 +16,7 @@ module type S = {
   let toIterableRight: t => Iterable.t a;
   let first: t => option a;
   let firstOrRaise: t => a;
+  let toSequentialCollection: t => SequentialCollection.t a;
   let last: t => option a;
   let lastOrRaise: t => a;
   let toSequenceRight: t => Sequence.t a;
@@ -202,6 +203,18 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toCollection (set: t): (Collection.t a) =>
     if (isEmpty set) (Collection.empty ())
     else Collection.Collection set collectionOps;
+
+  let seqCollectionOps: SequentialCollection.Ops.t a t = {
+    count,
+    first,
+    firstOrRaise,
+    toIterable,
+    toSequence,
+  };
+
+  let toSequentialCollection (set: t): (SequentialCollection.t a) =>
+    if (isEmpty set) (SequentialCollection.empty ())
+    else SequentialCollection.SequentialCollection set seqCollectionOps;
 
   let setOps: ImmSet.Ops.t a t = {
     contains,

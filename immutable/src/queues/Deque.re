@@ -114,7 +114,6 @@ let reduceRight
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
-
 let iterator: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceImpl };
 
 let toIterable (deque: t 'a): (Iterable.t 'a) =>
@@ -146,6 +145,18 @@ let collectionOps: Collection.Ops.t 'a (t 'a) = {
 let toCollection (deque: t 'a): (Collection.t 'a) =>
   if (isEmpty deque) (Collection.empty ())
   else Collection.Collection deque collectionOps;
+
+  let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
+    count,
+    first,
+    firstOrRaise,
+    toIterable,
+    toSequence,
+  };
+
+  let toSequentialCollection (deque: t 'a): (SequentialCollection.t 'a) =>
+    if (isEmpty deque) (SequentialCollection.empty ())
+    else SequentialCollection.SequentialCollection deque seqCollectionOps;
 
 let module Transient = {
   type deque 'a = t 'a;

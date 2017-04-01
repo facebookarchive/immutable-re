@@ -151,6 +151,8 @@ let module Collection = {
 };
 
 let module SequentialCollection = {
+  include SequentialCollection;
+
   module type S = {
     type a;
     type t;
@@ -159,6 +161,7 @@ let module SequentialCollection = {
 
     let first: t => (option a);
     let firstOrRaise: t => a;
+    let toSequentialCollection: t => (SequentialCollection.t a);
   };
 
   module type S1 = {
@@ -168,6 +171,7 @@ let module SequentialCollection = {
 
     let first: (t 'a) => (option 'a);
     let firstOrRaise: (t 'a) => 'a;
+    let toSequentialCollection: (t 'a) => (SequentialCollection.t 'a);
   };
 
   let module Persistent = {

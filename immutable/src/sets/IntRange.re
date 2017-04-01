@@ -145,6 +145,19 @@ let toCollection (set: t): (Collection.t int) =>
   if (isEmpty set) (Collection.empty ())
   else Collection.Collection set collectionOps;
 
+
+let seqCollectionOps: SequentialCollection.Ops.t int t = {
+  count,
+  first,
+  firstOrRaise,
+  toIterable,
+  toSequence,
+};
+
+let toSequentialCollection (set: t): (SequentialCollection.t int) =>
+  if (isEmpty set) (SequentialCollection.empty ())
+  else SequentialCollection.SequentialCollection set seqCollectionOps;
+
 let setOps: ImmSet.Ops.t int t = {
   contains,
   count,
