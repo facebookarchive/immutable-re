@@ -297,6 +297,18 @@ let toCollection (arr: t 'a): (Collection.t 'a) =>
   if (isEmpty arr) (Collection.empty ())
   else Collection.Collection arr collectionOps;
 
+let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  toIterable,
+  toSequence,
+};
+
+let toSequentialCollection (arr: t 'a): (SequentialCollection.t 'a) =>
+  if (isEmpty arr) (SequentialCollection.empty ())
+  else SequentialCollection.SequentialCollection arr seqCollectionOps;
+
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
 

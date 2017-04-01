@@ -88,9 +88,21 @@ let collectionOps: Collection.Ops.t 'a (t 'a) = {
   toSequence,
 };
 
+let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  toIterable,
+  toSequence,
+};
+
 let toCollection (stack: t 'a): (Collection.t 'a) =>
   if (isEmpty stack) (Collection.empty ())
   else Collection.Collection stack collectionOps;
+
+let toSequentialCollection (set: t 'a): (SequentialCollection.t 'a) =>
+  if (isEmpty set) (SequentialCollection.empty ())
+  else SequentialCollection.SequentialCollection set seqCollectionOps;
 
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;

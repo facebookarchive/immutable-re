@@ -12,6 +12,8 @@ open Functions.Operators;
 let module Ops = {
   type t 'a 'collection = {
     count: 'collection => int,
+    first: 'collection => (option 'a),
+    firstOrRaise: 'collection => 'a,
     toIterable: 'collection => Iterable.t 'a,
     toSequence: 'collection => Sequence.t 'a,
   };
@@ -19,14 +21,24 @@ let module Ops = {
 
 type t 'a =
   | Empty
-  | Collection 'collection (Ops.t 'a 'collection): t 'a;
+  | SequentialCollection 'collection (Ops.t 'a 'collection): t 'a;
 
 let count (collection: t 'a): int => switch collection {
   | Empty => 0
-  | Collection collection { count } => count collection
+  | SequentialCollection collection { count } => count collection
 };
 
 let empty (): (t 'a) => Empty;
+
+let first (collection: t 'a): (option 'a) => switch collection {
+  | Empty => None
+  | SequentialCollection collection { first } => first collection
+};
+
+let firstOrRaise (collection: t 'a): 'a => switch collection {
+  | Empty => failwith "empty"
+  | SequentialCollection collection { firstOrRaise } => firstOrRaise collection
+};
 
 let isEmpty (collection: t 'a): bool =>
   (count collection) === 0;
@@ -36,12 +48,12 @@ let isNotEmpty (collection: t 'a): bool =>
 
 let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
   | Empty => Iterable.empty ()
-  | Collection collection { toIterable } => toIterable collection
+  | SequentialCollection collection { toIterable } => toIterable collection
 };
 
 let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
   | Empty => Sequence.empty ()
-  | Collection collection { toSequence } => toSequence collection
+  | SequentialCollection collection { toSequence } => toSequence collection
 };
 
 let reduce
@@ -51,13 +63,25 @@ let reduce
     (collection: t 'a): 'acc =>
   collection |> toIterable |> Iterable.reduce while_::predicate f acc;
 
-let toCollection (collection: t 'a): (t 'a) =>
+let collectionOps: Collection.Ops.t 'a (t 'a) = {
+  count,
+  toIterable,
+  toSequence,
+};
+
+let toCollection (collection: t 'a): (Collection.t 'a) =>
+  if (isEmpty collection) (Collection.empty ())
+  else Collection.Collection collection collectionOps;
+
+let toSequentialCollection (collection: t 'a): (t 'a) =>
   collection;
 
 let map (f: 'a => 'b) (collection: t 'a): (t 'b) => switch collection {
   | Empty => Empty
-  | Collection collection ops => Collection collection {
+  | SequentialCollection collection ops => SequentialCollection collection {
       count: ops.count,
+      first: ops.first >> Option.map f,
+      firstOrRaise: ops.firstOrRaise >> f,
       toIterable: ops.toIterable >> Iterable.map f,
       toSequence: ops.toSequence >> Sequence.map f,
     }

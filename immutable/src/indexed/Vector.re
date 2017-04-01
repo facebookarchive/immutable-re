@@ -1109,6 +1109,18 @@ let toCollection (vec: t 'a): (Collection.t 'a) =>
   if (isEmpty vec) (Collection.empty ())
   else Collection.Collection vec collectionOps;
 
+let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  toIterable,
+  toSequence,
+};
+
+let toSequentialCollection (vector: t 'a): (SequentialCollection.t 'a) =>
+  if (isEmpty vector) (SequentialCollection.empty ())
+  else SequentialCollection.SequentialCollection vector seqCollectionOps;
+
 let mapOps: ImmMap.Ops.t int 'a (t 'a) = {
   containsKey: fun index arr => index >= 0 && index < count arr,
   count,
