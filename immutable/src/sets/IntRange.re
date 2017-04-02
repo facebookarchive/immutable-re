@@ -84,7 +84,7 @@ let reduce
     (set : t): 'acc =>
   reduceImpl while_::predicate f acc set;
 
-let reduceRightImpl
+let reduceReversedImpl
     while_::(predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
     (acc: 'acc)
@@ -99,12 +99,12 @@ let reduceRightImpl
   recurse predicate f (start + count - 1) count acc;
 };
 
-let reduceRight
+let reduceReversed
     while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     (set: t): 'acc =>
-  reduceRightImpl while_::predicate f acc set;
+  reduceReversedImpl while_::predicate f acc set;
 
 let hash ({ start, count }: t): int =>
   start + count;
@@ -116,7 +116,7 @@ let toSequence ({ count, start }: t): (Sequence.t int) => {
   recurse start count
 };
 
-let toSequenceRight ({ count, start }: t): (Sequence.t int) => {
+let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
     if (count === 0) Sequence.Completed
     else Sequence.Next start (recurse (start - 1) (count - 1));
@@ -129,11 +129,11 @@ let toIterable (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
   else Iterable.Iterable set iterator;
 
-let iteratorRight: Iterable.Iterator.t int t = { reduce: reduceRightImpl };
+let iteratorReversed: Iterable.Iterator.t int t = { reduce: reduceReversedImpl };
 
-let toIterableRight (set: t): (Iterable.t int) =>
+let toIterableReversed (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
-  else Iterable.Iterable set iteratorRight;
+  else Iterable.Iterable set iteratorReversed;
 
 let collectionOps: Collection.Ops.t int t = {
   count,
@@ -168,9 +168,9 @@ let navCollectionOps: NavigableCollection.Ops.t int t = {
   toCollection,
   toSequentialCollection,
   toIterable,
-  toIterableRight,
+  toIterableReversed,
   toSequence,
-  toSequenceRight,
+  toSequenceReversed,
 };
 
 let toNavigableCollection (set: t): (NavigableCollection.t int) =>
@@ -199,22 +199,22 @@ let navigableSetOps: NavigableSet.Ops.t int t = {
   toCollection,
   toSequentialCollection,
   toIterable,
-  toIterableRight,
+  toIterableReversed,
   toNavigableCollection,
   toSequence,
-  toSequenceRight,
+  toSequenceReversed,
 };
 
 let toNavigableSet (set: t): (NavigableSet.t int) =>
   if (isEmpty set) (NavigableSet.empty ())
   else NavigableSet.NavigableSet set navigableSetOps;
 
-let module ReducerRight = Iterable.Reducer.Make {
+let module ReducerReversed = Iterable.Reducer.Make {
   type nonrec a = a;
   type nonrec t = t;
 
-  let reduce = reduceRight;
-  let toIterable = toIterableRight;
+  let reduce = reduceReversed;
+  let toIterable = toIterableReversed;
 };
 
 let module Reducer = Iterable.Reducer.Make {

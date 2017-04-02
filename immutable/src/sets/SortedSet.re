@@ -17,10 +17,10 @@ module type S = {
   let toSequentialCollection: t => SequentialCollection.t a;
   let last: t => option a;
   let lastOrRaise: t => a;
-  let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toIterableRight: t => Iterable.t a;
+  let reduceReversed: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toIterableReversed: t => Iterable.t a;
   let toNavigableCollection: t => NavigableCollection.t a;
-  let toSequenceRight: t => Sequence.t a;
+  let toSequenceReversed: t => Sequence.t a;
   let toNavigableSet: t => NavigableSet.t a;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;
@@ -43,7 +43,7 @@ module type S = {
   let union: t => t => t;
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
-  let module ReducerRight: Iterable.Reducer.S with type a:= a and type t:= t;
+  let module ReducerReversed: Iterable.Reducer.S with type a:= a and type t:= t;
   let module Reducer: Iterable.Reducer.S with type a:= a and type t:= t;
 };
 
@@ -94,20 +94,20 @@ let module Make = fun (Comparable: Comparable.S) => {
       (set: t): 'acc =>
     reduceImpl while_::predicate f acc set;
 
-  let reduceRightImpl
+  let reduceReversedImpl
       while_::(predicate: 'acc => a => bool)
       (f: 'acc => a => 'acc)
       (acc: 'acc)
       ({ tree }: t): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduceRight f acc tree)
-    else (AVLTreeSet.reduceRightWhile predicate f acc tree);
+    if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduceReversed f acc tree)
+    else (AVLTreeSet.reduceReversedWhile predicate f acc tree);
 
-  let reduceRight
+  let reduceReversed
       while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
       (f: 'acc => a => 'acc)
       (acc: 'acc)
       (set: t): 'acc =>
-    reduceRightImpl while_::predicate f acc set;
+    reduceReversedImpl while_::predicate f acc set;
 
   let remove (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = AVLTreeSet.remove comparator x tree;
@@ -130,8 +130,8 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toSequence ({ tree }: t): (Sequence.t a) =>
     tree |> AVLTreeSet.toSequence;
 
-  let toSequenceRight ({ tree }: t): (Sequence.t a) =>
-    tree |> AVLTreeSet.toSequenceRight;
+  let toSequenceReversed ({ tree }: t): (Sequence.t a) =>
+    tree |> AVLTreeSet.toSequenceReversed;
 
   let rec compareWith
       (valueCompare: Comparator.t 'a)
@@ -190,11 +190,11 @@ let module Make = fun (Comparable: Comparable.S) => {
     if (isEmpty set) (Iterable.empty ())
     else Iterable.Iterable set iterator;
 
-  let iteratorRight: Iterable.Iterator.t a t = { reduce: reduceRightImpl };
+  let iteratorReversed: Iterable.Iterator.t a t = { reduce: reduceReversedImpl };
 
-  let toIterableRight (set: t): (Iterable.t a) =>
+  let toIterableReversed (set: t): (Iterable.t a) =>
     if (isEmpty set) (Iterable.empty ())
-    else Iterable.Iterable set iteratorRight;
+    else Iterable.Iterable set iteratorReversed;
 
   let collectionOps: Collection.Ops.t a t = {
     count,
@@ -228,9 +228,9 @@ let module Make = fun (Comparable: Comparable.S) => {
     toCollection,
     toSequentialCollection,
     toIterable,
-    toIterableRight,
+    toIterableReversed,
     toSequence,
-    toSequenceRight,
+    toSequenceReversed,
   };
 
   let toNavigableCollection (set: t): (NavigableCollection.t a) =>
@@ -258,10 +258,10 @@ let module Make = fun (Comparable: Comparable.S) => {
     lastOrRaise,
     toCollection,
     toIterable,
-    toIterableRight,
+    toIterableReversed,
     toNavigableCollection,
     toSequence,
-    toSequenceRight,
+    toSequenceReversed,
     toSequentialCollection,
   };
 
@@ -281,12 +281,12 @@ let module Make = fun (Comparable: Comparable.S) => {
     /* FIXME: Improve this implementation */
     ImmSet.union (toSet this) (toSet that) |> from;
 
-  let module ReducerRight = Iterable.Reducer.Make {
+  let module ReducerReversed = Iterable.Reducer.Make {
     type nonrec a = a;
     type nonrec t = t;
 
-    let reduce = reduceRight;
-    let toIterable = toIterableRight;
+    let reduce = reduceReversed;
+    let toIterable = toIterableReversed;
   };
 
   let module Reducer = Iterable.Reducer.Make {

@@ -355,18 +355,18 @@ describe (sprintf "count: %i" count) [
   }),
   it "toKeyedIterable" (fun () => {
     IntRange.create start::0 count::count
-      |> IntRange.toIterableRight
+      |> IntRange.toIterableReversed
       |> Vector.from
       |> Vector.toKeyedIterable
       |> KeyedIterable.KeyedReducer.forEach (
           fun i v => count - v - 1 |> Expect.toBeEqualToInt i
         );
   }),
-  it "toKeyedIterableRight" (fun () => {
+  it "toKeyedIterableReversed" (fun () => {
     IntRange.create start::0 count::count
-      |> IntRange.toIterableRight
+      |> IntRange.toIterableReversed
       |> Vector.from
-      |> Vector.toKeyedIterableRight
+      |> Vector.toKeyedIterableReversed
       |> KeyedIterable.KeyedReducer.forEach (
           fun i v => count - v - 1 |> Expect.toBeEqualToInt i
         );

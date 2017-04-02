@@ -24,7 +24,7 @@ let module Ops = {
     get: 'k => 'map => (option 'v),
     getOrRaise: 'k => 'map => 'v,
     keys: 'map => Iterable.t 'k,
-    keysRight: 'map => Iterable.t 'k,
+    keysReversed: 'map => Iterable.t 'k,
     keySet: 'map => ImmSet.t 'k,
     navigableKeySet: 'map => NavigableSet.t 'k,
     last: 'map => (option ('k, 'v)),
@@ -34,16 +34,16 @@ let module Ops = {
     lastValue: 'map => (option 'v),
     lastValueOrRaise: 'map => 'v,
     toIterable: 'map => Iterable.t ('k, 'v),
-    toIterableRight: 'map => Iterable.t ('k, 'v),
+    toIterableReversed: 'map => Iterable.t ('k, 'v),
     toKeyedCollection: 'map => (KeyedCollection.t 'k 'v),
     toKeyedIterable: 'map => (KeyedIterable.t 'k 'v),
-    toKeyedIterableRight: 'map => KeyedIterable.t 'k 'v,
+    toKeyedIterableReversed: 'map => KeyedIterable.t 'k 'v,
     toMap: 'map => (ImmMap.t 'k 'v),
     toNavigableKeyedCollection: 'map => (NavigableKeyedCollection.t 'k 'v),
     toSequence: 'map => (Sequence.t ('k, 'v)),
-    toSequenceRight: 'map => (Sequence.t ('k, 'v)),
+    toSequenceReversed: 'map => (Sequence.t ('k, 'v)),
     values: 'map => Iterable.t 'v,
-    valuesRight: 'map => Iterable.t 'v,
+    valuesReversed: 'map => Iterable.t 'v,
   };
 };
 
@@ -114,9 +114,9 @@ let keys (map: t 'k 'v): (Iterable.t 'k) => switch map {
   | NavigableMap map { keys } => keys map
 };
 
-let keysRight (map: t 'k 'v): (Iterable.t 'k) => switch map {
+let keysReversed (map: t 'k 'v): (Iterable.t 'k) => switch map {
   | Empty => Iterable.empty ()
-  | NavigableMap map { keysRight } => keysRight map
+  | NavigableMap map { keysReversed } => keysReversed map
 };
 
 let keySet (map: t 'k 'v): (ImmSet.t 'k) => switch map {
@@ -164,9 +164,9 @@ let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>switch map {
   | NavigableMap map { toIterable } => toIterable map
 };
 
-let toIterableRight (map: t 'k 'v): (Iterable.t ('k, 'v)) =>switch map {
+let toIterableReversed (map: t 'k 'v): (Iterable.t ('k, 'v)) =>switch map {
   | Empty => Iterable.empty ()
-  | NavigableMap map { toIterableRight } => toIterableRight map
+  | NavigableMap map { toIterableReversed } => toIterableReversed map
 };
 
 let toKeyedCollection (map: t 'k 'v): (KeyedCollection.t 'k 'v) => switch map {
@@ -179,9 +179,9 @@ let toKeyedIterable (map: t 'k 'v): (KeyedIterable.t 'k 'v) => switch map {
   | NavigableMap map { toKeyedIterable } => toKeyedIterable map
 };
 
-let toKeyedIterableRight (map: t 'k 'v): (KeyedIterable.t 'k 'v) => switch map {
+let toKeyedIterableReversed (map: t 'k 'v): (KeyedIterable.t 'k 'v) => switch map {
   | Empty => KeyedIterable.empty ()
-  | NavigableMap map { toKeyedIterableRight } => toKeyedIterableRight map
+  | NavigableMap map { toKeyedIterableReversed } => toKeyedIterableReversed map
 };
 
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) => switch map {
@@ -201,9 +201,9 @@ let toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | NavigableMap map { toSequence } => toSequence map
 };
 
-let toSequenceRight (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
+let toSequenceReversed (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | Empty => Sequence.empty ()
-  | NavigableMap map { toSequenceRight } => toSequenceRight map
+  | NavigableMap map { toSequenceReversed } => toSequenceReversed map
 };
 
 let values (map: t 'k 'v): (Iterable.t 'v) => switch map {
@@ -211,9 +211,9 @@ let values (map: t 'k 'v): (Iterable.t 'v) => switch map {
   | NavigableMap map { values } => values map
 };
 
-let valuesRight (map: t 'k 'v): (Iterable.t 'v) => switch map {
+let valuesReversed (map: t 'k 'v): (Iterable.t 'v) => switch map {
   | Empty => Iterable.empty ()
-  | NavigableMap map { valuesRight } => valuesRight map
+  | NavigableMap map { valuesReversed } => valuesReversed map
 };
 
 let reduce
@@ -223,12 +223,12 @@ let reduce
     (map: t 'k 'v): 'acc =>
   map |> toKeyedIterable |> KeyedIterable.reduce while_::predicate f acc;
 
-let reduceRight
+let reduceReversed
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
     (map: t 'k 'v): 'acc =>
-  map |> toKeyedIterableRight |> KeyedIterable.reduce while_::predicate f acc;
+  map |> toKeyedIterableReversed |> KeyedIterable.reduce while_::predicate f acc;
 
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;

@@ -86,7 +86,7 @@ let reduceImpl
     (acc: 'acc)
     (deque: t 'a): 'acc => switch deque {
   | Ascending vector => vector |> Vector.reduce while_::predicate f acc;
-  | Descending vector => vector |> Vector.reduceRight while_::predicate f acc;
+  | Descending vector => vector |> Vector.reduceReversed while_::predicate f acc;
 };
 
 let reduce
@@ -96,21 +96,21 @@ let reduce
     (deque: t 'a): 'acc =>
   reduceImpl while_::predicate f acc deque;
 
-let reduceRightImpl
+let reduceReversedImpl
     while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (deque: t 'a): 'acc => switch deque {
-  | Ascending vector => vector |> Vector.reduceRight while_::predicate f acc;
+  | Ascending vector => vector |> Vector.reduceReversed while_::predicate f acc;
   | Descending vector => vector |> Vector.reduce while_::predicate f acc;
 };
 
-let reduceRight
+let reduceReversed
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (deque: t 'a): 'acc =>
-  reduceRightImpl while_::predicate f acc deque;
+  reduceReversedImpl while_::predicate f acc deque;
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
@@ -120,19 +120,19 @@ let toIterable (deque: t 'a): (Iterable.t 'a) =>
  if (isEmpty deque) (Iterable.empty ())
  else Iterable.Iterable deque iterator;
 
-let iteratorRight: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceRightImpl };
+let iteratorReversed: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceReversedImpl };
 
-let toIterableRight (deque: t 'a): (Iterable.t 'a) =>
+let toIterableReversed (deque: t 'a): (Iterable.t 'a) =>
   if (isEmpty deque) (Iterable.empty ())
-  else Iterable.Iterable deque iteratorRight;
+  else Iterable.Iterable deque iteratorReversed;
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequence
-  | Descending vector => vector |> Vector.toSequenceRight;
+  | Descending vector => vector |> Vector.toSequenceReversed;
 };
 
-let toSequenceRight (deque: t 'a): (Sequence.t 'a) => switch deque {
-  | Ascending vector => vector |> Vector.toSequenceRight
+let toSequenceReversed (deque: t 'a): (Sequence.t 'a) => switch deque {
+  | Ascending vector => vector |> Vector.toSequenceReversed
   | Descending vector => vector |> Vector.toSequence;
 };
 
@@ -168,9 +168,9 @@ let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
   toCollection,
   toSequentialCollection,
   toIterable,
-  toIterableRight,
+  toIterableReversed,
   toSequence,
-  toSequenceRight,
+  toSequenceReversed,
 };
 
 let toNavigableCollection (deque: t 'a): (NavigableCollection.t 'a) =>
@@ -331,11 +331,11 @@ let from (iter: Iterable.t 'a): (t 'a) =>
 let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
-let module ReducerRight = Iterable.Reducer.Make1 {
+let module ReducerReversed = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
 
-  let reduce = reduceRight;
-  let toIterable = toIterableRight;
+  let reduce = reduceReversed;
+  let toIterable = toIterableReversed;
 };
 
 let module Reducer = Iterable.Reducer.Make1 {

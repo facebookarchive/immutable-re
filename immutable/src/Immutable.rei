@@ -790,18 +790,18 @@ let module rec NavigableCollection: {
      *  By contract, implementations are efficient with no worst than O(log N) performance.
      */
 
-    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+    let reduceReversed: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduceReversed while_::predicate initialValue f iterable] applies the accumulator
      *  function [f] to each value in [iterable] while [predicate] returns true, starting
      *  from the right most value, accumulating the result.
      */
 
-    let toIterableRight: t => (Iterable.t a);
+    let toIterableReversed: t => (Iterable.t a);
 
     let toNavigableCollection: t => (NavigableCollection.t a);
 
-    let toSequenceRight: t => (Sequence.t a);
-    /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
+    let toSequenceReversed: t => (Sequence.t a);
+    /* [toSequenceReversed collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
      */
   };
@@ -819,18 +819,18 @@ let module rec NavigableCollection: {
     let lastOrRaise: (t 'a) => 'a;
     /** [lastOrRaise collection] returns the first value in [collection] or raises an exception. */
 
-    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
+    let reduceReversed: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduceReversed while_::predicate initialValue f iterable] applies the accumulator
      *  function [f] to each value in [iterable] while [predicate] returns true, starting
      *  from the right most value, accumulating the result.
      */
 
-    let toIterableRight: t 'a => (Iterable.t 'a);
+    let toIterableReversed: t 'a => (Iterable.t 'a);
 
     let toNavigableCollection: (t 'a) => (NavigableCollection.t 'a);
 
-    let toSequenceRight: (t 'a) => (Sequence.t 'a);
-    /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
+    let toSequenceReversed: (t 'a) => (Sequence.t 'a);
+    /* [toSequenceReversed collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
      */
   };
@@ -1754,7 +1754,7 @@ let module rec NavigableKeyedCollection: {
 
     let firstValueOrRaise: (t 'v) => 'v;
 
-    let keysRight: (t 'v) => Iterable.t k;
+    let keysReversed: (t 'v) => Iterable.t k;
 
     let last: (t 'v) => (option (k, 'v));
     /** [last keyed] returns last value in [keyed] or None.
@@ -1776,30 +1776,30 @@ let module rec NavigableKeyedCollection: {
 
     let lastValueOrRaise: (t 'v) => 'v;
 
-    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
+    let reduceReversed: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduceReversed while_::predicate initialValue f keyedIterable] applies the accumulator
      *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
      *  from the right most key/value pair, accumulating the result.
      */
 
-    let toIterableRight: t 'v => Iterable.t (k, 'v);
-    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
+    let toIterableReversed: t 'v => Iterable.t (k, 'v);
+    /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
 
-    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
-    /** [toKeyedIterableRight keyedIterable] returns a KeyedIterable that can be used to iterate over
+    let toKeyedIterableReversed: t 'v => KeyedIterable.t k 'v;
+    /** [toKeyedIterableReversed keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
 
     let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
 
-    let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-    /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
+    let toSequenceReversed: (t 'v) => (Sequence.t (k, 'v));
+    /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
 
-    let valuesRight: (t 'v) => Iterable.t 'v;
+    let valuesReversed: (t 'v) => Iterable.t 'v;
   };
 
   module type S2 = {
@@ -1829,7 +1829,7 @@ let module rec NavigableKeyedCollection: {
 
     let firstValueOrRaise: (t 'k 'v) => 'v;
 
-    let keysRight: (t 'k 'v) => Iterable.t 'k;
+    let keysReversed: (t 'k 'v) => Iterable.t 'k;
 
     let last: (t 'k 'v) => (option ('k, 'v));
     /** [last keyed] returns last value in [keyed] or None.
@@ -1851,30 +1851,30 @@ let module rec NavigableKeyedCollection: {
 
     let lastValueOrRaise: (t 'k 'v) => 'v;
 
-    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
+    let reduceReversed: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    /** [reduceReversed while_::predicate initialValue f keyedIterable] applies the accumulator
      *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
      *  from the right most key/value pair, accumulating the result.
      */
 
-    let toIterableRight: t 'k 'v => Iterable.t ('k, 'v);
-    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
+    let toIterableReversed: t 'k 'v => Iterable.t ('k, 'v);
+    /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
 
-    let toKeyedIterableRight: t 'k 'v => KeyedIterable.t 'k 'v;
-    /** [toKeyedIterableRight keyedIterable] returns a KeyedIterable that can be used to iterate over
+    let toKeyedIterableReversed: t 'k 'v => KeyedIterable.t 'k 'v;
+    /** [toKeyedIterableReversed keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
 
     let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
 
-    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
-    /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
+    let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
+    /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
 
-    let valuesRight: (t 'k 'v) => Iterable.t 'v;
+    let valuesReversed: (t 'k 'v) => Iterable.t 'v;
   };
 
   type t 'k 'v;
@@ -2225,7 +2225,7 @@ let module rec Indexed: {
    *
    *  By contract, all functions must be efficient, with no worst than O(log N) performance.
    */
-   
+
   module type S1 = {
     /** Indexed module type signature for types with a parametric type arity of 1. */
 
@@ -2251,8 +2251,8 @@ let module rec Indexed: {
      *  the index/value pairs in [indexed].
      */
 
-    let toKeyedIterableRight: (t 'a) => (KeyedIterable.t int 'a);
-    /* [toKeyedIterableRight indexed] returns an KeyedIterable that can be used to iterate over
+    let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
+    /* [toKeyedIterableReversed indexed] returns an KeyedIterable that can be used to iterate over
      * the index/value pairs in [indexed] from right to left.
      */
 
@@ -2377,7 +2377,7 @@ let module rec Deque: {
    *  Complexity: O(1)
    */
 
-  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module ReducerReversed: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for Deques which reduces right. */
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
@@ -2562,7 +2562,7 @@ let module IntRange: {
    *  than or equal to 0.
    */
 
-  let module ReducerRight: Iterable.Reducer.S with type a := a and type t := t;
+  let module ReducerReversed: Iterable.Reducer.S with type a := a and type t := t;
     /* Reducer module for IntRanges which reduces right. */
 
   let module Reducer: Iterable.Reducer.S with type a := a and type t := t;
@@ -2688,7 +2688,7 @@ let module ReadOnlyArray: {
    *  responsibility to ensure that [arr] is not subsequently mutated.
    */
 
-  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module ReducerReversed: Iterable.Reducer.S1 with type t 'a := t 'a;
   /* Reducer module for ReadOnlyArray which reduces right. */
 
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
@@ -2728,7 +2728,7 @@ let module SortedMap: {
 
     include NavigableMap.Persistent.S1 with type k := k and type t 'v := t 'v;
 
-    let module KeyedReducerRight: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+    let module KeyedReducerReversed: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
     /* KeyedReducer module for SortedMaps which reduces right. */
 
     let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
@@ -2750,7 +2750,7 @@ let module SortedSet: {
     include Comparable.S with type t := t;
     include NavigableSet.Persistent.S with type a := a and type t := t;
 
-    let module ReducerRight: Iterable.Reducer.S with type a:= a and type t:= t;
+    let module ReducerReversed: Iterable.Reducer.S with type a:= a and type t:= t;
     /* Reducer module for SortedSets which reduces right. */
 
     let module Reducer: Iterable.Reducer.S with type a := a and type t := t;
@@ -2796,6 +2796,6 @@ let module rec Vector: {
   let mutate: (t 'a) => (Transient.t 'a);
   /** [mutate vector] returns a Transient Vector containing the same values as [set]. */
 
-  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module ReducerReversed: Iterable.Reducer.S1 with type t 'a := t 'a;
   let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
 };

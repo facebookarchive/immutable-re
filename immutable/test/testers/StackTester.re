@@ -31,7 +31,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
           (Stack.empty ())
         |> Stack.toIterable
         |> List.fromReverse
-        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableReversed testData));
     }),
     it "addFirstAll" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;
@@ -40,7 +40,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
         |> Stack.addFirstAll (IntRange.toIterable testData)
         |> Stack.toIterable
         |> List.fromReverse
-        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableReversed testData));
     }),
     it "count" (fun () => {
       (Stack.empty ()) |> Stack.count |> Expect.toBeEqualToInt 0;
@@ -58,7 +58,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
         |> Stack.fromReverse
         |> Stack.toIterable
         |> List.fromReverse
-        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableRight testData));
+        |> Expect.toBeEqualToListOfInt (List.fromReverse (IntRange.toIterableReversed testData));
     }),
     it "isEmpty" (fun () => {
       (Stack.empty ()) |> Stack.isEmpty |> Expect.toBeEqualToTrue;
@@ -68,7 +68,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
     }),
     it "reduce" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIterableRight
+        |> IntRange.toIterableReversed
         |> Stack.fromReverse
         |> Stack.reduce
             while_::(fun _ i => i < (Config.count / 2))
@@ -78,7 +78,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
     }),
     it "removeAll" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIterableRight
+        |> IntRange.toIterableReversed
         |> Stack.fromReverse
         |> Stack.removeAll
         |> Stack.count
@@ -89,7 +89,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
 
       let fullStack = range |> IntRange.toIterable |> Stack.fromReverse;
 
-      let emptyStack = range |> IntRange.reduceRight
+      let emptyStack = range |> IntRange.reduceReversed
         (fun acc i => {
           Stack.first acc |> Expect.toBeEqualToSomeOfInt i;
           Stack.firstOrRaise acc |> Expect.toBeEqualToInt i;
@@ -108,7 +108,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
     }),
     it "toIterable" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIterableRight
+        |> IntRange.toIterableReversed
         |> Stack.fromReverse
         |> Stack.toIterable
         |> Iterable.reduce
@@ -119,7 +119,7 @@ let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: Teste
     }),
     it "toSequence" (fun () => {
       IntRange.create start::0 count::Config.count
-        |> IntRange.toIterableRight
+        |> IntRange.toIterableReversed
         |> Stack.fromReverse
         |> Stack.toSequence
         |> Sequence.reduce

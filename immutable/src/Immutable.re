@@ -195,10 +195,10 @@ let module NavigableCollection = {
 
     let last: t => (option a);
     let lastOrRaise: t => a;
-    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    let toIterableRight: t => (Iterable.t a);
+    let reduceReversed: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    let toIterableReversed: t => (Iterable.t a);
     let toNavigableCollection: t => (NavigableCollection.t a);
-    let toSequenceRight: t => (Sequence.t a);
+    let toSequenceReversed: t => (Sequence.t a);
   };
 
   module type S1 = {
@@ -208,10 +208,10 @@ let module NavigableCollection = {
 
     let last: (t 'a) => (option 'a);
     let lastOrRaise: (t 'a) => 'a;
-    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let toIterableRight: t 'a => (Iterable.t 'a);
+    let reduceReversed: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let toIterableReversed: t 'a => (Iterable.t 'a);
     let toNavigableCollection: (t 'a) => (NavigableCollection.t 'a);
-    let toSequenceRight: (t 'a) => (Sequence.t 'a);
+    let toSequenceReversed: (t 'a) => (Sequence.t 'a);
   };
 
   let module Persistent = {
@@ -473,19 +473,19 @@ let module NavigableKeyedCollection = {
     let firstKeyOrRaise: (t 'v) => k;
     let firstValue: (t 'v) => (option 'v);
     let firstValueOrRaise: (t 'v) => 'v;
-    let keysRight: (t 'v) => (Iterable.t k);
+    let keysReversed: (t 'v) => (Iterable.t k);
     let last: (t 'v) => (option (k, 'v));
     let lastOrRaise: (t 'v) => (k, 'v);
     let lastKey: (t 'v) => (option k);
     let lastKeyOrRaise: (t 'v) => k;
     let lastValue: (t 'v) => (option 'v);
     let lastValueOrRaise: (t 'v) => 'v;
-    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let toIterableRight: t 'v => Iterable.t (k, 'v);
-    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
+    let reduceReversed: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let toIterableReversed: t 'v => Iterable.t (k, 'v);
+    let toKeyedIterableReversed: t 'v => KeyedIterable.t k 'v;
     let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
-    let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-    let valuesRight: (t 'v) => (Iterable.t 'v);
+    let toSequenceReversed: (t 'v) => (Sequence.t (k, 'v));
+    let valuesReversed: (t 'v) => (Iterable.t 'v);
   };
 
   module type S2 = {
@@ -501,19 +501,19 @@ let module NavigableKeyedCollection = {
     let firstKeyOrRaise: (t 'k 'v) => 'k;
     let firstValue: (t 'k 'v) => (option 'v);
     let firstValueOrRaise: (t 'k 'v) => 'v;
-    let keysRight: (t 'k 'v) => (Iterable.t 'k);
+    let keysReversed: (t 'k 'v) => (Iterable.t 'k);
     let last: (t 'k 'v) => (option ('k, 'v));
     let lastOrRaise: (t 'k 'v) => ('k, 'v);
     let lastKey: (t 'k 'v) => (option 'k);
     let lastKeyOrRaise: (t 'k 'v) => 'k;
     let lastValue: (t 'k 'v) => (option 'v);
     let lastValueOrRaise: (t 'k 'v) => 'v;
-    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    let toIterableRight: t 'k 'v => Iterable.t ('k, 'v);
-    let toKeyedIterableRight: t 'k 'v => KeyedIterable.t 'k 'v;
+    let reduceReversed: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let toIterableReversed: t 'k 'v => Iterable.t ('k, 'v);
+    let toKeyedIterableReversed: t 'k 'v => KeyedIterable.t 'k 'v;
     let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
-    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
-    let valuesRight: (t 'k 'v) => (Iterable.t 'v);
+    let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
+    let valuesReversed: (t 'k 'v) => (Iterable.t 'v);
   };
 };
 
@@ -665,7 +665,7 @@ let module Indexed = {
     let getOrRaise: int => (t 'a) => 'a;
     let toKeyedCollection: (t 'a) => (KeyedCollection.t int 'a);
     let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
-    let toKeyedIterableRight: (t 'a) => (KeyedIterable.t int 'a);
+    let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
     let toMap: (t 'a) => (Map.t int 'a);
     let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int 'a);
     let toNavigableMap: (t 'a) => (NavigableMap.t int 'a);
