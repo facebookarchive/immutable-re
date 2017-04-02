@@ -670,6 +670,41 @@ let module Indexed = {
     let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int 'a);
     let toNavigableMap: (t 'a) => (NavigableMap.t int 'a);
   };
+
+  let module Persistent = {
+    module type S1 = {
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+      include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
+
+      let concat: (list (t 'a)) => (t 'a);
+      let insertAt: int => 'a => (t 'a) => (t 'a);
+      let removeAt: int => (t 'a) => (t 'a);
+      let skip: int => (t 'a) => (t 'a);
+      let slice: start::int? => end_::int? => (t 'a) => (t 'a);
+      let take: int => (t 'a) => (t 'a);
+      let update: int => 'a => (t 'a) => (t 'a);
+      let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+      let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+    };
+  };
+
+  let module Transient = {
+    module type S1 = {
+      type t 'a;
+
+      include NavigableCollection.Transient.S1 with type t 'a := t 'a;
+
+      let get: int => (t 'a) => (option 'a);
+      let getOrRaise: int => (t 'a) => 'a;
+      let insertAt: int => 'a => (t 'a) => (t 'a);
+      let removeAt: int => (t 'a) => (t 'a);
+      let update: int => 'a => (t 'a) => (t 'a);
+      let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+      let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+    };
+  };
 };
 
 let module Deque = Deque;
