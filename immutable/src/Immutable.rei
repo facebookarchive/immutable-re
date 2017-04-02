@@ -171,9 +171,6 @@ let module rec Streamable: {
      *  function [f] to each value in the stream as they are enumerated.
      */
 
-    let empty: unit => (t 'a);
-    /** Returns an empty Streamable. */
-
     let filter: ('a => bool) => (t 'a) => (t 'a);
     /** [filter f stream] returns a Streamable only including values from [stream]
      *  for which application of the predicate function [f] returns true.
@@ -275,6 +272,9 @@ let module rec Iterable: {
   type t 'a;
 
   include Streamable.S1 with type t 'a := t 'a;
+
+  let empty: unit => (t 'a);
+  /** Returns an empty Iterable. */
 
   let module Reducer: {
     /** Module functions for generating modules which provide common reduction functions for Iterables.
@@ -410,6 +410,9 @@ let module Sequence: {
 
   include Iterable.S1 with type t 'a := t 'a;
   include Streamable.S1 with type t 'a := t 'a;
+
+  let empty: unit => (t 'a);
+  /** Returns an empty Sequence. */
 
   let seek: int => (t 'a) => (t 'a);
   /** [seek count seq] scans forward [count] values in [seq]. It is the eagerly
@@ -1224,9 +1227,6 @@ let module KeyedStreamable: {
      *  function [f] to each key/value pair they are iterated.
      */
 
-    let empty: unit => (t 'k 'v);
-    /** Returns an empty KeyedStreamable. */
-
     let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
     /** [filter f stream] returns a KeyedStreamable only including key/value pairs from [stream]
      *  for which application of the predicate function [f] returns true.
@@ -1508,6 +1508,9 @@ let module rec KeyedIterable: {
 
   include S2 with type t 'k 'v := t 'k 'v;
 
+  let empty: unit => (t 'k 'v);
+  /** The empty KeyedCollection. */
+
   let fromEntries: Iterable.t ('k, 'v) => (t 'k 'v);
   /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */
 
@@ -1605,6 +1608,9 @@ let module rec KeyedCollection: {
   type t 'k 'v;
 
   include S2 with type t 'k 'v := t 'k 'v;
+
+  let empty: unit => (t 'k 'v);
+  /** The empty KeyedCollection. */
 
   let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
   /** [map f map] returns lazy KeyedCollection that computes values lazily by applying [f].
@@ -1746,7 +1752,7 @@ let module rec KeyedCollection: {
   };
 };
 
-let module NavigableKeyedCollection: {
+let module rec NavigableKeyedCollection: {
   /** Module types implemented by KeyedCollections that are ordered or sorted and support
    *  navigation operations.
    */
@@ -1799,11 +1805,78 @@ let module NavigableKeyedCollection: {
      *  the key/value pairs in [keyedIterable].
      */
 
+    let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
+
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
     /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
   };
+
+  module type S2 = {
+    /** NavigableKeyedCollection module type signature for types with a parametric type arity of 2. */
+
+    type t 'k 'v;
+
+    include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+
+    let first: (t 'k 'v) => (option ('k, 'v));
+    /** [first keyed] returns first value in [keyed] or None.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    /** [firstOrRaise keyed] returns first value in [keyed] or raises an exception.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let last: (t 'k 'v) => (option ('k, 'v));
+    /** [last keyed] returns last value in [keyed] or None.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let lastOrRaise: (t 'k 'v) => ('k, 'v);
+    /** [lastOrRaise keyed] returns last value in [keyed] or raises an exception.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
+     *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
+     *  from the right most key/value pair, accumulating the result.
+     */
+
+    let toIterableRight: t 'k 'v => Iterable.t ('k, 'v);
+    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable] as tuples.
+     */
+
+    let toKeyedIterableRight: t 'k 'v => KeyedIterable.t 'k 'v;
+    /** [toKeyedIterableRight keyedIterable] returns a KeyedIterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable].
+     */
+
+    let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
+
+    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
+    /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
+     * the key/value pairs in [keyed] as tuples from right to left.
+     */
+  };
+
+  type t 'k 'v;
+
+  include S2 with type t 'k 'v := t 'k 'v;
+
+  let empty: unit => (t 'k 'v);
+  /** The empty Map. */
+
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+   /* KeyedReducer module for NavigableKeyedCollection. */
 };
 
 let module rec Map: {
@@ -2074,7 +2147,7 @@ let module rec Map: {
   };
 };
 
-let module NavigableMap: {
+let module rec NavigableMap: {
   /*  Module types implemented by NavigableMap that supports navigation operations. */
 
   module type S1 = {
@@ -2085,7 +2158,25 @@ let module NavigableMap: {
 
     include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
+
+    let toNavigableMap: (t 'v) => NavigableMap.t k 'v;
   };
+
+  module type S2 = {
+    /** NavigableMap module type signature for types with a parametric type arity of 1. */
+
+    type t 'k 'v;
+
+    include NavigableKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+    include Map.S2 with type t 'k 'v := t 'k 'v;
+
+    let toNavigableMap: (t 'k 'v) => NavigableMap.t 'k 'v;
+  };
+
+  type t 'k 'v;
+  /** The map type. */
+
+  include S2 with type t 'k 'v := t 'k 'v;
 
   let module Persistent: {
     /** Module types implemented by NavigableMaps supporting persistent mutations.
@@ -2115,7 +2206,7 @@ let module NavigableMap: {
   };
 };
 
-let module Indexed: {
+let module rec Indexed: {
   /** Collections that support efficient indexed access to values.
    *
    *  By contract, all functions must be efficient, with no worst than O(log N) performance.
@@ -2153,7 +2244,15 @@ let module Indexed: {
 
     let toMap: (t 'a) => (Map.t int 'a);
     /** [toMap indexed] returns a Map view of [indexed]. */
+
+    let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int 'a);
+
+    let toNavigableMap: (t 'a) => (NavigableMap.t int 'a);
   };
+
+  type t 'a;
+
+  include S1 with type t 'a := t 'a;
 };
 
 let module rec Deque: {

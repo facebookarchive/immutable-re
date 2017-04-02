@@ -289,6 +289,14 @@ let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   loop 0;
 };
 
+let toSequenceWithIndexRight (arr: t 'a): (Sequence.t (int, 'a)) => {
+  let arrCount = count arr;
+  let rec loop index => fun () =>
+    if (index >= 0) (Sequence.Next (index, arr.(index)) (loop (index - 1)))
+    else Sequence.Completed;
+  loop (arrCount - 1);
+};
+
 let collectionOps: Collection.Ops.t 'a (t 'a) = {
   count,
   toIterable,
@@ -362,6 +370,52 @@ let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
 let toNavigableCollection (arr: t 'a): (NavigableCollection.t 'a) =>
   if (isEmpty arr) (NavigableCollection.empty ())
   else NavigableCollection.NavigableCollection arr navCollectionOps;
+
+let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v) =>  {
+  containsKey,
+  count,
+  first: first >> Option.map (fun v => (0, v)),
+  firstOrRaise: fun arr => (0, firstOrRaise arr),
+  keys,
+  last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
+  lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
+  toIterable: toKeyedIterable >> KeyedIterable.toIterable,
+  toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
+  toKeyedCollection,
+  toKeyedIterable,
+  toKeyedIterableRight,
+  toSequence: toSequenceWithIndex,
+  toSequenceRight: toSequenceWithIndexRight,
+};
+
+let toNavigableKeyedCollection (arr: t 'a): (NavigableKeyedCollection.t int 'a) =>
+  if (isEmpty arr) (NavigableKeyedCollection.empty ())
+  else NavigableKeyedCollection.NavigableKeyedCollection arr (navigableKeyedCollectionOps ());
+
+let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
+  containsKey,
+  count,
+  first: first >> Option.map (fun v => (0, v)),
+  firstOrRaise: fun arr => (0, firstOrRaise arr),
+  get,
+  getOrRaise,
+  keys,
+  last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
+  lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
+  toIterable: toKeyedIterable >> KeyedIterable.toIterable,
+  toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
+  toKeyedCollection,
+  toKeyedIterable,
+  toKeyedIterableRight,
+  toMap,
+  toNavigableKeyedCollection,
+  toSequence: toSequenceWithIndex,
+  toSequenceRight: toSequenceWithIndexRight,
+};
+
+let toNavigableMap (arr: t 'a): (NavigableMap.t int 'a) =>
+  if (isEmpty arr) (NavigableMap.empty ())
+  else NavigableMap.NavigableMap arr (navigableMapOps ());
 
 let update (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;

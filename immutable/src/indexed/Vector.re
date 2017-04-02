@@ -1107,6 +1107,11 @@ let toSequenceWithIndex (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
   (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)
   (toSequence vec);
 
+let toSequenceWithIndexRight (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
+  (fun a b => (a, b))
+  (IntRange.create start::0 count::(count vec) |> IntRange.toSequenceRight)
+  (toSequenceRight vec);
+
 let collectionOps: Collection.Ops.t 'a (t 'a) = {
   count,
   toIterable,
@@ -1129,24 +1134,6 @@ let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
 let toSequentialCollection (vector: t 'a): (SequentialCollection.t 'a) =>
   if (isEmpty vector) (SequentialCollection.empty ())
   else SequentialCollection.SequentialCollection vector seqCollectionOps;
-
-let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  last,
-  lastOrRaise,
-  toCollection,
-  toSequentialCollection,
-  toIterable,
-  toIterableRight,
-  toSequence,
-  toSequenceRight,
-};
-
-let toNavigableCollection (set: (t 'a)): (NavigableCollection.t 'a) =>
-  if (isEmpty set) (NavigableCollection.empty ())
-  else NavigableCollection.NavigableCollection set navCollectionOps;
 
 let keys (arr: t 'a): (ImmSet.t int) =>
   IntRange.create start::0 count::(count arr) |> IntRange.toSet;
@@ -1177,6 +1164,70 @@ let mapOps: ImmMap.Ops.t int 'a (t 'a) = {
 let toMap (vec: t 'a): (ImmMap.t int 'a) =>
   if (isEmpty vec) (ImmMap.empty ())
   else ImmMap.Map vec mapOps;
+
+let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
+  count,
+  first,
+  firstOrRaise,
+  last,
+  lastOrRaise,
+  toCollection,
+  toSequentialCollection,
+  toIterable,
+  toIterableRight,
+  toSequence,
+  toSequenceRight,
+};
+
+let toNavigableCollection (set: (t 'a)): (NavigableCollection.t 'a) =>
+  if (isEmpty set) (NavigableCollection.empty ())
+  else NavigableCollection.NavigableCollection set navCollectionOps;
+
+let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v) =>  {
+  containsKey,
+  count,
+  first: first >> Option.map (fun v => (0, v)),
+  firstOrRaise: fun arr => (0, firstOrRaise arr),
+  keys,
+  last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
+  lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
+  toIterable: toKeyedIterable >> KeyedIterable.toIterable,
+  toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
+  toKeyedCollection,
+  toKeyedIterable,
+  toKeyedIterableRight,
+  toSequence: toSequenceWithIndex,
+  toSequenceRight: toSequenceWithIndexRight,
+};
+
+let toNavigableKeyedCollection (arr: t 'a): (NavigableKeyedCollection.t int 'a) =>
+  if (isEmpty arr) (NavigableKeyedCollection.empty ())
+  else NavigableKeyedCollection.NavigableKeyedCollection arr (navigableKeyedCollectionOps ());
+
+let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
+  containsKey,
+  count,
+  first: first >> Option.map (fun v => (0, v)),
+  firstOrRaise: fun arr => (0, firstOrRaise arr),
+  get,
+  getOrRaise,
+  keys,
+  last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
+  lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
+  toIterable: toKeyedIterable >> KeyedIterable.toIterable,
+  toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
+  toKeyedCollection,
+  toKeyedIterable,
+  toKeyedIterableRight,
+  toMap,
+  toNavigableKeyedCollection,
+  toSequence: toSequenceWithIndex,
+  toSequenceRight: toSequenceWithIndexRight,
+};
+
+let toNavigableMap (arr: t 'a): (NavigableMap.t int 'a) =>
+  if (isEmpty arr) (NavigableMap.empty ())
+  else NavigableMap.NavigableMap arr (navigableMapOps ());
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> mutate

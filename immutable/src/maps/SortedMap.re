@@ -21,7 +21,9 @@ module type S1 = {
   let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterableRight: t 'v => Iterable.t (k, 'v);
   let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
+  let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
+  let toNavigableMap: t 'v => NavigableMap.t k 'v;
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
   let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
@@ -271,6 +273,52 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let toMap (map: t 'v): (ImmMap.t k 'v) =>
     if (isEmpty map) (ImmMap.empty ())
     else ImmMap.Map map mapOps;
+
+  let navigableKeyedCollectionOps: NavigableKeyedCollection.Ops.t k 'v (t 'v) = {
+    containsKey,
+    count,
+    first,
+    firstOrRaise,
+    keys,
+    last,
+    lastOrRaise,
+    toIterable,
+    toIterableRight,
+    toKeyedCollection,
+    toKeyedIterable,
+    toKeyedIterableRight,
+    toSequence,
+    toSequenceRight,
+  };
+
+  let toNavigableKeyedCollection (map: t 'v): (NavigableKeyedCollection.t k 'v) =>
+    if (isEmpty map) (NavigableKeyedCollection.empty ())
+    else NavigableKeyedCollection.NavigableKeyedCollection map navigableKeyedCollectionOps;
+
+  let navigableMap: NavigableMap.Ops.t k 'v (t 'v) = {
+    containsKey,
+    count,
+    first,
+    firstOrRaise,
+    get,
+    getOrRaise,
+    keys,
+    last,
+    lastOrRaise,
+    toIterable,
+    toIterableRight,
+    toKeyedCollection,
+    toKeyedIterable,
+    toKeyedIterableRight,
+    toMap,
+    toNavigableKeyedCollection,
+    toSequence,
+    toSequenceRight,
+  };
+
+  let toNavigableMap (map: t 'v): (NavigableMap.t k 'v) =>
+    if (isEmpty map) (NavigableMap.empty ())
+    else NavigableMap.NavigableMap map navigableMap;
 
   let merge
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
