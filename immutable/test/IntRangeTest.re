@@ -127,9 +127,9 @@ let test = describe "IntRange" [
       |> IntRange.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
-  it "reduceRight"  (fun () => {
+  it "reduceReversed"  (fun () => {
     IntRange.create start::1 count::20
-      |> IntRange.reduceRight while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
+      |> IntRange.reduceReversed while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),
   it "toIterable"  (fun () => {
@@ -138,9 +138,9 @@ let test = describe "IntRange" [
       |> Iterable.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
-  it "toIterableRight"  (fun () => {
+  it "toIterableReversed"  (fun () => {
     IntRange.create start::1 count::20
-      |> IntRange.toIterableRight
+      |> IntRange.toIterableReversed
       |> Iterable.reduce while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),
@@ -151,9 +151,9 @@ let test = describe "IntRange" [
       |> Sequence.reduce while_::(fun _ i => i < 5) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 10;
   }),
-  it "toSequenceRight"  (fun () => {
+  it "toSequenceReversed"  (fun () => {
     IntRange.create start::1 count::20
-      |> IntRange.toSequenceRight
+      |> IntRange.toSequenceReversed
       |> Sequence.reduce while_::(fun _ i => i > 15) (fun acc i => i + acc) 0
       |> Expect.toBeEqualToInt 90;
   }),

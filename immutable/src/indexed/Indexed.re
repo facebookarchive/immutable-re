@@ -21,16 +21,16 @@ let module Ops = {
     toCollection: 'indexed => Collection.t 'a,
     toSequentialCollection: 'indexed => SequentialCollection.t 'a,
     toIterable: 'indexed => Iterable.t 'a,
-    toIterableRight: 'indexed => Iterable.t 'a,
+    toIterableReversed: 'indexed => Iterable.t 'a,
     toKeyedCollection: 'indexed => (KeyedCollection.t int 'a),
     toKeyedIterable: 'indexed => (KeyedIterable.t int 'a),
-    toKeyedIterableRight: 'indexed => (KeyedIterable.t int 'a),
+    toKeyedIterableReversed: 'indexed => (KeyedIterable.t int 'a),
     toMap: 'indexed => (ImmMap.t int 'a),
     toNavigableCollection: 'indexed => (NavigableCollection.t 'a),
     toNavigableKeyedCollection: 'indexed => (NavigableKeyedCollection.t int 'a),
     toNavigableMap: 'indexed => (NavigableMap.t int 'a),
     toSequence: 'indexed => Sequence.t 'a,
-    toSequenceRight: 'indexed => Sequence.t 'a,
+    toSequenceReversed: 'indexed => Sequence.t 'a,
   };
 };
 
@@ -93,9 +93,9 @@ let toIterable (indexed: t 'a): (Iterable.t 'a) => switch indexed {
   | Indexed indexed { toIterable } => toIterable indexed
 };
 
-let toIterableRight (indexed: t 'a): (Iterable.t 'a) => switch indexed {
+let toIterableReversed (indexed: t 'a): (Iterable.t 'a) => switch indexed {
   | Empty => Iterable.empty ()
-  | Indexed indexed { toIterableRight } => toIterableRight indexed
+  | Indexed indexed { toIterableReversed } => toIterableReversed indexed
 };
 
 let toKeyedCollection (indexed: t 'a): (KeyedCollection.t int 'a) => switch indexed {
@@ -108,9 +108,9 @@ let toKeyedIterable (indexed: t 'a): (KeyedIterable.t int 'a) => switch indexed 
   | Indexed indexed { toKeyedIterable } => toKeyedIterable indexed
 };
 
-let toKeyedIterableRight (indexed: t 'a): (KeyedIterable.t int 'a) => switch indexed {
+let toKeyedIterableReversed (indexed: t 'a): (KeyedIterable.t int 'a) => switch indexed {
   | Empty => KeyedIterable.empty ()
-  | Indexed indexed { toKeyedIterableRight } => toKeyedIterableRight indexed
+  | Indexed indexed { toKeyedIterableReversed } => toKeyedIterableReversed indexed
 };
 
 let toIndexed (indexed: t 'a): (t 'a) => indexed;
@@ -140,9 +140,9 @@ let toSequence (indexed: t 'a): (Sequence.t 'a) => switch indexed {
   | Indexed indexed { toSequence } => toSequence indexed
 };
 
-let toSequenceRight (indexed: t 'a): (Sequence.t 'a) => switch indexed {
+let toSequenceReversed (indexed: t 'a): (Sequence.t 'a) => switch indexed {
   | Empty => Sequence.empty ()
-  | Indexed indexed { toSequenceRight } => toSequenceRight indexed
+  | Indexed indexed { toSequenceReversed } => toSequenceReversed indexed
 };
 
 let toSequentialCollection (indexed: t 'a): (SequentialCollection.t 'a) => switch indexed {
@@ -157,12 +157,12 @@ let reduce
     (indexed: t 'a): 'acc =>
   indexed |> toIterable |> Iterable.reduce while_::predicate f acc;
 
-let reduceRight
+let reduceReversed
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (indexed: t 'a): 'acc =>
-  indexed |> toIterableRight |> Iterable.reduce while_::predicate f acc;
+  indexed |> toIterableReversed |> Iterable.reduce while_::predicate f acc;
 
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;

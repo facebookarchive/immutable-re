@@ -887,14 +887,14 @@ let reduceWithIndex
   if (predicate === Functions.alwaysTrue3) (reduceWithIndexImpl f acc vec)
   else (reduceWithIndexWhile while_::predicate f acc vec);
 
-let reduceRightImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
-  let acc = right |> CopyOnWriteArray.reduceRight f acc;
-  let acc = middle |> IndexedTrie.reduceRight f acc;
-  let acc = left |> CopyOnWriteArray.reduceRight f acc;
+let reduceReversedImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
+  let acc = right |> CopyOnWriteArray.reduceReversed f acc;
+  let acc = middle |> IndexedTrie.reduceReversed f acc;
+  let acc = left |> CopyOnWriteArray.reduceReversed f acc;
   acc;
 };
 
-let reduceRightWhile
+let reduceReversedWhile
     while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
@@ -908,12 +908,12 @@ let reduceRightWhile
 
   let triePredicate _ _ => !shouldContinue;
   let rec trieReducer acc =>
-    IndexedTrie.reduceRightWhileWithResult triePredicate trieReducer predicate f acc;
+    IndexedTrie.reduceReversedWhileWithResult triePredicate trieReducer predicate f acc;
 
-  let acc = right |> CopyOnWriteArray.reduceRight while_::predicate f acc;
+  let acc = right |> CopyOnWriteArray.reduceReversed while_::predicate f acc;
 
   let acc =
-    if (!shouldContinue) (IndexedTrie.reduceRightWhileWithResult
+    if (!shouldContinue) (IndexedTrie.reduceReversedWhileWithResult
       triePredicate
       trieReducer
       predicate
@@ -924,21 +924,21 @@ let reduceRightWhile
     else acc;
 
   let acc =
-    if (!shouldContinue) (CopyOnWriteArray.reduceRight while_::predicate f acc left)
+    if (!shouldContinue) (CopyOnWriteArray.reduceReversed while_::predicate f acc left)
     else acc;
 
   acc;
 };
 
-let reduceRight
+let reduceReversed
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (vec: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue2) (reduceRightImpl f acc vec)
-  else (reduceRightWhile while_::predicate f acc vec);
+  if (predicate === Functions.alwaysTrue2) (reduceReversedImpl f acc vec)
+  else (reduceReversedWhile while_::predicate f acc vec);
 
-let reduceRightWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
+let reduceReversedWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
   let index = ref (count vec - 1);
   let reducer acc next => {
@@ -947,10 +947,10 @@ let reduceRightWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 
     acc
   };
 
-  reduceRight reducer acc vec;
+  reduceReversed reducer acc vec;
 };
 
-let reduceRightWithIndexWhile
+let reduceReversedWithIndexWhile
     while_::(predicate: 'acc => int => 'a => bool)
     (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
@@ -966,16 +966,16 @@ let reduceRightWithIndexWhile
   let predicate acc next =>
     predicate acc !index next;
 
-  reduceRightWhile while_::predicate reducer acc vec;
+  reduceReversedWhile while_::predicate reducer acc vec;
 };
 
-let reduceRightWithIndex
+let reduceReversedWithIndex
     while_::(predicate: 'acc => int => 'a => bool)=Functions.alwaysTrue3
     (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
     (vec: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue3) (reduceRightWithIndexImpl f acc vec)
-  else (reduceRightWithIndexWhile while_::predicate f acc vec);
+  if (predicate === Functions.alwaysTrue3) (reduceReversedWithIndexImpl f acc vec)
+  else (reduceReversedWithIndexWhile while_::predicate f acc vec);
 
 let return (value: 'a): (t 'a) =>
   empty () |> addLast value;
@@ -1070,11 +1070,11 @@ let toIterable (vec: t 'a): (Iterable.t 'a) =>
   if (isEmpty vec) (Iterable.empty ())
   else Iterable.Iterable vec iterator;
 
-let iteratorRight: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceRightWhile };
+let iteratorReversed: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceReversedWhile };
 
-let toIterableRight (vec: t 'a): (Iterable.t 'a) =>
+let toIterableReversed (vec: t 'a): (Iterable.t 'a) =>
   if (isEmpty vec) (Iterable.empty ())
-  else Iterable.Iterable vec iteratorRight;
+  else Iterable.Iterable vec iteratorReversed;
 
 let keyedIterator: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceWithIndexWhile };
 
@@ -1082,9 +1082,9 @@ let toKeyedIterable (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
   else KeyedIterable.KeyedIterable vec keyedIterator;
 
-let keyedIteratorRight: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceRightWithIndexWhile };
+let keyedIteratorReversed: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceReversedWithIndexWhile };
 
-let toKeyedIterableRight (vec: t 'a): (KeyedIterable.t int 'a) =>
+let toKeyedIterableReversed (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
   else KeyedIterable.KeyedIterable vec keyedIterator;
   let containsKey (index: int) (arr: t 'a): bool =>
@@ -1096,10 +1096,10 @@ let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.conc
   CopyOnWriteArray.toSequence right,
 ];
 
-let toSequenceRight ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
-  CopyOnWriteArray.toSequenceRight right,
-  IndexedTrie.toSequenceRight middle,
-  CopyOnWriteArray.toSequenceRight left,
+let toSequenceReversed ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
+  CopyOnWriteArray.toSequenceReversed right,
+  IndexedTrie.toSequenceReversed middle,
+  CopyOnWriteArray.toSequenceReversed left,
 ];
 
 let toSequenceWithIndex (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
@@ -1107,10 +1107,10 @@ let toSequenceWithIndex (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
   (IntRange.create start::0 count::(count vec) |> IntRange.toSequence)
   (toSequence vec);
 
-let toSequenceWithIndexRight (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
+let toSequenceWithIndexReversed (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
   (fun a b => (a, b))
-  (IntRange.create start::0 count::(count vec) |> IntRange.toSequenceRight)
-  (toSequenceRight vec);
+  (IntRange.create start::0 count::(count vec) |> IntRange.toSequenceReversed)
+  (toSequenceReversed vec);
 
 let collectionOps: Collection.Ops.t 'a (t 'a) = {
   count,
@@ -1138,8 +1138,8 @@ let toSequentialCollection (vector: t 'a): (SequentialCollection.t 'a) =>
 let keys (arr: t 'a): (Iterable.t int) =>
   IntRange.create start::0 count::(count arr) |> IntRange.toIterable;
 
-let keysRight (arr: t 'a): (Iterable.t int) =>
-  IntRange.create start::0 count::(count arr) |> IntRange.toIterableRight;
+let keysReversed (arr: t 'a): (Iterable.t int) =>
+  IntRange.create start::0 count::(count arr) |> IntRange.toIterableReversed;
 
 let keySet (arr: t 'a): (ImmSet.t int) =>
   IntRange.create start::0 count::(count arr) |> IntRange.toSet;
@@ -1188,9 +1188,9 @@ let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
   toCollection,
   toSequentialCollection,
   toIterable,
-  toIterableRight,
+  toIterableReversed,
   toSequence,
-  toSequenceRight,
+  toSequenceReversed,
 };
 
 let toNavigableCollection (set: (t 'a)): (NavigableCollection.t 'a) =>
@@ -1210,7 +1210,7 @@ let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v)
   firstValue: first,
   firstValueOrRaise: firstOrRaise,
   keys,
-  keysRight,
+  keysReversed,
   last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
   lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
   lastKey: fun arr => arr |> last |> Option.map (fun v => (count arr) - 1),
@@ -1221,14 +1221,14 @@ let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v)
   lastValue: last,
   lastValueOrRaise: lastOrRaise,
   toIterable: toKeyedIterable >> KeyedIterable.toIterable,
-  toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
+  toIterableReversed: toKeyedIterableReversed >> KeyedIterable.toIterable,
   toKeyedCollection,
   toKeyedIterable,
-  toKeyedIterableRight,
+  toKeyedIterableReversed,
   toSequence: toSequenceWithIndex,
-  toSequenceRight: toSequenceWithIndexRight,
+  toSequenceReversed: toSequenceWithIndexReversed,
   values: toIterable,
-  valuesRight: toIterableRight,
+  valuesReversed: toIterableReversed,
 };
 
 let toNavigableKeyedCollection (arr: t 'a): (NavigableKeyedCollection.t int 'a) =>
@@ -1250,7 +1250,7 @@ let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
   get,
   getOrRaise,
   keys,
-  keysRight,
+  keysReversed,
   keySet,
   navigableKeySet,
   last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
@@ -1263,16 +1263,16 @@ let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
   lastValue: last,
   lastValueOrRaise: lastOrRaise,
   toIterable: toKeyedIterable >> KeyedIterable.toIterable,
-  toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
+  toIterableReversed: toKeyedIterableReversed >> KeyedIterable.toIterable,
   toKeyedCollection,
   toKeyedIterable,
-  toKeyedIterableRight,
+  toKeyedIterableReversed,
   toMap,
   toNavigableKeyedCollection,
   toSequence: toSequenceWithIndex,
-  toSequenceRight: toSequenceWithIndexRight,
+  toSequenceReversed: toSequenceWithIndexReversed,
   values: toIterable,
-  valuesRight: toIterableRight,
+  valuesReversed: toIterableReversed,
 };
 
 let toNavigableMap (arr: t 'a): (NavigableMap.t int 'a) =>
@@ -1294,11 +1294,11 @@ let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) =>
 let removeAt (index: int) (vec: t 'a): (t 'a) =>
   failwith "Not Implemented";
 
-let module ReducerRight = Iterable.Reducer.Make1 {
+let module ReducerReversed = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
 
-  let reduce = reduceRight;
-  let toIterable = toIterableRight;
+  let reduce = reduceReversed;
+  let toIterable = toIterableReversed;
 };
 
 let module Reducer = Iterable.Reducer.Make1 {

@@ -20,7 +20,7 @@ let module Ops = {
     firstValue: 'keyed => (option 'v),
     firstValueOrRaise: 'keyed => 'v,
     keys: 'keyed => Iterable.t 'k,
-    keysRight: 'keyed => Iterable.t 'k,
+    keysReversed: 'keyed => Iterable.t 'k,
     last: 'keyed => (option ('k, 'v)),
     lastOrRaise: 'keyed => ('k, 'v),
     lastKey: 'keyed => (option 'k),
@@ -28,14 +28,14 @@ let module Ops = {
     lastValue: 'keyed => (option 'v),
     lastValueOrRaise: 'keyed => 'v,
     toIterable: 'keyed => Iterable.t ('k, 'v),
-    toIterableRight: 'keyed => Iterable.t ('k, 'v),
+    toIterableReversed: 'keyed => Iterable.t ('k, 'v),
     toKeyedCollection: 'keyed => KeyedCollection.t 'k 'v,
     toKeyedIterable: 'keyed => KeyedIterable.t 'k 'v,
-    toKeyedIterableRight: 'keyed => KeyedIterable.t 'k 'v,
+    toKeyedIterableReversed: 'keyed => KeyedIterable.t 'k 'v,
     toSequence: 'keyed => Sequence.t ('k, 'v),
-    toSequenceRight: 'keyed => (Sequence.t ('k, 'v)),
+    toSequenceReversed: 'keyed => (Sequence.t ('k, 'v)),
     values: 'keyed => Iterable.t 'v,
-    valuesRight: 'keyed => Iterable.t 'v,
+    valuesReversed: 'keyed => Iterable.t 'v,
   };
 };
 
@@ -96,9 +96,9 @@ let keys (keyed: t 'k 'v): Iterable.t 'k => switch keyed {
   | NavigableKeyedCollection keyed { keys } => keys keyed
 };
 
-let keysRight (keyed: t 'k 'v): Iterable.t 'k => switch keyed {
+let keysReversed (keyed: t 'k 'v): Iterable.t 'k => switch keyed {
   | Empty => Iterable.empty ()
-  | NavigableKeyedCollection keyed { keysRight } => keysRight keyed
+  | NavigableKeyedCollection keyed { keysReversed } => keysReversed keyed
 };
 
 let last (keyed: t 'k 'v): option ('k, 'v) => switch keyed {
@@ -136,9 +136,9 @@ let toIterable (keyed: t 'k 'v): Iterable.t ('k, 'v) => switch keyed {
   | NavigableKeyedCollection keyed { toIterable } => toIterable keyed
 };
 
-let toIterableRight (keyed: t 'k 'v): Iterable.t ('k, 'v) => switch keyed {
+let toIterableReversed (keyed: t 'k 'v): Iterable.t ('k, 'v) => switch keyed {
   | Empty => Iterable.empty ()
-  | NavigableKeyedCollection keyed { toIterableRight } => toIterableRight keyed
+  | NavigableKeyedCollection keyed { toIterableReversed } => toIterableReversed keyed
 };
 
 let toKeyedCollection (keyed: t 'k 'v): (KeyedCollection.t 'k 'v) => switch keyed {
@@ -151,9 +151,9 @@ let toKeyedIterable (keyed: t 'k 'v): KeyedIterable.t 'k 'v => switch keyed {
   | NavigableKeyedCollection keyed { toKeyedIterable } => toKeyedIterable keyed
 };
 
-let toKeyedIterableRight (keyed: t 'k 'v): KeyedIterable.t 'k 'v => switch keyed {
+let toKeyedIterableReversed (keyed: t 'k 'v): KeyedIterable.t 'k 'v => switch keyed {
   | Empty => KeyedIterable.empty ()
-  | NavigableKeyedCollection keyed { toKeyedIterableRight } => toKeyedIterableRight keyed
+  | NavigableKeyedCollection keyed { toKeyedIterableReversed } => toKeyedIterableReversed keyed
 };
 
 let toNavigableKeyedCollection (keyed: t 'k 'v): t 'k 'v => keyed;
@@ -163,9 +163,9 @@ let toSequence (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
   | NavigableKeyedCollection keyed { toSequence } => toSequence keyed
 };
 
-let toSequenceRight (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
+let toSequenceReversed (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
   | Empty => Sequence.empty ()
-  | NavigableKeyedCollection keyed { toSequenceRight } => toSequenceRight keyed
+  | NavigableKeyedCollection keyed { toSequenceReversed } => toSequenceReversed keyed
 };
 
 let values (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
@@ -173,9 +173,9 @@ let values (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
   | NavigableKeyedCollection keyed { values } => values keyed
 };
 
-let valuesRight (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
+let valuesReversed (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
   | Empty => Iterable.empty ()
-  | NavigableKeyedCollection keyed { valuesRight } => valuesRight keyed
+  | NavigableKeyedCollection keyed { valuesReversed } => valuesReversed keyed
 };
 
 let reduce
@@ -185,12 +185,12 @@ let reduce
     (keyed: t 'k 'v): 'acc =>
   keyed |> toKeyedIterable |> KeyedIterable.reduce while_::predicate f acc;
 
-let reduceRight
+let reduceReversed
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
     (keyed: t 'k 'v): 'acc =>
-  keyed |> toKeyedIterableRight |> KeyedIterable.reduce while_::predicate f acc;
+  keyed |> toKeyedIterableReversed |> KeyedIterable.reduce while_::predicate f acc;
 
 
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {

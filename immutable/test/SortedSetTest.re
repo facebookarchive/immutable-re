@@ -56,11 +56,11 @@ let navigationTests (count: int) => {
         |> SortedIntSet.lastOrRaise
         |> Expect.toBeEqualToInt (countDiv2 - 1);
     }),
-    it "reduceRight" (fun () => {
+    it "reduceReversed" (fun () => {
       IntRange.create start::0 count::count
         |> IntRange.toIterable
         |> SortedIntSet.from
-        |> SortedIntSet.reduceRight while_::(fun acc _ => acc < countDiv2) (fun acc _ => 1 + acc) 0
+        |> SortedIntSet.reduceReversed while_::(fun acc _ => acc < countDiv2) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv2;
     }),
     it "removeFirstOrRaise" (fun () => {
@@ -83,7 +83,7 @@ let navigationTests (count: int) => {
         |> SortedIntSet.from;
 
       IntRange.create start::0 count::count
-        |> IntRange.reduceRight (fun acc i => {
+        |> IntRange.reduceReversed (fun acc i => {
             acc |> SortedIntSet.lastOrRaise |> Expect.toBeEqualToInt i;
             acc |> SortedIntSet.removeLastOrRaise;
           }) set
@@ -91,19 +91,19 @@ let navigationTests (count: int) => {
 
       (fun () => SortedIntSet.empty |> SortedIntSet.removeLastOrRaise) |> Expect.shouldRaise;
     }),
-    it "toIterableRight" (fun () => {
+    it "toIterableReversed" (fun () => {
       IntRange.create start::0 count::count
         |> IntRange.toIterable
         |> SortedIntSet.from
-        |> SortedIntSet.toIterableRight
+        |> SortedIntSet.toIterableReversed
         |> Iterable.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
-    it "toSequenceRight" (fun () => {
+    it "toSequenceReversed" (fun () => {
       IntRange.create start::0 count::count
         |> IntRange.toIterable
         |> SortedIntSet.from
-        |> SortedIntSet.toSequenceRight
+        |> SortedIntSet.toSequenceReversed
         |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),

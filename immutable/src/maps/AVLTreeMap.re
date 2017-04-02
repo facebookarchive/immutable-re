@@ -229,17 +229,17 @@ let reduceWhile
   reduceWhileWithResult shouldContinue predicate f acc tree;
 };
 
-let rec reduceRight (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
+let rec reduceReversed (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
   | Empty => acc
   | Leaf k v => f acc k v
   | Node _ left k v right =>
-     let acc = reduceRight f acc right;
+     let acc = reduceReversed f acc right;
      let acc = f acc k v;
-     let acc = reduceRight f acc left;
+     let acc = reduceReversed f acc left;
      acc
 };
 
-let rec reduceRightWhileWithResult
+let rec reduceReversedWhileWithResult
     (shouldContinue: ref bool)
     (predicate: 'acc => 'k => 'v => bool)
     (f: 'acc => 'k => 'v => 'acc)
@@ -251,18 +251,18 @@ let rec reduceRightWhileWithResult
       else acc
   | Node _ left k v right =>
     let acc =
-      if (!shouldContinue) (reduceRightWhileWithResult shouldContinue predicate f acc right)
+      if (!shouldContinue) (reduceReversedWhileWithResult shouldContinue predicate f acc right)
       else acc;
      let acc =
        if (!shouldContinue && (predicate acc k v)) (f acc k v)
        else acc;
      let acc =
-       if (!shouldContinue) (reduceRightWhileWithResult shouldContinue predicate f acc left)
+       if (!shouldContinue) (reduceReversedWhileWithResult shouldContinue predicate f acc left)
        else acc;
      acc
 };
 
-let reduceRightWhile
+let reduceReversedWhile
     (predicate: 'acc => 'k => 'v => bool)
     (f: 'acc => 'k => 'v => 'acc)
     (acc: 'acc)
@@ -274,7 +274,7 @@ let reduceRightWhile
     shouldContinue := result;
     result;
   };
-  reduceRightWhileWithResult shouldContinue predicate f acc tree;
+  reduceReversedWhileWithResult shouldContinue predicate f acc tree;
 };
 
 let rec toKeySequence (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
@@ -287,13 +287,13 @@ let rec toKeySequence (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
     ]
 };
 
-let rec toKeySequenceRight (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
+let rec toKeySequenceReversed (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
   | Empty => Sequence.empty ()
   | Leaf k _ => Sequence.return k
   | Node _ left k _ right => Sequence.concat [
-      Sequence.defer(fun () => toKeySequenceRight right),
+      Sequence.defer(fun () => toKeySequenceReversed right),
       Sequence.return k,
-      Sequence.defer(fun () => toKeySequenceRight left),
+      Sequence.defer(fun () => toKeySequenceReversed left),
     ]
 };
 
@@ -307,13 +307,13 @@ let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
     ]
 };
 
-let rec toSequenceRight (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
+let rec toSequenceReversed (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
   | Empty => Sequence.empty ()
   | Leaf k v => Sequence.return (k, v)
   | Node _ left k v right => Sequence.concat [
-      Sequence.defer(fun () => toSequenceRight right),
+      Sequence.defer(fun () => toSequenceReversed right),
       Sequence.return (k, v),
-      Sequence.defer(fun () => toSequenceRight left),
+      Sequence.defer(fun () => toSequenceReversed left),
     ]
 };
 
@@ -409,12 +409,12 @@ let rec alter
         }
       }
       else if (cmp === Ordering.greaterThan) {
-        let newRight = alter comparator result xK f right;
+        let newReversed = alter comparator result xK f right;
         switch !result {
-        | AlterResult.Added => rebalance left k v newRight
+        | AlterResult.Added => rebalance left k v newReversed
         | AlterResult.NoChange => tree
-        | AlterResult.Removed => Node height left k v newRight
-        | AlterResult.Replace => Node height left k v newRight
+        | AlterResult.Removed => Node height left k v newReversed
+        | AlterResult.Replace => Node height left k v newReversed
       }}
       else (switch (f @@ Option.return @@ v) {
         | None => switch (left, right) {
@@ -455,8 +455,8 @@ let rec put
         let newLeft = put comparator xK xV left;
         if (newLeft === left) tree else rebalance newLeft k v right
       } else if (cmp === Ordering.greaterThan) {
-        let newRight = put comparator xK xV right;
-        if (newRight === right) tree else rebalance left k v newRight
+        let newReversed = put comparator xK xV right;
+        if (newReversed === right) tree else rebalance left k v newReversed
       } else if (xV === v) tree
       else (Node height left xK xV right)
 };
@@ -493,8 +493,8 @@ let rec putWithResult
         let newLeft = putWithResult comparator result xK xV left;
         if (newLeft === left) tree else rebalance newLeft k v right
       } else if (cmp === Ordering.greaterThan) {
-        let newRight = putWithResult comparator result xK xV right;
-        if (newRight === right) tree else rebalance left k v newRight
+        let newReversed = putWithResult comparator result xK xV right;
+        if (newReversed === right) tree else rebalance left k v newReversed
       } else if (xV === v) tree
       else {
         result := AlterResult.Replace;

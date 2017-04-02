@@ -66,11 +66,11 @@ let navigationTests (count: int) => {
         |> fst
         |> Expect.toBeEqualToInt (countDiv2 - 1);
     }),/*
-    it "reduceRight" (fun () => {
+    it "reduceReversed" (fun () => {
       IntRange.create start::0 count::count
         |> IntRange.toIterable
         |> SortedIntMap.from
-        |> SortedIntMap.reduceRight while_::(fun acc i => acc < countDiv2) (fun acc i => 1 + acc) 0
+        |> SortedIntMap.reduceReversed while_::(fun acc i => acc < countDiv2) (fun acc i => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv2;
     }),*/
     it "removeFirstOrRaise" (fun () => {
@@ -95,7 +95,7 @@ let navigationTests (count: int) => {
         |> SortedIntMap.fromEntries;
 
       IntRange.create start::0 count::count
-        |> IntRange.reduceRight (fun acc i => {
+        |> IntRange.reduceReversed (fun acc i => {
             acc |> SortedIntMap.lastOrRaise |> fst |> Expect.toBeEqualToInt i;
             acc |> SortedIntMap.removeLastOrRaise;
           }) set
@@ -103,21 +103,21 @@ let navigationTests (count: int) => {
 
       (fun () => SortedIntMap.empty () |> SortedIntMap.removeLastOrRaise) |> Expect.shouldRaise;
     }),
-    it "toIterableRight" (fun () => {
+    it "toIterableReversed" (fun () => {
       IntRange.create start::0 count::count
         |> IntRange.toIterable
         |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
-        |> SortedIntMap.toIterableRight
+        |> SortedIntMap.toIterableReversed
         |> Iterable.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),
-    it "toSequenceRight" (fun () => {
+    it "toSequenceReversed" (fun () => {
       IntRange.create start::0 count::count
         |> IntRange.toIterable
         |> Iterable.map (fun i => (i, i))
         |> SortedIntMap.fromEntries
-        |> SortedIntMap.toSequenceRight
+        |> SortedIntMap.toSequenceReversed
         |> Sequence.reduce while_::(fun acc _ => acc < countDiv4) (fun acc _ => 1 + acc) 0
         |> Expect.toBeEqualToInt countDiv4;
     }),

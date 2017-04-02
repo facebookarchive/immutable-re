@@ -45,15 +45,15 @@ let reduceWhileWithResult
         while_::triePredicate trieReducer acc
 };
 
-let rec reduceRight (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
+let rec reduceReversed (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
   | Empty => acc
-  | Leaf _ values => values |> CopyOnWriteArray.reduceRight f acc
+  | Leaf _ values => values |> CopyOnWriteArray.reduceReversed f acc
   | Level _ _ _ nodes =>
-      let reducer acc node => node |> reduceRight f acc;
-      nodes |> CopyOnWriteArray.reduceRight reducer acc
+      let reducer acc node => node |> reduceReversed f acc;
+      nodes |> CopyOnWriteArray.reduceReversed reducer acc
 };
 
-let reduceRightWhileWithResult
+let reduceReversedWhileWithResult
     (triePredicate: 'acc => t 'a => bool)
     (trieReducer: 'acc => t 'a => 'acc)
     (predicate: 'acc => 'a => bool)
@@ -62,9 +62,9 @@ let reduceRightWhileWithResult
     (trie: t 'a): 'acc => switch trie {
   | Empty => acc
   | Leaf _ values =>
-      values |> CopyOnWriteArray.reduceRight while_::predicate f acc
+      values |> CopyOnWriteArray.reduceReversed while_::predicate f acc
   | Level _ _ _ nodes =>
-      nodes |> CopyOnWriteArray.reduceRight
+      nodes |> CopyOnWriteArray.reduceReversed
         while_::triePredicate trieReducer acc
 };
 
@@ -74,10 +74,10 @@ let rec toSequence (trie: t 'a): (Sequence.t 'a) => switch trie {
   | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
 };
 
-let rec toSequenceRight (trie: t 'a): (Sequence.t 'a) => switch trie {
+let rec toSequenceReversed (trie: t 'a): (Sequence.t 'a) => switch trie {
   | Empty => Sequence.empty ()
-  | Leaf _ values => values |> CopyOnWriteArray.toSequenceRight
-  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceRight |> Sequence.flatMap toSequenceRight
+  | Leaf _ values => values |> CopyOnWriteArray.toSequenceReversed
+  | Level _ _ _ nodes => nodes |> CopyOnWriteArray.toSequenceReversed |> Sequence.flatMap toSequenceReversed
 };
 
 let depth (trie: t 'a): int => switch trie {

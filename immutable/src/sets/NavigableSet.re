@@ -21,10 +21,10 @@ let module Ops = {
     toCollection: 'set => Collection.t 'a,
     toSequentialCollection: 'set => SequentialCollection.t 'a,
     toIterable: 'set => Iterable.t 'a,
-    toIterableRight: 'set => Iterable.t 'a,
+    toIterableReversed: 'set => Iterable.t 'a,
     toNavigableCollection: 'set => NavigableCollection.t 'a,
     toSequence: 'set => Sequence.t 'a,
-    toSequenceRight: 'set => Sequence.t 'a,
+    toSequenceReversed: 'set => Sequence.t 'a,
   };
 };
 

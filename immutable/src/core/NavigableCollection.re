@@ -19,9 +19,9 @@ let module Ops = {
     toCollection: 'collection => Collection.t 'a,
     toSequentialCollection: 'collection => SequentialCollection.t 'a,
     toIterable: 'collection => Iterable.t 'a,
-    toIterableRight: 'collection => Iterable.t 'a,
+    toIterableReversed: 'collection => Iterable.t 'a,
     toSequence: 'collection => Sequence.t 'a,
-    toSequenceRight: 'collection => Sequence.t 'a,
+    toSequenceReversed: 'collection => Sequence.t 'a,
   };
 };
 
@@ -77,9 +77,9 @@ let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
   | NavigableCollection collection { toIterable } => toIterable collection
 };
 
-let toIterableRight (collection: t 'a): (Iterable.t 'a) => switch collection {
+let toIterableReversed (collection: t 'a): (Iterable.t 'a) => switch collection {
   | Empty => Iterable.empty ()
-  | NavigableCollection collection { toIterableRight } => toIterableRight collection
+  | NavigableCollection collection { toIterableReversed } => toIterableReversed collection
 };
 
 let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
@@ -87,9 +87,9 @@ let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
   | NavigableCollection collection { toSequence } => toSequence collection
 };
 
-let toSequenceRight (collection: t 'a): (Sequence.t 'a) => switch collection {
+let toSequenceReversed (collection: t 'a): (Sequence.t 'a) => switch collection {
   | Empty => Sequence.empty ()
-  | NavigableCollection collection { toSequenceRight } => toSequenceRight collection
+  | NavigableCollection collection { toSequenceReversed } => toSequenceReversed collection
 };
 
 let reduce
@@ -99,12 +99,12 @@ let reduce
     (collection: t 'a): 'acc =>
   collection |> toIterable |> Iterable.reduce while_::predicate f acc;
 
-let reduceRight
+let reduceReversed
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (collection: t 'a): 'acc =>
-  collection |> toIterableRight |> Iterable.reduce while_::predicate f acc;
+  collection |> toIterableReversed |> Iterable.reduce while_::predicate f acc;
 
 let toNavigableCollection (collection: t 'a): (t 'a) =>
   collection;

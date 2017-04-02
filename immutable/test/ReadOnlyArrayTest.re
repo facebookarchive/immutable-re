@@ -60,11 +60,11 @@ let test = describe "ReadOnlyArray" [
   }),
   it "ofUnsafe" (fun () => ()),
   it "reduce" (fun () => ()),
-  it "reduceRight" (fun () => ()),
+  it "reduceReversed" (fun () => ()),
   it "toIterable" (fun () => ()),
-  it "toIterableRight" (fun () => ()),
+  it "toIterableReversed" (fun () => ()),
   it "toKeyedIterator" (fun () => ()),
-  it "toKeyedIteratorRight" (fun () => ()),
+  it "toKeyedIteratorReversed" (fun () => ()),
   it "toMap" (fun () => {
     let count = 12;
     let countDiv4 = count / 4;
@@ -90,5 +90,5 @@ let test = describe "ReadOnlyArray" [
       |> Expect.toBeEqualToInt countDiv4;
   }),
   it "toSequence" (fun () => ()),
-  it "toSequenceRight" (fun () => ()),
+  it "toSequenceReversed" (fun () => ()),
 ];

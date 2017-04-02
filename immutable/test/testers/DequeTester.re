@@ -60,11 +60,11 @@ let module Make = fun (Deque: NavigableCollection.Persistent.S1) (Config: Tester
       it "lastOrRaise" (fun () => {
         (fun () => (Deque.empty ()) |> Deque.lastOrRaise) |> Expect.shouldRaise;
       }),
-      it "reduceRight" (fun () => {
+      it "reduceReversed" (fun () => {
         IntRange.create start::0 count::Config.count
           |> IntRange.toIterable
           |> Deque.from
-          |> Deque.reduceRight
+          |> Deque.reduceReversed
               while_::(fun _ i => i >= (Config.count / 2))
               (fun _ i => i)
               0
@@ -75,7 +75,7 @@ let module Make = fun (Deque: NavigableCollection.Persistent.S1) (Config: Tester
 
         let fullDeque = range |> IntRange.toIterable |> Deque.from;
 
-        let emptyDeque = range |> IntRange.reduceRight
+        let emptyDeque = range |> IntRange.reduceReversed
           (fun acc i => {
             Deque.last acc |> Expect.toBeEqualToSomeOfInt i;
             Deque.lastOrRaise acc |> Expect.toBeEqualToInt i;
@@ -87,22 +87,22 @@ let module Make = fun (Deque: NavigableCollection.Persistent.S1) (Config: Tester
 
         Deque.isEmpty emptyDeque |> Expect.toBeEqualToTrue;
       }),
-      it "toIterableRight" (fun () => {
+      it "toIterableReversed" (fun () => {
         IntRange.create start::0 count::Config.count
           |> IntRange.toIterable
           |> Deque.from
-          |> Deque.toIterableRight
+          |> Deque.toIterableReversed
           |> Iterable.reduce
               while_::(fun _ i => i >= (Config.count / 2))
               (fun acc _ => acc - 1)
               Config.count
           |> Expect.toBeEqualToInt (Config.count / 2);
       }),
-      it "toSequenceRight" (fun () => {
+      it "toSequenceReversed" (fun () => {
         IntRange.create start::0 count::Config.count
           |> IntRange.toIterable
           |> Deque.from
-          |> Deque.toSequenceRight
+          |> Deque.toSequenceReversed
           |> Sequence.reduce
               while_::(fun _ i => i >= (Config.count / 2))
               (fun acc _ => acc - 1)
@@ -126,9 +126,9 @@ let module Make = fun (Deque: NavigableCollection.Persistent.S1) (Config: Tester
 
       it "addFirst, removeLastOrRaise" (fun () => {
         let testData = IntRange.create start::0 count::Config.count;
-        let deque = (Deque.empty ()) |> Deque.addFirstAll (IntRange.toIterableRight testData);
+        let deque = (Deque.empty ()) |> Deque.addFirstAll (IntRange.toIterableReversed testData);
 
-        testData |> IntRange.reduceRight
+        testData |> IntRange.reduceReversed
           (fun acc i => {
             Deque.last acc |> Expect.toBeEqualToSomeOfInt i;
             Deque.lastOrRaise acc |> Expect.toBeEqualToInt i;
