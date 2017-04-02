@@ -109,7 +109,6 @@ let test = describe "Map" [
   }),
   it "toIterable" (fun () => ()),
   it "toKeyedIterator" (fun () => ()),
-  it "map" (fun () => ()),
   it "toSequence" (fun () => ()),
   it "values" (fun () => ()),
 ];

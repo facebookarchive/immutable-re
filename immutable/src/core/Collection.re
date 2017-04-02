@@ -54,15 +54,6 @@ let reduce
 let toCollection (collection: t 'a): (t 'a) =>
   collection;
 
-let map (f: 'a => 'b) (collection: t 'a): (t 'b) => switch collection {
-  | Empty => Empty
-  | Collection collection ops => Collection collection {
-      count: ops.count,
-      toIterable: ops.toIterable >> Iterable.map f,
-      toSequence: ops.toSequence >> Sequence.map f,
-    }
-};
-
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
   let reduce = reduce;

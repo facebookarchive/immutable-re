@@ -72,18 +72,6 @@ let reduce
 let toSequentialCollection (collection: t 'a): (t 'a) =>
   collection;
 
-let map (f: 'a => 'b) (collection: t 'a): (t 'b) => switch collection {
-  | Empty => Empty
-  | SequentialCollection collection ops => SequentialCollection collection {
-      count: ops.count,
-      first: ops.first >> Option.map f,
-      firstOrRaise: ops.firstOrRaise >> f,
-      toCollection: ops.toCollection >> Collection.map f,
-      toIterable: ops.toIterable >> Iterable.map f,
-      toSequence: ops.toSequence >> Sequence.map f,
-    }
-};
-
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
   let reduce = reduce;

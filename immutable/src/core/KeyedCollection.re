@@ -70,19 +70,6 @@ let values (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
   | KeyedCollection keyed { values } => values keyed
 };
 
-let map (f: 'k => 'a => 'b) (keyed: t 'k 'a): (t 'k 'b) => switch keyed {
-  | Empty => Empty
-  | KeyedCollection keyed ops => KeyedCollection keyed {
-      containsKey: ops.containsKey,
-      count: ops.count,
-      keys: ops.keys,
-      toIterable: ops.toKeyedIterable >> KeyedIterable.mapValues f >> KeyedIterable.toIterable,
-      toKeyedIterable: ops.toKeyedIterable >> KeyedIterable.mapValues f,
-      toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, f k v)),
-      values: ops.toKeyedIterable >> KeyedIterable.mapValues f >> KeyedIterable.values,
-    }
-};
-
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)

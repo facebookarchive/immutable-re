@@ -544,14 +544,6 @@ let module rec Collection: {
   let empty: unit => (t 'a);
   /** [empty ()] returns the empty collection */
 
-  let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map f collection] Returns a lazy Collection that computes values
-   *  lazily by applying [f].
-   *
-   *  Note, the results of applying [f] to a given value are not
-   *  memoized. Therefore [f] must be a pure function.
-   */
-
   let module Persistent: {
     /** Module types implemented by collections supporting fully persistent mutations.
      *  Mutation operations on these types do not mutate the underlying collection, but instead
@@ -692,14 +684,6 @@ let module rec SequentialCollection: {
 
   let empty: unit => (t 'a);
   /** [empty ()] returns the empty SequentialCollection */
-
-  let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map f collection] Returns a lazy SequentialCollection that computes values
-   *  lazily by applying [f].
-   *
-   *  Note, the results of applying [f] to a value are not
-   *  memoized. Therefore [f] must be a pure function.
-   */
 
   let module Persistent: {
     /** Module types implemented by collections supporting persistent mutations to left
@@ -857,14 +841,6 @@ let module rec NavigableCollection: {
 
   let empty: unit => (t 'a);
   /** [empty ()] returns the empty NavigableCollection */
-
-  let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map f collection] Returns a lazy NavigableCollection that computes values
-   *  lazily by applying [f].
-   *
-   *  Note, the results of applying [f] to a value are not
-   *  memoized. Therefore [f] must be a pure function.
-   */
 
   let module Persistent: {
     /** Module types implemented by collections supporting persistent mutations to both the left
@@ -1612,13 +1588,6 @@ let module rec KeyedCollection: {
   let empty: unit => (t 'k 'v);
   /** The empty KeyedCollection. */
 
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  /** [map f map] returns lazy KeyedCollection that computes values lazily by applying [f].
-   *
-   *  Note, the results of applying [f] to a given key/value pair are not
-   *  memoized. Therefore [f] must be a pure function.
-   */
-
   let module Persistent: {
     /** Module types implemented by KeyedCollections supporting fully persistent mutations.
      *  Mutation operations on these types do not mutate the underlying collection, but instead
@@ -1973,13 +1942,6 @@ let module rec Map: {
 
   let empty: unit => (t 'k 'v);
   /** The empty Map. */
-
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  /** [map f map] returns lazy Map that computes values lazily by applying [f].
-   *
-   *  Note, the results of applying [f] to a given key/value pair are not
-   *  memoized. Therefore [f] must be a pure function.
-   */
 
   let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
    /* KeyedReducer module for Maps. */

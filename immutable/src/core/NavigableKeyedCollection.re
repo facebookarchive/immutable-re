@@ -178,33 +178,6 @@ let valuesRight (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
   | NavigableKeyedCollection keyed { valuesRight } => valuesRight keyed
 };
 
-/*
-let map (f: 'k => 'a => 'b) (keyed: t 'k 'a): (t 'k 'b) => switch keyed {
-  | Empty => Empty
-  | NavigableKeyedCollection keyed ops => NavigableKeyedCollection keyed {
-      containsKey: ops.containsKey,
-      count: ops.count,
-      first: ops.first >> Option.map (fun (k, v) => (k, f k v)),
-      firstOrRaise: fun map => {
-        let (k,v) = ops.firstOrRaise map;
-        (k, (f k v))
-      },
-      keys: ops.keys,
-      last: ops.last >> Option.map (fun (k, v) => (k, f k v)),
-      lastOrRaise: fun map => {
-        let (k,v) = ops.lastOrRaise map;
-        (k, (f k v))
-      },
-      toIterable: ops.toKeyedIterable >> KeyedIterable.mapValues f >> KeyedIterable.toIterable,
-      toIterableRight: ops.toKeyedIterableRight >> KeyedIterable.mapValues f >> KeyedIterable.toIterable,
-      toKeyedCollection: ops.toKeyedCollection >> KeyedCollection.map f,
-      toKeyedIterable: ops.toKeyedIterable >> KeyedIterable.mapValues f,
-      toKeyedIterableRight: ops.toKeyedIterableRight >> KeyedIterable.mapValues f,
-      toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, f k v)),
-      toSequenceRight: ops.toSequenceRight >> Sequence.map (fun (k, v) => (k, f k v)),
-    }
-};*/
-
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
     (f: 'acc => 'k => 'v => 'acc)

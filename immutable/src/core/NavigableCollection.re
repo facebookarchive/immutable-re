@@ -109,23 +109,6 @@ let reduceRight
 let toNavigableCollection (collection: t 'a): (t 'a) =>
   collection;
 
-let map (f: 'a => 'b) (collection: t 'a): (t 'b) => switch collection {
-  | Empty => Empty
-  | NavigableCollection collection ops => NavigableCollection collection {
-      count: ops.count,
-      first: ops.first >> Option.map f,
-      firstOrRaise: ops.firstOrRaise >> f,
-      last: ops.last >> Option.map f,
-      lastOrRaise: ops.lastOrRaise >> f,
-      toCollection: ops.toCollection >> Collection.map f,
-      toSequentialCollection: ops.toSequentialCollection >> SequentialCollection.map f,
-      toIterable: ops.toIterable >> Iterable.map f,
-      toIterableRight: ops.toIterableRight >> Iterable.map f,
-      toSequence: ops.toSequence >> Sequence.map f,
-      toSequenceRight: ops.toSequenceRight >> Sequence.map f,
-    }
-};
-
 let module Reducer = Iterable.Reducer.Make1 {
   type nonrec t 'a = t 'a;
   let reduce = reduce;

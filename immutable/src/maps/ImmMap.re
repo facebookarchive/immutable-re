@@ -101,26 +101,6 @@ let reduce
     (map: t 'k 'v): 'acc =>
   map |> toKeyedIterable |> KeyedIterable.reduce while_::predicate f acc;
 
-let map (mapValues: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => switch map {
-  | Empty => Empty
-  | Map map ops => Map map {
-      containsKey: ops.containsKey,
-      count: ops.count,
-      get: fun k map => ops.get k map >>| mapValues k,
-      getOrRaise: fun k map => {
-        let v = map |> ops.getOrRaise k;
-        mapValues k v;
-      },
-      keys: ops.keys,
-      keySet: ops.keySet,
-      toIterable: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues >> KeyedIterable.toIterable,
-      toKeyedCollection: ops.toKeyedCollection >> KeyedCollection.map mapValues,
-      toKeyedIterable: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues,
-      toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, mapValues k v)),
-      values: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues >> KeyedIterable.values,
-    }
-};
-
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
 
