@@ -2225,7 +2225,7 @@ let module rec Indexed: {
    *
    *  By contract, all functions must be efficient, with no worst than O(log N) performance.
    */
-
+   
   module type S1 = {
     /** Indexed module type signature for types with a parametric type arity of 1. */
 
@@ -2267,6 +2267,99 @@ let module rec Indexed: {
   type t 'a;
 
   include S1 with type t 'a := t 'a;
+
+  let module Persistent: {
+    /** An Indexed collection supporting persistent mutations. */
+
+    module type S1 = {
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+      include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
+
+      let concat: (list (t 'a)) => (t 'a);
+      /** [concat indexed] returns a persistent Indexed collection concatenating
+       *  together the in [indexed].
+       */
+
+      let insertAt: int => 'a => (t 'a) => (t 'a);
+      /** [insertAt index value indexed] returns a persistent Indexed collection with
+       *  [value] inserted at [index].
+       */
+
+      let removeAt: int => (t 'a) => (t 'a);
+      /** [removeAt index indexed] returns a persistent Indexed collection with the
+       *  value at [index] removed.
+       */
+
+      let skip: int => (t 'a) => (t 'a);
+      /** [skip count indexed] returns a persistent Indexed collection that removes the
+       *  first [count] values in [indexed].
+       */
+
+      let slice: start::int? => end_::int? => (t 'a) => (t 'a);
+
+      let take: int => (t 'a) => (t 'a);
+      /** [take count indexed] returns a Vector that includes the first [count] values in [indexed]. */
+
+      let update: int => 'a => (t 'a) => (t 'a);
+      /** [update index value indexed] returns a persistent Indexed collection with [value]
+       *  replacing the value at [index].
+       */
+
+      let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+      /** [updateAll f indexed] returns a persistent Indexed collection updating each value
+       *  in [indexed] with result of applying the function [f] to each index/value pair.
+       *
+       *  Complexity: O(N)
+       */
+
+      let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+      /** [updateWith index f indexed] returns a persistent Indexed collection updating the value
+       *  at [index] with the result of applying the function [f] to the value.
+       */
+    };
+  };
+
+  let module Transient: {
+    /** A temporarily mutable Indexed collection. Once persisted, any further operations on a
+     *  Transient instance will throw. Intended for implementing bulk mutation
+     *  operations efficiently.
+     */
+
+    module type S1 = {
+      type t 'a;
+
+      include NavigableCollection.Transient.S1 with type t 'a := t 'a;
+
+      let get: int => (t 'a) => (option 'a);
+      /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
+
+      let getOrRaise: int => (t 'a) => 'a;
+      /** [getOrRaise index transient] returns the value at [index] or
+       *  raises an exception if [index] is out of bounds.
+       */
+
+      let insertAt: int => 'a => (t 'a) => (t 'a);
+      /** [insertAt index value transient] inserts value into [transient] at [index]. */
+
+      let removeAt: int => (t 'a) => (t 'a);
+      /** [removeAt index transient] removes the value at [index]. */
+
+      let update: int => 'a => (t 'a) => (t 'a);
+      /** [update index value transient] replaces the value at [index] with [value]. */
+
+      let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+      /** [updateAll f transient] updates each value in [transient] with result of applying
+       *  the function [f] to each index/value pair.
+       */
+
+      let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+      /** [updateWith index f transient] updates the value at [index] with the result
+       *  of applying the function [f] to the value.
+       */
+    };
+  };
 };
 
 let module rec Deque: {
@@ -2677,70 +2770,11 @@ let module rec Vector: {
 
   type t 'a;
 
-  include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
-  include Indexed.S1 with type t 'a := t 'a;
-
-  let concat: (list (t 'a)) => (t 'a);
-  /** [concat vecs] returns a Vector, concatenating together the Vectors in [vec].
-  *
-  *  WARNING: Not implemented
-  *
-  *  Complexity: O(log32 N * m)
-  */
+  include Indexed.Persistent.S1 with type t 'a := t 'a;
 
   let init: int => (int => 'a) => (t 'a);
   /* [init count f] returns a Vector with size [count]. The callback [f] is called
    * for each index to initialize the value at the respective index.
-   */
-
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  /** [insertAt index value vec] returns a Vector with [value] inserted at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let removeAt: int => (t 'a) => (t 'a);
-  /** [removeAt index vec] returns a Vector with the value at [index] removed.
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let skip: int => (t 'a) => (t 'a);
-  /** [skip count vec] returns a new Vector that removes the first [count] values in [vec].
-   *
-   *  WARNING: Known issues for Vectors with count > 1024.
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let slice: start::int? => end_::int? => (t 'a) => (t 'a);
-
-  let take: int => (t 'a) => (t 'a);
-  /** [take count vec] returns a Vector that includes the first [count] values in [vec]. */
-
-  let update: int => 'a => (t 'a) => (t 'a);
-  /** [update index value cow] returns a Vector with [value]
-   *  replacing the value at [index].
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  /** [updateAll f vec] returns a Vector updating each value
-   *  in [vec] with result of applying the function [f] to each index/value pair.
-   *
-   *  Complexity: O(N)
-   */
-
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-  /** [updateWith index f cow] returns a Vector updating the value
-   *  at [index] with the result of applying the function [f] to the value.
-   *
-   *  Complexity: O(log32 N)
    */
 
   let module Transient: {
@@ -2751,51 +2785,7 @@ let module rec Vector: {
 
     type t 'a;
 
-    include NavigableCollection.Transient.S1 with type t 'a := t 'a;
-
-    let get: int => (t 'a) => (option 'a);
-    /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
-
-    let getOrRaise: int => (t 'a) => 'a;
-    /** [getOrRaise index transient] returns the value at [index] or
-     *  raises an exception if [index] is out of bounds.
-     */
-
-    let insertAt: int => 'a => (t 'a) => (t 'a);
-    /** [insertAt index value transient] inserts value into [transient] at [index].
-     *
-     *  WARNING: Not implemented
-     *
-     *  Complexity: O(log32 N)
-     */
-
-    let removeAt: int => (t 'a) => (t 'a);
-    /** [removeAt index transient] removes the value at [index].
-     *
-     *  WARNING: Not implemented
-     *
-     *  Complexity: O(log32 N)
-     */
-
-    let update: int => 'a => (t 'a) => (t 'a);
-    /** [update index value transient] replaces the value at [index] with [value].
-     *
-     *  Complexity: O(log32 N)
-     */
-
-    let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-    /** [updateAll f transient] updates each value in [transient] with result of applying
-     *  the function [f] to each index/value pair.
-     *
-     *  Complexity: O(N)
-     */
-
-    let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-    /** [updateWith index f transient] updates the value at [index] with the result
-     *  of applying the function [f] to the value.
-     *
-     *  Complexity: O(log32 N)
-     */
+    include Indexed.Transient.S1 with type t 'a := t 'a;
 
     let persist: (t 'a) => (Vector.t 'a);
     /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
