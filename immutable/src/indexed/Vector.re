@@ -1135,8 +1135,17 @@ let toSequentialCollection (vector: t 'a): (SequentialCollection.t 'a) =>
   if (isEmpty vector) (SequentialCollection.empty ())
   else SequentialCollection.SequentialCollection vector seqCollectionOps;
 
-let keys (arr: t 'a): (ImmSet.t int) =>
+let keys (arr: t 'a): (Iterable.t int) =>
+  IntRange.create start::0 count::(count arr) |> IntRange.toIterable;
+
+let keysRight (arr: t 'a): (Iterable.t int) =>
+  IntRange.create start::0 count::(count arr) |> IntRange.toIterableRight;
+
+let keySet (arr: t 'a): (ImmSet.t int) =>
   IntRange.create start::0 count::(count arr) |> IntRange.toSet;
+
+let navigableKeySet (arr: t 'a): (NavigableSet.t int) =>
+  IntRange.create start::0 count::(count arr) |> IntRange.toNavigableSet;
 
 let keyedCollectionOps (): KeyedCollection.Ops.t int 'a (t 'a) => {
   containsKey,
@@ -1145,25 +1154,30 @@ let keyedCollectionOps (): KeyedCollection.Ops.t int 'a (t 'a) => {
   toIterable: toKeyedIterable >> KeyedIterable.toIterable,
   toKeyedIterable,
   toSequence: toSequenceWithIndex,
+  values: toIterable,
 };
 
 let toKeyedCollection (arr: t 'a): (KeyedCollection.t int 'a) =>
   if (isEmpty arr) (KeyedCollection.empty ())
   else KeyedCollection.KeyedCollection arr (keyedCollectionOps ());
 
-let mapOps: ImmMap.Ops.t int 'a (t 'a) = {
+let mapOps (): ImmMap.Ops.t int 'a (t 'a) => {
   containsKey: fun index arr => index >= 0 && index < count arr,
   count,
   get,
   getOrRaise,
+  keys,
+  keySet,
+  toIterable: toKeyedIterable >> KeyedIterable.toIterable,
   toKeyedCollection,
   toKeyedIterable,
   toSequence: toSequenceWithIndex,
+  values: toIterable,
 };
 
 let toMap (vec: t 'a): (ImmMap.t int 'a) =>
   if (isEmpty vec) (ImmMap.empty ())
-  else ImmMap.Map vec mapOps;
+  else ImmMap.Map vec (mapOps ());
 
 let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
   count,
@@ -1188,9 +1202,24 @@ let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v)
   count,
   first: first >> Option.map (fun v => (0, v)),
   firstOrRaise: fun arr => (0, firstOrRaise arr),
+  firstKey: first >> Option.map (fun v => 0),
+  firstKeyOrRaise: fun arr => {
+    firstOrRaise arr |> ignore;
+    0
+  },
+  firstValue: first,
+  firstValueOrRaise: firstOrRaise,
   keys,
+  keysRight,
   last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
   lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
+  lastKey: fun arr => arr |> last |> Option.map (fun v => (count arr) - 1),
+  lastKeyOrRaise: fun arr => {
+    lastOrRaise arr |> ignore;
+    (count arr) - 1;
+  },
+  lastValue: last,
+  lastValueOrRaise: lastOrRaise,
   toIterable: toKeyedIterable >> KeyedIterable.toIterable,
   toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
   toKeyedCollection,
@@ -1198,6 +1227,8 @@ let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v)
   toKeyedIterableRight,
   toSequence: toSequenceWithIndex,
   toSequenceRight: toSequenceWithIndexRight,
+  values: toIterable,
+  valuesRight: toIterableRight,
 };
 
 let toNavigableKeyedCollection (arr: t 'a): (NavigableKeyedCollection.t int 'a) =>
@@ -1209,11 +1240,28 @@ let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
   count,
   first: first >> Option.map (fun v => (0, v)),
   firstOrRaise: fun arr => (0, firstOrRaise arr),
+  firstKey: first >> Option.map (fun v => 0),
+  firstKeyOrRaise: fun arr => {
+    firstOrRaise arr |> ignore;
+    0
+  },
+  firstValue: first,
+  firstValueOrRaise: firstOrRaise,
   get,
   getOrRaise,
   keys,
+  keysRight,
+  keySet,
+  navigableKeySet,
   last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
   lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
+  lastKey: fun arr => arr |> last |> Option.map (fun v => (count arr) - 1),
+  lastKeyOrRaise: fun arr => {
+    lastOrRaise arr |> ignore;
+    (count arr) - 1;
+  },
+  lastValue: last,
+  lastValueOrRaise: lastOrRaise,
   toIterable: toKeyedIterable >> KeyedIterable.toIterable,
   toIterableRight: toKeyedIterableRight >> KeyedIterable.toIterable,
   toKeyedCollection,
@@ -1223,6 +1271,8 @@ let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
   toNavigableKeyedCollection,
   toSequence: toSequenceWithIndex,
   toSequenceRight: toSequenceWithIndexRight,
+  values: toIterable,
+  valuesRight: toIterableRight,
 };
 
 let toNavigableMap (arr: t 'a): (NavigableMap.t int 'a) =>

@@ -78,13 +78,13 @@ let test = describe "Map" [
       |> Map.isNotEmpty
       |> Expect.toBeEqualToTrue;
   }),
-  it "keys" (fun () => {
+  it "keySet" (fun () => {
     IntRange.create start::0 count::200
       |> IntRange.toIterable
       |> Iterable.map (fun i => (i, i))
       |> SortedIntMap.fromEntries
       |> SortedIntMap.toMap
-      |> Map.keys
+      |> Map.keySet
       |> Set.equals (
           IntRange.create start::0 count::200 |> IntRange.toSet
         )

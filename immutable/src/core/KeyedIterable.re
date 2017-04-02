@@ -431,17 +431,21 @@ module type S1 = {
   type k;
   type t 'v;
 
+  let keys: (t 'v) => Iterable.t k;
   let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   let toIterable: t 'v => Iterable.t (k, 'v);
   let toKeyedIterable: t 'v => keyedIterable k 'v;
+  let values: (t 'v) => Iterable.t 'v;
 };
 
 module type S2 = {
   type t 'k 'v;
 
+  let keys: (t 'k 'v) => Iterable.t 'k;
   let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let toIterable: t 'k 'v => Iterable.t ('k, 'v);
   let toKeyedIterable: t 'k 'v => keyedIterable 'k 'v;
+  let values: (t 'k 'v) => Iterable.t 'v;
 };
 
 let module KeyedReducer = {
@@ -625,8 +629,10 @@ let module KeyedReducer = {
   include Make2 ({
     type nonrec t 'k 'v = t 'k 'v;
 
+    let keys = keys;
     let reduce = reduce;
     let toIterable = toIterable;
     let toKeyedIterable = toKeyedIterable;
+    let values = values;
   });
 };

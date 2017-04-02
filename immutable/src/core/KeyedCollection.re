@@ -13,10 +13,11 @@ open Functions.Operators;
    type t 'k 'v 'keyed = {
      containsKey: 'k => 'keyed => bool,
      count: 'keyed => int,
-     keys: 'keyed => ImmSet.t 'k,
+     keys: 'keyed => Iterable.t 'k,
      toIterable: 'keyed => Iterable.t ('k, 'v),
      toKeyedIterable: 'keyed => KeyedIterable.t 'k 'v,
      toSequence: 'keyed => Sequence.t ('k, 'v),
+     values: 'keyed => Iterable.t 'v,
    };
  };
 
@@ -42,8 +43,8 @@ let isEmpty (keyed: t 'k 'v): bool =>
 let isNotEmpty (keyed: t 'k 'v): bool =>
   (count keyed) !== 0;
 
-let keys (keyed: t 'k 'v): ImmSet.t 'k => switch keyed {
-  | Empty => ImmSet.empty ()
+let keys (keyed: t 'k 'v): Iterable.t 'k => switch keyed {
+  | Empty => Iterable.empty ()
   | KeyedCollection keyed { keys } => keys keyed
 };
 
@@ -64,6 +65,11 @@ let toSequence (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
   | KeyedCollection keyed { toSequence } => toSequence keyed
 };
 
+let values (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
+  | Empty => Iterable.empty ()
+  | KeyedCollection keyed { values } => values keyed
+};
+
 let map (f: 'k => 'a => 'b) (keyed: t 'k 'a): (t 'k 'b) => switch keyed {
   | Empty => Empty
   | KeyedCollection keyed ops => KeyedCollection keyed {
@@ -73,6 +79,7 @@ let map (f: 'k => 'a => 'b) (keyed: t 'k 'a): (t 'k 'b) => switch keyed {
       toIterable: ops.toKeyedIterable >> KeyedIterable.mapValues f >> KeyedIterable.toIterable,
       toKeyedIterable: ops.toKeyedIterable >> KeyedIterable.mapValues f,
       toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, f k v)),
+      values: ops.toKeyedIterable >> KeyedIterable.mapValues f >> KeyedIterable.values,
     }
 };
 
@@ -86,7 +93,9 @@ let reduce
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
 
+  let keys = keys;
   let reduce = reduce;
   let toIterable = toIterable;
   let toKeyedIterable = toKeyedIterable;
+  let values = values;
 };

@@ -33,6 +33,7 @@ let module HashIntMap: Map.Persistent.S1 with type k = int = {
   let get = HashMap.get;
   let getOrRaise = HashMap.getOrRaise;
   let keys = HashMap.keys;
+  let keySet = HashMap.keySet;
   let merge = HashMap.merge;
   let put = HashMap.put;
   let putAll = HashMap.putAll;
@@ -45,6 +46,7 @@ let module HashIntMap: Map.Persistent.S1 with type k = int = {
   let toKeyedIterable = HashMap.toKeyedIterable;
   let toMap = HashMap.toMap;
   let toSequence = HashMap.toSequence;
+  let values = HashMap.values;
 };
 
 let badHashFunction i => i mod 100;
@@ -72,6 +74,7 @@ let module BadHashIntMap: Map.Persistent.S1 with type k = int = {
   let get = HashMap.get;
   let getOrRaise = HashMap.getOrRaise;
   let keys = HashMap.keys;
+  let keySet = HashMap.keySet;
   let merge = HashMap.merge;
   let put = HashMap.put;
   let putAll = HashMap.putAll;
@@ -84,6 +87,7 @@ let module BadHashIntMap: Map.Persistent.S1 with type k = int = {
   let toKeyedIterable = HashMap.toKeyedIterable;
   let toMap = HashMap.toMap;
   let toSequence = HashMap.toSequence;
+  let values = HashMap.values;
 };
 
 let test = describe "HashMap" [

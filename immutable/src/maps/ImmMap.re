@@ -17,9 +17,13 @@ let module Ops = {
     count: 'map => int,
     get: 'k => 'map => (option 'v),
     getOrRaise: 'k => 'map => 'v,
-    toKeyedIterable: 'map => (KeyedIterable.t 'k 'v),
+    keys: 'map => Iterable.t 'k,
+    keySet: 'map => ImmSet.t 'k,
+    toIterable: 'map => Iterable.t ('k, 'v),
     toKeyedCollection: 'map => (KeyedCollection.t 'k 'v),
+    toKeyedIterable: 'map => (KeyedIterable.t 'k 'v),
     toSequence: 'map => (Sequence.t ('k, 'v)),
+    values: 'map => Iterable.t 'v,
   };
 };
 
@@ -49,12 +53,21 @@ let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {
   | Map map { getOrRaise } => getOrRaise key map
 };
 
+let keys (map: t 'k 'v): Iterable.t 'k => switch map {
+  | Empty => Iterable.empty ()
+  | Map map { keys } => keys map
+};
+
+let keySet (map: t 'k 'v): ImmSet.t 'k => switch map {
+  | Empty => ImmSet.empty ()
+  | Map map { keySet } => keySet map
+};
+
 let isEmpty (map: t 'k 'v): bool =>
   (count map) === 0;
 
 let isNotEmpty (map: t 'k 'v): bool =>
   (count map) !== 0;
-
 
 let toKeyedCollection (map: t 'k 'v): (KeyedCollection.t 'k 'v) => switch map {
   | Empty => KeyedCollection.empty ()
@@ -76,25 +89,10 @@ let toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | Map map { toSequence } => toSequence map
 };
 
-let keyCollectionOps (): Collection.Ops.t 'k (t 'k 'v) => {
-  count,
-  toIterable: toKeyedIterable >> KeyedIterable.keys,
-  toSequence: toSequence >> Sequence.map (fun (k, _) => k),
+let values (map: t 'k 'v): Iterable.t 'v => switch map {
+  | Empty => Iterable.empty ()
+  | Map map { values } => values map
 };
-
-let keySetOps (): ImmSet.Ops.t 'k (t 'k 'v) => {
-  contains: containsKey,
-  count,
-  toCollection: fun map =>
-    if (isEmpty map) (Collection.empty ())
-    else Collection.Collection map (keyCollectionOps ()),
-  toIterable: toKeyedIterable >> KeyedIterable.keys,
-  toSequence: toSequence >> Sequence.map (fun (k, _) => k),
-};
-
-let keys (map: t 'k 'v): (ImmSet.t 'k) =>
-  if (isEmpty map) (ImmSet.empty ())
-  else ImmSet.Set map (keySetOps ());
 
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
@@ -113,16 +111,22 @@ let map (mapValues: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => switch map {
         let v = map |> ops.getOrRaise k;
         mapValues k v;
       },
+      keys: ops.keys,
+      keySet: ops.keySet,
+      toIterable: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues >> KeyedIterable.toIterable,
       toKeyedCollection: ops.toKeyedCollection >> KeyedCollection.map mapValues,
       toKeyedIterable: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues,
       toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, mapValues k v)),
+      values: ops.toKeyedIterable >> KeyedIterable.mapValues mapValues >> KeyedIterable.values,
     }
 };
 
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
 
+  let keys = keys;
   let reduce = reduce;
   let toIterable = toIterable;
   let toKeyedIterable = toKeyedIterable;
+  let values = values;
 };

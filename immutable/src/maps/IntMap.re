@@ -122,17 +122,23 @@ let toKeyCollection (map: t 'v): Collection.t int =>
   if (isEmpty map) (Collection.empty ())
   else (Collection.Collection map (keyCollectionOps ()));
 
-let keySetOps (): ImmSet.Ops.t int (t 'v) => {
+let keys (map: t 'v): Iterable.t k =>
+  map |> toKeyedIterable |> KeyedIterable.keys;
+
+let values  (map: t 'v): Iterable.t 'v =>
+  map |> toKeyedIterable |> KeyedIterable.values;
+
+let keySetOps: ImmSet.Ops.t int (t 'v) = {
   contains: containsKey,
   count,
   toCollection: toKeyCollection,
-  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toIterable: keys,
   toSequence: toKeySequence,
 };
 
-let keys (map: t 'v): (ImmSet.t int) =>
+let keySet (map: t 'v): (ImmSet.t int) =>
   if (isEmpty map) (ImmSet.empty ())
-  else ImmSet.Set map (keySetOps ());
+  else ImmSet.Set map keySetOps;
 
 let keyedCollectionOps: KeyedCollection.Ops.t int 'v (t 'v) = {
   containsKey,
@@ -141,29 +147,30 @@ let keyedCollectionOps: KeyedCollection.Ops.t int 'v (t 'v) = {
   toIterable,
   toKeyedIterable,
   toSequence,
+  values,
 };
 
 let toKeyedCollection (map: t 'v): (KeyedCollection.t int 'v) =>
   if (isEmpty map) (KeyedCollection.empty ())
   else KeyedCollection.KeyedCollection map keyedCollectionOps;
 
-
 let mapOps: ImmMap.Ops.t int 'v (t 'v) = {
   containsKey,
   count,
   get,
   getOrRaise,
+  keys,
+  keySet,
+  toIterable,
   toKeyedCollection,
   toKeyedIterable,
   toSequence,
+  values,
 };
 
 let toMap (map: t 'v): (ImmMap.t int 'v) =>
   if (isEmpty map) (ImmMap.empty ())
   else ImmMap.Map map mapOps;
-
-let keys (map: t 'v): (ImmSet.t int) =>
-  map |> toMap |> ImmMap.keys;
 
 let module Transient = {
   type k = int;
@@ -290,7 +297,7 @@ let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
 let merge
     (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (initialValue: t 'vAcc)
-    (next: t 'v): (t 'vAcc) => ImmSet.union (keys next) (keys initialValue)
+    (next: t 'v): (t 'vAcc) => ImmSet.union (keySet next) (keySet initialValue)
   |> Iterable.reduce (
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);
@@ -306,7 +313,9 @@ let module KeyedReducer = KeyedIterable.KeyedReducer.Make1 {
   type nonrec k = k;
   type nonrec t 'v = t 'v;
 
+  let keys = keys;
   let reduce = reduce;
   let toIterable = toIterable;
   let toKeyedIterable = toKeyedIterable;
+  let values = values;
 };
