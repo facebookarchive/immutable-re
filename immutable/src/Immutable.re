@@ -367,7 +367,6 @@ let module KeyedStreamable = {
     let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
     let mapValues: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
     let return: 'k => 'v => (t 'k 'v);
-    let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterable.t 'acc);
     let skip: int => (t 'k 'v) => (t 'k 'v);
     let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
     let startWith: 'k => 'v => (t 'k 'v) => (t 'k 'v);
@@ -391,7 +390,6 @@ let module KeyedCollection = {
     let count: t 'v => int;
     let isEmpty: (t 'v) => bool;
     let isNotEmpty: (t 'v) => bool;
-    let keys: (t 'v) => (Set.t k);
     let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
     let toSequence: (t 'v) => (Sequence.t (k, 'v));
   };
@@ -405,7 +403,6 @@ let module KeyedCollection = {
     let count: t 'k 'v => int;
     let isEmpty: (t 'k 'v) => bool;
     let isNotEmpty: (t 'k 'v) => bool;
-    let keys: (t 'k 'v) => (Set.t 'k);
     let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
@@ -472,13 +469,23 @@ let module NavigableKeyedCollection = {
 
     let first: (t 'v) => (option (k, 'v));
     let firstOrRaise: (t 'v) => (k, 'v);
+    let firstKey: (t 'v) => (option k);
+    let firstKeyOrRaise: (t 'v) => k;
+    let firstValue: (t 'v) => (option 'v);
+    let firstValueOrRaise: (t 'v) => 'v;
+    let keysRight: (t 'v) => (Iterable.t k);
     let last: (t 'v) => (option (k, 'v));
     let lastOrRaise: (t 'v) => (k, 'v);
+    let lastKey: (t 'v) => (option k);
+    let lastKeyOrRaise: (t 'v) => k;
+    let lastValue: (t 'v) => (option 'v);
+    let lastValueOrRaise: (t 'v) => 'v;
     let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     let toIterableRight: t 'v => Iterable.t (k, 'v);
     let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
     let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
+    let valuesRight: (t 'v) => (Iterable.t 'v);
   };
 
   module type S2 = {
@@ -490,13 +497,23 @@ let module NavigableKeyedCollection = {
 
     let first: (t 'k 'v) => (option ('k, 'v));
     let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    let firstKey: (t 'k 'v) => (option 'k);
+    let firstKeyOrRaise: (t 'k 'v) => 'k;
+    let firstValue: (t 'k 'v) => (option 'v);
+    let firstValueOrRaise: (t 'k 'v) => 'v;
+    let keysRight: (t 'k 'v) => (Iterable.t 'k);
     let last: (t 'k 'v) => (option ('k, 'v));
     let lastOrRaise: (t 'k 'v) => ('k, 'v);
+    let lastKey: (t 'k 'v) => (option 'k);
+    let lastKeyOrRaise: (t 'k 'v) => 'k;
+    let lastValue: (t 'k 'v) => (option 'v);
+    let lastValueOrRaise: (t 'k 'v) => 'v;
     let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     let toIterableRight: t 'k 'v => Iterable.t ('k, 'v);
     let toKeyedIterableRight: t 'k 'v => KeyedIterable.t 'k 'v;
     let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
     let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
+    let valuesRight: (t 'k 'v) => (Iterable.t 'v);
   };
 };
 
@@ -511,6 +528,7 @@ let module Map = {
 
     let get: k => (t 'v) => (option 'v);
     let getOrRaise: k => (t 'v) => 'v;
+    let keySet: (t 'v) => (ImmSet.t k);
     let toMap: (t 'v) => ImmMap.t k 'v;
   };
 
@@ -521,6 +539,7 @@ let module Map = {
 
     let get: 'k => (t 'k 'v) => (option 'v);
     let getOrRaise: 'k => (t 'k 'v) => 'v;
+    let keySet: (t 'k 'v) => (ImmSet.t 'k);
     let toMap: (t 'k 'v) => ImmMap.t 'k 'v;
   };
 
@@ -602,6 +621,8 @@ let module NavigableMap = {
     include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
 
+    let navigableKeySet: (t 'v) => (NavigableSet.t k);
+
     let toNavigableMap: (t 'v) => NavigableMap.t k 'v;
   };
 
@@ -612,6 +633,8 @@ let module NavigableMap = {
 
     include NavigableKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
+
+    let navigableKeySet: (t 'k 'v) => (NavigableSet.t 'k);
 
     let toNavigableMap: (t 'k 'v) => NavigableMap.t 'k 'v;
   };

@@ -17,11 +17,22 @@ let module Ops = {
     count: 'map => int,
     first: 'map => (option ('k, 'v)),
     firstOrRaise: 'map => ('k, 'v),
+    firstKey: 'map => (option 'k),
+    firstKeyOrRaise: 'map => 'k,
+    firstValue: 'map => (option 'v),
+    firstValueOrRaise: 'map => 'v,
     get: 'k => 'map => (option 'v),
     getOrRaise: 'k => 'map => 'v,
-    keys: 'map => ImmSet.t 'k,
+    keys: 'map => Iterable.t 'k,
+    keysRight: 'map => Iterable.t 'k,
+    keySet: 'map => ImmSet.t 'k,
+    navigableKeySet: 'map => NavigableSet.t 'k,
     last: 'map => (option ('k, 'v)),
     lastOrRaise: 'map => ('k, 'v),
+    lastKey: 'map => (option 'k),
+    lastKeyOrRaise: 'map => 'k,
+    lastValue: 'map => (option 'v),
+    lastValueOrRaise: 'map => 'v,
     toIterable: 'map => Iterable.t ('k, 'v),
     toIterableRight: 'map => Iterable.t ('k, 'v),
     toKeyedCollection: 'map => (KeyedCollection.t 'k 'v),
@@ -31,6 +42,8 @@ let module Ops = {
     toNavigableKeyedCollection: 'map => (NavigableKeyedCollection.t 'k 'v),
     toSequence: 'map => (Sequence.t ('k, 'v)),
     toSequenceRight: 'map => (Sequence.t ('k, 'v)),
+    values: 'map => Iterable.t 'v,
+    valuesRight: 'map => Iterable.t 'v,
   };
 };
 
@@ -60,6 +73,26 @@ let firstOrRaise (map: t 'k 'v): ('k, 'v) => switch map {
   | NavigableMap map { firstOrRaise } => firstOrRaise map
 };
 
+let firstKey (map: t 'k 'v): option 'k => switch map {
+  | Empty => None
+  | NavigableMap map { firstKey } => firstKey map
+};
+
+let firstKeyOrRaise (map: t 'k 'v): 'k => switch map {
+  | Empty => failwith "empty"
+  | NavigableMap map { firstKeyOrRaise } => firstKeyOrRaise map
+};
+
+let firstValue (map: t 'k 'v): option 'v => switch map {
+  | Empty => None
+  | NavigableMap map { firstValue } => firstValue map
+};
+
+let firstValueOrRaise (map: t 'k 'v): 'v => switch map {
+  | Empty => failwith "empty"
+  | NavigableMap map { firstValueOrRaise } => firstValueOrRaise map
+};
+
 let get (key: 'k) (map: t 'k 'v): (option 'v) => switch map {
   | Empty => None
   | NavigableMap map { get } => get key map
@@ -76,6 +109,21 @@ let isEmpty (map: t 'k 'v): bool =>
 let isNotEmpty (map: t 'k 'v): bool =>
   (count map) !== 0;
 
+let keys (map: t 'k 'v): (Iterable.t 'k) => switch map {
+  | Empty => Iterable.empty ()
+  | NavigableMap map { keys } => keys map
+};
+
+let keysRight (map: t 'k 'v): (Iterable.t 'k) => switch map {
+  | Empty => Iterable.empty ()
+  | NavigableMap map { keysRight } => keysRight map
+};
+
+let keySet (map: t 'k 'v): (ImmSet.t 'k) => switch map {
+  | Empty => ImmSet.empty ()
+  | NavigableMap map { keySet } => keySet map
+};
+
 let last (map: t 'k 'v): option ('k, 'v) => switch map {
   | Empty => None
   | NavigableMap map { last } => last map
@@ -84,6 +132,31 @@ let last (map: t 'k 'v): option ('k, 'v) => switch map {
 let lastOrRaise (map: t 'k 'v): ('k, 'v) => switch map {
   | Empty => failwith "empty"
   | NavigableMap map { lastOrRaise } => lastOrRaise map
+};
+
+let lastKey (keyed: t 'k 'v): option 'k => switch keyed {
+  | Empty => None
+  | NavigableMap keyed { lastKey } => lastKey keyed
+};
+
+let lastKeyOrRaise (keyed: t 'k 'v): 'k => switch keyed {
+  | Empty => failwith "empty"
+  | NavigableMap keyed { lastKeyOrRaise } => lastKeyOrRaise keyed
+};
+
+let lastValue (keyed: t 'k 'v): option 'v => switch keyed {
+  | Empty => None
+  | NavigableMap keyed { lastValue } => lastValue keyed
+};
+
+let lastValueOrRaise (keyed: t 'k 'v): 'v => switch keyed {
+  | Empty => failwith "empty"
+  | NavigableMap keyed { lastValueOrRaise } => lastValueOrRaise keyed
+};
+
+let navigableKeySet (map: t 'k 'v): NavigableSet.t 'k => switch map {
+  | Empty => NavigableSet.empty ()
+  | NavigableMap map { navigableKeySet } => navigableKeySet map
 };
 
 let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>switch map {
@@ -133,25 +206,15 @@ let toSequenceRight (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
   | NavigableMap map { toSequenceRight } => toSequenceRight map
 };
 
-let keyCollectionOps (): Collection.Ops.t 'k (t 'k 'v) => {
-  count,
-  toIterable: toKeyedIterable >> KeyedIterable.keys,
-  toSequence: toSequence >> Sequence.map (fun (k, _) => k),
+let values (map: t 'k 'v): (Iterable.t 'v) => switch map {
+  | Empty => Iterable.empty ()
+  | NavigableMap map { values } => values map
 };
 
-let keySetOps (): ImmSet.Ops.t 'k (t 'k 'v) => {
-  contains: containsKey,
-  count,
-  toCollection: fun map =>
-    if (isEmpty map) (Collection.empty ())
-    else Collection.Collection map (keyCollectionOps ()),
-  toIterable: toKeyedIterable >> KeyedIterable.keys,
-  toSequence: toSequence >> Sequence.map (fun (k, _) => k),
+let valuesRight (map: t 'k 'v): (Iterable.t 'v) => switch map {
+  | Empty => Iterable.empty ()
+  | NavigableMap map { valuesRight } => valuesRight map
 };
-
-let keys (map: t 'k 'v): (ImmSet.t 'k) =>
-  if (isEmpty map) (ImmSet.empty ())
-  else ImmSet.Set map (keySetOps ());
 
 let reduce
     while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
@@ -187,7 +250,9 @@ let map (mapValues: 'k => 'a => 'b) (map: t 'k 'a): (t 'k 'b) => switch map {
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
 
+  let keys = keys;
   let reduce = reduce;
   let toIterable = toIterable;
   let toKeyedIterable = toKeyedIterable;
+  let values = values;
 };

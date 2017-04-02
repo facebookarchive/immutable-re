@@ -1262,12 +1262,6 @@ let module KeyedStreamable: {
     let return: 'k => 'v => (t 'k 'v);
     /** [return key value] returns a KeyedStreamable containing the pair ([key], [value]). */
 
-    let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterable.t 'acc);
-    /** [scan f acc stream] returns a KeyedStreamable of accumulated values resulting from the
-     *  application of the accumulator function [f] to each value in [stream] with the
-     *  specified initial value [acc].
-     */
-
     let skip: int => (t 'k 'v) => (t 'k 'v);
     /** [skip count stream] return a KeyedStreamable which skips the first [count]
      *  values in [stream].
@@ -1307,6 +1301,9 @@ let module rec KeyedIterable: {
     type k;
     type t 'v;
 
+    let keys: (t 'v) => (Iterable.t k);
+    /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
+
     let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
      *  function [f] to each key/value pair in [keyedIterable], while [predicate] returns true,
@@ -1322,12 +1319,18 @@ let module rec KeyedIterable: {
     /** [toKeyedIterable keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
+
+    let values: (t 'v) => Iterable.t 'v;
+    /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
   };
 
   module type S2 = {
     /** KeyedIterable module type signature for types with a parametric type arity of 2. */
 
     type t 'k 'v;
+
+    let keys: (t 'k 'v) => (Iterable.t 'k);
+    /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
 
     let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1344,6 +1347,9 @@ let module rec KeyedIterable: {
     /** [toKeyedIterable keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
+
+    let values: (t 'k 'v) => Iterable.t 'v;
+    /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
   };
 
   type t 'k 'v;
@@ -1514,11 +1520,11 @@ let module rec KeyedIterable: {
   let fromEntries: Iterable.t ('k, 'v) => (t 'k 'v);
   /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */
 
-  let keys: (t 'k 'v) => (Iterable.t 'k);
-  /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
-
-  let values: (t 'k 'v) => Iterable.t 'v;
-  /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
+  let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterable.t 'acc);
+  /** [scan f acc stream] returns a KeyedStreamable of accumulated values resulting from the
+   *  application of the accumulator function [f] to each value in [stream] with the
+   *  specified initial value [acc].
+   */
 };
 
 let module rec KeyedCollection: {
@@ -1556,9 +1562,6 @@ let module rec KeyedCollection: {
      *  least one value, otherwise false.
      */
 
-    let keys: (t 'v) => (Set.t k);
-    /** [keys keyed] return a Set view of the keys in [keyed]. */
-
     let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
     /* [toKeyedCollection keyed] returns KeyedCollection view. */
 
@@ -1592,9 +1595,6 @@ let module rec KeyedCollection: {
     /** [isNotEmpty keyed] returns true if [keyed] contains at
      *  least one value, otherwise false.
      */
-
-    let keys: (t 'k 'v) => (Set.t 'k);
-    /** [keys keyed] return a Set view of the keys in [keyed]. */
 
     let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
     /* [toKeyedCollection keyed] returns KeyedCollection view. */
@@ -1777,6 +1777,16 @@ let module rec NavigableKeyedCollection: {
      *  By contract, no worst than O(log N) performance.
      */
 
+    let firstKey: (t 'v) => (option k);
+
+    let firstKeyOrRaise: (t 'v) => k;
+
+    let firstValue: (t 'v) => (option 'v);
+
+    let firstValueOrRaise: (t 'v) => 'v;
+
+    let keysRight: (t 'v) => Iterable.t k;
+
     let last: (t 'v) => (option (k, 'v));
     /** [last keyed] returns last value in [keyed] or None.
      *
@@ -1788,6 +1798,14 @@ let module rec NavigableKeyedCollection: {
      *
      *  By contract, no worst than O(log N) performance.
      */
+
+    let lastKey: (t 'v) => (option k);
+
+    let lastKeyOrRaise: (t 'v) => k;
+
+    let lastValue: (t 'v) => (option 'v);
+
+    let lastValueOrRaise: (t 'v) => 'v;
 
     let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1811,6 +1829,8 @@ let module rec NavigableKeyedCollection: {
     /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
+
+    let valuesRight: (t 'v) => Iterable.t 'v;
   };
 
   module type S2 = {
@@ -1832,6 +1852,16 @@ let module rec NavigableKeyedCollection: {
      *  By contract, no worst than O(log N) performance.
      */
 
+    let firstKey: (t 'k 'v) => (option 'k);
+
+    let firstKeyOrRaise: (t 'k 'v) => 'k;
+
+    let firstValue: (t 'k 'v) => (option 'v);
+
+    let firstValueOrRaise: (t 'k 'v) => 'v;
+
+    let keysRight: (t 'k 'v) => Iterable.t 'k;
+
     let last: (t 'k 'v) => (option ('k, 'v));
     /** [last keyed] returns last value in [keyed] or None.
      *
@@ -1843,6 +1873,14 @@ let module rec NavigableKeyedCollection: {
      *
      *  By contract, no worst than O(log N) performance.
      */
+
+    let lastKey: (t 'k 'v) => (option 'k);
+
+    let lastKeyOrRaise: (t 'k 'v) => 'k;
+
+    let lastValue: (t 'k 'v) => (option 'v);
+
+    let lastValueOrRaise: (t 'k 'v) => 'v;
 
     let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1866,6 +1904,8 @@ let module rec NavigableKeyedCollection: {
     /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
+
+    let valuesRight: (t 'k 'v) => Iterable.t 'v;
   };
 
   type t 'k 'v;
@@ -1899,6 +1939,9 @@ let module rec Map: {
      let getOrRaise: k => (t 'v) => 'v;
      /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
 
+     let keySet: (t 'v) => (Set.t k);
+     /** [keys keyed] return a Set view of the keys in [keyed]. */
+
      let toMap: (t 'v) => Map.t k 'v;
      /** [toMap map] returns a Map view of [map] */
    };
@@ -1915,6 +1958,9 @@ let module rec Map: {
 
      let getOrRaise: 'k => (t 'k 'v) => 'v;
      /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
+
+     let keySet: (t 'k 'v) => (Set.t 'k);
+     /** [keys keyed] return a Set view of the keys in [keyed]. */
 
      let toMap: (t 'k 'v) => Map.t 'k 'v;
      /** [toMap map] returns a Map view of [map] */
@@ -2159,6 +2205,9 @@ let module rec NavigableMap: {
     include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
 
+    let navigableKeySet: (t 'v) => (NavigableSet.t k);
+    /** [keys keyed] return a NavigableSet view of the keys in [keyed]. */
+
     let toNavigableMap: (t 'v) => NavigableMap.t k 'v;
   };
 
@@ -2169,6 +2218,9 @@ let module rec NavigableMap: {
 
     include NavigableKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
+
+    let navigableKeySet: (t 'k 'v) => (NavigableSet.t 'k);
+    /** [keys keyed] return a NavigableSet view of the keys in [keyed]. */
 
     let toNavigableMap: (t 'k 'v) => NavigableMap.t 'k 'v;
   };

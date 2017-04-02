@@ -150,15 +150,21 @@ let toKeyCollection (map: t 'k _): Collection.t 'k =>
   if (isEmpty map) (Collection.empty ())
   else (Collection.Collection map (keyCollectionOps ()));
 
+let keys (map: t 'k _): Iterable.t 'k =>
+  map |> toKeyedIterable |> KeyedIterable.keys;
+
+let values (map: t 'k _): Iterable.t 'v =>
+  map |> toKeyedIterable |> KeyedIterable.values;
+
 let keySetOps (): ImmSet.Ops.t 'k (t 'k _) => {
   contains: containsKey,
   count,
   toCollection: toKeyCollection,
-  toIterable: toKeyedIterable >> KeyedIterable.keys,
+  toIterable: keys,
   toSequence: toKeySequence,
 };
 
-let keys (map: t 'k 'v): (ImmSet.t 'k) =>
+let keySet (map: t 'k 'v): (ImmSet.t 'k) =>
   if (isEmpty map) (ImmSet.empty ())
   else ImmSet.Set map (keySetOps ());
 
@@ -169,6 +175,7 @@ let keyedCollectionOps: KeyedCollection.Ops.t 'k 'v (t 'k 'v) = {
   toIterable,
   toKeyedIterable,
   toSequence,
+  values,
 };
 
 let toKeyedCollection (map: t 'k 'v): (KeyedCollection.t 'k 'v) =>
@@ -180,9 +187,13 @@ let mapOps: ImmMap.Ops.t 'k 'v (t 'k 'v) = {
   count,
   get,
   getOrRaise,
+  keys,
+  keySet,
+  toIterable,
   toKeyedCollection,
   toKeyedIterable,
   toSequence,
+  values,
 };
 
 let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) =>
@@ -330,7 +341,7 @@ let fromEntriesWith
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (initialValue: t 'k 'vAcc)
-    (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keys next) (keys initialValue)
+    (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keySet next) (keySet initialValue)
   |> Iterable.reduce (
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);
@@ -345,7 +356,9 @@ let merge
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
 
+  let keys = keys;
   let reduce = reduce;
   let toIterable = toIterable;
   let toKeyedIterable = toKeyedIterable;
+  let values = values;
 };

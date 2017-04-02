@@ -16,28 +16,45 @@ module type S1 = {
 
   let first: t 'v => option (k, 'v);
   let firstOrRaise: t 'v => (k, 'v);
+  let firstKey: t 'v => option k;
+  let firstKeyOrRaise: t 'v => k;
+  let firstValue: t 'v => option 'v;
+  let firstValueOrRaise: t 'v => 'v;
+  let keysRight: t 'v => Iterable.t k;
   let last: t 'v => option (k, 'v);
   let lastOrRaise: t 'v => (k, 'v);
-  let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let lastKey: t 'v => option k;
+  let lastKeyOrRaise: t 'v => k;
+  let lastValue: t 'v => option 'v;
+  let lastValueOrRaise: t 'v => 'v;
+  let reduceRight:
+    while_::('acc => k => 'v => bool)? =>
+    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterableRight: t 'v => Iterable.t (k, 'v);
   let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
   let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
   let toSequenceRight: t 'v => Sequence.t (k, 'v);
+  let valuesRight: t 'v => Iterable.t 'v;
+  let navigableKeySet: t 'v => NavigableSet.t k;
   let toNavigableMap: t 'v => NavigableMap.t k 'v;
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
-  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let keys: t 'v => Iterable.t k;
+  let reduce:
+    while_::('acc => k => 'v => bool)? =>
+    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterable: t 'v => Iterable.t (k, 'v);
   let toKeyedIterable: t 'v => KeyedIterable.t k 'v;
+  let values: t 'v => Iterable.t 'v;
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
   let isEmpty: t 'v => bool;
   let isNotEmpty: t 'v => bool;
-  let keys: t 'v => ImmSet.t k;
   let toKeyedCollection: t 'v => KeyedCollection.t k 'v;
   let toSequence: t 'v => Sequence.t (k, 'v);
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
+  let keySet: t 'v => ImmSet.t k;
   let toMap: t 'v => ImmMap.t k 'v;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let empty: unit => t 'v;
@@ -51,6 +68,7 @@ module type S1 = {
   let putAllEntries: Iterable.t (k, 'v) => t 'v => t 'v;
   let removeFirstOrRaise: t 'v => t 'v;
   let removeLastOrRaise: t 'v => t 'v;
+
   let module KeyedReducerRight: KeyedIterable.KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
   let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k:= k and type t 'v:= t 'v;
 };
@@ -95,6 +113,18 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let firstOrRaise ({ tree }: t 'v): (k, 'v) =>
     tree |> AVLTreeMap.firstOrRaise;
 
+  let firstKey ({ tree }: t 'v): (option k) =>
+    tree |> AVLTreeMap.firstKey;
+
+  let firstKeyOrRaise ({ tree }: t 'v): k =>
+    tree |> AVLTreeMap.firstKeyOrRaise;
+
+  let firstValue ({ tree }: t 'v): (option 'v) =>
+    tree |> AVLTreeMap.firstValue;
+
+  let firstValueOrRaise ({ tree }: t 'v): 'v =>
+    tree |> AVLTreeMap.firstValueOrRaise;
+
   let get (key: k) ({ tree }: t 'v): (option 'v) =>
     tree |> AVLTreeMap.get comparator key;
 
@@ -112,6 +142,18 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let lastOrRaise ({ tree }: t 'v): (k, 'v) =>
     tree |> AVLTreeMap.lastOrRaise;
+
+  let lastKey ({ tree }: t 'v): (option k) =>
+    tree |> AVLTreeMap.lastKey;
+
+  let lastKeyOrRaise ({ tree }: t 'v): k =>
+    tree |> AVLTreeMap.lastKeyOrRaise;
+
+  let lastValue ({ tree }: t 'v): (option 'v) =>
+    tree |> AVLTreeMap.lastValue;
+
+  let lastValueOrRaise ({ tree }: t 'v): 'v =>
+    tree |> AVLTreeMap.lastValueOrRaise;
 
   let put (key: k) (value: 'v) ({ count, tree } as map: t 'v): (t 'v) => {
     let alterResult = ref AlterResult.NoChange;
@@ -185,6 +227,9 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let toKeySequence ({ tree }: t 'v): (Sequence.t k) =>
     tree |> AVLTreeMap.toKeySequence;
 
+  let toKeySequenceRight ({ tree }: t 'v): (Sequence.t k) =>
+    tree |> AVLTreeMap.toKeySequenceRight;
+
   let toSequence ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
     tree |> AVLTreeMap.toSequence;
 
@@ -225,6 +270,18 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     if (isEmpty map) (KeyedIterable.empty ())
     else KeyedIterable.KeyedIterable map keyedIteratorRight;
 
+  let keys (map: t 'v): (Iterable.t k) =>
+    map |> toKeyedIterable |> KeyedIterable.keys;
+
+  let keysRight (map: t 'v): (Iterable.t k) =>
+    map |> toKeyedIterableRight |> KeyedIterable.keys;
+
+  let values (map: t 'v): (Iterable.t 'v) =>
+    map |> toKeyedIterable |> KeyedIterable.values;
+
+  let valuesRight (map: t 'v): (Iterable.t 'v) =>
+    map |> toKeyedIterableRight |> KeyedIterable.values;
+
   let keyCollectionOps (): Collection.Ops.t 'k (t 'v) => {
     count: count,
     toIterable: toKeyedIterable >> KeyedIterable.keys,
@@ -243,9 +300,60 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     toSequence: toKeySequence,
   };
 
-  let keys (map: t 'v): (ImmSet.t k) =>
+  let keySet (map: t 'v): (ImmSet.t k) =>
     if (isEmpty map) (ImmSet.empty ())
     else ImmSet.Set map (keySetOps ());
+
+  let sequentialKeyCollectionOps (): SequentialCollection.Ops.t k (t 'v) => {
+    count,
+    first: firstKey,
+    firstOrRaise: firstKeyOrRaise,
+    toCollection: toKeyCollection,
+    toIterable: toKeyedIterable >> KeyedIterable.keys,
+    toSequence: toKeySequence,
+  };
+
+  let toSequentialKeyCollection (map: t 'v): (SequentialCollection.t k) =>
+    if (isEmpty map) (SequentialCollection.empty ())
+    else SequentialCollection.SequentialCollection map (sequentialKeyCollectionOps ());
+
+  let navigableKeyCollectionOps (): NavigableCollection.Ops.t k (t 'v) => {
+    count,
+    first: firstKey,
+    firstOrRaise: firstKeyOrRaise,
+    last: lastKey,
+    lastOrRaise: lastKeyOrRaise,
+    toCollection: toKeyCollection,
+    toSequentialCollection: toSequentialKeyCollection,
+    toIterable: toKeyedIterable >> KeyedIterable.keys,
+    toIterableRight: toKeyedIterable >> KeyedIterable.keys,
+    toSequence: toKeySequence,
+    toSequenceRight: toKeySequenceRight,
+  };
+
+  let toNavigableKeyCollection (map: t 'v): (NavigableCollection.t k) =>
+    if (isEmpty map) (NavigableCollection.empty ())
+    else NavigableCollection.NavigableCollection map (navigableKeyCollectionOps ());
+
+  let navigableKeySetOps (): NavigableSet.Ops.t k (t 'v) => {
+    contains: containsKey,
+    count,
+    first: firstKey,
+    firstOrRaise: firstKeyOrRaise,
+    last: lastKey,
+    lastOrRaise: lastKeyOrRaise,
+    toCollection: toKeyCollection,
+    toIterable: toKeyedIterable >> KeyedIterable.keys,
+    toIterableRight: toKeyedIterable >> KeyedIterable.keys,
+    toNavigableCollection: toNavigableKeyCollection,
+    toSequence: toKeySequence,
+    toSequenceRight: toKeySequenceRight,
+    toSequentialCollection: toSequentialKeyCollection
+  };
+
+  let navigableKeySet (map: t 'v): (NavigableSet.t k) =>
+    if (isEmpty map) (NavigableSet.empty ())
+    else NavigableSet.NavigableSet map (navigableKeySetOps ());
 
   let keyedCollectionOps: KeyedCollection.Ops.t k 'v (t 'v) = {
     containsKey,
@@ -254,6 +362,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     toIterable,
     toKeyedIterable,
     toSequence,
+    values,
   };
 
   let toKeyedCollection (map: t 'v): (KeyedCollection.t k 'v) =>
@@ -265,9 +374,13 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     count,
     get,
     getOrRaise,
+    keys,
+    keySet,
+    toIterable,
     toKeyedCollection,
     toKeyedIterable,
     toSequence,
+    values,
   };
 
   let toMap (map: t 'v): (ImmMap.t k 'v) =>
@@ -279,9 +392,18 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     count,
     first,
     firstOrRaise,
+    firstKey,
+    firstKeyOrRaise,
+    firstValue,
+    firstValueOrRaise,
     keys,
+    keysRight,
     last,
     lastOrRaise,
+    lastKey,
+    lastKeyOrRaise,
+    lastValue,
+    lastValueOrRaise,
     toIterable,
     toIterableRight,
     toKeyedCollection,
@@ -289,6 +411,8 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     toKeyedIterableRight,
     toSequence,
     toSequenceRight,
+    values,
+    valuesRight,
   };
 
   let toNavigableKeyedCollection (map: t 'v): (NavigableKeyedCollection.t k 'v) =>
@@ -300,11 +424,22 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     count,
     first,
     firstOrRaise,
+    firstKey,
+    firstKeyOrRaise,
+    firstValue,
+    firstValueOrRaise,
     get,
     getOrRaise,
     keys,
+    keysRight,
+    keySet,
     last,
     lastOrRaise,
+    lastKey,
+    lastKeyOrRaise,
+    lastValue,
+    lastValueOrRaise,
+    navigableKeySet,
     toIterable,
     toIterableRight,
     toKeyedCollection,
@@ -314,6 +449,8 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     toNavigableKeyedCollection,
     toSequence,
     toSequenceRight,
+    values,
+    valuesRight
   };
 
   let toNavigableMap (map: t 'v): (NavigableMap.t k 'v) =>
@@ -323,7 +460,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let merge
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
       (acc: t 'vAcc)
-      (next: t 'v): (t 'vAcc) =>  ImmSet.union (keys next) (keys acc)
+      (next: t 'v): (t 'vAcc) =>  ImmSet.union (keySet next) (keySet acc)
     |> Iterable.reduce (
         fun acc key => {
           let result = f key (acc |> get key) (next |> get key);
@@ -338,17 +475,21 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     type nonrec k = k;
     type nonrec t 'v = t 'v;
 
+    let keys = keysRight;
     let reduce = reduceRight;
     let toIterable = toIterableRight;
     let toKeyedIterable = toKeyedIterableRight;
+    let values = valuesRight;
   };
 
   let module KeyedReducer = KeyedIterable.KeyedReducer.Make1 {
     type nonrec k = k;
     type nonrec t 'v = t 'v;
 
+    let keys = keys;
     let reduce = reduce;
     let toIterable = toIterable;
     let toKeyedIterable = toKeyedIterable;
+    let values = values;
   };
 };
