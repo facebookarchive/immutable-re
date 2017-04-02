@@ -36,7 +36,6 @@ let module Streamable = {
     let defer: (unit => t 'a) => (t 'a);
     let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
     let doOnNext: ('a => unit) => (t 'a) => (t 'a);
-    let empty: unit => (t 'a);
     let filter: ('a => bool) => (t 'a) => (t 'a);
     let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
     let flatten: (t (t 'a)) => (t 'a);
@@ -361,7 +360,6 @@ let module KeyedStreamable = {
     let defer: (unit => t 'k 'v) => (t 'k 'v);
     let distinctUntilChangedWith: keyEquals::(Equality.t 'k) => valueEquals::(Equality.t 'v) => (t 'k 'v) => (t 'k 'v);
     let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
-    let empty: unit => (t 'k 'v);
     let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
     let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
     let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
@@ -464,6 +462,8 @@ let module KeyedCollection = {
 };
 
 let module NavigableKeyedCollection = {
+  include NavigableKeyedCollection;
+
   module type S1 = {
     type k;
     type t 'v;
@@ -477,7 +477,26 @@ let module NavigableKeyedCollection = {
     let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     let toIterableRight: t 'v => Iterable.t (k, 'v);
     let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
+    let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
     let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
+  };
+
+  module type S2 = {
+    /** NavigableKeyedCollection module type signature for types with a parametric type arity of 2. */
+
+    type t 'k 'v;
+
+    include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+
+    let first: (t 'k 'v) => (option ('k, 'v));
+    let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    let last: (t 'k 'v) => (option ('k, 'v));
+    let lastOrRaise: (t 'k 'v) => ('k, 'v);
+    let reduceRight: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let toIterableRight: t 'k 'v => Iterable.t ('k, 'v);
+    let toKeyedIterableRight: t 'k 'v => KeyedIterable.t 'k 'v;
+    let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
+    let toSequenceRight: (t 'k 'v) => (Sequence.t ('k, 'v));
   };
 };
 
@@ -572,12 +591,29 @@ let module Map = {
 };
 
 let module NavigableMap = {
+  include NavigableMap;
+
   module type S1 = {
+    /** NavigableMap module type signature for types with a parametric type arity of 1. */
+
     type k;
     type t 'v;
 
     include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
+
+    let toNavigableMap: (t 'v) => NavigableMap.t k 'v;
+  };
+
+  module type S2 = {
+    /** NavigableMap module type signature for types with a parametric type arity of 1. */
+
+    type t 'k 'v;
+
+    include NavigableKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+    include Map.S2 with type t 'k 'v := t 'k 'v;
+
+    let toNavigableMap: (t 'k 'v) => NavigableMap.t 'k 'v;
   };
 
   let module Persistent = {
@@ -592,10 +628,11 @@ let module NavigableMap = {
       let removeLastOrRaise: (t 'v) => (t 'v);
     };
   };
-
 };
 
 let module Indexed = {
+  include Indexed;
+
   module type S1 = {
     type t 'a;
 
@@ -607,6 +644,8 @@ let module Indexed = {
     let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
     let toKeyedIterableRight: (t 'a) => (KeyedIterable.t int 'a);
     let toMap: (t 'a) => (Map.t int 'a);
+    let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int 'a);
+    let toNavigableMap: (t 'a) => (NavigableMap.t int 'a);
   };
 };
 

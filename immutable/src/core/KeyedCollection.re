@@ -47,16 +47,6 @@ let keys (keyed: t 'k 'v): ImmSet.t 'k => switch keyed {
   | KeyedCollection keyed { keys } => keys keyed
 };
 
-let reduce
-    while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
-    (f: 'acc => 'k => 'v => 'acc)
-    (acc: 'acc)
-    (keyed: t 'k 'v): 'acc => switch keyed {
-  | Empty => acc
-  | KeyedCollection keyed { toKeyedIterable } =>
-      keyed |> toKeyedIterable |> KeyedIterable.reduce while_::predicate f acc;
-};
-
 let toIterable (keyed: t 'k 'v): Iterable.t ('k, 'v) => switch keyed {
   | Empty => Iterable.empty ()
   | KeyedCollection keyed { toIterable } => toIterable keyed
@@ -85,6 +75,13 @@ let map (f: 'k => 'a => 'b) (keyed: t 'k 'a): (t 'k 'b) => switch keyed {
       toSequence: ops.toSequence >> Sequence.map (fun (k, v) => (k, f k v)),
     }
 };
+
+let reduce
+    while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (keyed: t 'k 'v): 'acc =>
+  keyed |> toKeyedIterable |> KeyedIterable.reduce while_::predicate f acc;
 
 let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
