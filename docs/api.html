@@ -28,7 +28,7 @@
 Equality
 ---------------
 ```reason
-let module Equality: {
+let module rec Equality: {
   /** Equality functions for common types. */
 
   type t 'a = 'a => 'a => bool;
@@ -36,48 +36,48 @@ let module Equality: {
    * [equals this that] returns [true] if [this] and [that] are equal, otherwise [false].
    */
 
-  let bytes: t bytes;
+  let bytes: Equality.t bytes;
   /** Equality for bytes. */
 
-  let char: t char;
+  let char: Equality.t char;
   /** Equality for chars. */
 
-  let int: t int;
+  let int: Equality.t int;
   /** Equality for ints. */
 
-  let int32: t int32;
+  let int32: Equality.t int32;
   /** Equality for int32s. */
 
-  let int64: t int64;
+  let int64: Equality.t int64;
   /** Equality for int64s. */
 
-  let nativeInt: t nativeint;
+  let nativeInt: Equality.t nativeint;
   /** Equality for nativeInts. */
 
-  let reference: t 'a;
+  let reference: Equality.t 'a;
   /** The reference equality function, analogous to === */
 
-  let string: t string;
+  let string: Equality.t string;
   /** Equality for strings. */
 };
 ```
 Ordering
 ---------------
 ```reason
-let module Ordering: {
+let module rec Ordering: {
   /** Represents the absolute ordering of a type when comparing values. */
 
   type t;
 
-  let equal: t;
-  let greaterThan: t;
-  let lessThan: t;
+  let equal: Ordering.t;
+  let greaterThan: Ordering.t;
+  let lessThan: Ordering.t;
 };
 ```
 Comparator
 ---------------
 ```reason
-let module Comparator: {
+let module rec Comparator: {
   /** Comparison functions for common types. */
 
   type t 'a = 'a => 'a => Ordering.t;
@@ -88,28 +88,28 @@ let module Comparator: {
    *    otherwise [Ordering.equals].
    */
 
-  let bytes: t bytes;
+  let bytes: Comparator.t bytes;
   /** Compares bytes. */
 
-  let char: t char;
+  let char: Comparator.t char;
   /** Compares chars. */
 
-  let int: t int;
+  let int: Comparator.t int;
   /** Compares ints. */
 
-  let int32: t int32;
+  let int32: Comparator.t int32;
   /** Compares int32s. */
 
-  let int64: t int64;
+  let int64: Comparator.t int64;
   /** Compares int64s. */
 
-  let nativeInt: t nativeint;
+  let nativeInt: Comparator.t nativeint;
   /** Compares nativeInts. */
 
-  let string: t string;
+  let string: Comparator.t string;
   /** Compares strings. */
 
-  let toEquality: (t 'a) => (Equality.t 'a);
+  let toEquality: (Comparator.t 'a) => (Equality.t 'a);
   /** Converts a Comparator function to an Equality function. */
 };
 ```
@@ -212,9 +212,6 @@ let module rec Streamable: {
     /** [doOnNext f stream] returns a Streamable that applies the side effect
      *  function [f] to each value in the stream as they are enumerated.
      */
-
-    let empty: unit => (t 'a);
-    /** Returns an empty Streamable. */
 
     let filter: ('a => bool) => (t 'a) => (t 'a);
     /** [filter f stream] returns a Streamable only including values from [stream]
@@ -319,7 +316,10 @@ let module rec Iterable: {
 
   type t 'a;
 
-  include Streamable.S1 with type t 'a := t 'a;
+  include Streamable.S1 with type t 'a := Iterable.t 'a;
+
+  let empty: unit => (Iterable.t 'a);
+  /** Returns an empty Iterable. */
 
   let module Reducer: {
     /** Module functions for generating modules which provide common reduction functions for Iterables.
@@ -438,55 +438,13 @@ let module rec Iterable: {
     include S1 with type t 'a := t 'a;
   };
 
-  include S1 with type t 'a := t 'a;
-};
-```
-IterableRight
----------------
-```reason
-let module IterableRight: {
-  /** Module types implemented by modules that support reducing over
-   *  values in both the left to right, and right to left directions.
-   */
-
-  module type S = {
-    /** IterableRight module type signature for types with a parametric type arity of 0. */
-
-    type a;
-    type t;
-
-    include Iterable.S with type a := a and type t := t;
-
-    let reduceRight: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
-     *  function [f] to each value in [iterable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-
-     let toIterableRight: t => (Iterable.t a);
-  };
-
-  module type S1 = {
-    /** IterableRight module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include Iterable.S1 with type t 'a := t 'a;
-
-    let reduceRight: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    /** [reduceRight while_::predicate initialValue f iterable] applies the accumulator
-     *  function [f] to each value in [iterable] while [predicate] returns true, starting
-     *  from the right most value, accumulating the result.
-     */
-
-    let toIterableRight: t 'a => (Iterable.t 'a);
-  };
+  include S1 with type t 'a := Iterable.t 'a;
 };
 ```
 Sequence
 ---------------
 ```reason
-let module Sequence: {
+let module rec Sequence: {
   /** Functional pull based sequences. Sequences are generally lazy, computing values as
    *  they are pulled. Sequences are reusable and are guaranteed to produce the
    *  same values, in the same order every time they are enumerated. In addition, Sequences
@@ -501,14 +459,17 @@ let module Sequence: {
   include Iterable.S1 with type t 'a := t 'a;
   include Streamable.S1 with type t 'a := t 'a;
 
-  let seek: int => (t 'a) => (t 'a);
+  let empty: unit => (Sequence.t 'a);
+  /** Returns an empty Sequence. */
+
+  let seek: int => (Sequence.t 'a) => (Sequence.t 'a);
   /** [seek count seq] scans forward [count] values in [seq]. It is the eagerly
    *  evaluated equivalent of [skip count seq].
    *
    *  Computational complexity: O(count).
    */
 
-  let seekWhile: ('a => bool) => (t 'a) => (t 'a);
+  let seekWhile: ('a => bool) => (Sequence.t 'a) => (Sequence.t 'a);
   /** [seekWhile f seq] scans forward through [seq] while application of
    *  the predicate function [f] returns true. It is the eagerly evaluated
    *  equivalent of [skipWhile f seq].
@@ -516,25 +477,25 @@ let module Sequence: {
    *  Computational complexity: O(N).
    */
 
-  let zip: (list (t 'a)) => (t (list 'a));
+  let zip: (list (Sequence.t 'a)) => (Sequence.t (list 'a));
   /** [zip seqs] returns a Sequence which lazily zips a list of [Sequence]s
    *  into a single Sequence of lists. Values are produce until any Sequence
    *  in [seqs] completes.
    */
 
-  let zip2With: ('a => 'b => 'c) => (t 'a) => (t 'b) => (t 'c);
+  let zip2With: ('a => 'b => 'c) => (Sequence.t 'a) => (Sequence.t 'b) => (Sequence.t 'c);
   /** [zip2With zipper first second] returns a Sequence which lazily zips two Sequences,
    *  combining their values using [zipper]. Values are produce until either [first]
    *  or [second] completes.
    */
 
-  let zip3With: ('a => 'b => 'c => 'd) => (t 'a) => (t 'b) => (t 'c) => (t 'd);
+  let zip3With: ('a => 'b => 'c => 'd) => (Sequence.t 'a) => (Sequence.t 'b) => (Sequence.t 'c) => (Sequence.t 'd);
   /** [zip3With zipper first second third] returns a Sequence which lazily zips three Sequences,
    *  combining their values using [zipper]. Values are produce until either [first], [second]
    *  or [third] complete.
    */
 
-  let zipLongest: (list (t 'a)) => (t (list (option 'a)));
+  let zipLongest: (list (Sequence.t 'a)) => (Sequence.t (list (option 'a)));
   /** [zipLongest seqs] returns a Sequence which zips a list of Sequences
    *  into a single of Sequence of lists. Values are produce until all Sequences
    *  in [seqs] complete.
@@ -542,9 +503,9 @@ let module Sequence: {
 
   let zipLongest2With:
     (option 'a => option 'b => 'c) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c);
+    (Sequence.t 'a) =>
+    (Sequence.t 'b) =>
+    (Sequence.t 'c);
   /** [zipLongest2With zipper first second] returns a Sequence which lazily zips two Sequences,
    *  combining their values using [zipper]. Values are produce until both [first]
    *  and [second] complete.
@@ -552,16 +513,16 @@ let module Sequence: {
 
   let zipLongest3With:
     (option 'a => option 'b => option 'c => 'd) =>
-    (t 'a) =>
-    (t 'b) =>
-    (t 'c) =>
-    (t 'd);
+    (Sequence.t 'a) =>
+    (Sequence.t 'b) =>
+    (Sequence.t 'c) =>
+    (Sequence.t 'd);
   /** [zipLongest3With zipper first second third] returns a Sequence which lazily
    *  zips three Sequences, combining their values using [zipper]. Values are produce
    *  until [first], [second] and [third] all complete.
    */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := Sequence.t 'a;
   /* Reducer module for Sequences. */
 };
 ```
@@ -629,21 +590,11 @@ let module rec Collection: {
 
   type t 'a;
 
-  include S1 with type t 'a := t 'a;
+  include S1 with type t 'a := Collection.t 'a;
 
-  let empty: unit => (t 'a);
+  let empty: unit => (Collection.t 'a);
   /** [empty ()] returns the empty collection */
 
-  let map: ('a => 'b) => (t 'a) => (t 'b);
-  /** [map f collection] Returns a lazy Collection that computes values
-   *  lazily by applying [f].
-   *
-   *  Note, the results of applying [f] to a given key/value pair are not
-   *  memoized. Therefore [f] must be a pure function.
-   */
-
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
-  /* Reducer module for Iterables. */
   let module Persistent: {
     /** Module types implemented by collections supporting fully persistent mutations.
      *  Mutation operations on these types do not mutate the underlying collection, but instead
@@ -668,7 +619,7 @@ let module rec Collection: {
     };
 
     module type S1 = {
-      /** Persistent Collection module type signature for types with a parametric type arity of 1. */
+      /** PersistentCollection module type signature for types with a parametric type arity of 1. */
 
       type t 'a;
 
@@ -681,6 +632,9 @@ let module rec Collection: {
        */
     };
   };
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := Collection.t 'a;
+  /* Reducer module for Collections. */
 
   let module Transient: {
     /** Module types implemented by transiently mutable Collections. Transient collections
@@ -739,7 +693,7 @@ let module rec Collection: {
 SequentialCollection
 ---------------
 ```reason
-let module SequentialCollection: {
+let module rec SequentialCollection: {
   /** Module types implemented by collections that support sequential access to
    *  the left most contained values. Concrete implementations include [Stack] and [SortedSet].
    *
@@ -759,6 +713,8 @@ let module SequentialCollection: {
 
     let firstOrRaise: t => a;
     /** [firstOrRaise collection] returns the first value in [collection] or throws. */
+
+    let toSequentialCollection: t => (SequentialCollection.t a);
   };
 
   module type S1 = {
@@ -772,7 +728,16 @@ let module SequentialCollection: {
 
     let firstOrRaise: (t 'a) => 'a;
     /** [firstOrRaise collection] returns the first value in [collection] or throws. */
+
+    let toSequentialCollection: (t 'a) => (SequentialCollection.t 'a);
   };
+
+  type t 'a;
+
+  include S1 with type t 'a := SequentialCollection.t 'a;
+
+  let empty: unit => (SequentialCollection.t 'a);
+  /** [empty ()] returns the empty SequentialCollection */
 
   let module Persistent: {
     /** Module types implemented by collections supporting persistent mutations to left
@@ -811,6 +776,9 @@ let module SequentialCollection: {
        */
     };
   };
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := SequentialCollection.t 'a;
+  /* Reducer module for SequentialCollections. */
 
   let module Transient: {
     /** Module types implemented by transient collections supporting transient mutations to left
@@ -852,7 +820,7 @@ let module SequentialCollection: {
 NavigableCollection
 ---------------
 ```reason
-let module NavigableCollection: {
+let module rec NavigableCollection: {
   /** Module types implemented by Collections that are ordered or sorted and support
    *  navigation operations.
    *
@@ -865,7 +833,6 @@ let module NavigableCollection: {
     type a;
     type t;
 
-    include IterableRight.S with type a := a and type t := t;
     include SequentialCollection.S with type a := a and type t := t;
 
     let last: t => (option a);
@@ -880,8 +847,18 @@ let module NavigableCollection: {
      *  By contract, implementations are efficient with no worst than O(log N) performance.
      */
 
-    let toSequenceRight: t => (Sequence.t a);
-    /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
+    let reduceReversed: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    /** [reduceReversed while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+    let toIterableReversed: t => (Iterable.t a);
+
+    let toNavigableCollection: t => (NavigableCollection.t a);
+
+    let toSequenceReversed: t => (Sequence.t a);
+    /* [toSequenceReversed collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
      */
   };
@@ -891,7 +868,6 @@ let module NavigableCollection: {
 
     type t 'a;
 
-    include IterableRight.S1 with type t 'a := t 'a;
     include SequentialCollection.S1 with type t 'a := t 'a;
 
     let last: (t 'a) => (option 'a);
@@ -900,11 +876,28 @@ let module NavigableCollection: {
     let lastOrRaise: (t 'a) => 'a;
     /** [lastOrRaise collection] returns the first value in [collection] or raises an exception. */
 
-    let toSequenceRight: (t 'a) => (Sequence.t 'a);
-    /* [toSequenceRight collection] returns an Sequence that can be used to enumerate
+    let reduceReversed: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    /** [reduceReversed while_::predicate initialValue f iterable] applies the accumulator
+     *  function [f] to each value in [iterable] while [predicate] returns true, starting
+     *  from the right most value, accumulating the result.
+     */
+
+    let toIterableReversed: t 'a => (Iterable.t 'a);
+
+    let toNavigableCollection: (t 'a) => (NavigableCollection.t 'a);
+
+    let toSequenceReversed: (t 'a) => (Sequence.t 'a);
+    /* [toSequenceReversed collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
      */
   };
+
+  type t 'a;
+
+  include S1 with type t 'a := NavigableCollection.t 'a;
+
+  let empty: unit => (NavigableCollection.t 'a);
+  /** [empty ()] returns the empty NavigableCollection */
 
   let module Persistent: {
     /** Module types implemented by collections supporting persistent mutations to both the left
@@ -914,7 +907,7 @@ let module NavigableCollection: {
      */
 
     module type S1 = {
-      /** Persistent NavigableCollection module type signature for types with a parametric type arity of 1. */
+      /** PersistentNavigableCollection module type signature for types with a parametric type arity of 1. */
 
       type t 'a;
 
@@ -942,6 +935,9 @@ let module NavigableCollection: {
        */
     };
   };
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := NavigableCollection.t 'a;
+  /* Reducer module for NavigableCollections. */
 
   let module Transient: {
     /** Module types implemented by transient collections supporting transient mutations to both
@@ -1027,26 +1023,23 @@ let module rec Set: {
   type t 'a;
   /** The Set type. */
 
-  include S1 with type t 'a := t 'a;
+  include S1 with type t 'a := Set.t 'a;
 
-  let empty: unit => (t 'a);
+  let empty: unit => (Set.t 'a);
   /** The empty Set. */
 
-  let intersect: (t 'a) => (t 'a) => (Iterable.t 'a);
+  let intersect: (Set.t 'a) => (Set.t 'a) => (Iterable.t 'a);
   /** [intersect this that] returns an Iterable of unique values
    *  which occur in both [this] and [that].
    */
 
-  let subtract: (t 'a) => (t 'a) => (Iterable.t 'a);
+  let subtract: (Set.t 'a) => (Set.t 'a) => (Iterable.t 'a);
   /** [subtract this that] returns an Iterable of unique value
    *  which occur in [this] but not in [that].
    */
 
-  let union: (t 'a) => (t 'a) => (Iterable.t 'a);
+  let union: (Set.t 'a) => (Set.t 'a) => (Iterable.t 'a);
   /** [union this that] returns an Iterable of unique values which occur in either [this] or [that]. */
-
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
-  /* Reducer module for Iterables. */
 
   let module Persistent: {
     /** Module types implemented by Set collections supporting persistent mutations.
@@ -1129,6 +1122,9 @@ let module rec Set: {
     };
   };
 
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := Set.t 'a;
+  /* Reducer module for Iterables. */
+
   let module Transient: {
     /** Module types implemented by transiently mutable sets.
      *
@@ -1193,7 +1189,7 @@ let module rec Set: {
 NavigableSet
 ---------------
 ```reason
-let module NavigableSet: {
+let module rec NavigableSet: {
   /*  Module types implemented by Sets that supports navigation operations. */
 
   module type S = {
@@ -1204,7 +1200,16 @@ let module NavigableSet: {
 
     include Set.S with type a := a and type t := t;
     include NavigableCollection.S with type a := a and type t := t;
+
+    let toNavigableSet: t => NavigableSet.t a;
+    /** [toNavigableSet set] returns a NavigableSet view of [set]. */
   };
+
+  type t 'a;
+  /** The Set type. */
+
+  let empty: unit => (NavigableSet.t 'a);
+  /** The empty Set. */
 
   let module Persistent: {
     /** Module types implemented by NavigableSet collections supporting persistent mutations.
@@ -1231,6 +1236,9 @@ let module NavigableSet: {
        */
     };
   };
+
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := NavigableSet.t 'a;
+  /* Reducer module for NavigableSets. */
 };
 ```
 KeyedStreamable
@@ -1260,9 +1268,6 @@ let module KeyedStreamable: {
     /** [doOnNext f stream] returns a KeyedStreamable that applies the side effect
      *  function [f] to each key/value pair they are iterated.
      */
-
-    let empty: unit => (t 'k 'v);
-    /** Returns an empty KeyedStreamable. */
 
     let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
     /** [filter f stream] returns a KeyedStreamable only including key/value pairs from [stream]
@@ -1298,12 +1303,6 @@ let module KeyedStreamable: {
 
     let return: 'k => 'v => (t 'k 'v);
     /** [return key value] returns a KeyedStreamable containing the pair ([key], [value]). */
-
-    let scan: ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => (Iterable.t 'acc);
-    /** [scan f acc stream] returns a KeyedStreamable of accumulated values resulting from the
-     *  application of the accumulator function [f] to each value in [stream] with the
-     *  specified initial value [acc].
-     */
 
     let skip: int => (t 'k 'v) => (t 'k 'v);
     /** [skip count stream] return a KeyedStreamable which skips the first [count]
@@ -1347,6 +1346,9 @@ let module rec KeyedIterable: {
     type k;
     type t 'v;
 
+    let keys: (t 'v) => (Iterable.t k);
+    /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
+
     let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
      *  function [f] to each key/value pair in [keyedIterable], while [predicate] returns true,
@@ -1362,12 +1364,18 @@ let module rec KeyedIterable: {
     /** [toKeyedIterable keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
+
+    let values: (t 'v) => Iterable.t 'v;
+    /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
   };
 
   module type S2 = {
     /** KeyedIterable module type signature for types with a parametric type arity of 2. */
 
     type t 'k 'v;
+
+    let keys: (t 'k 'v) => (Iterable.t 'k);
+    /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
 
     let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1384,11 +1392,14 @@ let module rec KeyedIterable: {
     /** [toKeyedIterable keyedIterable] returns a KeyedIterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable].
      */
+
+    let values: (t 'k 'v) => Iterable.t 'v;
+    /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
   };
 
   type t 'k 'v;
 
-  include KeyedStreamable.S2 with type t 'k 'v := t 'k 'v;
+  include KeyedStreamable.S2 with type t 'k 'v := KeyedIterable.t 'k 'v;
 
   let module KeyedReducer: {
     /** Module functions for generating modules which provide common reduction functions for Iterables.
@@ -1546,56 +1557,25 @@ let module rec KeyedIterable: {
     include S2 with type t 'k 'v := t 'k 'v;
   };
 
-  include S2 with type t 'k 'v := t 'k 'v;
+  include S2 with type t 'k 'v := KeyedIterable.t 'k 'v;
 
-  let fromEntries: Iterable.t ('k, 'v) => (t 'k 'v);
+  let empty: unit => (KeyedIterable.t 'k 'v);
+  /** The empty KeyedCollection. */
+
+  let fromEntries: Iterable.t ('k, 'v) => (KeyedIterable.t 'k 'v);
   /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */
 
-  let keys: (t 'k 'v) => (Iterable.t 'k);
-  /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
-
-  let values: (t 'k 'v) => Iterable.t 'v;
-  /** [values keyedIter] returns an Iterable view of the values in [keyedIter] */
-};
-```
-KeyedIterableRight
----------------
-```reason
-let module KeyedIterableRight: {
-  /** Module types implemented by modules that support reducing over
-   *  key/value pairs in both the left to right, and right to left directions.
+  let scan: ('acc => 'k => 'v => 'acc) => 'acc => (KeyedIterable.t 'k 'v) => (Iterable.t 'acc);
+  /** [scan f acc stream] returns a KeyedStreamable of accumulated values resulting from the
+   *  application of the accumulator function [f] to each value in [stream] with the
+   *  specified initial value [acc].
    */
-
-  module type S1 = {
-    /** KeyedIterableRight module type signature for types with a parametric type arity of 1. */
-
-    type k;
-    type t 'v;
-
-    include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
-
-    let reduceRight: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    /** [reduceRight while_::predicate initialValue f keyedIterable] applies the accumulator
-     *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
-     *  from the right most key/value pair, accumulating the result.
-     */
-
-    let toIterableRight: t 'v => Iterable.t (k, 'v);
-    /** [toIterableRight keyedIterable] returns an Iterable that can be used to iterate over
-      *  the key/value pairs in [keyedIterable] as tuples.
-      */
-
-    let toKeyedIterableRight: t 'v => KeyedIterable.t k 'v;
-    /** [toKeyedIterableRight keyedIterable] returns a KeyedIterable that can be used to iterate over
-      *  the key/value pairs in [keyedIterable].
-      */
-  };
 };
 ```
 KeyedCollection
 ---------------
 ```reason
-let module KeyedCollection: {
+let module rec KeyedCollection: {
   /** Module types implemented by all immutable keyed collections. This module
    *  signature does not impose any restrictions on the relationship between
    *  keys and associated values.
@@ -1630,8 +1610,8 @@ let module KeyedCollection: {
      *  least one value, otherwise false.
      */
 
-    let keys: (t 'v) => (Set.t k);
-    /** [keys keyed] return a Set view of the keys in [keyed]. */
+    let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
+    /* [toKeyedCollection keyed] returns KeyedCollection view. */
 
     let toSequence: (t 'v) => (Sequence.t (k, 'v));
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
@@ -1664,14 +1644,21 @@ let module KeyedCollection: {
      *  least one value, otherwise false.
      */
 
-    let keys: (t 'k 'v) => (Set.t 'k);
-    /** [keys keyed] return a Set view of the keys in [keyed]. */
+    let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
+    /* [toKeyedCollection keyed] returns KeyedCollection view. */
 
     let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples.
      */
   };
+
+  type t 'k 'v;
+
+  include S2 with type t 'k 'v := KeyedCollection.t 'k 'v;
+
+  let empty: unit => (KeyedCollection.t 'k 'v);
+  /** The empty KeyedCollection. */
 
   let module Persistent: {
     /** Module types implemented by KeyedCollections supporting fully persistent mutations.
@@ -1725,8 +1712,11 @@ let module KeyedCollection: {
     };
   };
 
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := KeyedCollection.t 'k 'v;
+   /* KeyedReducer module for KeyedCollections. */
+
   let module Transient: {
-    /** Module types implemented by transiently mutable KeyedCollections. Transient collections
+    /** Module types implemented by transiently mutable KeyedCollections. Transient Collections
     *  are designed to enable fast and efficient batch operations by temporarily enabling mutation
     *  of an underlying collection type. Unlike Persistent KeyedCollection functions, Transient KeyedCollection
     *  APIs always return the same value reference passed in as an argument, with mutations applied.
@@ -1806,7 +1796,7 @@ let module KeyedCollection: {
 NavigableKeyedCollection
 ---------------
 ```reason
-let module NavigableKeyedCollection: {
+let module rec NavigableKeyedCollection: {
   /** Module types implemented by KeyedCollections that are ordered or sorted and support
    *  navigation operations.
    */
@@ -1818,7 +1808,6 @@ let module NavigableKeyedCollection: {
     type t 'v;
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
-    include KeyedIterableRight.S1 with type k := k and type t 'v := t 'v;
 
     let first: (t 'v) => (option (k, 'v));
     /** [first keyed] returns first value in [keyed] or None.
@@ -1832,6 +1821,16 @@ let module NavigableKeyedCollection: {
      *  By contract, no worst than O(log N) performance.
      */
 
+    let firstKey: (t 'v) => (option k);
+
+    let firstKeyOrRaise: (t 'v) => k;
+
+    let firstValue: (t 'v) => (option 'v);
+
+    let firstValueOrRaise: (t 'v) => 'v;
+
+    let keysReversed: (t 'v) => Iterable.t k;
+
     let last: (t 'v) => (option (k, 'v));
     /** [last keyed] returns last value in [keyed] or None.
      *
@@ -1844,11 +1843,124 @@ let module NavigableKeyedCollection: {
      *  By contract, no worst than O(log N) performance.
      */
 
-    let toSequenceRight: (t 'v) => (Sequence.t (k, 'v));
-    /* [toSequenceRight keyed] returns an Sequence that can be used to enumerate
+    let lastKey: (t 'v) => (option k);
+
+    let lastKeyOrRaise: (t 'v) => k;
+
+    let lastValue: (t 'v) => (option 'v);
+
+    let lastValueOrRaise: (t 'v) => 'v;
+
+    let reduceReversed: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    /** [reduceReversed while_::predicate initialValue f keyedIterable] applies the accumulator
+     *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
+     *  from the right most key/value pair, accumulating the result.
+     */
+
+    let toIterableReversed: t 'v => Iterable.t (k, 'v);
+    /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable] as tuples.
+     */
+
+    let toKeyedIterableReversed: t 'v => KeyedIterable.t k 'v;
+    /** [toKeyedIterableReversed keyedIterable] returns a KeyedIterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable].
+     */
+
+    let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
+
+    let toSequenceReversed: (t 'v) => (Sequence.t (k, 'v));
+    /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
+
+    let valuesReversed: (t 'v) => Iterable.t 'v;
   };
+
+  module type S2 = {
+    /** NavigableKeyedCollection module type signature for types with a parametric type arity of 2. */
+
+    type t 'k 'v;
+
+    include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+
+    let first: (t 'k 'v) => (option ('k, 'v));
+    /** [first keyed] returns first value in [keyed] or None.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    /** [firstOrRaise keyed] returns first value in [keyed] or raises an exception.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let firstKey: (t 'k 'v) => (option 'k);
+
+    let firstKeyOrRaise: (t 'k 'v) => 'k;
+
+    let firstValue: (t 'k 'v) => (option 'v);
+
+    let firstValueOrRaise: (t 'k 'v) => 'v;
+
+    let keysReversed: (t 'k 'v) => Iterable.t 'k;
+
+    let last: (t 'k 'v) => (option ('k, 'v));
+    /** [last keyed] returns last value in [keyed] or None.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let lastOrRaise: (t 'k 'v) => ('k, 'v);
+    /** [lastOrRaise keyed] returns last value in [keyed] or raises an exception.
+     *
+     *  By contract, no worst than O(log N) performance.
+     */
+
+    let lastKey: (t 'k 'v) => (option 'k);
+
+    let lastKeyOrRaise: (t 'k 'v) => 'k;
+
+    let lastValue: (t 'k 'v) => (option 'v);
+
+    let lastValueOrRaise: (t 'k 'v) => 'v;
+
+    let reduceReversed: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    /** [reduceReversed while_::predicate initialValue f keyedIterable] applies the accumulator
+     *  function [f] to each key/value pair in [keyedIterable] while [predicate] returns true, starting
+     *  from the right most key/value pair, accumulating the result.
+     */
+
+    let toIterableReversed: t 'k 'v => Iterable.t ('k, 'v);
+    /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable] as tuples.
+     */
+
+    let toKeyedIterableReversed: t 'k 'v => KeyedIterable.t 'k 'v;
+    /** [toKeyedIterableReversed keyedIterable] returns a KeyedIterable that can be used to iterate over
+     *  the key/value pairs in [keyedIterable].
+     */
+
+    let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
+
+    let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
+    /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
+     * the key/value pairs in [keyed] as tuples from right to left.
+     */
+
+    let valuesReversed: (t 'k 'v) => Iterable.t 'v;
+  };
+
+  type t 'k 'v;
+
+  include S2 with type t 'k 'v := NavigableKeyedCollection.t 'k 'v;
+
+  let empty: unit => (NavigableKeyedCollection.t 'k 'v);
+  /** The empty Map. */
+
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := NavigableKeyedCollection.t 'k 'v;
+   /* KeyedReducer module for NavigableKeyedCollection. */
 };
 ```
 Map
@@ -1874,6 +1986,9 @@ let module rec Map: {
      let getOrRaise: k => (t 'v) => 'v;
      /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
 
+     let keySet: (t 'v) => (Set.t k);
+     /** [keys keyed] return a Set view of the keys in [keyed]. */
+
      let toMap: (t 'v) => Map.t k 'v;
      /** [toMap map] returns a Map view of [map] */
    };
@@ -1891,6 +2006,9 @@ let module rec Map: {
      let getOrRaise: 'k => (t 'k 'v) => 'v;
      /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
 
+     let keySet: (t 'k 'v) => (Set.t 'k);
+     /** [keys keyed] return a Set view of the keys in [keyed]. */
+
      let toMap: (t 'k 'v) => Map.t 'k 'v;
      /** [toMap map] returns a Map view of [map] */
    };
@@ -1898,19 +2016,12 @@ let module rec Map: {
   type t 'k 'v;
   /** The map type. */
 
-  include S2 with type t 'k 'v := t 'k 'v;
+  include S2 with type t 'k 'v := Map.t 'k 'v;
 
-  let empty: unit => (t 'k 'v);
+  let empty: unit => (Map.t 'k 'v);
   /** The empty Map. */
 
-  let map: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-  /** [map f map] returns lazy Map that computes values lazily by applying [f].
-   *
-   *  Note, the results of applying [f] to a given key/value pair are not
-   *  memoized. Therefore [f] must be a pure function.
-   */
-
-  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := Map.t 'k 'v;
    /* KeyedReducer module for Maps. */
 
   let module Persistent: {
@@ -2125,7 +2236,7 @@ let module rec Map: {
 NavigableMap
 ---------------
 ```reason
-let module NavigableMap: {
+let module rec NavigableMap: {
   /*  Module types implemented by NavigableMap that supports navigation operations. */
 
   module type S1 = {
@@ -2136,7 +2247,31 @@ let module NavigableMap: {
 
     include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
+
+    let navigableKeySet: (t 'v) => (NavigableSet.t k);
+    /** [keys keyed] return a NavigableSet view of the keys in [keyed]. */
+
+    let toNavigableMap: (t 'v) => NavigableMap.t k 'v;
   };
+
+  module type S2 = {
+    /** NavigableMap module type signature for types with a parametric type arity of 1. */
+
+    type t 'k 'v;
+
+    include NavigableKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+    include Map.S2 with type t 'k 'v := t 'k 'v;
+
+    let navigableKeySet: (t 'k 'v) => (NavigableSet.t 'k);
+    /** [keys keyed] return a NavigableSet view of the keys in [keyed]. */
+
+    let toNavigableMap: (t 'k 'v) => NavigableMap.t 'k 'v;
+  };
+
+  type t 'k 'v;
+  /** The map type. */
+
+  include S2 with type t 'k 'v := NavigableMap.t 'k 'v;
 
   let module Persistent: {
     /** Module types implemented by NavigableMaps supporting persistent mutations.
@@ -2169,7 +2304,7 @@ let module NavigableMap: {
 Indexed
 ---------------
 ```reason
-let module Indexed: {
+let module rec Indexed: {
   /** Collections that support efficient indexed access to values.
    *
    *  By contract, all functions must be efficient, with no worst than O(log N) performance.
@@ -2190,18 +2325,124 @@ let module Indexed: {
      *  raises an exception if [index] is out of bounds.
      */
 
+    let toKeyedCollection: (t 'a) => (KeyedCollection.t int 'a);
+    /** [toKeyedCollection indexed] returns a KeyedCollection view of
+     *  the index/value pairs in [indexed].
+     */
+
     let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
     /** [toKeyedIterable indexed] returns a KeyedIterable that can be used to iterate over
      *  the index/value pairs in [indexed].
      */
 
-    let toKeyedIterableRight: (t 'a) => (KeyedIterable.t int 'a);
-    /* [toKeyedIterableRight indexed] returns an KeyedIterable that can be used to iterate over
+    let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
+    /* [toKeyedIterableReversed indexed] returns an KeyedIterable that can be used to iterate over
      * the index/value pairs in [indexed] from right to left.
      */
 
     let toMap: (t 'a) => (Map.t int 'a);
     /** [toMap indexed] returns a Map view of [indexed]. */
+
+    let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int 'a);
+
+    let toNavigableMap: (t 'a) => (NavigableMap.t int 'a);
+  };
+
+  type t 'a;
+
+  include S1 with type t 'a := Indexed.t 'a;
+
+  let module Persistent: {
+    /** An Indexed collection supporting persistent mutations. */
+
+    module type S1 = {
+      type t 'a;
+
+      include S1 with type t 'a := t 'a;
+      include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
+
+      let concat: (list (t 'a)) => (t 'a);
+      /** [concat indexed] returns a persistent Indexed collection concatenating
+       *  together the in [indexed].
+       */
+
+      let insertAt: int => 'a => (t 'a) => (t 'a);
+      /** [insertAt index value indexed] returns a persistent Indexed collection with
+       *  [value] inserted at [index].
+       */
+
+      let removeAt: int => (t 'a) => (t 'a);
+      /** [removeAt index indexed] returns a persistent Indexed collection with the
+       *  value at [index] removed.
+       */
+
+      let skip: int => (t 'a) => (t 'a);
+      /** [skip count indexed] returns a persistent Indexed collection that removes the
+       *  first [count] values in [indexed].
+       */
+
+      let slice: start::int? => end_::int? => (t 'a) => (t 'a);
+
+      let take: int => (t 'a) => (t 'a);
+      /** [take count indexed] returns a Vector that includes the first [count] values in [indexed]. */
+
+      let update: int => 'a => (t 'a) => (t 'a);
+      /** [update index value indexed] returns a persistent Indexed collection with [value]
+       *  replacing the value at [index].
+       */
+
+      let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+      /** [updateAll f indexed] returns a persistent Indexed collection updating each value
+       *  in [indexed] with result of applying the function [f] to each index/value pair.
+       *
+       *  Complexity: O(N)
+       */
+
+      let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+      /** [updateWith index f indexed] returns a persistent Indexed collection updating the value
+       *  at [index] with the result of applying the function [f] to the value.
+       */
+    };
+  };
+
+  let module Transient: {
+    /** A temporarily mutable Indexed collection. Once persisted, any further operations on a
+     *  Transient instance will throw. Intended for implementing bulk mutation
+     *  operations efficiently.
+     */
+
+    module type S1 = {
+      type t 'a;
+
+      include NavigableCollection.Transient.S1 with type t 'a := t 'a;
+
+      let get: int => (t 'a) => (option 'a);
+      /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
+
+      let getOrRaise: int => (t 'a) => 'a;
+      /** [getOrRaise index transient] returns the value at [index] or
+       *  raises an exception if [index] is out of bounds.
+       */
+
+      let insertAt: int => 'a => (t 'a) => (t 'a);
+      /** [insertAt index value transient] inserts value into [transient] at [index]. */
+
+      let removeAt: int => (t 'a) => (t 'a);
+      /** [removeAt index transient] removes the value at [index]. */
+
+      let update: int => 'a => (t 'a) => (t 'a);
+      /** [update index value transient] replaces the value at [index] with [value]. */
+
+      let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
+      /** [updateAll f transient] updates each value in [transient] with result of applying
+       *  the function [f] to each index/value pair.
+       */
+
+      let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
+      /** [updateWith index f transient] updates the value at [index] with the result
+       *  of applying the function [f] to the value.
+       */
+    };
   };
 };
 ```
@@ -2215,18 +2456,18 @@ let module rec Deque: {
 
   type t 'a;
 
-  include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
+  include NavigableCollection.Persistent.S1 with type t 'a := Deque.t 'a;
 
-  let reverse: (t 'a) => (t 'a);
+  let reverse: (Deque.t 'a) => (Deque.t 'a);
   /** [reverse deque] returns a new Deque with [deque]'s values reversed.
    *
    *  Complexity: O(1)
    */
 
-  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module ReducerReversed: Iterable.Reducer.S1 with type t 'a := Deque.t 'a;
   /* Reducer module for Deques which reduces right. */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := Deque.t 'a;
   /* Reducer module for Deques. */
 
   let module Transient: {
@@ -2237,22 +2478,22 @@ let module rec Deque: {
 
     type t 'a;
 
-    include NavigableCollection.Transient.S1 with type t 'a := t 'a;
+    include NavigableCollection.Transient.S1 with type t 'a := Deque.Transient.t 'a;
     /** The Transient Deque type. */
 
-    let persist: (t 'a) => (Deque.t 'a);
+    let persist: (Deque.Transient.t 'a) => (Deque.t 'a);
     /** [persist transient] persists [transient] returning a Deque. Further attempts
      *  to access or mutate [transient] will raise exceptions.
      */
 
-    let reverse: (t 'a) => (t 'a);
+    let reverse: (Deque.Transient.t 'a) => (Deque.Transient.t 'a);
     /** [reverse transient] reverse [transient]'s values.
      *
      *  Complexity: O(1)
      */
   };
 
-  let mutate: (t 'a) => (Deque.Transient.t 'a);
+  let mutate: (Deque.t 'a) => (Deque.Transient.t 'a);
   /** [mutate deque] returns a Transient Deque containing the same values as [deque]. */
 };
 ```
@@ -2267,7 +2508,7 @@ let module rec HashMap: {
 
   type t 'k 'v;
 
-  include Map.Persistent.S2 with type t 'k 'v := t 'k 'v;
+  include Map.Persistent.S2 with type t 'k 'v := HashMap.t 'k 'v;
 
   let emptyWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (HashMap.t 'k 'v);
   /** [emptyWith hash comparator] returns an empty HashMap which uses [hash] to hash
@@ -2280,7 +2521,7 @@ let module rec HashMap: {
    *  to resolve collisions.
    */
 
-  let fromEntriesWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (Iterable.t ('k, 'v)) => (t 'k 'v);
+  let fromEntriesWith: hash::(Hash.t 'k) => comparator::(Comparator.t 'k) => (Iterable.t ('k, 'v)) => (HashMap.t 'k 'v);
   /** [fromEntriesWith hash comparator iter] returns a HashMap containing all the key/value
    *  pairs in [iter]. The returned HashMap uses [hash] to hash keys, and [comparator]
    *  to resolve collisions.
@@ -2307,10 +2548,10 @@ let module rec HashMap: {
      */
   };
 
-  let mutate: (t 'k 'v) => (HashMap.Transient.t 'k 'v);
+  let mutate: (HashMap.t 'k 'v) => (HashMap.Transient.t 'k 'v);
   /** [mutate map] returns a Transient HashMap containing the same key/values pairs as [map]. */
 
-  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := t 'k 'v;
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S2 with type t 'k 'v := HashMap.t 'k 'v;
   /* KeyedReducer module for HashMaps. */
 };
 ```
@@ -2326,7 +2567,7 @@ let module rec HashSet: {
   type t 'a;
   /** The HashSet type. */
 
-  include Set.Persistent.S1 with type t 'a := t 'a;
+  include Set.Persistent.S1 with type t 'a := HashSet.t 'a;
 
   let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => (HashSet.t 'a);
   /** [emptyWith hash comparator] returns an empty HashSet which uses [hash] to hash
@@ -2338,7 +2579,7 @@ let module rec HashSet: {
    *  The returned HashSet uses [hash] to hash keys, and [comparator] to resolve collisions.
    */
 
-  let hash: Hash.t (t 'a);
+  let hash: Hash.t (HashSet.t 'a);
   /** An hashing function for HashSet instances. */
 
   let module Transient: {
@@ -2349,23 +2590,23 @@ let module rec HashSet: {
 
     type t 'a;
 
-    include Set.Transient.S1 with type t 'a := t 'a;
+    include Set.Transient.S1 with type t 'a := HashSet.Transient.t 'a;
 
-    let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (t 'a);
+    let emptyWith: hash::(Hash.t 'a) => comparator::(Comparator.t 'a) => unit => (HashSet.Transient.t 'a);
     /** [emptyWith hash comparator ()] returns an empty Transient HashSet which uses [hash] to hash
      *  keys, and [comparator] to resolve collisions.
      */
 
-    let persist: (t 'a) => (HashSet.t 'a);
+    let persist: (HashSet.Transient.t 'a) => (HashSet.t 'a);
     /** [persist transient] persists [transient] returning a HashSet. Further attempts
      *  to access or mutate [transient] will raise exceptions.
      */
   };
 
-  let mutate: (t 'a) => (HashSet.Transient.t 'a);
+  let mutate: (HashSet.t 'a) => (HashSet.Transient.t 'a);
   /** [mutate set] returns a Transient HashSet containing the same values as [set]. */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := HashSet.t 'a;
   /* Reducer module for HashSets. */
 };
 ```
@@ -2380,13 +2621,13 @@ let module rec IntMap: {
   type k = int;
   type t 'v;
 
-  include Map.Persistent.S1 with type k := k and type t 'v := t 'v;
+  include Map.Persistent.S1 with type k := IntMap.k and type t 'v := IntMap.t 'v;
 
   let module Transient: {
     type k = int;
     type t 'v;
 
-    include Map.Transient.S1 with type k := k and type t 'v := t 'v;
+    include Map.Transient.S1 with type k := IntMap.Transient.k and type t 'v := IntMap.Transient.t 'v;
 
     let persist: (t 'v) => (IntMap.t 'v);
     /** [persist transient] persists [transient] returning a IntMap. Further attempts
@@ -2397,33 +2638,33 @@ let module rec IntMap: {
   let mutate: (t 'v) => (IntMap.Transient.t 'v);
   /** [mutate map] returns a Transient IntMap containing the same key/values pairs as [map]. */
 
-  let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k = k and type t 'v := t 'v;
+  let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k = IntMap.k and type t 'v := IntMap.t 'v;
   /* KeyedReducer module for IntMaps. */
 };
 ```
 IntRange
 ---------------
 ```reason
-let module IntRange: {
+let module rec IntRange: {
   /** A contiguous Set of discrete integers */
 
   type a = int;
   type t;
 
-  include NavigableSet.S with type a := a and type t := t;
-  include Comparable.S with type t := t;
-  include Hashable.S with type t := t;
+  include NavigableSet.S with type a := IntRange.a and type t := IntRange.t;
+  include Comparable.S with type t := IntRange.t;
+  include Hashable.S with type t := IntRange.t;
 
-  let create: start::int => count::int => t;
+  let create: start::int => count::int => IntRange.t;
   /** [create start count] returns an IntRange startint at [start] with [count].
    *  [start] may be any positive or negative integer. [count] must be greater
    *  than or equal to 0.
    */
 
-  let module ReducerRight: Iterable.Reducer.S with type a := a and type t := t;
+  let module ReducerReversed: Iterable.Reducer.S with type a := IntRange.a and type t := IntRange.t;
     /* Reducer module for IntRanges which reduces right. */
 
-  let module Reducer: Iterable.Reducer.S with type a := a and type t := t;
+  let module Reducer: Iterable.Reducer.S with type a := IntRange.a and type t := IntRange.t;
   /* Reducer module for IntRanges. */
 };
 ```
@@ -2439,7 +2680,7 @@ let module rec IntSet: {
   type t;
   /** The IntSet type. */
 
-  include Set.Persistent.S with type a := a and type t := t;
+  include Set.Persistent.S with type a := IntSet.a and type t := IntSet.t;
 
   let module Transient: {
     /** A temporarily mutable IntSet. Once persisted, any further operations on a
@@ -2451,9 +2692,9 @@ let module rec IntSet: {
     type t;
     /** The Transient IntSet type. */
 
-    include Set.Transient.S with type a := a and type t := t;
+    include Set.Transient.S with type a := IntSet.Transient.a and type t := IntSet.Transient.t;
 
-    let empty: unit => t;
+    let empty: unit => IntSet.Transient.t;
     /** [empty ()] return a new empty Transient IntSet. */
 
     let persist: t => IntSet.t;
@@ -2465,30 +2706,30 @@ let module rec IntSet: {
   let mutate: t => IntSet.Transient.t;
   /** [mutate set] returns a Transient IntSet containing the same values as [set]. */
 
-  let module Reducer: Iterable.Reducer.S with type a = a and type t := t;
+  let module Reducer: Iterable.Reducer.S with type a = IntSet.a and type t := IntSet.t;
   /* Reducer module for IntSets. */
 };
 ```
 List
 ---------------
 ```reason
-let module List: {
+let module rec List: {
   /** OCaml singly-linked list */
 
   type t 'a = list 'a;
 
   include Iterable.S1 with type t 'a := t 'a;
 
-  let addFirst: 'a => (t 'a) => (t 'a);
+  let addFirst: 'a => (List.t 'a) => (List.t 'a);
   /** [addFirst value list] returns a List with [value] prepended.
    *
    *  Complexity: O(1)
    */
 
-  let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+  let addFirstAll: (Iterable.t 'a) => (List.t 'a) => (List.t 'a);
   /** [addFirstAll iter list] returns a List with the values in [iter] prepended. */
 
-  let empty: unit => (t 'a);
+  let empty: unit => (List.t 'a);
   /** [empty ()] returns an empty List. */
 
   let first: t 'a => (option 'a);
@@ -2497,91 +2738,91 @@ let module List: {
    *  Complexity: O(1)
    */
 
-  let firstOrRaise: t 'a => 'a;
+  let firstOrRaise: List.t 'a => 'a;
   /** [first seq] returns the first value in [list] or raises an exception.
    *
    *  Complexity: O(1)
    */
 
-  let fromReverse: (Iterable.t 'a) => (t 'a);
+  let fromReverse: (Iterable.t 'a) => (List.t 'a);
   /** [fromReverse iter] returns a new List containing the values in [iter]
    *  in reverse order.
    *
    * Complexity: O(N) the number of values in [iter].
    */
 
-  let removeAll: (t 'a) => (t 'a);
+  let removeAll: (List.t 'a) => (List.t 'a);
   /** [removeAll list] returns the empty List.
    *
    *  Complexity: O(1)
    */
 
-  let removeFirstOrRaise: (t 'a) => (t 'a);
+  let removeFirstOrRaise: (List.t 'a) => (List.t 'a);
   /** [removeFirstOrRaise list] returns a List without the first value.
    *
    *  Complexity: O(1)
    */
 
-  let return: 'a => (t 'a);
+  let return: 'a => (List.t 'a);
   /** [return value] returns a new List containing a single value, [value]. */
 
-  let toSequence: (t 'a) => (Sequence.t 'a);
+  let toSequence: (List.t 'a) => (Sequence.t 'a);
   /** [toSequence list] returns a Sequence of the values in [list] in order. */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := List.t 'a;
   /* Reducer module for Lists. */
 };
 ```
 ReadOnlyArray
 ---------------
 ```reason
-let module ReadOnlyArray: {
+let module rec ReadOnlyArray: {
   /** Opaque wrapper around an underlying array instance that provides read only semantics */
 
   type t 'a;
 
-  include Indexed.S1 with type t 'a := t 'a;
+  include Indexed.S1 with type t 'a := ReadOnlyArray.t 'a;
 
-  let empty: unit => t 'a;
+  let empty: unit => ReadOnlyArray.t 'a;
   /* [empty ()] returns an empty ReadOnlyArray. */
 
-  let init: int => (int => 'a) => (t 'a);
+  let init: int => (int => 'a) => (ReadOnlyArray.t 'a);
   /* [init count f] returns a ReadOnlyArray with size [count]. The callback [f] is called
    * for each index to initialize the value at the respective index.
    */
 
-  let ofUnsafe: (array 'a) => (t 'a);
+  let ofUnsafe: (array 'a) => (ReadOnlyArray.t 'a);
   /** [unsafe arr] returns a ReadOnlyArray backed by [arr]. Note, it is the caller's
    *  responsibility to ensure that [arr] is not subsequently mutated.
    */
 
-  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module ReducerReversed: Iterable.Reducer.S1 with type t 'a := ReadOnlyArray.t 'a;
   /* Reducer module for ReadOnlyArray which reduces right. */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := ReadOnlyArray.t 'a;
   /* Reducer module for ReadOnlyArrays. */
 };
 ```
 Stack
 ---------------
 ```reason
-let module Stack: {
+let module rec Stack: {
   /** A singly-linked stack with an O(1) count operation. */
 
   type t 'a;
 
-  include SequentialCollection.Persistent.S1 with type t 'a := t 'a;
+  include SequentialCollection.Persistent.S1 with type t 'a := Stack.t 'a;
 
-  let fromList: (list 'a) => (t 'a);
+  let fromList: (list 'a) => (Stack.t 'a);
   /** [fromList list] returns a Stack backed by [list].
    *
    *  Complexity: O(N)
    */
 
-  let toList: (t 'a) => (list 'a);
+  let toList: (Stack.t 'a) => (list 'a);
   /** [toList stack] returns the underlying List backing the stack */
 
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := Stack.t 'a;
   /* Reducer module for Stacks. */
 };
 ```
@@ -2601,7 +2842,7 @@ let module SortedMap: {
 
     include NavigableMap.Persistent.S1 with type k := k and type t 'v := t 'v;
 
-    let module KeyedReducerRight: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
+    let module KeyedReducerReversed: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
     /* KeyedReducer module for SortedMaps which reduces right. */
 
     let module KeyedReducer: KeyedIterable.KeyedReducer.S1 with type k := k and type t 'v := t 'v;
@@ -2626,7 +2867,7 @@ let module SortedSet: {
     include Comparable.S with type t := t;
     include NavigableSet.Persistent.S with type a := a and type t := t;
 
-    let module ReducerRight: Iterable.Reducer.S with type a:= a and type t:= t;
+    let module ReducerReversed: Iterable.Reducer.S with type a:= a and type t:= t;
     /* Reducer module for SortedSets which reduces right. */
 
     let module Reducer: Iterable.Reducer.S with type a := a and type t := t;
@@ -2649,70 +2890,11 @@ let module rec Vector: {
 
   type t 'a;
 
-  include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
-  include Indexed.S1 with type t 'a := t 'a;
+  include Indexed.Persistent.S1 with type t 'a := Vector.t 'a;
 
-  let concat: (list (t 'a)) => (t 'a);
-  /** [concat vecs] returns a Vector, concatenating together the Vectors in [vec].
-  *
-  *  WARNING: Not implemented
-  *
-  *  Complexity: O(log32 N * m)
-  */
-
-  let init: int => (int => 'a) => (t 'a);
+  let init: int => (int => 'a) => (Vector.t 'a);
   /* [init count f] returns a Vector with size [count]. The callback [f] is called
    * for each index to initialize the value at the respective index.
-   */
-
-  let insertAt: int => 'a => (t 'a) => (t 'a);
-  /** [insertAt index value vec] returns a Vector with [value] inserted at [index].
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let removeAt: int => (t 'a) => (t 'a);
-  /** [removeAt index vec] returns a Vector with the value at [index] removed.
-   *
-   *  WARNING: Not implemented
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let skip: int => (t 'a) => (t 'a);
-  /** [skip count vec] returns a new Vector that removes the first [count] values in [vec].
-   *
-   *  WARNING: Known issues for Vectors with count > 1024.
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let slice: start::int? => end_::int? => (t 'a) => (t 'a);
-
-  let take: int => (t 'a) => (t 'a);
-  /** [take count vec] returns a Vector that includes the first [count] values in [vec]. */
-
-  let update: int => 'a => (t 'a) => (t 'a);
-  /** [update index value cow] returns a Vector with [value]
-   *  replacing the value at [index].
-   *
-   *  Complexity: O(log32 N)
-   */
-
-  let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-  /** [updateAll f vec] returns a Vector updating each value
-   *  in [vec] with result of applying the function [f] to each index/value pair.
-   *
-   *  Complexity: O(N)
-   */
-
-  let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-  /** [updateWith index f cow] returns a Vector updating the value
-   *  at [index] with the result of applying the function [f] to the value.
-   *
-   *  Complexity: O(log32 N)
    */
 
   let module Transient: {
@@ -2723,63 +2905,19 @@ let module rec Vector: {
 
     type t 'a;
 
-    include NavigableCollection.Transient.S1 with type t 'a := t 'a;
+    include Indexed.Transient.S1 with type t 'a := Vector.Transient.t 'a;
 
-    let get: int => (t 'a) => (option 'a);
-    /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
-
-    let getOrRaise: int => (t 'a) => 'a;
-    /** [getOrRaise index transient] returns the value at [index] or
-     *  raises an exception if [index] is out of bounds.
-     */
-
-    let insertAt: int => 'a => (t 'a) => (t 'a);
-    /** [insertAt index value transient] inserts value into [transient] at [index].
-     *
-     *  WARNING: Not implemented
-     *
-     *  Complexity: O(log32 N)
-     */
-
-    let removeAt: int => (t 'a) => (t 'a);
-    /** [removeAt index transient] removes the value at [index].
-     *
-     *  WARNING: Not implemented
-     *
-     *  Complexity: O(log32 N)
-     */
-
-    let update: int => 'a => (t 'a) => (t 'a);
-    /** [update index value transient] replaces the value at [index] with [value].
-     *
-     *  Complexity: O(log32 N)
-     */
-
-    let updateAll: (int => 'a => 'a) => (t 'a) => (t 'a);
-    /** [updateAll f transient] updates each value in [transient] with result of applying
-     *  the function [f] to each index/value pair.
-     *
-     *  Complexity: O(N)
-     */
-
-    let updateWith: int => ('a => 'a) => (t 'a) => (t 'a);
-    /** [updateWith index f transient] updates the value at [index] with the result
-     *  of applying the function [f] to the value.
-     *
-     *  Complexity: O(log32 N)
-     */
-
-    let persist: (t 'a) => (Vector.t 'a);
+    let persist: (Vector.Transient.t 'a) => (Vector.t 'a);
     /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
     *  will throw.
     */
   };
 
-  let mutate: (t 'a) => (Transient.t 'a);
+  let mutate: (Vector.t 'a) => (Vector.Transient.t 'a);
   /** [mutate vector] returns a Transient Vector containing the same values as [set]. */
 
-  let module ReducerRight: Iterable.Reducer.S1 with type t 'a := t 'a;
-  let module Reducer: Iterable.Reducer.S1 with type t 'a := t 'a;
+  let module ReducerReversed: Iterable.Reducer.S1 with type t 'a := Vector.t 'a;
+  let module Reducer: Iterable.Reducer.S1 with type t 'a := Vector.t 'a;
 };
 ```
   </script>
