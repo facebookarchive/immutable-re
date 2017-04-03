@@ -26,7 +26,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
         |> Iterable.reduce (fun acc i => acc |> PersistentSet.add i) PersistentSet.empty;
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
-      values |> Iterable.Reducer.forEach (fun i => {
+      values |> Iterable.forEach (fun i => {
         set |> PersistentSet.contains i |> Expect.toBeEqualToTrue;
       });
     }),
@@ -38,7 +38,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
       let set = PersistentSet.empty |> PersistentSet.addAll values;
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
-      values |> Iterable.Reducer.forEach (fun i => {
+      values |> Iterable.forEach (fun i => {
         set |> PersistentSet.contains i |> Expect.toBeEqualToTrue;
       });
     }),
@@ -143,7 +143,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
             else acc
           ) set
         |> PersistentSet.toIterable
-        |> Iterable.Reducer.every (fun i => i mod 2 != 0)
+        |> Iterable.every (fun i => i mod 2 != 0)
         |> Expect.toBeEqualToTrue;
     }),
     it "removeAll" (fun () => {

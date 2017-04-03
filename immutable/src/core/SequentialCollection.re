@@ -71,9 +71,3 @@ let reduce
 
 let toSequentialCollection (collection: t 'a): (t 'a) =>
   collection;
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

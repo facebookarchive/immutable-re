@@ -34,13 +34,13 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
             else (acc |> PersistentMap.alter k (fun _ => None))
           }) mapHashed
         |> PersistentMap.toKeyedIterable
-        |> KeyedIterable.KeyedReducer.forEach (fun k v => {
+        |> KeyedIterable.forEach (fun k v => {
             k === v |> Expect.toBeEqualToTrue;
             k mod 2 === 0 |> Expect.toBeEqualToTrue;
           });
     }),
     it "containsKey" (fun () => {
-      keyValuePairsHashed |> Iterable.Reducer.forEach (fun (k, _) => {
+      keyValuePairsHashed |> Iterable.forEach (fun (k, _) => {
         mapHashed |> PersistentMap.containsKey k |> Expect.toBeEqualToTrue
       });
 
@@ -58,7 +58,7 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
     }),
     it "from" (fun () => ()),
     it "get" (fun () => {
-      keyValuePairsHashed |> Iterable.Reducer.forEach (fun (k, v) => {
+      keyValuePairsHashed |> Iterable.forEach (fun (k, v) => {
         mapHashed |> PersistentMap.get k |> Expect.toBeEqualToSomeOfInt v;
       });
 
@@ -66,7 +66,7 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
       map |> PersistentMap.get count |> Expect.toBeEqualToNoneOfInt;
     }),
     it "getOrRaise" (fun () => {
-      keyValuePairsHashed |> Iterable.Reducer.forEach (fun (k, v) => {
+      keyValuePairsHashed |> Iterable.forEach (fun (k, v) => {
         mapHashed |> PersistentMap.getOrRaise k |> Expect.toBeEqualToInt v;
       });
 
@@ -84,7 +84,7 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
     it "keySet" (fun () => {
       let keySet = mapHashed |> PersistentMap.keySet;
 
-      keyValuePairsHashed |> Iterable.Reducer.forEach (fun (i, _) => {
+      keyValuePairsHashed |> Iterable.forEach (fun (i, _) => {
         keySet |> Set.contains i |> Expect.toBeEqualToTrue;
       });
 
@@ -111,11 +111,15 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
         acc
         next;
 
-      IntRange.create start::0 count::countDiv2 |> IntRange.Reducer.forEach (
+      IntRange.create start::0 count::countDiv2
+        |> IntRange.toIterable
+        |> Iterable.forEach (
         fun i => merged |> PersistentMap.get i |> Expect.toBeEqualToNoneOfInt
       );
 
-      IntRange.create start::countDiv2 count::countDiv2 |> IntRange.Reducer.forEach (
+      IntRange.create start::countDiv2 count::countDiv2
+        |> IntRange.toIterable
+        |> Iterable.forEach (
         fun i => merged |> PersistentMap.get i |> Expect.toBeEqualToSomeOfInt i
       );
     }),
@@ -129,18 +133,18 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
           })
           (PersistentMap.empty ());
 
-      map |> PersistentMap.keySet |> Set.Reducer.forEach (fun k => {
+      map |> PersistentMap.keys |> Iterable.forEach (fun k => {
         map |> PersistentMap.containsKey k |> Expect.toBeEqualToTrue;
       });
     }),
     it "putAll" (fun () => {
       let map = PersistentMap.empty ();
-      keyValuePairsHashed |> Iterable.Reducer.forEach (fun (k, _) => {
+      keyValuePairsHashed |> Iterable.forEach (fun (k, _) => {
         map |> PersistentMap.containsKey k |> Expect.toBeEqualToFalse;
       });
 
       let map = PersistentMap.empty () |> PersistentMap.putAllEntries keyValuePairsHashed;
-      map |> PersistentMap.keySet |> Set.Reducer.forEach (fun k => {
+      map |> PersistentMap.keys |> Iterable.forEach (fun k => {
         map |> PersistentMap.containsKey k |> Expect.toBeEqualToTrue;
       });
     }),
@@ -158,7 +162,7 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
         |> IntRange.toIterable
         |> Iterable.map (fun i => i * 2)
         |> Iterable.map hash
-        |> Iterable.Reducer.forEach (fun i => {
+        |> Iterable.forEach (fun i => {
               mapWithOddKeys |> PersistentMap.containsKey i |> Expect.toBeEqualToFalse;
           });
 
@@ -166,7 +170,7 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
         |> IntRange.toIterable
         |> Iterable.map (fun i => i * 2 + 1)
         |> Iterable.map hash
-        |> Iterable.Reducer.forEach (fun i => {
+        |> Iterable.forEach (fun i => {
               mapWithOddKeys |> PersistentMap.containsKey i |> Expect.toBeEqualToTrue;
           });
     }),

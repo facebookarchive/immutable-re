@@ -104,10 +104,3 @@ let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
 let toSequentialCollection (set: t 'a): (SequentialCollection.t 'a) =>
   if (isEmpty set) (SequentialCollection.empty ())
   else SequentialCollection.SequentialCollection set seqCollectionOps;
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

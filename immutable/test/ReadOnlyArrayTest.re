@@ -37,9 +37,9 @@ let test = describe "ReadOnlyArray" [
     (fun () => arr |> ReadOnlyArray.getOrRaise 3) |> Expect.shouldRaise;
   }),
   it "init" (fun () => {
-    let vector = ReadOnlyArray.init 20 (fun i => i + 1);
-    vector |> ReadOnlyArray.Reducer.forEach (fun i => {
-      vector |> ReadOnlyArray.getOrRaise (i - 1) |> Expect.toBeEqualToInt i;
+    let arr = ReadOnlyArray.init 20 (fun i => i + 1);
+    arr |> ReadOnlyArray.toIterable |> Iterable.forEach (fun i => {
+      arr |> ReadOnlyArray.getOrRaise (i - 1) |> Expect.toBeEqualToInt i;
     });
   }),
   it "isEmpty" (fun () => {

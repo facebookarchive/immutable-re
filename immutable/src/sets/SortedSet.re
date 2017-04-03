@@ -43,8 +43,6 @@ module type S = {
   let union: t => t => t;
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
-  let module ReducerReversed: Iterable.Reducer.S with type a:= a and type t:= t;
-  let module Reducer: Iterable.Reducer.S with type a:= a and type t:= t;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -280,20 +278,4 @@ let module Make = fun (Comparable: Comparable.S) => {
   let union (this: t) (that: t): t =>
     /* FIXME: Improve this implementation */
     ImmSet.union (toSet this) (toSet that) |> from;
-
-  let module ReducerReversed = Iterable.Reducer.Make {
-    type nonrec a = a;
-    type nonrec t = t;
-
-    let reduce = reduceReversed;
-    let toIterable = toIterableReversed;
-  };
-
-  let module Reducer = Iterable.Reducer.Make {
-    type nonrec a = a;
-    type nonrec t = t;
-
-    let reduce = reduce;
-    let toIterable = toIterable;
-  };
 };

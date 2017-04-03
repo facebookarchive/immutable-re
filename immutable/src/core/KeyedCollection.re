@@ -76,13 +76,3 @@ let reduce
     (acc: 'acc)
     (keyed: t 'k 'v): 'acc =>
   keyed |> toKeyedIterable |> KeyedIterable.reduce while_::predicate f acc;
-
-let module KeyedReducer = KeyedIterable.KeyedReducer.Make2 {
-  type nonrec t 'k 'v = t 'k 'v;
-
-  let keys = keys;
-  let reduce = reduce;
-  let toIterable = toIterable;
-  let toKeyedIterable = toKeyedIterable;
-  let values = values;
-};

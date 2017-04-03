@@ -330,17 +330,3 @@ let from (iter: Iterable.t 'a): (t 'a) =>
 
 let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
-
-let module ReducerReversed = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduceReversed;
-  let toIterable = toIterableReversed;
-};
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

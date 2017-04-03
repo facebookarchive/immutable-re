@@ -323,10 +323,3 @@ let rec zipLongest3With
       Next (f None None (Some cValue)) (zipLongest3With f (empty ()) (empty ()) cNext)
   | _ => Completed
 };
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

@@ -486,17 +486,3 @@ let updateWith (index: int) (f: 'a => 'a) (arr: t 'a): (t 'a) => {
   clone.(index) = f arr.(index);
   clone
 };
-
-let module ReducerReversed = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduceReversed;
-  let toIterable = toIterableReversed;
-};
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

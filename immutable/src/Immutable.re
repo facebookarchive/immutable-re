@@ -51,7 +51,24 @@ let module Streamable = {
   };
 };
 
-let module Iterable = Iterable;
+let module Iterable = {
+  include Iterable;
+
+  module type S = {
+    type a;
+    type t;
+
+    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+    let toIterable: t => (Iterable.t a);
+  };
+
+  module type S1 = {
+    type t 'a;
+
+    let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+    let toIterable: t 'a => (Iterable.t 'a);
+  };
+};
 
 let module Sequence = Sequence;
 
@@ -375,7 +392,30 @@ let module KeyedStreamable = {
   };
 };
 
-let module KeyedIterable = KeyedIterable;
+let module KeyedIterable = {
+  include KeyedIterable;
+
+  module type S1 = {
+    type k;
+    type t 'v;
+
+    let keys: (t 'v) => (Iterable.t k);
+    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+    let toIterable: t 'v => Iterable.t (k, 'v);
+    let toKeyedIterable: t 'v => KeyedIterable.t k 'v;
+    let values: (t 'v) => Iterable.t 'v;
+  };
+
+  module type S2 = {
+    type t 'k 'v;
+
+    let keys: (t 'k 'v) => (Iterable.t 'k);
+    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+    let toIterable: t 'k 'v => Iterable.t ('k, 'v);
+    let toKeyedIterable: t 'k 'v => KeyedIterable.t 'k 'v;
+    let values: (t 'k 'v) => Iterable.t 'v;
+  };
+};
 
 let module KeyedCollection = {
   include KeyedCollection;
@@ -726,8 +766,6 @@ let module List = {
   let fromReverse = Iterable.listFromReverse;
   let toIterable = Iterable.ofList;
   let toSequence = Sequence.ofList;
-
-  let module Reducer = Iterable.ListReducer;
 };
 
 let module ReadOnlyArray = CopyOnWriteArray;

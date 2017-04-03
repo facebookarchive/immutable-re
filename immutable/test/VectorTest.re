@@ -103,7 +103,7 @@ describe (sprintf "count: %i" count) [
     vector |> Vector.get (-1) |> Expect.toBeEqualToNoneOfInt;
     vector |> Vector.get count |> Expect.toBeEqualToNoneOfInt;
 
-    vector |> Vector.Reducer.forEach (fun i => {
+    vector |> Vector.toIterable |> Iterable.forEach (fun i => {
       vector |> Vector.get i |> Expect.toBeEqualToSomeOfInt i;
     });
   }),
@@ -115,13 +115,13 @@ describe (sprintf "count: %i" count) [
     (fun () => vector |> Vector.getOrRaise (-1)) |> Expect.shouldRaise;
     (fun () => vector |> Vector.getOrRaise count) |> Expect.shouldRaise;
 
-    vector |> Vector.Reducer.forEach (fun i => {
+    vector |> Vector.toIterable |> Iterable.forEach (fun i => {
       vector |> Vector.getOrRaise i |> Expect.toBeEqualToInt i;
     });
   }),
   it "init" (fun () => {
     let vector = Vector.init count (fun i => i + 1);
-    vector |> Vector.Reducer.forEach (fun i => {
+    vector |> Vector.toIterable |> Iterable.forEach (fun i => {
       vector |> Vector.getOrRaise (i - 1) |> Expect.toBeEqualToInt i;
     });
   }),
@@ -358,7 +358,7 @@ describe (sprintf "count: %i" count) [
       |> IntRange.toIterableReversed
       |> Vector.from
       |> Vector.toKeyedIterable
-      |> KeyedIterable.KeyedReducer.forEach (
+      |> KeyedIterable.forEach (
           fun i v => count - v - 1 |> Expect.toBeEqualToInt i
         );
   }),
@@ -367,7 +367,7 @@ describe (sprintf "count: %i" count) [
       |> IntRange.toIterableReversed
       |> Vector.from
       |> Vector.toKeyedIterableReversed
-      |> KeyedIterable.KeyedReducer.forEach (
+      |> KeyedIterable.forEach (
           fun i v => count - v - 1 |> Expect.toBeEqualToInt i
         );
   }),

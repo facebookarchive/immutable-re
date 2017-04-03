@@ -425,214 +425,66 @@ let toIterable (iter: t 'k 'v): (Iterable.t ('k, 'v)) => switch iter {
   | KeyedIterable _ _ => Iterable.Iterable iter toIterableIterator
 };
 
-type keyedIterable 'k 'v = t 'k 'v;
+let increment acc _ _ => acc + 1;
+let count (reducer: t 'k 'v): int =>
+  reducer |> reduce increment 0;
 
-module type S1 = {
-  type k;
-  type t 'v;
+let every (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
+  iter |> reduce
+    while_::(fun acc _ _ => acc)
+    (fun _ => f)
+    true;
 
-  let keys: (t 'v) => Iterable.t k;
-  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  let toIterable: t 'v => Iterable.t (k, 'v);
-  let toKeyedIterable: t 'v => keyedIterable k 'v;
-  let values: (t 'v) => Iterable.t 'v;
-};
+let find (f: 'k => 'v => bool) (iter: t 'k 'v): (option ('k, 'v)) =>
+  iter |> reduce
+    while_::(fun acc _ _ => Option.isEmpty acc)
+    (fun _ k v => if (f k v) (Some (k, v)) else None)
+    None;
 
-module type S2 = {
-  type t 'k 'v;
+let findOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): ('k, 'v) =>
+  find f iter |> Option.firstOrRaise;
 
-  let keys: (t 'k 'v) => Iterable.t 'k;
-  let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let toIterable: t 'k 'v => Iterable.t ('k, 'v);
-  let toKeyedIterable: t 'k 'v => keyedIterable 'k 'v;
-  let values: (t 'k 'v) => Iterable.t 'v;
-};
+let findKey (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'k) =>
+  iter |> reduce
+    while_::(fun acc _ _ => Option.isEmpty acc)
+    (fun _ k v => if (f k v) (Some k) else None)
+    None;
 
-let module KeyedReducer = {
-  module type KeyedIterable1 = S1;
-  module type KeyedIterable2 = S2;
+let findKeyOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'k =>
+  findKey f iter |> Option.firstOrRaise;
 
-  module type S1 = {
-    type k;
-    type t 'v;
+let findValue (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'v) =>
+  iter |> reduce
+    while_::(fun acc _ _ => Option.isEmpty acc)
+    (fun _ k v => if (f k v) (Some v) else None)
+    None;
 
-    let count: (t 'v) => int;
-    let every: (k => 'v => bool) => (t 'v) => bool;
-    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
-    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
-    let findKey: (k => 'v => bool) => (t 'v) => (option k);
-    let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
-    let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
-    let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
-    let first: (t 'v) => (option (k, 'v));
-    let firstOrRaise: (t 'v) => (k, 'v);
-    let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
-    let none: (k => 'v => bool) => (t 'v) => bool;
-    let some: (k => 'v => bool) => (t 'v) => bool;
-  };
+let findValueOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'v =>
+  findValue f iter |> Option.firstOrRaise;
 
-  module type S2 = {
-    type t 'k 'v;
+let first (iter: t 'k 'v): (option ('k, 'v)) =>
+  iter |> reduce
+    while_::(fun acc _ _ => Option.isEmpty acc)
+    (fun _ k v => Option.return (k, v))
+    None;
 
-    let count: (t 'k 'v) => int;
-    let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-    let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
-    let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
-    let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
-    let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
-    let first: (t 'k 'v) => (option ('k, 'v));
-    let firstOrRaise: (t 'k 'v) => ('k, 'v);
-    let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
-    let none: ('k => 'v => bool) => (t 'k 'v) => bool;
-    let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  };
+let firstOrRaise (iter: t 'k 'v): ('k, 'v) =>
+  iter |> first |> Option.firstOrRaise;
 
-  let module Make1 = fun (KeyedReduceable: KeyedIterable1) => {
-    type k = KeyedReduceable.k;
-    type t 'v = KeyedReduceable.t 'v;
+let forEach
+    while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2
+    (f: 'k => 'v => unit)
+    (iter: t 'k 'v) =>
+  iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
-    let increment acc _ _ => acc + 1;
-    let count (reducer: t 'v): int =>
-      reducer |> KeyedReduceable.reduce increment 0;
+let none (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
+  iter |> reduce
+    while_::(fun acc _ _ => acc)
+    (fun _ k v => f k v |> not)
+    true;
 
-    let every (f: k => 'v => bool) (keyedReduceable: t 'v): bool =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => acc)
-        (fun _ => f)
-        true;
-
-    let find (f: k => 'v => bool) (keyedReduceable: t 'v): (option (k, 'v)) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => if (f k v) (Some (k, v)) else None)
-        None;
-
-    let findOrRaise (f: k => 'v => bool) (keyedReduceable: t 'v): (k, 'v) =>
-      find f keyedReduceable |> Option.firstOrRaise;
-
-    let findKey (f: k => 'v => bool) (keyedReduceable: t 'v): (option k) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => if (f k v) (Some k) else None)
-        None;
-
-    let findKeyOrRaise (f: k => 'v => bool) (keyedReduceable: t 'v): k =>
-      findKey f keyedReduceable |> Option.firstOrRaise;
-
-    let findValue (f: k => 'v => bool) (keyedReduceable: t 'v): (option 'v) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => if (f k v) (Some v) else None)
-        None;
-
-    let findValueOrRaise (f: k => 'v => bool) (keyedReduceable: t 'v): 'v =>
-      findValue f keyedReduceable |> Option.firstOrRaise;
-
-    let first (keyedReduceable: t 'v): (option (k, 'v)) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => Option.return (k, v))
-        None;
-
-    let firstOrRaise (keyedReduceable: t 'v): ('k, 'v) =>
-      keyedReduceable |> first |> Option.firstOrRaise;
-
-    let forEach
-        while_::(predicate: k => 'v => bool)=Functions.alwaysTrue2
-        (f: k => 'v => unit)
-        (keyedReduceable: t 'v) =>
-      keyedReduceable |> KeyedReduceable.reduce while_::(fun _ => predicate) (fun _ => f) ();
-
-    let none (f: k => 'v => bool) (keyedReduceable: t 'v): bool =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => acc)
-        (fun _ k v => f k v |> not)
-        true;
-
-    let some (f: k => 'v => bool) (keyedReduceable: t 'v): bool =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => not acc)
-        (fun _ => f)
-        false;
-  };
-
-  let module Make2 = fun (KeyedReduceable: KeyedIterable2) => {
-    type t 'k 'v = KeyedReduceable.t 'k 'v;
-
-    let increment acc _ _ => acc + 1;
-    let count (reducer: t 'k 'v): int =>
-      reducer |> KeyedReduceable.reduce increment 0;
-
-    let every (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): bool =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => acc)
-        (fun _ => f)
-        true;
-
-    let find (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): (option ('k, 'v)) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => if (f k v) (Some (k, v)) else None)
-        None;
-
-    let findOrRaise (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): ('k, 'v) =>
-      find f keyedReduceable |> Option.firstOrRaise;
-
-    let findKey (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): (option 'k) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => if (f k v) (Some k) else None)
-        None;
-
-    let findKeyOrRaise (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): 'k =>
-      findKey f keyedReduceable |> Option.firstOrRaise;
-
-    let findValue (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): (option 'v) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => if (f k v) (Some v) else None)
-        None;
-
-    let findValueOrRaise (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): 'v =>
-      findValue f keyedReduceable |> Option.firstOrRaise;
-
-    let first (keyedReduceable: t 'k 'v): (option ('k, 'v)) =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => Option.isEmpty acc)
-        (fun _ k v => Option.return (k, v))
-        None;
-
-    let firstOrRaise (keyedReduceable: t 'k 'v): ('k, 'v) =>
-      keyedReduceable |> first |> Option.firstOrRaise;
-
-    let forEach
-        while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2
-        (f: 'k => 'v => unit)
-        (keyedReduceable: t 'k 'v) =>
-      keyedReduceable |> KeyedReduceable.reduce while_::(fun _ => predicate) (fun _ => f) ();
-
-    let none (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): bool =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => acc)
-        (fun _ k v => f k v |> not)
-        true;
-
-    let some (f: 'k => 'v => bool) (keyedReduceable: t 'k 'v): bool =>
-      keyedReduceable |> KeyedReduceable.reduce
-        while_::(fun acc _ _ => not acc)
-        (fun _ => f)
-        false;
-  };
-
-  include Make2 ({
-    type nonrec t 'k 'v = t 'k 'v;
-
-    let keys = keys;
-    let reduce = reduce;
-    let toIterable = toIterable;
-    let toKeyedIterable = toKeyedIterable;
-    let values = values;
-  });
-};
+let some (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
+  iter |> reduce
+    while_::(fun acc _ _ => not acc)
+    (fun _ => f)
+    false;

@@ -222,11 +222,3 @@ let subtract (this: t) (that: t): t =>
 let union (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */
   ImmSet.union (toSet this) (toSet that) |> from;
-
-let module Reducer = Iterable.Reducer.Make {
-  type nonrec a = a;
-  type nonrec t = t;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};
