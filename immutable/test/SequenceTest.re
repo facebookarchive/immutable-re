@@ -65,7 +65,7 @@ let test = describe "Sequence" [
       |> IntRange.toSequence
       |> Sequence.doOnNext (fun i => { last := i })
       |> Sequence.toIterable
-      |> Iterable.Reducer.forEach ignore;
+      |> Iterable.forEach ignore;
     !last |> Expect.toBeEqualToInt 4;
   }),
   it "filter" (fun () => {
@@ -139,14 +139,14 @@ let test = describe "Sequence" [
       |> IntRange.toSequence
       |> Sequence.seek 2;
 
-    seeked |> Sequence.Reducer.firstOrRaise |> Expect.toBeEqualToInt 2;
+    seeked |> Sequence.toIterable |> Iterable.firstOrRaise |> Expect.toBeEqualToInt 2;
   }),
   it "seekWhile" (fun () => {
     let seeked = IntRange.create start::0 count::5
       |> IntRange.toSequence
       |> Sequence.seekWhile (fun i => i < 2);
 
-    seeked |> Sequence.Reducer.firstOrRaise |> Expect.toBeEqualToInt 2;
+    seeked |> Sequence.toIterable |> Iterable.firstOrRaise |> Expect.toBeEqualToInt 2;
   }),
   it "skip" (fun () => {
     (fun () => Sequence.empty () |> Sequence.skip (-5)) |> Expect.shouldRaise;

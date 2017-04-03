@@ -735,5 +735,5 @@ let rec validate (trie: t 'a) => switch trie {
         print_string "firstTrie capacity: "; print_int (capacity firstTrie); print_newline ();
         failwith " first Trie isn't full";
       };
-      tries |> CopyOnWriteArray.Reducer.forEach validate;
+      tries |> CopyOnWriteArray.toIterable |> Iterable.forEach validate;
 };

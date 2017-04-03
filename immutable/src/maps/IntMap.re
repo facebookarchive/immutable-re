@@ -308,14 +308,3 @@ let merge
       }
     ) (mutate initialValue)
   |> Transient.persist;
-
-let module KeyedReducer = KeyedIterable.KeyedReducer.Make1 {
-  type nonrec k = k;
-  type nonrec t 'v = t 'v;
-
-  let keys = keys;
-  let reduce = reduce;
-  let toIterable = toIterable;
-  let toKeyedIterable = toKeyedIterable;
-  let values = values;
-};

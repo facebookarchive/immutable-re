@@ -342,146 +342,40 @@ let buffer
     |> filter (fun (_, counted, skipped) => counted === count && skipped === skip)
     |> map (fun (lst, _, _) => lst);
 
-type iterable 'a = t 'a;
 
-module type S = {
-  type a;
-  type t;
 
-  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toIterable: t => (iterable a);
-};
+let increment acc _ => acc + 1;
+let count (iterable: t 'a): int =>
+  iterable |> reduce increment 0;
 
-module type S1 = {
-  type t 'a;
+let every (f: 'a => bool) (iterable: t 'a): bool =>
+  iterable |> reduce while_::(fun acc _ => acc) (fun _ => f) true;
 
-  let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  let toIterable: t 'a => (iterable 'a);
-};
+let find (f: 'a => bool) (iterable: t 'a): (option 'a) =>
+  iterable |> reduce while_::(fun acc _ => Option.isEmpty acc) (
+    fun _ next => if (f next) (Some next) else None
+  ) None;
 
-let module Reducer = {
-  module type Iterable = S;
-  module type Iterable1 = S1;
+let findOrRaise (f: 'a => bool) (iterable: t 'a): 'a =>
+  find f iterable |> Option.firstOrRaise;
 
-  module type S = {
-    type a;
-    type t;
+let first (iterable: t 'a): (option 'a) =>
+  iterable |> reduce
+    while_::(fun acc _ => Option.isEmpty acc)
+    (fun _ => Option.return)
+    None;
 
-    let count: t => int;
-    let every: (a => bool) => t => bool;
-    let find: (a => bool) => t => (option a);
-    let findOrRaise: (a => bool) => t => a;
-    let first: t => (option a);
-    let firstOrRaise: t => a;
-    let forEach: while_::(a => bool)? => (a => unit) => t => unit;
-    let none: (a => bool) => t => bool;
-    let some: (a => bool) => t => bool;
-  };
+let firstOrRaise (iterable: t 'a): 'a =>
+  iterable |> first |> Option.firstOrRaise;
 
-  module type S1 = {
-    type t 'a;
+let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (iterable: t 'a) =>
+  if (predicate === Functions.alwaysTrue ) {
+    iterable |> reduce (fun _ => f) ();
+  }
+  else iterable |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
-    let count: t 'a => int;
-    let every: ('a => bool) => (t 'a) => bool;
-    let find: ('a => bool) => (t 'a) => (option 'a);
-    let findOrRaise: ('a => bool) => (t 'a) => 'a;
-    let first: t 'a => (option 'a);
-    let firstOrRaise: t 'a => 'a;
-    let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
-    let none: ('a => bool) => (t 'a) => bool;
-    let some: ('a => bool) => (t 'a) => bool;
-  };
+let none (f: 'a => bool) (iterable: t 'a): bool =>
+  iterable |> reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
 
-  let module Make = fun (Iterable: Iterable) => {
-    type a = Iterable.a;
-    type t = Iterable.t;
-
-    let increment acc _ => acc + 1;
-    let count (reduceable: t): int =>
-      reduceable |> Iterable.reduce increment 0;
-
-    let every (f: a => bool) (reduceable: t): bool =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => acc) (fun _ => f) true;
-
-    let find (f: a => bool) (reduceable: t): (option a) =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => Option.isEmpty acc) (
-        fun _ next => if (f next) (Some next) else None
-      ) None;
-
-    let findOrRaise (f: a => bool) (reduceable: t): a =>
-      find f reduceable |> Option.firstOrRaise;
-
-    let first (reduceable: t): (option a) =>
-      reduceable |> Iterable.reduce
-        while_::(fun acc _ => Option.isEmpty acc)
-        (fun _ => Option.return)
-        None;
-
-    let firstOrRaise (reduceable: t): a =>
-      reduceable |> first |> Option.firstOrRaise;
-
-    let forEach while_::(predicate: a => bool)=Functions.alwaysTrue (f: a => unit) (reduceable: t) =>
-      if (predicate === Functions.alwaysTrue ) {
-        reduceable |> Iterable.reduce (fun _ => f) ();
-      }
-      else reduceable |> Iterable.reduce while_::(fun _ => predicate) (fun _ => f) ();
-
-    let none (f: a => bool) (reduceable: t): bool =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
-
-    let some (f: a => bool) (reduceable: t): bool =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => not acc) (fun _ => f) false;
-  };
-
-  let module Make1 = fun (Iterable: Iterable1) => {
-    type t 'a = Iterable.t 'a;
-
-    let increment acc _ => acc + 1;
-    let count (reduceable: t 'a): int =>
-      reduceable |> Iterable.reduce increment 0;
-
-    let every (f: 'a => bool) (reduceable: t 'a): bool =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => acc) (fun _ => f) true;
-
-    let find (f: 'a => bool) (reduceable: t 'a): (option 'a) =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => Option.isEmpty acc) (
-        fun _ next => if (f next) (Some next) else None
-      ) None;
-
-    let findOrRaise (f: 'a => bool) (reduceable: t 'a): 'a =>
-      find f reduceable |> Option.firstOrRaise;
-
-    let first (reduceable: t 'a): (option 'a) =>
-      reduceable |> Iterable.reduce
-        while_::(fun acc _ => Option.isEmpty acc)
-        (fun _ => Option.return)
-        None;
-
-    let firstOrRaise (reduceable: t 'a): 'a =>
-      reduceable |> first |> Option.firstOrRaise;
-
-    let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (reduceable: t 'a) =>
-      if (predicate === Functions.alwaysTrue ) {
-        reduceable |> Iterable.reduce (fun _ => f) ();
-      }
-      else reduceable |> Iterable.reduce while_::(fun _ => predicate) (fun _ => f) ();
-
-    let none (f: 'a => bool) (reduceable: t 'a): bool =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
-
-    let some (f: 'a => bool) (reduceable: t 'a): bool =>
-      reduceable |> Iterable.reduce while_::(fun acc _ => not acc) (fun _ => f) false;
-  };
-
-  include Make1 ({
-    type nonrec t 'a = t 'a;
-    let reduce = reduce;
-    let toIterable = toIterable;
-  });
-};
-
-let module ListReducer = Reducer.Make1 ({
-  type t 'a = list 'a;
-  let reduce = ImmList.reduce;
-  let toIterable = ofList;
-});
+let some (f: 'a => bool) (iterable: t 'a): bool =>
+  iterable |> reduce while_::(fun acc _ => not acc) (fun _ => f) false;

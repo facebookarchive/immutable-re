@@ -208,19 +208,3 @@ let navigableSetOps: NavigableSet.Ops.t int t = {
 let toNavigableSet (set: t): (NavigableSet.t int) =>
   if (isEmpty set) (NavigableSet.empty ())
   else NavigableSet.NavigableSet set navigableSetOps;
-
-let module ReducerReversed = Iterable.Reducer.Make {
-  type nonrec a = a;
-  type nonrec t = t;
-
-  let reduce = reduceReversed;
-  let toIterable = toIterableReversed;
-};
-
-let module Reducer = Iterable.Reducer.Make {
-  type nonrec a = a;
-  type nonrec t = t;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

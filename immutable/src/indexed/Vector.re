@@ -1293,17 +1293,3 @@ let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) =>
 
 let removeAt (index: int) (vec: t 'a): (t 'a) =>
   failwith "Not Implemented";
-
-let module ReducerReversed = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduceReversed;
-  let toIterable = toIterableReversed;
-};
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

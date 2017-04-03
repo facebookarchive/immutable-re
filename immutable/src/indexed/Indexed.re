@@ -163,9 +163,3 @@ let reduceReversed
     (acc: 'acc)
     (indexed: t 'a): 'acc =>
   indexed |> toIterableReversed |> Iterable.reduce while_::predicate f acc;
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

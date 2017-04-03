@@ -63,7 +63,7 @@ let equals (this: t 'a) (that: t 'a): bool => switch (this, that) {
   | (Set _ _, Set _ _) =>
       if (this === that) true
       else if ((count this) !== (count that)) false
-      else this |> toIterable |> Iterable.Reducer.every (flip contains that)
+      else this |> toIterable |> Iterable.every (flip contains that)
   | _ => false
 };
 
@@ -84,10 +84,3 @@ let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
   this |> toIterable,
   subtract that this,
 ];
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};

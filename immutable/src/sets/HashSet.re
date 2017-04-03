@@ -256,10 +256,3 @@ let union ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
   /* FIXME: Makes this more efficient */
   emptyWith hash::hash comparator::comparator
     |> addAll (ImmSet.union (toSet this) (toSet that));
-
-let module Reducer = Iterable.Reducer.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let reduce = reduce;
-  let toIterable = toIterable;
-};
