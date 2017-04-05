@@ -261,6 +261,7 @@ let module Make = fun (Comparable: Comparable.S) => {
     toSequence,
     toSequenceReversed,
     toSequentialCollection,
+    toSet,
   };
 
   let toNavigableSet (set: t): (NavigableSet.t a) =>

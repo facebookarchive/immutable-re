@@ -1054,8 +1054,22 @@ let module rec NavigableSet: {
     /** [toNavigableSet set] returns a NavigableSet view of [set]. */
   };
 
+  module type S1 = {
+    /** NavigableSet module type signature for types with a parametric type arity of 1. */
+
+    type t 'a;
+
+    include Set.S1 with type t 'a := t 'a;
+    include NavigableCollection.S1 with type t 'a := t 'a;
+
+    let toNavigableSet: (t 'a) => NavigableSet.t 'a;
+    /** [toNavigableSet set] returns a NavigableSet view of [set]. */
+  };
+
   type t 'a;
   /** The Set type. */
+
+  include S1 with type t 'a := NavigableSet.t 'a;
 
   let empty: unit => (NavigableSet.t 'a);
   /** The empty Set. */

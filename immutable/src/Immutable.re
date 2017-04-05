@@ -354,6 +354,18 @@ let module NavigableSet = {
     let toNavigableSet: t => NavigableSet.t a;
   };
 
+  module type S1 = {
+    /** NavigableSet module type signature for types with a parametric type arity of 1. */
+
+    type t 'a;
+
+    include Set.S1 with type t 'a := t 'a;
+    include NavigableCollection.S1 with type t 'a := t 'a;
+
+    let toNavigableSet: (t 'a) => NavigableSet.t 'a;
+    /** [toNavigableSet set] returns a NavigableSet view of [set]. */
+  };
+
   let module Persistent = {
     module type S = {
       type a;
