@@ -345,7 +345,8 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     toNavigableCollection: toNavigableKeyCollection,
     toSequence: toKeySequence,
     toSequenceReversed: toKeySequenceReversed,
-    toSequentialCollection: toSequentialKeyCollection
+    toSequentialCollection: toSequentialKeyCollection,
+    toSet: keySet,
   };
 
   let navigableKeySet (map: t 'v): (NavigableSet.t k) =>

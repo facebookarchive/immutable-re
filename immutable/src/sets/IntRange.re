@@ -203,6 +203,7 @@ let navigableSetOps: NavigableSet.Ops.t int t = {
   toNavigableCollection,
   toSequence,
   toSequenceReversed,
+  toSet,
 };
 
 let toNavigableSet (set: t): (NavigableSet.t int) =>
