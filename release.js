@@ -1,0 +1,84 @@
+import * as ChildProcess from 'child_process';
+import * as Fs from 'fs';
+
+export const exec = cmd => new Promise(
+  (resolve, reject) => {
+    ChildProcess.exec(cmd, (err: Error, stdout: Buffer, stderr: Buffer) => {
+      if (err != null) {
+        reject(err);
+      } else {
+        resolve({ stdout, stderr });
+      }
+    });
+  }
+
+const readFile = (fileName, encodingType) => new Promise (
+  (resolve, reject) => {
+    Fs.readFile(fileName, encodingType, (err, data) => {
+      if (err != null) { reject(err); } else { resolve(data); }
+    });
+  }
+);
+
+export const writeFile = (fileName, data) => new Promise (
+  (resolve, reject) => {
+    Fs.writeFile(fileName, data, err => {
+      if (err != null) { reject(err); } else { resolve(); }
+    });
+  }
+);
+
+const opamFile = "opam";
+const metaFile = "pkg/META";
+const packageJSONFile = "package.json";
+
+const writeFiles = async version => {
+  const opam = `
+opam-version: "1.2"
+name: "immutable"
+version: "${ version }"
+maintainer: "Dave Bordoley <bordoley>"
+authors: [ "Dave Bordoley <bordoley>" ]
+license: "BSD"
+homepage: "https://github.com/facebookincubator/immutable-re.git"
+dev-repo: "git://github.com/facebookincubator/immutable-re.git"
+bug-reports: "https://github.com/facebookincubator/immutable-re/issues"
+tags: [ "reason" "immutable" ]
+build: [
+  [make "build"]
+]
+depends: [
+  "topkg"       {>=  "0.8.1" & < "0.9"}
+  "reason"      {>=  "1.13.3"}
+]
+available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
+`;
+
+  const meta =  `
+# Copyright (c) 2017-present, Facebook, Inc. All rights reserved.
+
+version = "${ version }"
+description = "immutable: Immutable data structures for Reason"
+
+archive(byte) = "immutable.cma"
+archive(native) = "immutable.cmxa"
+`;
+
+  await writeFile (opamFile, opam);
+  await writeFile (metaFile, meta);
+};
+
+const main = async () => {
+  const packageJSON = await readFile (packageJSONFile, "UTF-8");
+  const version = JSON.parse(packageJSON).version;
+
+  await writeFiles (version);
+
+  await exec('git commit -m "Version ${ version }"');
+  await exec('git tag -a $(version) -m "Version ${ version }."');
+
+  await exec('git push "git@github.com:bordoley/immutable-re.git"');
+	await exec('git push "git@github.com:bordoley/immutable-re.git" tag $(version)');
+  await exec(`mkdir -p _build && cd _build && opam-publish prepare https://github.com/facebookincubator/immutable-re/archive/${ version }.tar.gz`);
+
+};

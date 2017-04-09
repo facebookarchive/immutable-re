@@ -3,3 +3,32 @@ B ./_build/immutable/**
 B ./_build/reUnit/**
 S ./immutable/**
 S ./reUnit/**
+
+####{BSB GENERATED: NO EDIT
+FLG -ppx /Users/bordoley/personal/immutable-re/node_modules/bs-platform/bin/bsppx.exe
+S /Users/bordoley/personal/immutable-re/node_modules/bs-platform/lib/ocaml
+B /Users/bordoley/personal/immutable-re/node_modules/bs-platform/lib/ocaml
+FLG -nostdlib -no-alias-deps -color always -w -40+6+7+27+32..39+44+45
+S /Users/bordoley/personal/immutable-re/node_modules/ReUnit/lib/ocaml
+B /Users/bordoley/personal/immutable-re/node_modules/ReUnit/lib/ocaml
+S perf
+B lib/bs/perf
+S test
+B lib/bs/test
+S test/testers
+B lib/bs/test/testers
+S src
+B lib/bs/src
+S src/utils
+B lib/bs/src/utils
+S src/maps
+B lib/bs/src/maps
+S src/indexed
+B lib/bs/src/indexed
+S src/queues
+B lib/bs/src/queues
+S src/core
+B lib/bs/src/core
+S src/sets
+B lib/bs/src/sets
+####BSB GENERATED: NO EDIT}
