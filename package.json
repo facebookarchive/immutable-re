@@ -11,8 +11,6 @@
   "license": "BSD-3-Clause",
   "devDependencies": {
     "ReUnit": "./reUnit",
-    "babel-cli": "^6.24.1",
-    "babel-preset-env": "^1.3.3",
     "bs-platform": "^1.6.0"
   },
   "scripts": {
@@ -23,6 +21,6 @@
     "opam-init": "opam init",
     "opam-install-mac": "brew update && brew install opam",
     "opam-pin": "eval $(opam config env) && opam update && opam switch 4.02.3 && opam pin add -y immutable .",
-    "release": "babel-node release.js"
+    "release": "node release.js"
   }
 }

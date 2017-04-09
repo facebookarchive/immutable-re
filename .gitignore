@@ -22,7 +22,6 @@ immutable.install
 # Ignore bsb generated merlin files
 /reUnit/.merlin
 
-
 # Ignore bsb generate lib directories
 /reUnit/lib
 /lib
