@@ -1,6 +1,6 @@
 {
-  "name": "Immutable.re",
-  "bs-dependencies": ["ReUnit"],
+  "name": "immutable-re",
+  "bs-dependencies": ["reunit"],
   "sources": [
     {
       "dir": "src",
