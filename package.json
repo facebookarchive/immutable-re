@@ -22,6 +22,6 @@
     "opam-init": "opam init",
     "opam-install-mac": "brew update && brew install opam",
     "opam-pin": "eval $(opam config env) && opam update && opam switch 4.02.3 && opam pin add -y immutable .",
-    "make-release": "babel-node release.js"
+    "release": "babel-node release.js"
   }
 }

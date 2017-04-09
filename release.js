@@ -3,7 +3,7 @@ import * as Fs from 'fs';
 
 export const exec = cmd => new Promise(
   (resolve, reject) => {
-    ChildProcess.exec(cmd, (err: Error, stdout: Buffer, stderr: Buffer) => {
+    ChildProcess.exec(cmd, (err, stdout, stderr) => {
       if (err != null) {
         reject(err);
       } else {
@@ -11,6 +11,7 @@ export const exec = cmd => new Promise(
       }
     });
   }
+);
 
 const readFile = (fileName, encodingType) => new Promise (
   (resolve, reject) => {
@@ -74,11 +75,15 @@ const main = async () => {
 
   await writeFiles (version);
 
-  await exec('git commit -m "Version ${ version }"');
-  await exec('git tag -a $(version) -m "Version ${ version }."');
-
+  await exec(`git add ${ opamFile } ${ metaFile } ${ packageJSONFile }`)
+  await exec(`git commit -m "Version ${ version }"`);
+  await exec(`git tag -a ${ version } -m "Version ${ version }."`);
+/*
   await exec('git push "git@github.com:bordoley/immutable-re.git"');
 	await exec('git push "git@github.com:bordoley/immutable-re.git" tag $(version)');
-  await exec(`mkdir -p _build && cd _build && opam-publish prepare https://github.com/facebookincubator/immutable-re/archive/${ version }.tar.gz`);
+  await exec(`mkdir -p _build && cd _build && opam-publish prepare https://github.com/facebookincubator/immutable-re/archive/${ version }.tar.gz`);*/
 
 };
+
+
+main ();

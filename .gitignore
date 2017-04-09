@@ -18,7 +18,6 @@ _build/**
 *.log
 node_modules
 immutable.install
-/pkg/META
 
 # Ignore bsb generated merlin files
 /reUnit/.merlin
