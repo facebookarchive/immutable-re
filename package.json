@@ -18,6 +18,7 @@
   "scripts": {
     "start": "bsb -make-world -w",
     "clean": "bsb -clean-world",
+    "deploy-docs": "git subtree push --prefix docs origin gh-pages",
     "setup-global-env": "npm install -g git://github.com/reasonml/reason-cli.git",
     "opam-init": "opam init",
     "opam-install-mac": "brew update && brew install opam",

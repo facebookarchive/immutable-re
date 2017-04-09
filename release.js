@@ -83,6 +83,7 @@ const main = async () => {
   await exec('mkdir -p _build');
   await exec(`cd _build && opam-publish prepare https://github.com/facebookincubator/immutable-re/archive/${ version }.tar.gz`);
   await exec(`cd _build && opam-publish submit immutable.${ version }`);
+  await exec('npm publish');
 };
 
 
