@@ -19,6 +19,7 @@ _build/**
 *.tgz
 node_modules
 immutable.install
+immutable.*
 
 # Ignore bsb generated merlin files
 /reUnit/.merlin

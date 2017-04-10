@@ -29,6 +29,6 @@ Makefile
 opam
 /perf
 /pkg
-releases.js
+release.js
 /reUnit
 /test

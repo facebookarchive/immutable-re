@@ -3,10 +3,12 @@
   "version": "0.0.6",
   "description": "Persistent immutable collections for Reason",
   "main": "lib/js/immutable.js",
+  "url" : "https://facebookincubator.github.io/immutable-re/",
   "keywords": [
     "reason",
     "reasonml",
-    "ocaml"
+    "ocaml",
+    "immutable"
   ],
   "author": "facebook",
   "license": "BSD-3-Clause",

@@ -80,9 +80,8 @@ const main = async () => {
   await exec(`git tag -a ${ version } -m "Version ${ version }."`);
   await exec('git push "git@github.com:facebookincubator/immutable-re.git"');
   await exec(`git push "git@github.com:facebookincubator/immutable-re.git" tag ${version}`);
-  await exec('mkdir -p _build');
-  await exec(`cd _build && opam-publish prepare https://github.com/facebookincubator/immutable-re/archive/${ version }.tar.gz`);
-  await exec(`cd _build && opam-publish submit immutable.${ version }`);
+  await exec(`opam-publish prepare https://github.com/facebookincubator/immutable-re/archive/${ version }.tar.gz`);
+  await exec(`opam-publish submit immutable.${ version }`);
   await exec('npm publish');
 };
 

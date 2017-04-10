@@ -1,4 +1,4 @@
-![Immutable Collections For Reason](/docs/images/logo-800x215.png?raw=true)
+![Immutable Collections For Reason](https://github.com/facebookincubator/immutable-re/raw/master/docs/images/logo-800x215.png?raw=true)
 ===========================================================================
 Pure [Reason](https://facebook.github.io/reason) implementation of persistent immutable data structures.
 
@@ -18,7 +18,13 @@ For more details see the [API docs](http://facebookincubator.github.io/immutable
 
 # Installing
 
-## Installing `immutable` via OPAM
+## Installing via NPM (JS Workflow)
+
+```bash
+npm install --save immutable-re
+```
+
+## Installing `immutable` via OPAM (native workflow)
 
 ```bash
 # On macOS, install opam via Homebrew:
