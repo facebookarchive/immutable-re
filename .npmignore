@@ -20,9 +20,15 @@ _build/**
 node_modules
 immutable.install
 
-# Ignore bsb generated merlin files
-/reUnit/.merlin
-
-# Ignore bsb generate lib directories
-/reUnit/lib
-/lib
+_tags
+/docs
+/lib/bs
+/lib/js/test
+/lib/js/perf
+Makefile
+opam
+/perf
+/pkg
+releases.js
+/reUnit
+/test

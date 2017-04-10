@@ -2,6 +2,7 @@
   "name": "immutable-re",
   "version": "0.0.6",
   "description": "Persistent immutable collections for Reason",
+  "main": "lib/js/immutable.js",
   "keywords": [
     "reason",
     "reasonml",
@@ -16,6 +17,7 @@
   "scripts": {
     "start": "bsb -make-world -w",
     "clean": "bsb -clean-world",
+    "build": "bsb -make-world",
     "deploy-docs": "git subtree push --prefix docs origin gh-pages",
     "setup-global-env": "npm install -g git://github.com/reasonml/reason-cli.git",
     "opam-init": "opam init",

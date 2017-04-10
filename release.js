@@ -49,8 +49,8 @@ build: [
   [make "build"]
 ]
 depends: [
-  "topkg"       {>=  "0.8.1" & < "0.9"}
-  "reason"      {>=  "1.13.3"}
+  "topkg"       {build >=  "0.8.1" & < "0.9"}
+  "reason"      {build >=  "1.13.3"}
 ]
 available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
 `;
@@ -83,7 +83,7 @@ const main = async () => {
   await exec('mkdir -p _build');
   await exec(`cd _build && opam-publish prepare https://github.com/facebookincubator/immutable-re/archive/${ version }.tar.gz`);
   await exec(`cd _build && opam-publish submit immutable.${ version }`);
-  /*await exec('npm publish');*/
+  await exec('npm publish');
 };
 
 
