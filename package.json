@@ -11,7 +11,7 @@
   "license": "BSD-3-Clause",
   "devDependencies": {
     "reunit": "./reUnit",
-    "bs-platform": "^1.6.0"
+    "bs-platform": "https://github.com/bloomberg/bucklescript.git"
   },
   "scripts": {
     "start": "bsb -make-world -w",
