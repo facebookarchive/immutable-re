@@ -1,6 +1,7 @@
-# Copyright (c) 2015-present, Facebook, Inc. All rights reserved.
 
-version = "%{version}%"
+# Copyright (c) 2017-present, Facebook, Inc. All rights reserved.
+
+version = "0.0.4"
 description = "immutable: Immutable data structures for Reason"
 
 archive(byte) = "immutable.cma"

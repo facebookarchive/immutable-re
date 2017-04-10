@@ -1,36 +1,20 @@
 {
-  "name": "Immutable.re",
+  "name": "immutable-re",
+  "bs-dev-dependencies": ["reunit"],
   "sources": [
     {
-      "dir": "immutable",
+      "dir": "src",
       "subdirs": [
-        {
-          "dir": "src",
-          "subdirs": [
-            {"dir": "sets", "public": "none"}, 
-            {"dir": "core", "public": "none"}, 
-            {"dir": "queues", "public": "none"},
-            {"dir": "indexed", "public": "none"},
-            {"dir": "maps", "public": "none"},
-            {"dir": "utils", "public": "none"},
-          ],
-          "public": ["Immutable"],
-        },
-        {
-          "dir": "test",
-          "subdirs": ["testers"],
-          "type": "dev",
-        },
-        {
-          "dir": "perf",
-          "type": "dev",
-        },
+        {"dir": "sets", "public": "none"},
+        {"dir": "core", "public": "none"},
+        {"dir": "queues", "public": "none"},
+        {"dir": "indexed", "public": "none"},
+        {"dir": "maps", "public": "none"},
+        {"dir": "utils", "public": "none"},
       ],
+      "public": ["Immutable"],
     },
-    {
-      "dir": "reUnit",
-      "subdirs": ["src"],
-      "type": "dev",
-    },
+    { "dir": "test", "subdirs": ["testers"], "type": "dev" },
+    { "dir": "perf", "type": "dev" },
   ],
 }

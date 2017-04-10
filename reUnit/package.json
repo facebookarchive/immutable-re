@@ -1,0 +1,21 @@
+{
+  "name": "reunit",
+  "version": "0.0.0",
+  "description": "Basic unit testing framework for reason",
+
+  "keywords": [
+    "reason",
+    "reasonml",
+    "ocaml"
+  ],
+  "author": "facebook",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "bs-platform": "^1.6.0"
+  },
+
+  "scripts": {
+    "start": "bsb -make-world -w",
+    "clean": "bsb -clean-world"
+  }
+}

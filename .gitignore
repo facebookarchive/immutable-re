@@ -16,7 +16,12 @@ _build/**
 *.opt
 *.native
 *.log
-/node_modules/
-/lib/
-/immutable.install
-/pkg/META
+node_modules
+immutable.install
+
+# Ignore bsb generated merlin files
+/reUnit/.merlin
+
+# Ignore bsb generate lib directories
+/reUnit/lib
+/lib

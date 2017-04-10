@@ -1,2 +1,3 @@
+<lib/**>: -traverse
 <node_modules/**>: -traverse
-<lib>: -traverse
+<reUnit/**>: -traverse

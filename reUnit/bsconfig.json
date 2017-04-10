@@ -1,0 +1,8 @@
+{
+  "name": "reunit",
+  "sources": [
+    {
+      "dir": "src",
+    },
+  ],
+}

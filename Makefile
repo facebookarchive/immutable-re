@@ -1,29 +1,20 @@
 build:
-	cp pkg/META.in pkg/META
 	ocamlbuild -package topkg pkg/build.native
 	./build.native build
 
-ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-SUBSTS:=$(ROOT_DIR)/pkg/substs
+SRC_DIRS=src,src/sets,src/core,src/queues,src/indexed,src/maps,src/utils
 
-pre_release:
-ifndef version
-	$(error environment variable 'version' is undefined)
-endif
-	export git_version="$(shell git rev-parse --verify HEAD)"; \
-	export git_short_version="$(shell git rev-parse --short HEAD)"; \
-	$(SUBSTS) $(ROOT_DIR)/package.json.in; \
-	$(SUBSTS) $(ROOT_DIR)/opam.in
+test-debug:
+	rebuild -cflag -g -Is $(SRC_DIRS) -Is reUnit/src,test/testers,test ./test/ImmutableTest.byte
+	./ImmutableTest.byte
 
-release: pre_release
-	git add package.json opam
-	git commit -m "Version $(version)"
-	git tag -a $(version) -m "Version $(version)."
-	# Push first the objects, then the tag.
-	git push "git@github.com:facebookincubator/immutable-re.git"
-	git push "git@github.com:facebookincubator/immutable-re.git" tag $(version)
+perf-debug:
+	rebuild -cflag -g -Is $(SRC_DIRS) -Is reUnit/src,perf ./perf/PerfTest.byte
+	./PerfTest.byte
+
+perf-native:
+	rebuild -Is $(SRC_DIRS) -Is reUnit/src,perf -ocamlopt 'ocamlopt -p -inline 100 -unsafe -noassert -nodynlink' ./perf/PerfTest.native
+	./PerfTest.native
 
 clean:
 	ocamlbuild -clean
-
-.PHONY: build pre_release
