@@ -2,16 +2,31 @@
   "name": "immutable-re",
   "version": "0.0.6",
   "description": "Persistent immutable collections for Reason",
-  "main": "lib/js/immutable.js",
+  "main": "lib/js/src/immutable.js",
   "url" : "https://facebookincubator.github.io/immutable-re/",
+  "bugs": "https://github.com/facebookincubator/immutable-re/issues",
   "keywords": [
     "reason",
     "reasonml",
     "ocaml",
     "immutable"
   ],
-  "author": "facebook",
+  "author": "facebookincubator",
+  "contributors": [{ "name": "Dave Bordoley", "email": "bordoley@gmail.com" }],
   "license": "BSD-3-Clause",
+  "files": [
+    "bsconfig.json",
+    "CONTRIBUTING.md",
+    "LICENSE.txt",
+    "lib/js/src",
+    "PATENTS.txt",
+    "README.md",
+    "src"
+  ],
+  "repository": { "type": "git", "url" : "https://github.com/facebookincubator/immutable-re.git" },
+  "dependencies": {
+    "bs-platform": "https://github.com/bloomberg/bucklescript.git"
+  },
   "devDependencies": {
     "reunit": "./reUnit",
     "bs-platform": "https://github.com/bloomberg/bucklescript.git"
