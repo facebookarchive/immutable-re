@@ -69,7 +69,7 @@ let distinctUntilChangedWith
         let previousValue = ref [||];
 
         let predicate acc key value =>
-          if (!previousKey === [||]) (
+          if ((Array.length !previousKey) === 0) (
             predicate acc key value
           )
           else if (
@@ -81,7 +81,7 @@ let distinctUntilChangedWith
           else true;
 
         let f acc key value =>
-          if (!previousKey === [||]) {
+          if ((Array.length !previousKey) === 0) {
             previousKey := [| key |];
             previousValue := [| value |];
             f acc key value;
@@ -213,7 +213,7 @@ let map
           let nextKey = keyMapper key value;
           let nextValue = valueMapper key value;
 
-          if (!memoizedKey === [||]) {
+          if ((Array.length !memoizedKey) === 0) {
             memoizedKey := [| nextKey |];
             memoizedValue := [| nextValue |]
           }
@@ -241,7 +241,7 @@ let mapKeys (mapper: 'a => 'v => 'b) (iter: t 'a 'v): (t 'b 'v) => switch iter {
         let predicate acc key value => {
           let nextKey = mapper key value;
 
-          if (!memoizedKey === [||]) { memoizedKey := [| nextKey |] }
+          if ((Array.length !memoizedKey) === 0) { memoizedKey := [| nextKey |] }
           else { (!memoizedKey).(0) = nextKey; };
 
           predicate acc nextKey value
@@ -263,7 +263,7 @@ let mapValues (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) => switch iter
         let predicate acc key value => {
           let nextValue = mapper key value;
 
-          if (!memoizedValue === [||]) { memoizedValue := [| nextValue |] }
+          if ((Array.length !memoizedValue) === 0) { memoizedValue := [| nextValue |] }
           else { (!memoizedValue).(0) = nextValue; };
 
           predicate acc key nextValue

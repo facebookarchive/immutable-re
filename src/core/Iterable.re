@@ -70,7 +70,7 @@ let distinctUntilChangedWith
         let previous = ref [||];
 
         let predicate acc next =>
-          if (!previous === [||]) (
+          if ((Array.length !previous) === 0) (
             predicate acc next
           )
           else if (equals (!previous).(0) next |> not) (
@@ -79,7 +79,7 @@ let distinctUntilChangedWith
           else true;
 
         let f acc next =>
-          if (!previous === [||]) {
+          if ((Array.length !previous) === 0) {
             previous := [| next |];
             f acc next
           }
@@ -180,7 +180,7 @@ let map
         let predicate acc next => {
           let next = mapper next;
 
-          if (!memoize === [||]) { memoize := [| next |] }
+          if ((Array.length !memoize) === 0) { memoize := [| next |] }
           else { (!memoize).(0) = next; };
 
           predicate acc next
