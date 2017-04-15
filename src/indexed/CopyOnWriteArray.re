@@ -222,7 +222,6 @@ let skip (startIndex: int) (arr: t 'a): (t 'a) => {
 
   if (startIndex < 0) (failwith "startIndex is < 0")
   else if (startIndex >= arrCount) [||]
-  else if (startIndex === 0) arr
   else {
     let newCount = arrCount - startIndex;
     Array.sub arr startIndex newCount;
@@ -233,7 +232,6 @@ let take (newCount: int) (arr: t 'a): (t 'a) => {
   let arrCount = count arr;
 
   if (newCount < 0) (failwith "count is < 0")
-  else if (newCount >= arrCount) arr
   else if (newCount === 0) [||]
   else Array.sub arr 0 newCount;
 };
