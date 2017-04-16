@@ -11,7 +11,10 @@
     "ocaml",
     "immutable"
   ],
-  "author": "facebookincubator",
+  "author": {
+    "name": "Dave Bordoley",
+    "email": "bordoley@gmail.com"
+  },
   "contributors": [{ "name": "Dave Bordoley", "email": "bordoley@gmail.com" }],
   "license": "BSD-3-Clause",
   "files": [
@@ -28,7 +31,16 @@
     "bs-platform": "^1.7.1"
   },
   "devDependencies": {
-    "reunit": "./reUnit"
+    "reunit": "./reUnit",
+    "opam_of_packagejson": "*"
+  },
+  "opam": {
+    "dependencies": {
+      "reason": "build >=  \"1.13.3\""
+    },
+    "installPath": "_build/src",
+    "libraryName": "immutable",
+    "mainModule": "Immutable"
   },
   "scripts": {
     "start": "bsb -make-world -w",
@@ -39,6 +51,6 @@
     "opam-init": "opam init",
     "opam-install-mac": "brew update && brew install opam",
     "opam-pin": "eval $(opam config env) && opam update && opam switch 4.02.3 && opam pin add -y immutable .",
-    "release": "node release.js"
+    "release": "opam_of_packagejson -gen-meta -gen-opam -gen-install package.json && node release.js"
   }
 }
