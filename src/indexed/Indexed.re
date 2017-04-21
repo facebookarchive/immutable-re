@@ -111,8 +111,6 @@ let toKeyedIterableReversed (indexed: t 'a): (KeyedIterable.t int 'a) => switch 
   | Indexed indexed { toKeyedIterableReversed } => toKeyedIterableReversed indexed
 };
 
-let toIndexed (indexed: t 'a): (t 'a) => indexed;
-
 let toMap (indexed: t 'a): (ImmMap.t int 'a) => switch indexed {
   | Empty => ImmMap.empty ()
   | Indexed indexed { toMap } => toMap indexed

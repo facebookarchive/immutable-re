@@ -269,9 +269,11 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     if (isEmpty map) (Collection.empty ())
     else (Collection.create (keyCollectionOps ()) map);
 
-  let keySetOps (): ImmSet.Ops.t k (t 'v) => {
+  let keySetBase (): ImmSet.s (t 'v) k => {
     contains: containsKey,
     count,
+    reduce: fun while_::predicate reducer acc map =>
+      map |> keys |> Iterable.reduce while_::predicate reducer acc,
     toCollection: toKeyCollection,
     toIterable: toKeyedIterable >> KeyedIterable.keys,
     toSequence: toKeySequence,
@@ -279,7 +281,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let keySet (map: t 'v): (ImmSet.t k) =>
     if (isEmpty map) (ImmSet.empty ())
-    else ImmSet.Set map (keySetOps ());
+    else ImmSet.Instance map (keySetBase ());
 
   let sequentialKeyCollectionBase (): SequentialCollection.s (t 'v) k => {
     count,
@@ -318,13 +320,17 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     if (isEmpty map) (NavigableCollection.empty ())
     else NavigableCollection.Instance map (navigableKeyCollectionBase ());
 
-  let navigableKeySetOps (): NavigableSet.Ops.t k (t 'v) => {
+  let navigableKeySetBase (): NavigableSet.s (t 'v) k => {
     contains: containsKey,
     count,
     first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     last: lastKey,
     lastOrRaise: lastKeyOrRaise,
+    reduce: fun while_::predicate reducer acc map =>
+      map |> keys |> Iterable.reduce while_::predicate reducer acc,
+    reduceReversed: fun while_::predicate reducer acc map =>
+      map |> keysReversed |> Iterable.reduce while_::predicate reducer acc,
     toCollection: toKeyCollection,
     toIterable: toKeyedIterable >> KeyedIterable.keys,
     toIterableReversed: toKeyedIterable >> KeyedIterable.keys,
@@ -337,7 +343,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let navigableKeySet (map: t 'v): (NavigableSet.t k) =>
     if (isEmpty map) (NavigableSet.empty ())
-    else NavigableSet.NavigableSet map (navigableKeySetOps ());
+    else NavigableSet.Instance map (navigableKeySetBase ());
 
   let keyedCollectionOps: KeyedCollection.Ops.t k 'v (t 'v) = {
     containsKey,

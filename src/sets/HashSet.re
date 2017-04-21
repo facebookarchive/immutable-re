@@ -28,11 +28,6 @@ let add (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => 
   else { count: count + 1, root: newRoot, hash, comparator };
 };
 
-let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
-  let keyHash = hash value;
-  root |> BitmapTrieSet.contains comparator 0 keyHash value;
-};
-
 let emptyWith
     hash::(hash: Hash.t 'a)
     comparator::(comparator: Comparator.t 'a): (t 'a) => {
@@ -59,10 +54,18 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator;
 
-include (Collection.Make1 {
+include (ImmSet.Make1 {
   type nonrec t 'a = t 'a;
 
+  let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
+    let keyHash = hash value;
+    root |> BitmapTrieSet.contains comparator 0 keyHash value;
+  };
+
   let count ({ count }: t 'a): int => count;
+
+  let equals (this: t 'a) (that: t 'a): bool =>
+    failwith "not implemented";
 
   let reduce
       while_::(predicate: 'acc => 'a => bool)
@@ -74,19 +77,7 @@ include (Collection.Make1 {
 
   let toSequence ({ root }: t 'a): (Sequence.t 'a) =>
     root |> BitmapTrieSet.toSequence;
-}: Collection.S1 with type t 'a := t 'a);
-
-let setOps: ImmSet.Ops.t 'a (t 'a) = {
-  contains,
-  count,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSet (set: t 'a): (ImmSet.t 'a) =>
-  if (isEmpty set) (ImmSet.empty ())
-  else ImmSet.Set set setOps;
+}: ImmSet.S1 with type t 'a := t 'a);
 
 let equals (this: t 'a) (that: t 'a): bool =>
   ImmSet.equals (toSet this) (toSet that);

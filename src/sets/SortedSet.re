@@ -64,9 +64,6 @@ let module Make = fun (Comparable: Comparable.S) => {
   let addAll (iter: Iterable.t a) (sortedSet: t): t => iter
     |> Iterable.reduce (fun acc next => acc |> add next) sortedSet;
 
-  let contains (x: a) ({ tree }: t): bool =>
-    AVLTreeSet.contains comparator x tree;
-
   let emptyInstance: t = { count: 0, tree: AVLTreeSet.Empty };
 
   let empty (): t => emptyInstance;
@@ -74,11 +71,17 @@ let module Make = fun (Comparable: Comparable.S) => {
   let from (iter: Iterable.t a): t =>
     emptyInstance |> addAll iter;
 
-  include (NavigableCollection.Make {
+  include (NavigableSet.Make {
     type nonrec a = a;
     type nonrec t = t;
 
+    let contains (x: a) ({ tree }: t): bool =>
+      AVLTreeSet.contains comparator x tree;
+
     let count ({ count }: t): int => count;
+
+    let equals (this: t) (that: t): bool =>
+      failwith "not implemented";
 
     let first ({ tree }: t): (option a) =>
       AVLTreeSet.first tree;
@@ -113,7 +116,7 @@ let module Make = fun (Comparable: Comparable.S) => {
 
     let toSequenceReversed ({ tree }: t): (Sequence.t a) =>
       tree |> AVLTreeSet.toSequenceReversed;
-  }: NavigableCollection.S with type t:= t and type a:= a);
+  }: NavigableSet.S with type t:= t and type a:= a);
 
   let remove (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = AVLTreeSet.remove comparator x tree;
@@ -171,39 +174,6 @@ let module Make = fun (Comparable: Comparable.S) => {
         (toSequence this)
         (toSequence that)
     );
-
-  let setOps: ImmSet.Ops.t a t = {
-    contains,
-    count,
-    toCollection,
-    toIterable,
-    toSequence,
-  };
-
-  let toSet (set: t): (ImmSet.t a) =>
-    if (isEmpty set) (ImmSet.empty ())
-    else ImmSet.Set set setOps;
-
-  let navigableSetOps: NavigableSet.Ops.t a t = {
-    contains,
-    count,
-    first,
-    firstOrRaise,
-    last,
-    lastOrRaise,
-    toCollection,
-    toIterable,
-    toIterableReversed,
-    toNavigableCollection,
-    toSequence,
-    toSequenceReversed,
-    toSequentialCollection,
-    toSet,
-  };
-
-  let toNavigableSet (set: t): (NavigableSet.t a) =>
-    if (isEmpty set) (NavigableSet.empty ())
-    else NavigableSet.NavigableSet set navigableSetOps;
 
   let intersect (this: t) (that: t): t =>
     /* FIXME: Improve this implementation */

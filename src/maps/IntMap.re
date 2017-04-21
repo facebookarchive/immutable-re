@@ -108,9 +108,11 @@ let toKeyCollection (map: t 'v): Collection.t int =>
   if (isEmpty map) (Collection.empty ())
   else Collection.create (keyCollectionBase ()) map;
 
-let keySetOps: ImmSet.Ops.t int (t 'v) = {
+let keySetOps: ImmSet.s (t 'v) int = {
   contains: containsKey,
   count,
+  reduce: fun while_::predicate reducer acc map =>
+    map |> keys |> Iterable.reduce while_::predicate reducer acc,
   toCollection: toKeyCollection,
   toIterable: keys,
   toSequence: toKeySequence,
@@ -118,7 +120,7 @@ let keySetOps: ImmSet.Ops.t int (t 'v) = {
 
 let keySet (map: t 'v): (ImmSet.t int) =>
   if (isEmpty map) (ImmSet.empty ())
-  else ImmSet.Set map keySetOps;
+  else ImmSet.Instance map keySetOps;
 
 let keyedCollectionOps: KeyedCollection.Ops.t int 'v (t 'v) = {
   containsKey,

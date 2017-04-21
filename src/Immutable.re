@@ -165,27 +165,6 @@ let module NavigableCollection = {
 let module Set = {
   include ImmSet;
 
-  module type S = {
-    type a;
-    type t;
-
-    include Collection.S with type a := a and type t := t;
-    include Equatable.S with type t := t;
-
-    let contains: a => t => bool;
-    let toSet: t => ImmSet.t a;
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include Collection.S1 with type t 'a := t 'a;
-
-    let contains: 'a => (t 'a) => bool;
-    let equals: Equality.t (t 'a);
-    let toSet: (t 'a) => ImmSet.t 'a;
-  };
-
   let module Persistent = {
     module type S = {
       type a;
@@ -245,28 +224,6 @@ let module Set = {
 
 let module NavigableSet = {
   include NavigableSet;
-
-  module type S = {
-    type a;
-    type t;
-
-    include Set.S with type a := a and type t := t;
-    include NavigableCollection.S with type a := a and type t := t;
-
-    let toNavigableSet: t => NavigableSet.t a;
-  };
-
-  module type S1 = {
-    /** NavigableSet module type signature for types with a parametric type arity of 1. */
-
-    type t 'a;
-
-    include Set.S1 with type t 'a := t 'a;
-    include NavigableCollection.S1 with type t 'a := t 'a;
-
-    let toNavigableSet: (t 'a) => NavigableSet.t 'a;
-    /** [toNavigableSet set] returns a NavigableSet view of [set]. */
-  };
 
   let module Persistent = {
     module type S = {

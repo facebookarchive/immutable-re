@@ -36,19 +36,17 @@ let compare
   else if (thisCount < thatCount) Ordering.lessThan
   else Ordering.equal;
 
-let contains (value: int) ({ count, start }: t): bool =>
-  value >= start && value < (start + count);
-
-let equals (this: t) (that: t): bool =>
-  this.start === that.start && this.count === that.count;
-
-
-
-include (NavigableCollection.Make {
+include (NavigableSet.Make {
   type nonrec a = int;
   type nonrec t = t;
 
+  let contains (value: int) ({ count, start }: t): bool =>
+    value >= start && value < (start + count);
+
   let count ({ count }: t): int => count;
+
+  let equals (this: t) (that: t): bool =>
+    this.start === that.start && this.count === that.count;
 
   let first ({ count, start }: t): (option int) =>
     if (count === 0) None
@@ -109,40 +107,7 @@ include (NavigableCollection.Make {
       else Sequence.Next start (recurse (start - 1) (count - 1));
     recurse (start + count - 1) count
   };
-}: NavigableCollection.S with type t := t and type a := a);
+}: NavigableSet.S with type t := t and type a := a);
 
 let hash ({ start, count }: t): int =>
   start + count;
-
-let setOps: ImmSet.Ops.t int t = {
-  contains,
-  count,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSet (set: t): (ImmSet.t int) =>
-  if (isEmpty set) (ImmSet.empty ())
-  else ImmSet.Set set setOps;
-
-let navigableSetOps: NavigableSet.Ops.t int t = {
-  contains,
-  count,
-  first,
-  firstOrRaise,
-  last,
-  lastOrRaise,
-  toCollection,
-  toSequentialCollection,
-  toIterable,
-  toIterableReversed,
-  toNavigableCollection,
-  toSequence,
-  toSequenceReversed,
-  toSet,
-};
-
-let toNavigableSet (set: t): (NavigableSet.t int) =>
-  if (isEmpty set) (NavigableSet.empty ())
-  else NavigableSet.NavigableSet set navigableSetOps;

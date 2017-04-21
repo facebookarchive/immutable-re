@@ -25,9 +25,6 @@ let add (value: int) ({ count, root } as set: t): t => {
   else { count: count + 1, root: newRoot };
 };
 
-let contains (value: int) ({ root }: t): bool =>
-  root |> BitmapTrieIntSet.contains 0 value;
-
 let emptyInstance: t = { count: 0, root: BitmapTrieIntSet.Empty };
 
 let empty (): t => emptyInstance;
@@ -46,11 +43,17 @@ let remove (value: int) ({ count, root } as set: t): t => {
 let removeAll (_: t): t =>
   emptyInstance;
 
-include (Collection.Make {
+include (ImmSet.Make {
   type nonrec a = int;
   type nonrec t = t;
 
+  let contains (value: int) ({ root }: t): bool =>
+    root |> BitmapTrieIntSet.contains 0 value;
+
   let count ({ count }: t): int => count;
+
+  let equals (this: t) (that: t): bool =>
+    failwith "not implemented";
 
   let reduce
       while_::(predicate: 'acc => int => bool)
@@ -62,19 +65,7 @@ include (Collection.Make {
 
   let toSequence ({ root }: t): (Sequence.t int) =>
     root |> BitmapTrieIntSet.toSequence;
-}: Collection.S with type t := t and type a := a);
-
-let setOps: ImmSet.Ops.t int t = {
-  contains,
-  count,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSet (set: t): (ImmSet.t int) =>
-  if (isEmpty set) (ImmSet.empty ())
-  else ImmSet.Set set setOps;
+}: ImmSet.S with type t := t and type a := a);
 
 let equals (this: t) (that: t): bool =>
   ImmSet.equals (toSet this) (toSet that);
