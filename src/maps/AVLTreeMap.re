@@ -83,8 +83,8 @@ let rec firstKey (tree: t 'k 'v): (option 'k) => switch tree {
 };
 
 let rec firstKeyOrRaise (tree: t 'k 'v): 'k => switch tree {
-  | Leaf k v => k
-  | Node _ Empty k v _ => k
+  | Leaf k _ => k
+  | Node _ Empty k _ _ => k
   | Node _ left _ _ _ => firstKeyOrRaise left
   | Empty => failwith "empty"
 };
@@ -161,8 +161,8 @@ let rec lastKey (tree: t 'k 'v): (option 'k) => switch tree {
 };
 
 let rec lastKeyOrRaise (tree: t 'k 'v): 'k => switch tree {
-  | Leaf k v => k
-  | Node _ _ k v Empty => k
+  | Leaf k _ => k
+  | Node _ _ k _ Empty => k
   | Node _ _ _ _ right => lastKeyOrRaise right
   | Empty => failwith "empty"
 };
@@ -279,7 +279,7 @@ let reduceReversedWhile
 
 let rec toKeySequence (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
   | Empty => Sequence.empty ()
-  | Leaf k v => Sequence.return k
+  | Leaf k _ => Sequence.return k
   | Node _ left k _ right => Sequence.concat [
       Sequence.defer(fun () => toKeySequence left),
       Sequence.return k,

@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Functions.Operators;
-
 let module Ops = {
   type t 'a 'collection = {
     count: 'collection => int,

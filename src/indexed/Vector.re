@@ -8,7 +8,6 @@
  */
 
 open Functions.Operators;
-open Option.Operators;
 
 let module VectorImpl = {
   module type VectorBase = {

@@ -556,7 +556,7 @@ let module Make1 = fun (Base: {
         predicate acc pair;
       };
 
-      let f acc k v => f acc (MutableOption.firstOrRaise memoizedPair);
+      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
       reduce while_::predicate f acc map;
     };
 
@@ -647,7 +647,7 @@ let module Make2 = fun (Base: {
         predicate acc pair;
       };
 
-      let f acc k v => f acc (MutableOption.firstOrRaise memoizedPair);
+      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
       reduce while_::predicate f acc map;
     };
 
