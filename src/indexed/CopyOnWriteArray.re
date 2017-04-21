@@ -11,7 +11,40 @@ open Functions.Operators;
 
 type t 'a = array 'a;
 
-let count (arr: t 'a): int => Array.length arr;
+include (Collection.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let count (arr: t 'a): int => Array.length arr;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (arr: t 'a): 'acc => {
+    let arrCount = count arr;
+    let rec loop acc index =>
+      if (index < arrCount) {
+        let next = arr.(index);
+
+        if (predicate acc next) {
+          let acc = f acc arr.(index);
+          loop acc (index + 1);
+        }
+        else acc
+      }
+      else acc;
+
+    loop acc 0;
+  };
+
+  let toSequence (arr: t 'a): (Sequence.t 'a) => {
+    let arrCount = count arr;
+    let rec loop index => fun () =>
+      if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
+      else Sequence.Completed;
+    loop 0;
+  };
+}: Collection.S1 with type t 'a := t 'a);
 
 let addFirst (item: 'a) (arr: t 'a): (t 'a) => {
   let count = count arr;
@@ -74,38 +107,7 @@ let insertAt (index: int) (item: 'a) (arr: t 'a): (t 'a) => {
   retval;
 };
 
-let isEmpty (arr: t 'a): bool => (count arr) === 0;
-
-let isNotEmpty (arr: t 'a): bool => (count arr) !== 0;
-
 let ofUnsafe (arr: array 'a): (t 'a) => arr;
-
-include (Iterable.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let isEmpty = isEmpty;
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (arr: t 'a): 'acc => {
-    let arrCount = count arr;
-    let rec loop acc index =>
-      if (index < arrCount) {
-        let next = arr.(index);
-
-        if (predicate acc next) {
-          let acc = f acc arr.(index);
-          loop acc (index + 1);
-        }
-        else acc
-      }
-      else acc;
-
-    loop acc 0;
-  };
-}: Iterable.S1 with type t 'a := t 'a);
 
 let reduceWithIndexImpl
     while_::(predicate: 'acc => int => 'a => bool)
@@ -260,16 +262,6 @@ let toSequenceReversed (arr: t 'a): (Sequence.t 'a) =>
     loop (count arr - 1);
   };
 
-let toSequence (arr: t 'a): (Sequence.t 'a) =>
-  if (isEmpty arr) (Sequence.empty ())
-  else {
-    let arrCount = count arr;
-    let rec loop index => fun () =>
-      if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
-      else Sequence.Completed;
-    loop 0;
-  };
-
 let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   let arrCount = count arr;
   let rec loop index => fun () =>
@@ -285,16 +277,6 @@ let toSequenceWithIndexReversed (arr: t 'a): (Sequence.t (int, 'a)) => {
     else Sequence.Completed;
   loop (arrCount - 1);
 };
-
-let collectionOps: Collection.Ops.t 'a (t 'a) = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (arr: t 'a): (Collection.t 'a) =>
-  if (isEmpty arr) (Collection.empty ())
-  else Collection.Collection arr collectionOps;
 
 let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
   count,

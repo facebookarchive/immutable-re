@@ -14,14 +14,16 @@ type t = {
   start: int,
 };
 
-let empty: t = {
+let emptyInstance: t = {
   start: 0,
   count: 0,
 };
 
+let empty (): t => emptyInstance;
+
 let create start::(start: int) count::(count: int): t => {
   Preconditions.failIf "count must be >= 0" (count < 0);
-  if (count === 0) empty
+  if (count === 0) emptyInstance
   else { start, count };
 };
 
@@ -37,8 +39,6 @@ let compare
 let contains (value: int) ({ count, start }: t): bool =>
   value >= start && value < (start + count);
 
-let count ({ count }: t): int => count;
-
 let equals (this: t) (that: t): bool =>
   this.start === that.start && this.count === that.count;
 
@@ -50,10 +50,6 @@ let firstOrRaise ({ count, start }: t): int =>
   if (count === 0) (failwith "empty")
   else start;
 
-let isEmpty ({ count }: t): bool => count === 0;
-
-let isNotEmpty ({ count }: t): bool => count !== 0;
-
 let last ({ count, start }: t): (option int) =>
   if (count === 0) None
   else (start + count - 1) |> Option.return;
@@ -62,11 +58,11 @@ let lastOrRaise ({ count, start }: t): int =>
   if (count === 0) (failwith "empty")
   else start + count - 1;
 
-include (Iterable.Make {
+include (Collection.Make {
   type nonrec a = int;
   type nonrec t = t;
 
-  let isEmpty = isEmpty;
+  let count ({ count }: t): int => count;
 
   let reduce
       while_::(predicate: 'acc => int => bool)
@@ -82,7 +78,14 @@ include (Iterable.Make {
       };
     recurse predicate f start count acc;
   };
-}: Iterable.S with type t := t and type a := a);
+
+  let toSequence ({ count, start }: t): (Sequence.t int) => {
+    let rec recurse start count => fun () =>
+      if (count === 0) Sequence.Completed
+      else Sequence.Next start (recurse (start + 1) (count - 1));
+    recurse start count
+  };
+}: Collection.S with type t := t and type a := a);
 
 let reduceReversedImpl
     while_::(predicate: 'acc => int => bool)
@@ -109,13 +112,6 @@ let reduceReversed
 let hash ({ start, count }: t): int =>
   start + count;
 
-let toSequence ({ count, start }: t): (Sequence.t int) => {
-  let rec recurse start count => fun () =>
-    if (count === 0) Sequence.Completed
-    else Sequence.Next start (recurse (start + 1) (count - 1));
-  recurse start count
-};
-
 let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
   let rec recurse start count => fun () =>
     if (count === 0) Sequence.Completed
@@ -128,16 +124,6 @@ let iterableReversedBase: Iterable.s t int = { reduce: reduceReversedImpl };
 let toIterableReversed (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
   else Iterable.create iterableReversedBase set;
-
-let collectionOps: Collection.Ops.t int t = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (set: t): (Collection.t int) =>
-  if (isEmpty set) (Collection.empty ())
-  else Collection.Collection set collectionOps;
 
 let seqCollectionOps: SequentialCollection.Ops.t int t = {
   count,

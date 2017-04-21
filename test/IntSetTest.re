@@ -11,6 +11,6 @@ open Immutable;
 open ReUnit.Test;
 
 let test = describe "IntSet" [
-  PersistentSetTester.test (module IntSet: Set.Persistent.S with type a = IntSet.a) 100,
-  PersistentSetTester.test (module IntSet: Set.Persistent.S with type a = IntSet.a) 10000,
+  PersistentSetTester.test (module IntSet) 100,
+  PersistentSetTester.test (module IntSet) 10000,
 ];

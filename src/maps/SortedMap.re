@@ -57,9 +57,6 @@ module type S1 = {
   let keySet: t 'v => ImmSet.t k;
   let toMap: t 'v => ImmMap.t k 'v;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
-  let empty: unit => t 'v;
-  let from: KeyedIterable.t k 'v => t 'v;
-  let fromEntries: Iterable.t (k, 'v) => t 'v;
   let merge:
     (k => option 'vAcc => option 'v => option 'vAcc) =>
     t 'vAcc => t 'v => t 'vAcc;
@@ -68,6 +65,9 @@ module type S1 = {
   let putAllEntries: Iterable.t (k, 'v) => t 'v => t 'v;
   let removeFirstOrRaise: t 'v => t 'v;
   let removeLastOrRaise: t 'v => t 'v;
+  let empty: unit => t 'v;
+  let from: KeyedIterable.t k 'v => t 'v;
+  let fromEntries: Iterable.t (k, 'v) => t 'v;
 };
 
 let module Make1 = fun (Comparable: Comparable.S) => {
@@ -256,15 +256,18 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let valuesReversed (map: t 'v): (Iterable.t 'v) =>
     map |> toKeyedIterableReversed |> KeyedIterable.values;
 
-  let keyCollectionOps (): Collection.Ops.t 'k (t 'v) => {
+  let keyCollectionOps (): Collection.s (t 'v) k  => {
     count: count,
+    reduce: fun while_::predicate reducer acc collection =>
+      collection |> toKeyedIterable |> KeyedIterable.keys |> Iterable.reduce
+        while_::predicate reducer acc,
     toIterable: toKeyedIterable >> KeyedIterable.keys,
     toSequence: toKeySequence,
   };
 
   let toKeyCollection (map: t _): Collection.t k =>
     if (isEmpty map) (Collection.empty ())
-    else (Collection.Collection map (keyCollectionOps ()));
+    else (Collection.create (keyCollectionOps ()) map);
 
   let keySetOps (): ImmSet.Ops.t k (t 'v) => {
     contains: containsKey,

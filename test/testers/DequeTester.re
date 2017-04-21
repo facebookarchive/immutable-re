@@ -12,8 +12,17 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let module Make = fun (Deque: NavigableCollection.Persistent.S1) (Config: TesterConfig.S) => {
-  let module StackTester = StackTester.Make (Deque: SequentialCollection.Persistent.S1) Config;
+module type S1 = {
+  type t 'a;
+
+  include StackTester.S1 with type t 'a := t 'a;
+  include NavigableCollection.Persistent.S1 with type t 'a := t 'a;
+
+  let from: (Iterable.t 'a) => t 'a;
+};
+
+let module Make = fun (Deque: S1) (Config: TesterConfig.S) => {
+  let module StackTester = StackTester.Make (Deque: StackTester.S1) Config;
 
   let tests = [
     describe (sprintf "count: %i" Config.count) [

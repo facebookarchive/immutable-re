@@ -415,13 +415,9 @@ let module rec Collection: {
     type t;
 
     include Iterable.S with type a := a and type t := t;
-    include Equatable.S with type t := t;
 
     let count: t => int;
     /** [count collection] returns number of values contained in [collection]. */
-
-    let empty: t;
-    /** The empty collection of type [t] */
 
     let isEmpty: t => bool;
     /** [isEmpty collection] returns true if [collection] is empty, otherwise false. */
@@ -524,8 +520,6 @@ let module rec Collection: {
       let count: t => int;
       /** [count transient] returns number of values contained in [transient]. */
 
-      let empty: unit => t;
-
       let isEmpty: t => bool;
       /** [isEmpty transient] returns true if [transient] is empty, otherwise false. */
 
@@ -626,14 +620,6 @@ let module rec SequentialCollection: {
       let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
       /** [addFirstAll iter collection] returns a SequentialCollection.Persistent with the values in [iter] prepended. */
 
-      let empty: unit => (t 'a);
-      /** [empty ()] return an empty SequentialCollection.Persistent. */
-
-      let fromReverse: (Iterable.t 'a) => (t 'a);
-      /** [fromReverse iter] returns a SequentialCollection.Persistent containing the values in [iter]
-       *  in reverse order.
-       */
-
       let return: 'a => (t 'a);
       /** [return value] returns a SequentialCollection.Persistent containing a single value, [value]. */
 
@@ -664,8 +650,6 @@ let module rec SequentialCollection: {
       let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
       /** [addFirstAll iter transient] prepends all values in [iter] to [transient]. */
 
-      let empty: unit => (t 'a);
-      /** [empty ()] returns a new empty SequentialCollection.Transient. */
 
       let first: (t 'a) => option 'a;
       /** [first transient] returns first value in [transient] or None. */
@@ -784,12 +768,6 @@ let module rec NavigableCollection: {
       let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
       /** [addLastAll iter collection] returns a Persistent NavigableCollection with the values in [iter] appended. */
 
-      let from: (Iterable.t 'a) => (t 'a);
-      /** [from iter] returns a Persistent NavigableCollection containing the values in [iter].
-       *
-       * Complexity: O(N) the number of values in [iter].
-       */
-
       let removeLastOrRaise: (t 'a) => (t 'a);
       /** [removeLastOrRaise collection] returns a SequentialCollection.Persistent without
        *  the last value or raises an exception if [collection] is empty.
@@ -843,6 +821,7 @@ let module rec Set: {
     type t;
 
     include Collection.S with type a := a and type t := t;
+    include Equatable.S with type t := t;
 
     let contains: a => t => bool;
     /** [contains value set] returns true if [set] contains at least one instace of [value],
@@ -918,9 +897,6 @@ let module rec Set: {
 
       let addAll: (Iterable.t a) => t => t;
       /** [addAll iter set] returns a Persistent Set with the values in [iter] and all the values in [set]. */
-
-      let from: (Iterable.t a) => t;
-      /** [from iter] returns a Persistent Set with all the values in [iter] */
 
       let intersect: t => t => t;
       /** [intersect this that] returns a Persistent Set of unique values
@@ -1789,21 +1765,6 @@ let module rec Map: {
        *  By contract, [alter] is efficient with no worst than O(log N) performance.
        */
 
-      let empty: unit => (t 'v);
-      /** [empty ()] Return an empty Persistent Map. */
-
-      let from: (KeyedIterable.t k 'v) => (t 'v);
-      /** [from keyedIterable] returns a Persistent Map including the key/value pairs in [keyedIterable].
-       *
-       *  By contract, [from] is efficient with no worst than O(N log N) performance.
-       */
-
-      let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
-      /** [fromEntries iter] returns a Persistent Map including the key/value pairs in [iter].
-       *
-       *  By contract, [fromEntries] is efficient with no worst than O(N log N) performance.
-       */
-
       let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
       /** [merge f acc next] return a Persistent Map that is the result of reducing [acc] with [next].
        *  The callback [f] is applied to the union of keys from [acc] and [next], with the values
@@ -1905,9 +1866,6 @@ let module rec Map: {
        *
        *  By contract, [alter] is efficient with no worst than O(log N) performance.
        */
-
-      let empty: unit => (t 'v);
-      /** [empty ()] returns a new empty Transient Map. */
 
       let get: k => (t 'v) => (option 'v);
       /** [get key transient] returns the value associated with [key] in [transient] or None */
@@ -2208,6 +2166,8 @@ let module rec Deque: {
     include NavigableCollection.Transient.S1 with type t 'a := Deque.Transient.t 'a;
     /** The Transient Deque type. */
 
+    let empty: unit => (Deque.Transient.t 'a);
+
     let persist: (Deque.Transient.t 'a) => (Deque.t 'a);
     /** [persist transient] persists [transient] returning a Deque. Further attempts
      *  to access or mutate [transient] will raise exceptions.
@@ -2219,6 +2179,12 @@ let module rec Deque: {
      *  Complexity: O(1)
      */
   };
+
+  let empty: unit => (Deque.t 'a);
+
+  let from: (Iterable.t 'a) => (Deque.t 'a);
+
+  let fromReverse: (Iterable.t 'a) => (Deque.t 'a);
 
   let mutate: (Deque.t 'a) => (Deque.Transient.t 'a);
   /** [mutate deque] returns a Transient Deque containing the same values as [deque]. */
@@ -2341,11 +2307,19 @@ let module rec IntMap: {
 
     include Map.Transient.S1 with type k := IntMap.Transient.k and type t 'v := IntMap.Transient.t 'v;
 
+    let empty: unit => (IntMap.Transient.t 'v);
+
     let persist: (t 'v) => (IntMap.t 'v);
     /** [persist transient] persists [transient] returning a IntMap. Further attempts
      *  to access or mutate [transient] will raise exceptions.
      */
   };
+
+  let empty: unit => (IntMap.t 'v);
+
+  let from: (KeyedIterable.t k 'v) => (IntMap.t 'v);
+
+  let fromEntries: (Iterable.t (k, 'v)) => (IntMap.t 'v);
 
   let mutate: (t 'v) => (IntMap.Transient.t 'v);
   /** [mutate map] returns a Transient IntMap containing the same key/values pairs as [map]. */
@@ -2366,6 +2340,8 @@ let module rec IntRange: {
    *  [start] may be any positive or negative integer. [count] must be greater
    *  than or equal to 0.
    */
+
+  let empty: unit => IntRange.t;
 };
 
 let module rec IntSet: {
@@ -2399,6 +2375,10 @@ let module rec IntSet: {
      *  will throw.
      */
   };
+
+  let empty: unit => t;
+
+  let from: (Iterable.t int) => t;
 
   let mutate: t => IntSet.Transient.t;
   /** [mutate set] returns a Transient IntSet containing the same values as [set]. */
@@ -2489,11 +2469,15 @@ let module rec Stack: {
 
   include SequentialCollection.Persistent.S1 with type t 'a := Stack.t 'a;
 
+  let empty: unit => (Stack.t 'a);
+
   let fromList: (list 'a) => (Stack.t 'a);
   /** [fromList list] returns a Stack backed by [list].
    *
    *  Complexity: O(N)
    */
+
+  let fromReverse: (Iterable.t 'a) => (Stack.t 'a);
 
   let toList: (Stack.t 'a) => (list 'a);
   /** [toList stack] returns the underlying List backing the stack */
@@ -2511,6 +2495,10 @@ let module SortedMap: {
     /** The SortedMap type. */
 
     include NavigableMap.Persistent.S1 with type k := k and type t 'v := t 'v;
+
+    let empty: unit => t 'v;
+    let from: KeyedIterable.t k 'v => t 'v;
+    let fromEntries: Iterable.t (k, 'v) => t 'v;
   };
 
   let module Make1: (Comparable: Comparable.S) => S1 with type k = Comparable.t;
@@ -2527,6 +2515,9 @@ let module SortedSet: {
 
     include Comparable.S with type t := t;
     include NavigableSet.Persistent.S with type a := a and type t := t;
+
+    let empty: unit => t;
+    let from: Iterable.t a => t;
   };
 
   let module Make: (Comparable: Comparable.S) => S with type a = Comparable.t;
@@ -2559,11 +2550,19 @@ let module rec Vector: {
 
     include Indexed.Transient.S1 with type t 'a := Vector.Transient.t 'a;
 
+    let empty: unit => (Vector.Transient.t 'a);
+
     let persist: (Vector.Transient.t 'a) => (Vector.t 'a);
     /** [persist transient] returns a persisted Vector. Further attempts to access or mutate [transient]
     *  will throw.
     */
   };
+
+  let empty: unit => (Vector.t 'a);
+
+  let from: (Iterable.t 'a) => (Vector.t 'a);
+
+  let fromReverse: (Iterable.t 'a) => (Vector.t 'a);
 
   let mutate: (Vector.t 'a) => (Vector.Transient.t 'a);
   /** [mutate vector] returns a Transient Vector containing the same values as [set]. */

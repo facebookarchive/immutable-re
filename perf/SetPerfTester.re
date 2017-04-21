@@ -99,7 +99,7 @@ let test (n: int) (count: int): Test.t => {
   let sortedSet = keys
     |> Iterable.reduce
       (fun acc i => acc |> SortedIntSet.add i)
-      SortedIntSet.empty;
+      (SortedIntSet.empty ());
 
   let testGroup = [
     describe "CamlIntSet" (
@@ -117,7 +117,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => sortedSet)
         (fun () => keys)
-        (fun () => SortedIntSet.empty)
+        SortedIntSet.empty
         SortedIntSet.add
         SortedIntSet.remove
         SortedIntSet.contains
@@ -150,7 +150,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => intSet)
         (fun () => keys)
-        (fun () => IntSet.empty)
+        IntSet.empty
         IntSet.add
         IntSet.remove
         IntSet.contains
@@ -161,7 +161,7 @@ let test (n: int) (count: int): Test.t => {
       generateTests
         (fun () => intSet |> IntSet.mutate)
         (fun () => keys)
-        (fun () => IntSet.empty |> IntSet.mutate)
+        IntSet.Transient.empty
         IntSet.Transient.add
         IntSet.Transient.remove
         IntSet.Transient.contains

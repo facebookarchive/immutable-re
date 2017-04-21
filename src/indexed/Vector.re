@@ -38,8 +38,6 @@ let module VectorImpl = {
     let firstOrRaise: (t 'a) => 'a;
     let get: int => (t 'a) => (option 'a);
     let getOrRaise: int => (t 'a) => 'a;
-    let isEmpty: (t 'a) => bool;
-    let isNotEmpty: (t 'a) => bool;
     let last: (t 'a) => (option 'a);
     let lastOrRaise: (t 'a) => 'a;
     let removeAll: (t 'a) => (t 'a);
@@ -85,12 +83,6 @@ let module VectorImpl = {
 
     let firstOrRaise (vector: t 'a): 'a =>
       getOrRaise 0 vector;
-
-    let isEmpty (vector: t 'a): bool =>
-      (X.count vector) === 0;
-
-    let isNotEmpty (vector: t 'a): bool =>
-      (X.count vector) !== 0;
 
     let last (vector: t 'a): (option 'a) => get ((X.count vector) - 1) vector;
 
@@ -619,8 +611,6 @@ let first = PersistentVector.first;
 let firstOrRaise = PersistentVector.firstOrRaise;
 let get = PersistentVector.get;
 let getOrRaise = PersistentVector.getOrRaise;
-let isEmpty = PersistentVector.isEmpty;
-let isNotEmpty = PersistentVector.isNotEmpty;
 let last = PersistentVector.last;
 let lastOrRaise = PersistentVector.lastOrRaise;
 let removeAll = PersistentVector.removeAll;
@@ -661,10 +651,10 @@ module Transient = {
   let empty () => empty () |> mutate;
 
   let isEmpty (transient: t 'a): bool =>
-    transient |> Transient.get |> TransientVectorImpl.isEmpty;
+    transient |> Transient.get |> TransientVectorImpl.count === 0;
 
   let isNotEmpty (transient: t 'a): bool =>
-    transient |> Transient.get |> TransientVectorImpl.isNotEmpty;
+    transient |> Transient.get |> TransientVectorImpl.count !== 0;
 
   let tailCompress (count: int) (arr: array 'a): (array 'a) => {
     let arrCount = CopyOnWriteArray.count arr;
@@ -841,10 +831,10 @@ let reduceWhile
   acc;
 };
 
-include (Iterable.Make1 {
+include (Collection.Make1 {
   type nonrec t 'a = t 'a;
 
-  let isEmpty = isEmpty;
+  let count = count;
 
   let reduce
       while_::(predicate: 'acc => 'a => bool)
@@ -853,7 +843,13 @@ include (Iterable.Make1 {
       (vec: t 'a): 'acc =>
     if (predicate === Functions.alwaysTrue2) (reduceImpl f acc vec)
     else (reduceWhile while_::predicate f acc vec);
-}: Iterable.S1 with type t 'a := t 'a);
+
+  let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
+    CopyOnWriteArray.toSequence left,
+    IndexedTrie.toSequence middle,
+    CopyOnWriteArray.toSequence right,
+  ];
+}: Collection.S1 with type t 'a := t 'a);
 
 let reduceWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
@@ -1091,12 +1087,6 @@ let toKeyedIterableReversed (vec: t 'a): (KeyedIterable.t int 'a) =>
 let containsKey (index: int) (arr: t 'a): bool =>
     index >= 0 && index < count arr;
 
-let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
-  CopyOnWriteArray.toSequence left,
-  IndexedTrie.toSequence middle,
-  CopyOnWriteArray.toSequence right,
-];
-
 let toSequenceReversed ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
   CopyOnWriteArray.toSequenceReversed right,
   IndexedTrie.toSequenceReversed middle,
@@ -1112,16 +1102,6 @@ let toSequenceWithIndexReversed (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.
   (fun a b => (a, b))
   (IntRange.create start::0 count::(count vec) |> IntRange.toSequenceReversed)
   (toSequenceReversed vec);
-
-let collectionOps: Collection.Ops.t 'a (t 'a) = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (vec: t 'a): (Collection.t 'a) =>
-  if (isEmpty vec) (Collection.empty ())
-  else Collection.Collection vec collectionOps;
 
 let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
   count,

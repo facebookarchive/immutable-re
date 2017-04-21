@@ -58,33 +58,6 @@ let module Sequence = Sequence;
 let module Collection = {
   include Collection;
 
-  module type S = {
-    type a;
-    type t;
-
-    include Iterable.S with type a := a and type t := t;
-    include Equatable.S with type t := t;
-
-    let count: t => int;
-    let empty: t;
-    let isEmpty: t => bool;
-    let isNotEmpty: t => bool;
-    let toCollection: t => Collection.t a;
-    let toSequence: t => (Sequence.t a);
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include Iterable.S1 with type t 'a := t 'a;
-
-    let count: (t 'a) => int;
-    let isEmpty: (t 'a) => bool;
-    let isNotEmpty: (t 'a) => bool;
-    let toCollection: (t 'a) => (Collection.t 'a);
-    let toSequence: (t 'a) => (Sequence.t 'a);
-  };
-
   let module Persistent = {
     module type S = {
       type a;
@@ -110,7 +83,6 @@ let module Collection = {
       type t;
 
       let count: t => int;
-      let empty: unit => t;
       let isEmpty: t => bool;
       let isNotEmpty: t => bool;
       let removeAll: t => t;
@@ -161,8 +133,6 @@ let module SequentialCollection = {
 
       let addFirst: 'a => (t 'a) => (t 'a);
       let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      let empty: unit => (t 'a);
-      let fromReverse: (Iterable.t 'a) => (t 'a);
       let return: 'a => (t 'a);
       let removeFirstOrRaise: (t 'a) => (t 'a);
     };
@@ -176,7 +146,6 @@ let module SequentialCollection = {
 
       let addFirst: 'a => (t 'a) => (t 'a);
       let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      let empty: unit => (t 'a);
       let first: (t 'a) => option 'a;
       let firstOrRaise: (t 'a) => 'a;
       let removeFirstOrRaise: (t 'a) => (t 'a);
@@ -223,7 +192,6 @@ let module NavigableCollection = {
 
       let addLast: 'a => (t 'a) => (t 'a);
       let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      let from: (Iterable.t 'a) => (t 'a);
       let removeLastOrRaise: (t 'a) => (t 'a);
     };
   };
@@ -251,6 +219,7 @@ let module Set = {
     type t;
 
     include Collection.S with type a := a and type t := t;
+    include Equatable.S with type t := t;
 
     let contains: a => t => bool;
     let toSet: t => ImmSet.t a;
@@ -276,7 +245,6 @@ let module Set = {
 
       let add: a => t => t;
       let addAll: (Iterable.t a) => t => t;
-      let from: (Iterable.t a) => t;
       let intersect: t => t => t;
       let remove: a => t => t;
       let subtract: t => t => t;
@@ -564,10 +532,6 @@ let module Map = {
       include S1 with type k := k and type t 'v := t 'v;
 
       let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
-
-      let empty: unit => (t 'v);
-      let from: (KeyedIterable.t k 'v) => (t 'v);
-      let fromEntries: (Iterable.t (k, 'v)) => (t 'v);
       let merge: (k => (option 'vAcc) => (option 'v) => (option 'vAcc)) => (t 'vAcc) => (t 'v) => (t 'vAcc);
       let put: k => 'v => (t 'v) => (t 'v);
       let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
@@ -597,7 +561,6 @@ let module Map = {
       include KeyedCollection.Transient.S1 with type k := k and type t 'v := t 'v;
 
       let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
-      let empty: unit => (t 'v);
       let get: k => (t 'v) => (option 'v);
       let getOrRaise: k => (t 'v) => 'v;
       let put: k => 'v => (t 'v) => (t 'v);

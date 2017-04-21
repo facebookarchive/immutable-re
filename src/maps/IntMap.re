@@ -95,15 +95,18 @@ let toKeySequence ({ root }: t 'v): (Sequence.t int) =>
 let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
   root |> BitmapTrieIntMap.toSequence;
 
-let keyCollectionOps (): Collection.Ops.t int (t 'v) => {
+let keyCollectionBase (): Collection.s (t 'v) int => {
   count: count,
+  reduce: fun while_::predicate reducer acc collection =>
+    collection |> toKeyedIterable |> KeyedIterable.keys |> Iterable.reduce
+      while_::predicate reducer acc,
   toIterable: toKeyedIterable >> KeyedIterable.keys,
   toSequence: toKeySequence,
 };
 
 let toKeyCollection (map: t 'v): Collection.t int =>
   if (isEmpty map) (Collection.empty ())
-  else (Collection.Collection map (keyCollectionOps ()));
+  else Collection.create (keyCollectionBase ()) map;
 
 let keySetOps: ImmSet.Ops.t int (t 'v) = {
   contains: containsKey,

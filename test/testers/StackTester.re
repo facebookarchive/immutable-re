@@ -12,7 +12,14 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let module Make = fun (Stack: SequentialCollection.Persistent.S1) (Config: TesterConfig.S) => {
+module type S1 = {
+  include SequentialCollection.Persistent.S1;
+
+  let empty: unit => t 'a;
+  let fromReverse: (Iterable.t 'a) => t 'a;
+};
+
+let module Make = fun (Stack: S1) (Config: TesterConfig.S) => {
   let tests = describe (sprintf "count: %i" Config.count) [
     it "addFirst" (fun () => {
       let testData = IntRange.create start::0 count::Config.count;

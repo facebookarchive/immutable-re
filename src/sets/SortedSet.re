@@ -10,25 +10,25 @@
 module type S = {
   type a;
   type t;
-
   let compare: Comparator.t t;
   let first: t => option a;
   let firstOrRaise: t => a;
   let toSequentialCollection: t => SequentialCollection.t a;
   let last: t => option a;
   let lastOrRaise: t => a;
-  let reduceReversed: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let reduceReversed:
+    while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toIterableReversed: t => Iterable.t a;
   let toNavigableCollection: t => NavigableCollection.t a;
   let toSequenceReversed: t => Sequence.t a;
   let toNavigableSet: t => NavigableSet.t a;
+  let equals: Equality.t t;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;
-  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let reduce:
+    while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toIterable: t => Iterable.t a;
-  let equals: Equality.t t;
   let count: t => int;
-  let empty: t;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;
   let toCollection: t => Collection.t a;
@@ -36,13 +36,14 @@ module type S = {
   let removeAll: t => t;
   let add: a => t => t;
   let addAll: Iterable.t a => t => t;
-  let from: Iterable.t a => t;
   let intersect: t => t => t;
   let remove: a => t => t;
   let subtract: t => t => t;
   let union: t => t => t;
   let removeFirstOrRaise: t => t;
   let removeLastOrRaise: t => t;
+  let empty: unit => t;
+  let from: Iterable.t a => t;
 };
 
 let module Make = fun (Comparable: Comparable.S) => {
@@ -66,22 +67,18 @@ let module Make = fun (Comparable: Comparable.S) => {
   let contains (x: a) ({ tree }: t): bool =>
     AVLTreeSet.contains comparator x tree;
 
-  let count ({ count }: t): int => count;
+  let emptyInstance: t = { count: 0, tree: AVLTreeSet.Empty };
 
-  let empty: t = { count: 0, tree: AVLTreeSet.Empty };
-
-  let isEmpty ({ count }: t): bool => count === 0;
-
-  let isNotEmpty ({ count }: t): bool => count !== 0;
+  let empty (): t => emptyInstance;
 
   let from (iter: Iterable.t a): t =>
-    empty |> addAll iter;
+    emptyInstance |> addAll iter;
 
-  include (Iterable.Make {
+  include (Collection.Make {
     type nonrec a = a;
     type nonrec t = t;
 
-    let isEmpty = isEmpty;
+    let count ({ count }: t): int => count;
 
     let reduce
         while_::(predicate: 'acc => a => bool)
@@ -90,7 +87,10 @@ let module Make = fun (Comparable: Comparable.S) => {
         ({ tree }: t): 'acc =>
       if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduce f acc tree)
       else (AVLTreeSet.reduceWhile predicate f acc tree);
-  }: Iterable.S with type t := t and type a := a);
+
+    let toSequence ({ tree }: t): (Sequence.t a) =>
+      tree |> AVLTreeSet.toSequence;
+  }: Collection.S with type t:= t and type a:= a);
 
   let reduceReversedImpl
       while_::(predicate: 'acc => a => bool)
@@ -113,7 +113,7 @@ let module Make = fun (Comparable: Comparable.S) => {
   };
 
   let removeAll (_: t): t =>
-    empty;
+    emptyInstance;
 
   let removeFirstOrRaise ({ count, tree }: t): t => {
     let newTree = AVLTreeSet.removeFirstOrRaise tree;
@@ -124,9 +124,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     let newTree = AVLTreeSet.removeLastOrRaise tree;
     { count: count - 1, tree: newTree }
   };
-
-  let toSequence ({ tree }: t): (Sequence.t a) =>
-    tree |> AVLTreeSet.toSequence;
 
   let toSequenceReversed ({ tree }: t): (Sequence.t a) =>
     tree |> AVLTreeSet.toSequenceReversed;
@@ -187,16 +184,6 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toIterableReversed (set: t): (Iterable.t a) =>
     if (isEmpty set) (Iterable.empty ())
     else Iterable.create iterableReversedBase set;
-
-  let collectionOps: Collection.Ops.t a t = {
-    count,
-    toIterable,
-    toSequence,
-  };
-
-  let toCollection (set: t): (Collection.t a) =>
-    if (isEmpty set) (Collection.empty ())
-    else Collection.Collection set collectionOps;
 
   let seqCollectionOps: SequentialCollection.Ops.t a t = {
     count,

@@ -12,7 +12,14 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int) => {
+module type S = {
+  include Set.Persistent.S with type a = int;
+
+  let empty: unit => t;
+  let from: (Iterable.t int) => t;
+};
+
+let test (module PersistentSet: S) (count: int) => {
   let countDiv2 = count / 2;
   let countDiv4 = count / 4;
 
@@ -23,7 +30,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
         |> Iterable.map Hashtbl.hash;
 
       let set = values
-        |> Iterable.reduce (fun acc i => acc |> PersistentSet.add i) PersistentSet.empty;
+        |> Iterable.reduce (fun acc i => acc |> PersistentSet.add i) (PersistentSet.empty ());
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
       values |> Iterable.forEach (fun i => {
@@ -35,7 +42,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
         |> IntRange.toIterable
         |> Iterable.map Hashtbl.hash;
 
-      let set = PersistentSet.empty |> PersistentSet.addAll values;
+      let set = PersistentSet.empty () |> PersistentSet.addAll values;
       set |> PersistentSet.count |> Expect.toBeEqualToInt count;
 
       values |> Iterable.forEach (fun i => {
@@ -52,7 +59,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
       range |> PersistentSet.contains count |> Expect.toBeEqualToFalse;
     }),
     it "count" (fun () => {
-      PersistentSet.empty |> PersistentSet.count |> Expect.toBeEqualToInt 0;
+      PersistentSet.empty () |> PersistentSet.count |> Expect.toBeEqualToInt 0;
     }),
     it "equals" (fun () => {
       let set1 = IntRange.create start::0 count::count
@@ -105,7 +112,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
         |> Expect.toBeEqualToTrue;
     }),
     it "isEmpty" (fun () => {
-      PersistentSet.empty |> PersistentSet.isEmpty |> Expect.toBeEqualToTrue;
+      PersistentSet.empty () |> PersistentSet.isEmpty |> Expect.toBeEqualToTrue;
 
       IntRange.create start::(-countDiv2) count::count
        |> IntRange.toIterable
@@ -115,7 +122,7 @@ let test (module PersistentSet: Set.Persistent.S with type a = int) (count: int)
        |> Expect.toBeEqualToFalse;
     }),
     it "isNotEmpty" (fun () => {
-      PersistentSet.empty |> PersistentSet.isNotEmpty |> Expect.toBeEqualToFalse;
+      PersistentSet.empty () |> PersistentSet.isNotEmpty |> Expect.toBeEqualToFalse;
 
       IntRange.create start::(-countDiv2) count::count
        |> IntRange.toIterable
