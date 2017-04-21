@@ -74,11 +74,17 @@ let module Make = fun (Comparable: Comparable.S) => {
   let from (iter: Iterable.t a): t =>
     emptyInstance |> addAll iter;
 
-  include (Collection.Make {
+  include (SequentialCollection.Make {
     type nonrec a = a;
     type nonrec t = t;
 
     let count ({ count }: t): int => count;
+
+    let first ({ tree }: t): (option a) =>
+      AVLTreeSet.first tree;
+
+    let firstOrRaise ({ tree }: t): a =>
+      AVLTreeSet.firstOrRaise tree;
 
     let reduce
         while_::(predicate: 'acc => a => bool)
@@ -90,7 +96,7 @@ let module Make = fun (Comparable: Comparable.S) => {
 
     let toSequence ({ tree }: t): (Sequence.t a) =>
       tree |> AVLTreeSet.toSequence;
-  }: Collection.S with type t:= t and type a:= a);
+  }: SequentialCollection.S with type t:= t and type a:= a);
 
   let reduceReversedImpl
       while_::(predicate: 'acc => a => bool)
@@ -167,12 +173,6 @@ let module Make = fun (Comparable: Comparable.S) => {
         (toSequence that)
     );
 
-  let first ({ tree }: t): (option a) =>
-    AVLTreeSet.first tree;
-
-  let firstOrRaise ({ tree }: t): a =>
-    AVLTreeSet.firstOrRaise tree;
-
   let last ({ tree }: t): (option a) =>
     AVLTreeSet.last tree;
 
@@ -184,19 +184,6 @@ let module Make = fun (Comparable: Comparable.S) => {
   let toIterableReversed (set: t): (Iterable.t a) =>
     if (isEmpty set) (Iterable.empty ())
     else Iterable.create iterableReversedBase set;
-
-  let seqCollectionOps: SequentialCollection.Ops.t a t = {
-    count,
-    first,
-    firstOrRaise,
-    toCollection,
-    toIterable,
-    toSequence,
-  };
-
-  let toSequentialCollection (set: t): (SequentialCollection.t a) =>
-    if (isEmpty set) (SequentialCollection.empty ())
-    else SequentialCollection.SequentialCollection set seqCollectionOps;
 
   let navCollectionOps: NavigableCollection.Ops.t a t = {
     count,

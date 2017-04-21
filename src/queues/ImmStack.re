@@ -30,16 +30,10 @@ let addFirstAll (values: Iterable.t 'a) ({ count, list }: t 'a): (t 'a) => {
   { count: !newCount, list: newList }
 };
 
-let count ({ count }: t 'a): int => count;
-
 let empty (): t 'a => {
   count: 0,
   list: [],
 };
-
-let first ({ list }: t 'a): (option 'a) => list |> ImmList.first;
-
-let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
 
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
@@ -47,10 +41,14 @@ let fromList (list: list 'a): (t 'a) =>
 let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
-include (Collection.Make1 {
+include (SequentialCollection.Make1 {
   type nonrec t 'a = t 'a;
 
   let count ({ count }: t 'a): int => count;
+
+  let first ({ list }: t 'a): (option 'a) => list |> ImmList.first;
+
+  let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
 
   let reduce
       while_::(predicate: 'acc => 'a => bool)
@@ -60,7 +58,7 @@ include (Collection.Make1 {
     list |> ImmList.reduce while_::predicate f acc;
 
   let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
-}: Collection.S1 with type t 'a := t 'a);
+}: SequentialCollection.S1 with type t 'a := t 'a);
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
@@ -78,16 +76,3 @@ let return (value: 'a): (t 'a) => {
 };
 
 let toList ({ list }: t 'a): (list 'a) => list;
-
-let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSequentialCollection (set: t 'a): (SequentialCollection.t 'a) =>
-  if (isEmpty set) (SequentialCollection.empty ())
-  else SequentialCollection.SequentialCollection set seqCollectionOps;

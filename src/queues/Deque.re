@@ -27,16 +27,6 @@ let addLast (value: 'a) (deque: t 'a): (t 'a) => switch deque {
       Descending (vector |> Vector.addFirst value);
 };
 
-let first (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector => vector |> Vector.first
-  | Descending vector => vector |> Vector.last
-};
-
-let firstOrRaise (deque: t 'a): 'a => switch deque {
-  | Ascending vector => Vector.firstOrRaise vector
-  | Descending vector => Vector.lastOrRaise vector
-};
-
 let last (deque: t 'a): (option 'a) => switch deque {
   | Ascending vector => vector |> Vector.last
   | Descending vector => vector |> Vector.first
@@ -69,12 +59,22 @@ let reverse (deque: t 'a): (t 'a) => switch deque {
   | Descending vector => Ascending vector
 };
 
-include (Collection.Make1 {
+include (SequentialCollection.Make1 {
   type nonrec t 'a = t 'a;
 
   let count (deque: t 'a): int => switch deque {
     | Ascending vector
     | Descending vector => Vector.count vector
+  };
+
+  let first (deque: t 'a): (option 'a) => switch deque {
+    | Ascending vector => vector |> Vector.first
+    | Descending vector => vector |> Vector.last
+  };
+
+  let firstOrRaise (deque: t 'a): 'a => switch deque {
+    | Ascending vector => Vector.firstOrRaise vector
+    | Descending vector => Vector.lastOrRaise vector
   };
 
   let reduce
@@ -90,7 +90,7 @@ include (Collection.Make1 {
     | Ascending vector => vector |> Vector.toSequence
     | Descending vector => vector |> Vector.toSequenceReversed;
   };
-}: Collection.S1 with type t 'a := t 'a);
+}: SequentialCollection.S1 with type t 'a := t 'a);
 
 let reduceReversedImpl
     while_::(predicate: 'acc => 'a => bool)
@@ -120,19 +120,6 @@ let toSequenceReversed (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequenceReversed
   | Descending vector => vector |> Vector.toSequence;
 };
-
-let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSequentialCollection (deque: t 'a): (SequentialCollection.t 'a) =>
-  if (isEmpty deque) (SequentialCollection.empty ())
-  else SequentialCollection.SequentialCollection deque seqCollectionOps;
 
 let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
   count,
