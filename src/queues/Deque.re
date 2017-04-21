@@ -80,21 +80,20 @@ let reverse (deque: t 'a): (t 'a) => switch deque {
   | Descending vector => Ascending vector
 };
 
-let reduceImpl
-    while_::(predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (deque: t 'a): 'acc => switch deque {
-  | Ascending vector => vector |> Vector.reduce while_::predicate f acc;
-  | Descending vector => vector |> Vector.reduceReversed while_::predicate f acc;
-};
+include (Iterable.Make1 {
+  type nonrec t 'a = t 'a;
 
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (deque: t 'a): 'acc =>
-  reduceImpl while_::predicate f acc deque;
+  let isEmpty = isEmpty;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (deque: t 'a): 'acc => switch deque {
+    | Ascending vector => vector |> Vector.reduce while_::predicate f acc;
+    | Descending vector => vector |> Vector.reduceReversed while_::predicate f acc;
+  };
+}: Iterable.S1 with type t 'a := t 'a);
 
 let reduceReversedImpl
     while_::(predicate: 'acc => 'a => bool)
@@ -114,17 +113,11 @@ let reduceReversed
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
-let iterator: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceImpl };
-
-let toIterable (deque: t 'a): (Iterable.t 'a) =>
- if (isEmpty deque) (Iterable.empty ())
- else Iterable.Iterable deque iterator;
-
-let iteratorReversed: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceReversedImpl };
+let iterableReversedBase: Iterable.s (t 'a) 'a = { reduce: reduceReversedImpl };
 
 let toIterableReversed (deque: t 'a): (Iterable.t 'a) =>
   if (isEmpty deque) (Iterable.empty ())
-  else Iterable.Iterable deque iteratorReversed;
+  else Iterable.create iterableReversedBase deque;
 
 let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
   | Ascending vector => vector |> Vector.toSequence

@@ -53,26 +53,20 @@ let removeAll (_: t): t =>
 let toSequence ({ root }: t): (Sequence.t int) =>
   root |> BitmapTrieIntSet.toSequence;
 
-let reduceImpl
-    while_::(predicate: 'acc => int => bool)
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    ({ root }: t): 'acc =>
-  if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
-  else (BitmapTrieIntSet.reduceWhile predicate f acc root);
+include (Iterable.Make {
+  type nonrec a = int;
+  type nonrec t = t;
 
-let reduce
-    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    (set: t): 'acc =>
-  reduceImpl while_::predicate f acc set;
+  let isEmpty = isEmpty;
 
-let iterator: Iterable.Iterator.t 'a t = { reduce: reduceImpl };
-
-let toIterable (set: t): (Iterable.t int) =>
-  if (isEmpty set) (Iterable.empty ())
-  else Iterable.Iterable set iterator;
+  let reduce
+      while_::(predicate: 'acc => int => bool)
+      (f: 'acc => int => 'acc)
+      (acc: 'acc)
+      ({ root }: t): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
+    else (BitmapTrieIntSet.reduceWhile predicate f acc root);
+}: Iterable.S with type t := t and type a := a);
 
 let collectionOps: Collection.Ops.t int t = {
   count,

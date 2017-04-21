@@ -18,6 +18,24 @@ and t 'a = unit => iterator 'a;
 
 let emptySeq () => Completed;
 
+include (Iterable.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let isEmpty (seq: t 'a) =>
+    seq === emptySeq;
+
+  let rec reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (reducer: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (seq: t 'a): 'acc => switch (seq ()) {
+    | Next value next when predicate acc value =>
+        let acc = reducer acc value;
+        reduce while_::predicate reducer acc next
+    | _ => acc
+  };
+}: Iterable.S1 with type t 'a := t 'a);
+
 let empty (): (t 'a) => emptySeq;
 
 let return (value: 'a): (t 'a) => fun () =>
@@ -80,23 +98,6 @@ let ofOption (opt: option 'a): (t 'a) => switch opt {
   | None => (empty ())
 };
 
-let rec reduceImpl
-    while_::(predicate: 'acc => 'a => bool)
-    (reducer: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (seq: t 'a): 'acc => switch (seq ()) {
-  | Next value next when predicate acc value =>
-      let acc = reducer acc value;
-      reduceImpl while_::predicate reducer acc next
-  | _ => acc
-};
-
-let rec reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (reducer: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (seq: t 'a): 'acc => reduceImpl while_::predicate reducer acc seq;
-
 let scan
     (reducer: 'acc => 'a => 'acc)
     (acc: 'acc)
@@ -110,13 +111,6 @@ let scan
 
   fun () => Next acc (recurse reducer acc seq);
 };
-
-let sequenceIterator: Iterable.Iterator.t 'acc (t 'a) = {
-  reduce: reduceImpl
-};
-
-let toIterable (seq: t 'a): (Iterable.t 'a) =>
-  Iterable.Iterable seq sequenceIterator;
 
 let buffer
     count::(count: int)

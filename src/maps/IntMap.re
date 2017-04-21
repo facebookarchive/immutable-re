@@ -89,7 +89,7 @@ let remove (key: int) (map: t 'v): (t 'v) =>
 
 let removeAll (_: t 'v): (t 'v) => empty ();
 
-let iterator: Iterable.Iterator.t (int, 'v) (t 'v) = {
+let iterableBase: Iterable.s (t 'v) (int, 'v) = {
   reduce: fun while_::predicate f acc map => map |> reduce
     while_::(fun acc k v => predicate acc (k, v))
     (fun acc k v => f acc (k, v))
@@ -98,7 +98,7 @@ let iterator: Iterable.Iterator.t (int, 'v) (t 'v) = {
 
 let toIterable (map: t 'v): (Iterable.t (int, 'v)) =>
   if (isEmpty map) (Iterable.empty ())
-  else Iterable.Iterable map iterator;
+  else Iterable.create iterableBase map;
 
 let keyedIterator: KeyedIterable.KeyedIterator.t int 'v (t 'v) = { reduce: reduceImpl };
 

@@ -77,20 +77,20 @@ let module Make = fun (Comparable: Comparable.S) => {
   let from (iter: Iterable.t a): t =>
     empty |> addAll iter;
 
-  let reduceImpl
-      while_::(predicate: 'acc => a => bool)
-      (f: 'acc => a => 'acc)
-      (acc: 'acc)
-      ({ tree }: t): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduce f acc tree)
-    else (AVLTreeSet.reduceWhile predicate f acc tree);
+  include (Iterable.Make {
+    type nonrec a = a;
+    type nonrec t = t;
 
-  let reduce
-      while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
-      (f: 'acc => a => 'acc)
-      (acc: 'acc)
-      (set: t): 'acc =>
-    reduceImpl while_::predicate f acc set;
+    let isEmpty = isEmpty;
+
+    let reduce
+        while_::(predicate: 'acc => a => bool)
+        (f: 'acc => a => 'acc)
+        (acc: 'acc)
+        ({ tree }: t): 'acc =>
+      if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduce f acc tree)
+      else (AVLTreeSet.reduceWhile predicate f acc tree);
+  }: Iterable.S with type t := t and type a := a);
 
   let reduceReversedImpl
       while_::(predicate: 'acc => a => bool)
@@ -182,17 +182,11 @@ let module Make = fun (Comparable: Comparable.S) => {
   let lastOrRaise ({ tree }: t): a =>
     AVLTreeSet.lastOrRaise tree;
 
-  let iterator: Iterable.Iterator.t a t = { reduce: reduceImpl };
-
-  let toIterable (set: t): (Iterable.t a) =>
-    if (isEmpty set) (Iterable.empty ())
-    else Iterable.Iterable set iterator;
-
-  let iteratorReversed: Iterable.Iterator.t a t = { reduce: reduceReversedImpl };
+  let iterableReversedBase: Iterable.s t a = { reduce: reduceReversedImpl };
 
   let toIterableReversed (set: t): (Iterable.t a) =>
     if (isEmpty set) (Iterable.empty ())
-    else Iterable.Iterable set iteratorReversed;
+    else Iterable.create iterableReversedBase set;
 
   let collectionOps: Collection.Ops.t a t = {
     count,

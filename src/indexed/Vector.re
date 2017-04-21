@@ -841,13 +841,19 @@ let reduceWhile
   acc;
 };
 
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (vec: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue2) (reduceImpl f acc vec)
-  else (reduceWhile while_::predicate f acc vec);
+include (Iterable.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let isEmpty = isEmpty;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (vec: t 'a): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (reduceImpl f acc vec)
+    else (reduceWhile while_::predicate f acc vec);
+}: Iterable.S1 with type t 'a := t 'a);
 
 let reduceWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
@@ -1064,17 +1070,11 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) =
   else vec |> skip skipCount |> take takeCount;
 };
 
-let iterator: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceWhile };
-
-let toIterable (vec: t 'a): (Iterable.t 'a) =>
-  if (isEmpty vec) (Iterable.empty ())
-  else Iterable.Iterable vec iterator;
-
-let iteratorReversed: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceReversedWhile };
+let iterableReversedBase: Iterable.s (t 'a) 'a = { reduce: reduceReversedWhile };
 
 let toIterableReversed (vec: t 'a): (Iterable.t 'a) =>
   if (isEmpty vec) (Iterable.empty ())
-  else Iterable.Iterable vec iteratorReversed;
+  else Iterable.create iterableReversedBase vec;
 
 let keyedIterator: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceWithIndexWhile };
 

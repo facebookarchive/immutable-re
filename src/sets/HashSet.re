@@ -65,26 +65,19 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator;
 
-let reduceImpl
-    while_::(predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    ({ root }: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue2) (BitmapTrieSet.reduce f acc root)
-  else (BitmapTrieSet.reduceWhile predicate f acc root);
+include (Iterable.Make1 {
+  type nonrec t 'a = t 'a;
 
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (set: t 'a): 'acc =>
-  reduceImpl while_::predicate f acc set;
+  let isEmpty = isEmpty;
 
-let iterator: Iterable.Iterator.t 'a (t 'a) = { reduce: reduceImpl };
-
-let toIterable (set: t 'a): (Iterable.t 'a) =>
-  if (isEmpty set) (Iterable.empty ())
-  else Iterable.Iterable set iterator;
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      ({ root }: t 'a): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (BitmapTrieSet.reduce f acc root)
+    else (BitmapTrieSet.reduceWhile predicate f acc root);
+}: Iterable.S1 with type t 'a := t 'a);
 
 let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
   if (isEmpty set) (Sequence.empty ())

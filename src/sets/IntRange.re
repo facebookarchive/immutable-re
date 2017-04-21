@@ -62,27 +62,27 @@ let lastOrRaise ({ count, start }: t): int =>
   if (count === 0) (failwith "empty")
   else start + count - 1;
 
-let reduceImpl
-    while_::(predicate: 'acc => int => bool)
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    ({ count, start }: t): 'acc => {
-  let rec recurse predicate f start count acc =>
-    if (count === 0) acc
-    else if (predicate acc start |> not) acc
-    else {
-      let acc = f acc start;
-      recurse predicate f (start + 1) (count - 1) acc;
-    };
-  recurse predicate f start count acc;
-};
+include (Iterable.Make {
+  type nonrec a = int;
+  type nonrec t = t;
 
-let reduce
-    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    (set : t): 'acc =>
-  reduceImpl while_::predicate f acc set;
+  let isEmpty = isEmpty;
+
+  let reduce
+      while_::(predicate: 'acc => int => bool)
+      (f: 'acc => int => 'acc)
+      (acc: 'acc)
+      ({ count, start }: t): 'acc => {
+    let rec recurse predicate f start count acc =>
+      if (count === 0) acc
+      else if (predicate acc start |> not) acc
+      else {
+        let acc = f acc start;
+        recurse predicate f (start + 1) (count - 1) acc;
+      };
+    recurse predicate f start count acc;
+  };
+}: Iterable.S with type t := t and type a := a);
 
 let reduceReversedImpl
     while_::(predicate: 'acc => int => bool)
@@ -123,17 +123,11 @@ let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
   recurse (start + count - 1) count
 };
 
-let iterator: Iterable.Iterator.t int t = { reduce: reduceImpl };
-
-let toIterable (set: t): (Iterable.t int) =>
-  if (isEmpty set) (Iterable.empty ())
-  else Iterable.Iterable set iterator;
-
-let iteratorReversed: Iterable.Iterator.t int t = { reduce: reduceReversedImpl };
+let iterableReversedBase: Iterable.s t int = { reduce: reduceReversedImpl };
 
 let toIterableReversed (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
-  else Iterable.Iterable set iteratorReversed;
+  else Iterable.create iterableReversedBase set;
 
 let collectionOps: Collection.Ops.t int t = {
   count,
@@ -144,7 +138,6 @@ let collectionOps: Collection.Ops.t int t = {
 let toCollection (set: t): (Collection.t int) =>
   if (isEmpty set) (Collection.empty ())
   else Collection.Collection set collectionOps;
-
 
 let seqCollectionOps: SequentialCollection.Ops.t int t = {
   count,

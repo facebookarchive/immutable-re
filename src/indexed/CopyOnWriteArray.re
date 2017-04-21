@@ -80,33 +80,32 @@ let isNotEmpty (arr: t 'a): bool => (count arr) !== 0;
 
 let ofUnsafe (arr: array 'a): (t 'a) => arr;
 
-let reduceImpl
-    while_::(predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (arr: t 'a): 'acc => {
-  let arrCount = count arr;
-  let rec loop acc index =>
-    if (index < arrCount) {
-      let next = arr.(index);
+include (Iterable.Make1 {
+  type nonrec t 'a = t 'a;
 
-      if (predicate acc next) {
-        let acc = f acc arr.(index);
-        loop acc (index + 1);
+  let isEmpty = isEmpty;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (arr: t 'a): 'acc => {
+    let arrCount = count arr;
+    let rec loop acc index =>
+      if (index < arrCount) {
+        let next = arr.(index);
+
+        if (predicate acc next) {
+          let acc = f acc arr.(index);
+          loop acc (index + 1);
+        }
+        else acc
       }
-      else acc
-    }
-    else acc;
+      else acc;
 
-  loop acc 0;
-};
-
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (arr: t 'a): 'acc =>
-  reduceImpl while_::predicate f acc arr;
+    loop acc 0;
+  };
+}: Iterable.S1 with type t 'a := t 'a);
 
 let reduceWithIndexImpl
     while_::(predicate: 'acc => int => 'a => bool)
@@ -229,24 +228,16 @@ let skip (startIndex: int) (arr: t 'a): (t 'a) => {
 };
 
 let take (newCount: int) (arr: t 'a): (t 'a) => {
-  let arrCount = count arr;
-
   if (newCount < 0) (failwith "count is < 0")
   else if (newCount === 0) [||]
   else Array.sub arr 0 newCount;
 };
 
-let iterator: Iterable.Iterator.t 'a (array 'a) = { reduce: reduceImpl };
-
-let toIterable (arr: t 'a): (Iterable.t 'a) =>
-  if (isEmpty arr) (Iterable.empty ())
-  else Iterable.Iterable arr iterator;
-
-let iteratorReversed: Iterable.Iterator.t 'a (array 'a) = { reduce: reduceReversedImpl };
+let iterableReversedBase: Iterable.s (array 'a) 'a = { reduce: reduceReversedImpl };
 
 let toIterableReversed (arr: t 'a): (Iterable.t 'a) =>
   if (isEmpty arr) (Iterable.empty ())
-  else Iterable.Iterable arr iteratorReversed;
+  else Iterable.create iterableReversedBase arr;
 
 let keyedIterator: KeyedIterable.KeyedIterator.t int 'a (array 'a) = { reduce: reduceWithIndexImpl };
 
@@ -388,7 +379,7 @@ let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v)
   count,
   first: first >> Option.map (fun v => (0, v)),
   firstOrRaise: fun arr => (0, firstOrRaise arr),
-  firstKey: first >> Option.map (fun v => 0),
+  firstKey: first >> Option.map (fun _ => 0),
   firstKeyOrRaise: fun arr => {
     firstOrRaise arr |> ignore;
     0
@@ -399,7 +390,7 @@ let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v)
   keysReversed,
   last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
   lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
-  lastKey: fun arr => arr |> last |> Option.map (fun v => (count arr) - 1),
+  lastKey: fun arr => arr |> last |> Option.map (fun _ => (count arr) - 1),
   lastKeyOrRaise: fun arr => {
     lastOrRaise arr |> ignore;
     (count arr) - 1;
@@ -426,7 +417,7 @@ let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
   count,
   first: first >> Option.map (fun v => (0, v)),
   firstOrRaise: fun arr => (0, firstOrRaise arr),
-  firstKey: first >> Option.map (fun v => 0),
+  firstKey: first >> Option.map (fun _ => 0),
   firstKeyOrRaise: fun arr => {
     firstOrRaise arr |> ignore;
     0
@@ -441,7 +432,7 @@ let navigableMapOps (): NavigableMap.Ops.t int 'v (t 'v) =>  {
   navigableKeySet,
   last: fun arr => arr |> last |> Option.map (fun v => ((count arr) - 1, v)),
   lastOrRaise: fun arr => ((count arr) - 1, lastOrRaise arr),
-  lastKey: fun arr => arr |> last |> Option.map (fun v => (count arr) - 1),
+  lastKey: fun arr => arr |> last |> Option.map (fun _ => (count arr) - 1),
   lastKeyOrRaise: fun arr => {
     lastOrRaise arr |> ignore;
     (count arr) - 1;

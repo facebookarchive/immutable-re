@@ -233,7 +233,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let toSequenceReversed ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
     tree |> AVLTreeMap.toSequenceReversed;
 
-  let iterator: Iterable.Iterator.t (k, 'v) (t 'v) = {
+  let iterableBase: Iterable.s (t 'v) (k, 'v) = {
     reduce: fun while_::predicate f acc map => map |> reduce
       while_::(fun acc k v => predicate acc (k, v))
       (fun acc k v => f acc (k, v))
@@ -242,9 +242,9 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let toIterable (map: t 'v): (Iterable.t (k, 'v)) =>
     if (isEmpty map) (Iterable.empty ())
-    else Iterable.Iterable map iterator;
+    else Iterable.create iterableBase map;
 
-  let iteratorReversed: Iterable.Iterator.t (k, 'v) (t 'v) = {
+  let iterableReversedBase: Iterable.s (t 'v) (k, 'v) = {
     reduce: fun while_::predicate f acc map => map |> reduceReversed
       while_::(fun acc k v => predicate acc (k, v))
       (fun acc k v => f acc (k, v))
@@ -253,7 +253,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let toIterableReversed (map: t 'v): (Iterable.t (k, 'v)) =>
     if (isEmpty map) (Iterable.empty ())
-    else Iterable.Iterable map iteratorReversed;
+    else Iterable.create iterableReversedBase map;
 
   let keyedIterator: KeyedIterable.KeyedIterator.t k 'v (t 'v) = { reduce: reduceImpl };
 

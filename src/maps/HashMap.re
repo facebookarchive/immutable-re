@@ -117,7 +117,7 @@ let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
 let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator;
 
-let iterator: Iterable.Iterator.t ('k, 'v) (t 'k 'v) = {
+let iterableBase: Iterable.s (t 'k 'v) ('k, 'v) = {
   reduce: fun while_::predicate f acc map => map |> reduce
     while_::(fun acc k v => predicate acc (k, v))
     (fun acc k v => f acc (k, v))
@@ -126,7 +126,7 @@ let iterator: Iterable.Iterator.t ('k, 'v) (t 'k 'v) = {
 
 let toIterable (map: t 'k 'v): (Iterable.t ('k, 'v)) =>
   if (isEmpty map) (Iterable.empty ())
-  else Iterable.Iterable map iterator;
+  else Iterable.create iterableBase map;
 
 let keyedIterator: KeyedIterable.KeyedIterator.t 'k 'v (t 'k 'v) = { reduce: reduceImpl };
 

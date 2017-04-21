@@ -157,7 +157,7 @@ let fromEntriesIterator: KeyedIterator.t 'k 'v (Iterable.t ('k, 'v)) = {
 
 let fromEntries (iter: Iterable.t ('k, 'v)): (t 'k 'v) => switch iter {
   | Iterable.Empty => Empty
-  | Iterable.Iterable  _ _ => KeyedIterable iter fromEntriesIterator
+  | Iterable.Instance  _ _ => KeyedIterable iter fromEntriesIterator
 };
 
 let generateIterator: KeyedIterator.t 'k 'v ('k => 'v => 'k, 'k => 'v => 'v, 'k, 'v) = {
@@ -187,7 +187,7 @@ let generate
     (initialValue: 'v): (t 'k 'v) =>
   KeyedIterable (genKey, genValue, initialKey, initialValue) generateIterator;
 
-let keysIterator: Iterable.Iterator.t 'k (t 'k _) = {
+let keysIterableBase: Iterable.s (t 'k _) 'k = {
   reduce: fun while_::predicate f acc iter => iter |> reduce
     while_::(fun acc k _ => predicate acc k)
     (fun acc k _ => f acc k)
@@ -196,7 +196,7 @@ let keysIterator: Iterable.Iterator.t 'k (t 'k _) = {
 
 let keys (iter: t 'k 'v): (Iterable.t 'k) => switch iter {
   | Empty => Iterable.Empty
-  | KeyedIterable _ _ => Iterable.Iterable iter keysIterator
+  | KeyedIterable _ _ => Iterable.create keysIterableBase iter
 };
 
 let map
@@ -290,7 +290,7 @@ let scan
     (initialValue: 'acc)
     (iter: t 'k 'v): (Iterable.t 'acc) => switch iter {
   | Empty => Iterable.Empty
-  | KeyedIterable iter { reduce } => Iterable.Iterable iter {
+  | KeyedIterable iter { reduce } => Iterable.Instance iter {
       reduce: fun while_::predicate f acc iter =>
         if (predicate acc initialValue)  {
           let result = ref (f acc initialValue);
@@ -399,7 +399,7 @@ let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) => switc
     }
 };
 
-let valuesIterator: Iterable.Iterator.t 'v (t _ 'v) = {
+let valuesIterableBase: Iterable.s (t _ 'v) 'v = {
   reduce: fun while_::predicate f acc iter => iter |> reduce
     while_::(fun acc _ v => predicate acc v)
     (fun acc _ v => f acc v)
@@ -407,13 +407,13 @@ let valuesIterator: Iterable.Iterator.t 'v (t _ 'v) = {
 };
 
 let values (iter: t 'k 'v): (Iterable.t 'v) => switch iter {
-  | Empty => Iterable.Empty
-  | KeyedIterable _ _ => Iterable.Iterable iter valuesIterator
+  | Empty => Iterable.empty ()
+  | KeyedIterable _ _ => Iterable.create valuesIterableBase iter
 };
 
 let toKeyedIterable (iter: t 'k 'v): (t 'k 'v) => iter;
 
-let toIterableIterator: Iterable.Iterator.t ('k, 'v) (t 'k 'v) = {
+let iterableBase: Iterable.s (t 'k 'v) ('k, 'v) = {
   reduce: fun while_::predicate f acc iter => iter |> reduce
     while_::(fun acc k v => predicate acc (k, v))
     (fun acc k v => f acc (k, v))
@@ -421,8 +421,8 @@ let toIterableIterator: Iterable.Iterator.t ('k, 'v) (t 'k 'v) = {
 };
 
 let toIterable (iter: t 'k 'v): (Iterable.t ('k, 'v)) => switch iter {
-  | Empty => Iterable.Empty
-  | KeyedIterable _ _ => Iterable.Iterable iter toIterableIterator
+  | Empty => Iterable.empty ()
+  | KeyedIterable _ _ => Iterable.create iterableBase iter
 };
 
 let increment acc _ _ => acc + 1;

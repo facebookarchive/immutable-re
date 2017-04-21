@@ -61,7 +61,7 @@ let rec reduceImpl
   | [] => acc
 };
 
-let rec reduce
+let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc )
     (acc: 'acc)

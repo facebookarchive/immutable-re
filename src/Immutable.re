@@ -51,24 +51,7 @@ let module Streamable = {
   };
 };
 
-let module Iterable = {
-  include Iterable;
-
-  module type S = {
-    type a;
-    type t;
-
-    let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    let toIterable: t => (Iterable.t a);
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let toIterable: t 'a => (Iterable.t 'a);
-  };
-};
+let module Iterable = Iterable;
 
 let module Sequence = Sequence;
 
