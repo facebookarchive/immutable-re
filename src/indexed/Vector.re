@@ -607,8 +607,6 @@ let module TransientVectorImpl = VectorImpl.Make {
 let addFirst value => PersistentVector.addFirst Transient.Owner.none value;
 let addLast value => PersistentVector.addLast Transient.Owner.none value;
 let count = PersistentVector.count;
-let first = PersistentVector.first;
-let firstOrRaise = PersistentVector.firstOrRaise;
 let get = PersistentVector.get;
 let getOrRaise = PersistentVector.getOrRaise;
 let last = PersistentVector.last;
@@ -831,10 +829,14 @@ let reduceWhile
   acc;
 };
 
-include (Collection.Make1 {
+include (SequentialCollection.Make1 {
   type nonrec t 'a = t 'a;
 
   let count = count;
+
+  let first = PersistentVector.first;
+
+  let firstOrRaise = PersistentVector.firstOrRaise;
 
   let reduce
       while_::(predicate: 'acc => 'a => bool)
@@ -849,7 +851,7 @@ include (Collection.Make1 {
     IndexedTrie.toSequence middle,
     CopyOnWriteArray.toSequence right,
   ];
-}: Collection.S1 with type t 'a := t 'a);
+}: SequentialCollection.S1 with type t 'a := t 'a);
 
 let reduceWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
@@ -1102,19 +1104,6 @@ let toSequenceWithIndexReversed (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.
   (fun a b => (a, b))
   (IntRange.create start::0 count::(count vec) |> IntRange.toSequenceReversed)
   (toSequenceReversed vec);
-
-let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSequentialCollection (vector: t 'a): (SequentialCollection.t 'a) =>
-  if (isEmpty vector) (SequentialCollection.empty ())
-  else SequentialCollection.SequentialCollection vector seqCollectionOps;
 
 let keys (arr: t 'a): (Iterable.t int) =>
   IntRange.create start::0 count::(count arr) |> IntRange.toIterable;

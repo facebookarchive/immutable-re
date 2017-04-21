@@ -46,6 +46,53 @@ include (Collection.Make1 {
   };
 }: Collection.S1 with type t 'a := t 'a);
 
+let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
+  arr.(index);
+
+let get (index: int) (arr: t 'a): (option 'a) =>
+  Preconditions.noneIfIndexOutOfRange (count arr) index (getOrRaiseFlipped arr);
+
+let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
+
+include (SequentialCollection.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let count = count;
+
+  let first (arr: t 'a): (option 'a) => get 0 arr;
+
+  let firstOrRaise (arr: t 'a): 'a => getOrRaise 0 arr;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (arr: t 'a): 'acc => {
+    let arrCount = count arr;
+    let rec loop acc index =>
+      if (index < arrCount) {
+        let next = arr.(index);
+
+        if (predicate acc next) {
+          let acc = f acc arr.(index);
+          loop acc (index + 1);
+        }
+        else acc
+      }
+      else acc;
+
+    loop acc 0;
+  };
+
+  let toSequence (arr: t 'a): (Sequence.t 'a) => {
+    let arrCount = count arr;
+    let rec loop index => fun () =>
+      if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
+      else Sequence.Completed;
+    loop 0;
+  };
+}: SequentialCollection.S1 with type t 'a := t 'a);
+
 let addFirst (item: 'a) (arr: t 'a): (t 'a) => {
   let count = count arr;
 
@@ -63,18 +110,6 @@ let addLast (item: 'a) (arr: t 'a): (t 'a) => {
 };
 
 let empty (): (t 'a) => [||];
-
-let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
-  arr.(index);
-
-let get (index: int) (arr: t 'a): (option 'a) =>
-  Preconditions.noneIfIndexOutOfRange (count arr) index (getOrRaiseFlipped arr);
-
-let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
-
-let first (arr: t 'a): (option 'a) => get 0 arr;
-
-let firstOrRaise (arr: t 'a): 'a => getOrRaise 0 arr;
 
 let lastIndexOrRaise (arr: t 'a): int => {
   let lastIndex = count arr - 1;
@@ -277,19 +312,6 @@ let toSequenceWithIndexReversed (arr: t 'a): (Sequence.t (int, 'a)) => {
     else Sequence.Completed;
   loop (arrCount - 1);
 };
-
-let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSequentialCollection (arr: t 'a): (SequentialCollection.t 'a) =>
-  if (isEmpty arr) (SequentialCollection.empty ())
-  else SequentialCollection.SequentialCollection arr seqCollectionOps;
 
 let containsKey (index: int) (arr: t 'a): bool =>
   index >= 0 && index < count arr;

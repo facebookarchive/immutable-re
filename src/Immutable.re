@@ -103,27 +103,6 @@ let module Collection = {
 let module SequentialCollection = {
   include SequentialCollection;
 
-  module type S = {
-    type a;
-    type t;
-
-    include Collection.S with type a := a and type t := t;
-
-    let first: t => (option a);
-    let firstOrRaise: t => a;
-    let toSequentialCollection: t => (SequentialCollection.t a);
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include Collection.S1 with type t 'a := t 'a;
-
-    let first: (t 'a) => (option 'a);
-    let firstOrRaise: (t 'a) => 'a;
-    let toSequentialCollection: (t 'a) => (SequentialCollection.t 'a);
-  };
-
   let module Persistent = {
     module type S1 = {
       type t 'a;

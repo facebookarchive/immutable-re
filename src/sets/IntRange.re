@@ -42,14 +42,6 @@ let contains (value: int) ({ count, start }: t): bool =>
 let equals (this: t) (that: t): bool =>
   this.start === that.start && this.count === that.count;
 
-let first ({ count, start }: t): (option int) =>
-  if (count === 0) None
-  else (Some start);
-
-let firstOrRaise ({ count, start }: t): int =>
-  if (count === 0) (failwith "empty")
-  else start;
-
 let last ({ count, start }: t): (option int) =>
   if (count === 0) None
   else (start + count - 1) |> Option.return;
@@ -58,11 +50,19 @@ let lastOrRaise ({ count, start }: t): int =>
   if (count === 0) (failwith "empty")
   else start + count - 1;
 
-include (Collection.Make {
+include (SequentialCollection.Make {
   type nonrec a = int;
   type nonrec t = t;
 
   let count ({ count }: t): int => count;
+
+  let first ({ count, start }: t): (option int) =>
+    if (count === 0) None
+    else (Some start);
+
+  let firstOrRaise ({ count, start }: t): int =>
+    if (count === 0) (failwith "empty")
+    else start;
 
   let reduce
       while_::(predicate: 'acc => int => bool)
@@ -85,7 +85,7 @@ include (Collection.Make {
       else Sequence.Next start (recurse (start + 1) (count - 1));
     recurse start count
   };
-}: Collection.S with type t := t and type a := a);
+}: SequentialCollection.S with type t := t and type a := a);
 
 let reduceReversedImpl
     while_::(predicate: 'acc => int => bool)
@@ -124,19 +124,6 @@ let iterableReversedBase: Iterable.s t int = { reduce: reduceReversedImpl };
 let toIterableReversed (set: t): (Iterable.t int) =>
   if (isEmpty set) (Iterable.empty ())
   else Iterable.create iterableReversedBase set;
-
-let seqCollectionOps: SequentialCollection.Ops.t int t = {
-  count,
-  first,
-  firstOrRaise,
-  toCollection,
-  toIterable,
-  toSequence,
-};
-
-let toSequentialCollection (set: t): (SequentialCollection.t int) =>
-  if (isEmpty set) (SequentialCollection.empty ())
-  else SequentialCollection.SequentialCollection set seqCollectionOps;
 
 let navCollectionOps: NavigableCollection.Ops.t int t = {
   count,
