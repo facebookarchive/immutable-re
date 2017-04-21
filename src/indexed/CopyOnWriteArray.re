@@ -239,17 +239,17 @@ let toIterableReversed (arr: t 'a): (Iterable.t 'a) =>
   if (isEmpty arr) (Iterable.empty ())
   else Iterable.create iterableReversedBase arr;
 
-let keyedIterator: KeyedIterable.KeyedIterator.t int 'a (array 'a) = { reduce: reduceWithIndexImpl };
+let keyedIterableBase: KeyedIterable.s (array 'a) int 'a = { reduce: reduceWithIndexImpl };
 
 let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) (KeyedIterable.empty ())
-  else KeyedIterable.KeyedIterable arr keyedIterator;
+  else KeyedIterable.create keyedIterableBase arr;
 
-let keyedIteratorReversed: KeyedIterable.KeyedIterator.t int 'a (array 'a) = { reduce: reduceReversedWithIndexImpl };
+let keyedIterableReversedBase: KeyedIterable.s (array 'a) int 'a = { reduce: reduceReversedWithIndexImpl };
 
 let toKeyedIterableReversed (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) (KeyedIterable.empty ())
-  else KeyedIterable.KeyedIterable arr keyedIteratorReversed;
+  else KeyedIterable.create keyedIterableReversedBase arr;
 
 let toSequenceReversed (arr: t 'a): (Sequence.t 'a) =>
   if (isEmpty arr) (Sequence.empty ())

@@ -69,42 +69,25 @@ let put (key: int) (value: 'v) ({ count, root } as map: t 'v): (t 'v) => {
   }
 };
 
-let reduceImpl
-    while_::(predicate: 'acc => int => 'v => bool)
-    (f: 'acc => int => 'v => 'acc)
-    (acc: 'acc)
-    ({ root }: t 'v): 'acc =>
-  if (predicate === Functions.alwaysTrue3) (BitmapTrieIntMap.reduce f acc root)
-  else (BitmapTrieIntMap.reduceWhile predicate f acc root);
+include (KeyedIterable.Make1 {
+  type nonrec k = k;
+  type nonrec t 'v = t 'v;
 
-let reduce
-    while_::(predicate: 'acc => int => 'v => bool)=Functions.alwaysTrue3
-    (f: 'acc => int => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'v): 'acc =>
-  reduceImpl while_::predicate f acc map;
+  let isEmpty = isEmpty;
+
+  let reduce
+      while_::(predicate: 'acc => int => 'v => bool)
+      (f: 'acc => int => 'v => 'acc)
+      (acc: 'acc)
+      ({ root }: t 'v): 'acc =>
+    if (predicate === Functions.alwaysTrue3) (BitmapTrieIntMap.reduce f acc root)
+    else (BitmapTrieIntMap.reduceWhile predicate f acc root);
+}: KeyedIterable.S1 with type t 'v := t 'v and type k := k);
 
 let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;
 
 let removeAll (_: t 'v): (t 'v) => empty ();
-
-let iterableBase: Iterable.s (t 'v) (int, 'v) = {
-  reduce: fun while_::predicate f acc map => map |> reduce
-    while_::(fun acc k v => predicate acc (k, v))
-    (fun acc k v => f acc (k, v))
-    acc
-};
-
-let toIterable (map: t 'v): (Iterable.t (int, 'v)) =>
-  if (isEmpty map) (Iterable.empty ())
-  else Iterable.create iterableBase map;
-
-let keyedIterator: KeyedIterable.KeyedIterator.t int 'v (t 'v) = { reduce: reduceImpl };
-
-let toKeyedIterable (map: t 'v): (KeyedIterable.t int 'v) =>
-  if (isEmpty map) (KeyedIterable.empty ())
-  else KeyedIterable.KeyedIterable map keyedIterator;
 
 let toKeySequence ({ root }: t 'v): (Sequence.t int) =>
   root |> BitmapTrieIntMap.toKeySequence;
@@ -121,12 +104,6 @@ let keyCollectionOps (): Collection.Ops.t int (t 'v) => {
 let toKeyCollection (map: t 'v): Collection.t int =>
   if (isEmpty map) (Collection.empty ())
   else (Collection.Collection map (keyCollectionOps ()));
-
-let keys (map: t 'v): Iterable.t k =>
-  map |> toKeyedIterable |> KeyedIterable.keys;
-
-let values  (map: t 'v): Iterable.t 'v =>
-  map |> toKeyedIterable |> KeyedIterable.values;
 
 let keySetOps: ImmSet.Ops.t int (t 'v) = {
   contains: containsKey,

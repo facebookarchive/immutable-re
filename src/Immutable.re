@@ -387,30 +387,7 @@ let module KeyedStreamable = {
   };
 };
 
-let module KeyedIterable = {
-  include KeyedIterable;
-
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    let keys: (t 'v) => (Iterable.t k);
-    let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let toIterable: t 'v => Iterable.t (k, 'v);
-    let toKeyedIterable: t 'v => KeyedIterable.t k 'v;
-    let values: (t 'v) => Iterable.t 'v;
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    let keys: (t 'k 'v) => (Iterable.t 'k);
-    let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    let toIterable: t 'k 'v => Iterable.t ('k, 'v);
-    let toKeyedIterable: t 'k 'v => KeyedIterable.t 'k 'v;
-    let values: (t 'k 'v) => Iterable.t 'v;
-  };
-};
+let module KeyedIterable = KeyedIterable;
 
 let module KeyedCollection = {
   include KeyedCollection;

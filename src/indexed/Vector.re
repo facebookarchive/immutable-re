@@ -1076,18 +1076,19 @@ let toIterableReversed (vec: t 'a): (Iterable.t 'a) =>
   if (isEmpty vec) (Iterable.empty ())
   else Iterable.create iterableReversedBase vec;
 
-let keyedIterator: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceWithIndexWhile };
+let keyedIterableBase: KeyedIterable.s (t 'a) int 'a = { reduce: reduceWithIndexWhile };
 
 let toKeyedIterable (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
-  else KeyedIterable.KeyedIterable vec keyedIterator;
+  else KeyedIterable.create keyedIterableBase vec;
 
-let keyedIteratorReversed: KeyedIterable.KeyedIterator.t int 'a (t 'a) = { reduce: reduceReversedWithIndexWhile };
+let keyedIterableReversedBase: KeyedIterable.s (t 'a) int 'a = { reduce: reduceReversedWithIndexWhile };
 
 let toKeyedIterableReversed (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
-  else KeyedIterable.KeyedIterable vec keyedIterator;
-  let containsKey (index: int) (arr: t 'a): bool =>
+  else KeyedIterable.create keyedIterableReversedBase vec;
+
+let containsKey (index: int) (arr: t 'a): bool =>
     index >= 0 && index < count arr;
 
 let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
