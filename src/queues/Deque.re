@@ -64,6 +64,7 @@ include (SequentialCollection.Make1 {
   let count (deque: t 'a): int => switch deque {
     | Ascending vector
     | Descending vector => Vector.count vector
+  };
 
   let first (deque: t 'a): (option 'a) => switch deque {
     | Ascending vector => vector |> Vector.first
