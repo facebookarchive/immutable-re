@@ -13,10 +13,10 @@ open ReUnit;
 open ReUnit.Test;
 
 let module SortedIntSet = SortedSet.Make {
-  type t = int;
+    type t = int;
 
-  let compare = Comparator.int;
-  let equals = Equality.int;
+    let compare = Comparator.int;
+    let equals = Equality.int;
 };
 
 let navigationTests (count: int) => {
@@ -25,7 +25,7 @@ let navigationTests (count: int) => {
 
   describe (sprintf "count: %i" count) [
     it "first" (fun () => {
-      SortedIntSet.empty |> SortedIntSet.first |> Expect.toBeEqualToNoneOfInt;
+      SortedIntSet.empty () |> SortedIntSet.first |> Expect.toBeEqualToNoneOfInt;
       IntRange.create start::(-countDiv2) count::count
         |> IntRange.toIterable
         |> SortedIntSet.from
@@ -33,7 +33,7 @@ let navigationTests (count: int) => {
         |> Expect.toBeEqualToSomeOfInt (-countDiv2);
     }),
     it "firstOrRaise" (fun () => {
-      (fun () => SortedIntSet.empty |> SortedIntSet.firstOrRaise) |> Expect.shouldRaise;
+      (fun () => SortedIntSet.empty () |> SortedIntSet.firstOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
         |> IntRange.toIterable
         |> SortedIntSet.from
@@ -41,7 +41,7 @@ let navigationTests (count: int) => {
         |> Expect.toBeEqualToInt (-countDiv2);
     }),
     it "last" (fun () => {
-      SortedIntSet.empty |> SortedIntSet.last |> Expect.toBeEqualToNoneOfInt;
+      SortedIntSet.empty () |> SortedIntSet.last |> Expect.toBeEqualToNoneOfInt;
       IntRange.create start::(-countDiv2) count::count
         |> IntRange.toIterable
         |> SortedIntSet.from
@@ -49,7 +49,7 @@ let navigationTests (count: int) => {
         |> Expect.toBeEqualToSomeOfInt (countDiv2 - 1);
     }),
     it "lastOrRaise" (fun () => {
-      (fun () => SortedIntSet.empty |> SortedIntSet.lastOrRaise) |> Expect.shouldRaise;
+      (fun () => SortedIntSet.empty () |> SortedIntSet.lastOrRaise) |> Expect.shouldRaise;
       IntRange.create start::(-countDiv2) count::count
         |> IntRange.toIterable
         |> SortedIntSet.from
@@ -75,7 +75,7 @@ let navigationTests (count: int) => {
           }) set
         |> ignore;
 
-      (fun () => SortedIntSet.empty |> SortedIntSet.removeFirstOrRaise) |> Expect.shouldRaise;
+      (fun () => SortedIntSet.empty () |> SortedIntSet.removeFirstOrRaise) |> Expect.shouldRaise;
     }),
     it "removeLastOrRaise" (fun () => {
       let set = IntRange.create start::0 count::count
@@ -89,7 +89,7 @@ let navigationTests (count: int) => {
           }) set
         |> ignore;
 
-      (fun () => SortedIntSet.empty |> SortedIntSet.removeLastOrRaise) |> Expect.shouldRaise;
+      (fun () => SortedIntSet.empty () |> SortedIntSet.removeLastOrRaise) |> Expect.shouldRaise;
     }),
     it "toIterableReversed" (fun () => {
       IntRange.create start::0 count::count
@@ -111,7 +111,7 @@ let navigationTests (count: int) => {
 };
 
 let test = describe "SortedSet" [
-  PersistentSetTester.test (module SortedIntSet: Set.Persistent.S with type a = IntSet.a) 100,
-  PersistentSetTester.test (module SortedIntSet: Set.Persistent.S with type a = IntSet.a) 10000,
+  PersistentSetTester.test (module SortedIntSet) 100,
+  PersistentSetTester.test (module SortedIntSet) 10000,
   navigationTests 10000,
 ];

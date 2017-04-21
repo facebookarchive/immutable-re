@@ -47,18 +47,20 @@ let fromList (list: list 'a): (t 'a) =>
 let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
-let isEmpty ({ list }: t 'a): bool =>
-  list |> ImmList.isEmpty;
+include (Collection.Make1 {
+  type nonrec t 'a = t 'a;
 
-let isNotEmpty ({ list }: t 'a): bool =>
-  list |> ImmList.isNotEmpty;
+  let count ({ count }: t 'a): int => count;
 
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc )
-    (acc: 'acc)
-    ({ list }: t 'a): 'acc =>
-  list |> ImmList.reduce while_::predicate f acc;
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc )
+      (acc: 'acc)
+      ({ list }: t 'a): 'acc =>
+    list |> ImmList.reduce while_::predicate f acc;
+
+  let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
+}: Collection.S1 with type t 'a := t 'a);
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
@@ -75,22 +77,7 @@ let return (value: 'a): (t 'a) => {
   list: [value],
 };
 
-let toIterable ({ list }: t 'a): (Iterable.t 'a) =>
-  Iterable.ofList list;
-
 let toList ({ list }: t 'a): (list 'a) => list;
-
-let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
-
-let collectionOps: Collection.Ops.t 'a (t 'a) = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (stack: t 'a): (Collection.t 'a) =>
-  if (isEmpty stack) (Collection.empty ())
-  else Collection.Collection stack collectionOps;
 
 let seqCollectionOps: SequentialCollection.Ops.t 'a (t 'a) = {
   count,

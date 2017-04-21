@@ -12,7 +12,17 @@ open Immutable;
 open ReUnit;
 open ReUnit.Test;
 
-let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int) => {
+module type S = {
+  include Map.Persistent.S1 with type k = int;
+
+  let empty: unit => t 'v;
+  let from: KeyedIterable.t k 'v => t 'v;
+  let fromEntries: Iterable.t (k, 'v) => t 'v;
+};
+
+let test
+    (module PersistentMap: S)
+    (count: int) => {
   let countDiv2 = count / 2;
   let countDiv4 = count / 4;
 
@@ -56,7 +66,6 @@ let test (module PersistentMap: Map.Persistent.S1 with type k = int) (count: int
         |> PersistentMap.count
         |> Expect.toBeEqualToInt count;
     }),
-    it "from" (fun () => ()),
     it "get" (fun () => {
       keyValuePairsHashed |> Iterable.forEach (fun (k, v) => {
         mapHashed |> PersistentMap.get k |> Expect.toBeEqualToSomeOfInt v;

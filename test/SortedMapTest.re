@@ -125,6 +125,6 @@ let navigationTests (count: int) => {
 };
 
 let test = describe "SortedMap" [
-  PersistentMapTester.test (module SortedIntMap: Map.Persistent.S1  with type k = SortedIntMap.k) 100,
-  PersistentMapTester.test (module SortedIntMap: Map.Persistent.S1 with type k = SortedIntMap.k) 10000,
+  PersistentMapTester.test (module SortedIntMap) 100,
+  PersistentMapTester.test (module SortedIntMap) 10000,
 ];

@@ -33,8 +33,6 @@ let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
   root |> BitmapTrieSet.contains comparator 0 keyHash value;
 };
 
-let count ({ count }: t 'a): int => count;
-
 let emptyWith
     hash::(hash: Hash.t 'a)
     comparator::(comparator: Comparator.t 'a): (t 'a) => {
@@ -43,10 +41,6 @@ let emptyWith
   comparator,
   hash,
 };
-
-let isEmpty ({ count }: t 'a): bool => count === 0;
-
-let isNotEmpty ({ count }: t 'a): bool => count !== 0;
 
 let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
   let keyHash = hash value;
@@ -65,10 +59,10 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator;
 
-include (Iterable.Make1 {
+include (Collection.Make1 {
   type nonrec t 'a = t 'a;
 
-  let isEmpty = isEmpty;
+  let count ({ count }: t 'a): int => count;
 
   let reduce
       while_::(predicate: 'acc => 'a => bool)
@@ -77,21 +71,10 @@ include (Iterable.Make1 {
       ({ root }: t 'a): 'acc =>
     if (predicate === Functions.alwaysTrue2) (BitmapTrieSet.reduce f acc root)
     else (BitmapTrieSet.reduceWhile predicate f acc root);
-}: Iterable.S1 with type t 'a := t 'a);
 
-let toSequence ({ root } as set: t 'a): (Sequence.t 'a) =>
-  if (isEmpty set) (Sequence.empty ())
-  else root |> BitmapTrieSet.toSequence;
-
-let collectionOps: Collection.Ops.t 'a (t 'a) = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (set: t 'a): (Collection.t 'a) =>
-  if (isEmpty set) (Collection.empty ())
-  else Collection.Collection set collectionOps;
+  let toSequence ({ root }: t 'a): (Sequence.t 'a) =>
+    root |> BitmapTrieSet.toSequence;
+}: Collection.S1 with type t 'a := t 'a);
 
 let setOps: ImmSet.Ops.t 'a (t 'a) = {
   contains,
@@ -108,7 +91,7 @@ let toSet (set: t 'a): (ImmSet.t 'a) =>
 let equals (this: t 'a) (that: t 'a): bool =>
   ImmSet.equals (toSet this) (toSet that);
 
-let hash ({ hash, comparator } as set: t 'a): int =>
+let hash ({ hash } as set: t 'a): int =>
   set |> reduce (fun acc next => acc + hash next) 0;
 
 let module Transient = {

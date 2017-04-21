@@ -28,13 +28,9 @@ let add (value: int) ({ count, root } as set: t): t => {
 let contains (value: int) ({ root }: t): bool =>
   root |> BitmapTrieIntSet.contains 0 value;
 
-let count ({ count }: t): int => count;
+let emptyInstance: t = { count: 0, root: BitmapTrieIntSet.Empty };
 
-let empty: t = { count: 0, root: BitmapTrieIntSet.Empty };
-
-let isEmpty ({ count }: t): bool => count === 0;
-
-let isNotEmpty ({ count }: t): bool => count !== 0;
+let empty (): t => emptyInstance;
 
 let remove (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.remove
@@ -48,16 +44,13 @@ let remove (value: int) ({ count, root } as set: t): t => {
 };
 
 let removeAll (_: t): t =>
-  empty;
+  emptyInstance;
 
-let toSequence ({ root }: t): (Sequence.t int) =>
-  root |> BitmapTrieIntSet.toSequence;
-
-include (Iterable.Make {
+include (Collection.Make {
   type nonrec a = int;
   type nonrec t = t;
 
-  let isEmpty = isEmpty;
+  let count ({ count }: t): int => count;
 
   let reduce
       while_::(predicate: 'acc => int => bool)
@@ -66,17 +59,10 @@ include (Iterable.Make {
       ({ root }: t): 'acc =>
     if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
     else (BitmapTrieIntSet.reduceWhile predicate f acc root);
-}: Iterable.S with type t := t and type a := a);
 
-let collectionOps: Collection.Ops.t int t = {
-  count,
-  toIterable,
-  toSequence,
-};
-
-let toCollection (set: t): (Collection.t int) =>
-  if (isEmpty set) (Collection.empty ())
-  else Collection.Collection set collectionOps;
+  let toSequence ({ root }: t): (Sequence.t int) =>
+    root |> BitmapTrieIntSet.toSequence;
+}: Collection.S with type t := t and type a := a);
 
 let setOps: ImmSet.Ops.t int t = {
   contains,
@@ -158,10 +144,8 @@ let module Transient = {
   let count (transient: t): int =>
     transient |> Transient.get |> count;
 
-  let persistentEmpty = empty;
-
   let empty (): t =>
-    empty |> mutate;
+    emptyInstance |> mutate;
 
   let isEmpty (transient: t): bool =>
     transient |> Transient.get |> isEmpty;
@@ -191,7 +175,7 @@ let module Transient = {
 
   let removeAllImpl
       (_: Transient.Owner.t)
-      (_: intSet): intSet => persistentEmpty;
+      (_: intSet): intSet => emptyInstance;
 
   let removeAll (transient: t): t =>
     transient |> Transient.update removeAllImpl;
@@ -203,7 +187,7 @@ let addAll (iter: Iterable.t int) (set: t): t =>
   set |> mutate |> Transient.addAll iter |> Transient.persist;
 
 let from (iter: Iterable.t int): t =>
-  empty |> addAll iter;
+  emptyInstance |> addAll iter;
 
 let intersect (this: t) (that: t): t =>
   /* FIXME: Improve this implementation */

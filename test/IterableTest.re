@@ -214,7 +214,7 @@ let test = describe "Iterable" [
       |> Iterable.find (fun i => i ===2)
       |> Expect.toBeEqualToSomeOfInt 2;
 
-    IntRange.empty
+    IntRange.empty()
       |> IntRange.toIterable
       |> Iterable.find (fun i => i ===2)
       |> Expect.toBeEqualToNoneOfInt;
@@ -239,7 +239,7 @@ let test = describe "Iterable" [
       |> Iterable.first
       |> Expect.toBeEqualToSomeOfInt 0;
 
-    IntRange.empty
+    IntRange.empty ()
       |> IntRange.toIterable
       |> Iterable.first
       |> Expect.toBeEqualToNoneOfInt;

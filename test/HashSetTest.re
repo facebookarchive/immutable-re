@@ -10,7 +10,7 @@
 open Immutable;
 open ReUnit.Test;
 
-let module HashIntSet: Set.Persistent.S with type a = int = {
+let module HashIntSet: PersistentSetTester.S = {
   type a = int;
   type t = HashSet.t a;
 
@@ -18,7 +18,7 @@ let module HashIntSet: Set.Persistent.S with type a = int = {
   let addAll = HashSet.addAll;
   let contains = HashSet.contains;
   let count = HashSet.count;
-  let empty = HashSet.emptyWith
+  let empty () => HashSet.emptyWith
     hash::(fun i => i)
     comparator::Comparator.int;
   let equals = HashSet.equals;
@@ -41,7 +41,7 @@ let module HashIntSet: Set.Persistent.S with type a = int = {
 
 let badHashFunction i => i mod 100;
 
-let module BadHashIntSet: Set.Persistent.S with type a = int = {
+let module BadHashIntSet: PersistentSetTester.S = {
   type a = int;
   type t = HashSet.t a;
 
@@ -49,7 +49,7 @@ let module BadHashIntSet: Set.Persistent.S with type a = int = {
   let addAll = HashSet.addAll;
   let contains = HashSet.contains;
   let count = HashSet.count;
-  let empty = HashSet.emptyWith
+  let empty () => HashSet.emptyWith
     hash::badHashFunction
     comparator::Comparator.int;
   let equals = HashSet.equals;

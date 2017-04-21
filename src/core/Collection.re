@@ -7,24 +7,24 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Functions.Operators;
-
-let module Ops = {
-  type t 'a 'collection = {
-    count: 'collection => int,
-    toIterable: 'collection => Iterable.t 'a,
-    toSequence: 'collection => Sequence.t 'a,
-  };
+type s 'collection 'a = {
+  count: 'collection => int,
+  reduce: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'collection => 'acc,
+  toIterable: 'collection => Iterable.t 'a,
+  toSequence: 'collection => Sequence.t 'a,
 };
 
 type t 'a =
   | Empty
-  | Collection 'collection (Ops.t 'a 'collection): t 'a;
+  | Instance 'collection (s 'collection 'a): t 'a;
 
 let count (collection: t 'a): int => switch collection {
   | Empty => 0
-  | Collection collection { count } => count collection
+  | Instance collection { count } => count collection
 };
+
+let create (impl: s 'collection 'a) (instance: 'collection): (t 'a) =>
+  Instance instance impl;
 
 let empty (): (t 'a) => Empty;
 
@@ -34,22 +34,127 @@ let isEmpty (collection: t 'a): bool =>
 let isNotEmpty (collection: t 'a): bool =>
   (count collection) !== 0;
 
-let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
-  | Empty => Iterable.empty ()
-  | Collection collection { toIterable } => toIterable collection
-};
-
-let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
-  | Empty => Sequence.empty ()
-  | Collection collection { toSequence } => toSequence collection
-};
-
 let reduce
     while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    (collection: t 'a): 'acc =>
-  collection |> toIterable |> Iterable.reduce while_::predicate f acc;
+    (collection: t 'a): 'acc => switch collection {
+  | Empty => acc
+  | Instance collection { reduce } =>
+      collection |> reduce while_::predicate f acc;
+};
+
+let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
+  | Empty => Iterable.empty ()
+  | Instance collection { toIterable } => toIterable collection
+};
 
 let toCollection (collection: t 'a): (t 'a) =>
   collection;
+
+let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
+  | Empty => Sequence.empty ()
+  | Instance collection { toSequence } => toSequence collection
+};
+
+type collection 'a = t 'a;
+
+module type S = {
+  type a;
+  type t;
+
+  include Iterable.S with type a := a and type t := t;
+
+  let count: t => int;
+  let isEmpty: t => bool;
+  let isNotEmpty: t => bool;
+  let toCollection: t => collection a;
+  let toSequence: t => (Sequence.t a);
+};
+
+module type S1 = {
+  type t 'a;
+
+  include Iterable.S1 with type t 'a := t 'a;
+
+  let count: (t 'a) => int;
+  let isEmpty: (t 'a) => bool;
+  let isNotEmpty: (t 'a) => bool;
+  let toCollection: (t 'a) => (collection 'a);
+  let toSequence: (t 'a) => (Sequence.t 'a);
+};
+
+let module Make = fun (Base: {
+  type a;
+  type t;
+
+  let count: t => int;
+  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toSequence: t => Sequence.t a;
+}) => ({
+  include Base;
+
+  let isEmpty (collection: t): bool =>
+    (count collection) === 0;
+
+  let isNotEmpty (collection: t): bool =>
+    (count collection) !== 0;
+
+  include (Iterable.Make {
+    type nonrec a = a;
+    type nonrec t = t;
+
+    let isEmpty = isEmpty;
+    let reduce = reduce;
+  }: Iterable.S with type t := t and type a := a);
+
+  let collectionBase: s t a = {
+    count,
+    reduce: Base.reduce,
+    toIterable,
+    toSequence,
+  };
+
+  let toCollection (collection: t): (collection a) =>
+    if (isEmpty collection) (empty ())
+    else Instance collection collectionBase;
+
+}: S with type t := Base.t and type a := Base.a);
+
+let module Make1 = fun (Base: {
+  type t 'a;
+
+  let count: t 'a => int;
+  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t 'a;
+}) => ({
+  include Base;
+
+  let isEmpty (collection: t 'a): bool =>
+    (count collection) === 0;
+
+  let isNotEmpty (collection: t 'a): bool =>
+    (count collection) !== 0;
+
+  include (Iterable.Make1 {
+    type nonrec t 'a = t 'a;
+
+    let isEmpty = isEmpty;
+    let reduce = reduce;
+  }: Iterable.S1 with type t 'a := t 'a);
+
+  let toSequence (collection: t 'a): (Sequence.t 'a) =>
+    if (isEmpty collection) (Sequence.empty ())
+    else (Base.toSequence collection);
+
+  let collectionBase: s (t 'a) 'a = {
+    count,
+    reduce: Base.reduce,
+    toIterable,
+    toSequence,
+  };
+
+  let toCollection (collection: t 'a): (collection 'a) =>
+    if (isEmpty collection) (empty ())
+    else Instance collection collectionBase;
+}: S1 with type t 'a := Base.t 'a);
