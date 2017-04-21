@@ -58,14 +58,12 @@ let reverse (deque: t 'a): (t 'a) => switch deque {
   | Ascending vector => Descending vector
   | Descending vector => Ascending vector
 };
-
 include (SequentialCollection.Make1 {
   type nonrec t 'a = t 'a;
 
   let count (deque: t 'a): int => switch deque {
     | Ascending vector
     | Descending vector => Vector.count vector
-  };
 
   let first (deque: t 'a): (option 'a) => switch deque {
     | Ascending vector => vector |> Vector.first

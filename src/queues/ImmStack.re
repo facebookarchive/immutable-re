@@ -41,6 +41,7 @@ let fromList (list: list 'a): (t 'a) =>
 let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
+
 include (SequentialCollection.Make1 {
   type nonrec t 'a = t 'a;
 

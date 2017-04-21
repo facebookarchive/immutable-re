@@ -11,7 +11,40 @@ open Functions.Operators;
 
 type t 'a = array 'a;
 
-let count (arr: t 'a): int => Array.length arr;
+include (Collection.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let count (arr: t 'a): int => Array.length arr;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (arr: t 'a): 'acc => {
+    let arrCount = count arr;
+    let rec loop acc index =>
+      if (index < arrCount) {
+        let next = arr.(index);
+
+        if (predicate acc next) {
+          let acc = f acc arr.(index);
+          loop acc (index + 1);
+        }
+        else acc
+      }
+      else acc;
+
+    loop acc 0;
+  };
+
+  let toSequence (arr: t 'a): (Sequence.t 'a) => {
+    let arrCount = count arr;
+    let rec loop index => fun () =>
+      if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
+      else Sequence.Completed;
+    loop 0;
+  };
+}: Collection.S1 with type t 'a := t 'a);
 
 let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
   arr.(index);

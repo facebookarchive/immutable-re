@@ -85,7 +85,7 @@ let module Make = fun (Comparable: Comparable.S) => {
 
     let firstOrRaise ({ tree }: t): a =>
       AVLTreeSet.firstOrRaise tree;
-
+    
     let reduce
         while_::(predicate: 'acc => a => bool)
         (f: 'acc => a => 'acc)
