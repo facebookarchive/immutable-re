@@ -296,12 +296,16 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     if (isEmpty map) (SequentialCollection.empty ())
     else SequentialCollection.create (sequentialKeyCollectionBase ()) map;
 
-  let navigableKeyCollectionOps (): NavigableCollection.Ops.t k (t 'v) => {
+  let navigableKeyCollectionBase (): NavigableCollection.s (t 'v) k => {
     count,
     first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     last: lastKey,
     lastOrRaise: lastKeyOrRaise,
+    reduce: fun while_::predicate reducer acc map =>
+      map |> keys |> Iterable.reduce while_::predicate reducer acc,
+    reduceReversed: fun while_::predicate reducer acc map =>
+      map |> keysReversed |> Iterable.reduce while_::predicate reducer acc,
     toCollection: toKeyCollection,
     toSequentialCollection: toSequentialKeyCollection,
     toIterable: toKeyedIterable >> KeyedIterable.keys,
@@ -312,7 +316,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let toNavigableKeyCollection (map: t 'v): (NavigableCollection.t k) =>
     if (isEmpty map) (NavigableCollection.empty ())
-    else NavigableCollection.NavigableCollection map (navigableKeyCollectionOps ());
+    else NavigableCollection.Instance map (navigableKeyCollectionBase ());
 
   let navigableKeySetOps (): NavigableSet.Ops.t k (t 'v) => {
     contains: containsKey,

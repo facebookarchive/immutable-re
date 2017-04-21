@@ -27,16 +27,6 @@ let addLast (value: 'a) (deque: t 'a): (t 'a) => switch deque {
       Descending (vector |> Vector.addFirst value);
 };
 
-let last (deque: t 'a): (option 'a) => switch deque {
-  | Ascending vector => vector |> Vector.last
-  | Descending vector => vector |> Vector.first
-};
-
-let lastOrRaise (deque: t 'a): 'a => switch deque {
-  | Ascending vector => Vector.lastOrRaise vector
-  | Descending vector => Vector.firstOrRaise vector
-};
-
 let removeFirstOrRaise (deque: t 'a): (t 'a) => switch deque {
   | Ascending vector =>
       Ascending (Vector.removeFirstOrRaise vector)
@@ -58,7 +48,8 @@ let reverse (deque: t 'a): (t 'a) => switch deque {
   | Ascending vector => Descending vector
   | Descending vector => Ascending vector
 };
-include (SequentialCollection.Make1 {
+
+include (NavigableCollection.Make1 {
   type nonrec t 'a = t 'a;
 
   let count (deque: t 'a): int => switch deque {
@@ -76,6 +67,16 @@ include (SequentialCollection.Make1 {
     | Descending vector => Vector.lastOrRaise vector
   };
 
+  let last (deque: t 'a): (option 'a) => switch deque {
+    | Ascending vector => vector |> Vector.last
+    | Descending vector => vector |> Vector.first
+  };
+
+  let lastOrRaise (deque: t 'a): 'a => switch deque {
+    | Ascending vector => Vector.lastOrRaise vector
+    | Descending vector => Vector.firstOrRaise vector
+  };
+
   let reduce
       while_::(predicate: 'acc => 'a => bool)
       (f: 'acc => 'a => 'acc)
@@ -85,58 +86,27 @@ include (SequentialCollection.Make1 {
     | Descending vector => vector |> Vector.reduceReversed while_::predicate f acc;
   };
 
+  let reduceReversed
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (deque: t 'a): 'acc => switch deque {
+    | Ascending vector => vector |> Vector.reduceReversed while_::predicate f acc;
+    | Descending vector => vector |> Vector.reduce while_::predicate f acc;
+  };
+
   let toSequence (deque: t 'a): (Sequence.t 'a) => switch deque {
     | Ascending vector => vector |> Vector.toSequence
     | Descending vector => vector |> Vector.toSequenceReversed;
   };
-}: SequentialCollection.S1 with type t 'a := t 'a);
 
-let reduceReversedImpl
-    while_::(predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (deque: t 'a): 'acc => switch deque {
-  | Ascending vector => vector |> Vector.reduceReversed while_::predicate f acc;
-  | Descending vector => vector |> Vector.reduce while_::predicate f acc;
-};
-
-let reduceReversed
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (deque: t 'a): 'acc =>
-  reduceReversedImpl while_::predicate f acc deque;
+  let toSequenceReversed (deque: t 'a): (Sequence.t 'a) => switch deque {
+    | Ascending vector => vector |> Vector.toSequenceReversed
+    | Descending vector => vector |> Vector.toSequence;
+  };
+}: NavigableCollection.S1 with type t 'a := t 'a);
 
 let removeAll (_: t 'a): (t 'a) => empty ();
-
-let iterableReversedBase: Iterable.s (t 'a) 'a = { reduce: reduceReversedImpl };
-
-let toIterableReversed (deque: t 'a): (Iterable.t 'a) =>
-  if (isEmpty deque) (Iterable.empty ())
-  else Iterable.create iterableReversedBase deque;
-
-let toSequenceReversed (deque: t 'a): (Sequence.t 'a) => switch deque {
-  | Ascending vector => vector |> Vector.toSequenceReversed
-  | Descending vector => vector |> Vector.toSequence;
-};
-
-let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  last,
-  lastOrRaise,
-  toCollection,
-  toSequentialCollection,
-  toIterable,
-  toIterableReversed,
-  toSequence,
-  toSequenceReversed,
-};
-
-let toNavigableCollection (deque: t 'a): (NavigableCollection.t 'a) =>
-  if (isEmpty deque) (NavigableCollection.empty ())
-  else NavigableCollection.NavigableCollection deque navCollectionOps;
 
 let module Transient = {
   type deque 'a = t 'a;

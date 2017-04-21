@@ -135,33 +135,6 @@ let module SequentialCollection = {
 let module NavigableCollection = {
   include NavigableCollection;
 
-  module type S = {
-    type a;
-    type t;
-
-    include SequentialCollection.S with type a := a and type t := t;
-
-    let last: t => (option a);
-    let lastOrRaise: t => a;
-    let reduceReversed: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-    let toIterableReversed: t => (Iterable.t a);
-    let toNavigableCollection: t => (NavigableCollection.t a);
-    let toSequenceReversed: t => (Sequence.t a);
-  };
-
-  module type S1 = {
-    type t 'a;
-
-    include SequentialCollection.S1 with type t 'a := t 'a;
-
-    let last: (t 'a) => (option 'a);
-    let lastOrRaise: (t 'a) => 'a;
-    let reduceReversed: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-    let toIterableReversed: t 'a => (Iterable.t 'a);
-    let toNavigableCollection: (t 'a) => (NavigableCollection.t 'a);
-    let toSequenceReversed: (t 'a) => (Sequence.t 'a);
-  };
-
   let module Persistent = {
     module type S1 = {
       type t 'a;
@@ -187,7 +160,6 @@ let module NavigableCollection = {
       let removeLastOrRaise: (t 'a) => (t 'a);
     };
   };
-
 };
 
 let module Set = {

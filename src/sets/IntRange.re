@@ -42,15 +42,9 @@ let contains (value: int) ({ count, start }: t): bool =>
 let equals (this: t) (that: t): bool =>
   this.start === that.start && this.count === that.count;
 
-let last ({ count, start }: t): (option int) =>
-  if (count === 0) None
-  else (start + count - 1) |> Option.return;
 
-let lastOrRaise ({ count, start }: t): int =>
-  if (count === 0) (failwith "empty")
-  else start + count - 1;
 
-include (SequentialCollection.Make {
+include (NavigableCollection.Make {
   type nonrec a = int;
   type nonrec t = t;
 
@@ -63,6 +57,14 @@ include (SequentialCollection.Make {
   let firstOrRaise ({ count, start }: t): int =>
     if (count === 0) (failwith "empty")
     else start;
+
+  let last ({ count, start }: t): (option int) =>
+    if (count === 0) None
+    else (start + count - 1) |> Option.return;
+
+  let lastOrRaise ({ count, start }: t): int =>
+    if (count === 0) (failwith "empty")
+    else start + count - 1;
 
   let reduce
       while_::(predicate: 'acc => int => bool)
@@ -79,69 +81,38 @@ include (SequentialCollection.Make {
     recurse predicate f start count acc;
   };
 
+  let reduceReversed
+      while_::(predicate: 'acc => int => bool)
+      (f: 'acc => int => 'acc)
+      (acc: 'acc)
+      ({ count, start }: t): 'acc => {
+    let rec recurse predicate f start count acc =>
+      if (count === 0) acc
+      else if (predicate acc start |> not) acc
+      else {
+        let acc = f acc start;
+        recurse predicate f (start - 1) (count - 1) acc;
+      };
+    recurse predicate f (start + count - 1) count acc;
+  };
+
   let toSequence ({ count, start }: t): (Sequence.t int) => {
     let rec recurse start count => fun () =>
       if (count === 0) Sequence.Completed
       else Sequence.Next start (recurse (start + 1) (count - 1));
     recurse start count
   };
-}: SequentialCollection.S with type t := t and type a := a);
 
-let reduceReversedImpl
-    while_::(predicate: 'acc => int => bool)
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    ({ count, start }: t): 'acc => {
-  let rec recurse predicate f start count acc =>
-    if (count === 0) acc
-    else if (predicate acc start |> not) acc
-    else {
-      let acc = f acc start;
-      recurse predicate f (start - 1) (count - 1) acc;
-    };
-  recurse predicate f (start + count - 1) count acc;
-};
-
-let reduceReversed
-    while_::(predicate: 'acc => int => bool)=Functions.alwaysTrue2
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    (set: t): 'acc =>
-  reduceReversedImpl while_::predicate f acc set;
+  let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
+    let rec recurse start count => fun () =>
+      if (count === 0) Sequence.Completed
+      else Sequence.Next start (recurse (start - 1) (count - 1));
+    recurse (start + count - 1) count
+  };
+}: NavigableCollection.S with type t := t and type a := a);
 
 let hash ({ start, count }: t): int =>
   start + count;
-
-let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
-  let rec recurse start count => fun () =>
-    if (count === 0) Sequence.Completed
-    else Sequence.Next start (recurse (start - 1) (count - 1));
-  recurse (start + count - 1) count
-};
-
-let iterableReversedBase: Iterable.s t int = { reduce: reduceReversedImpl };
-
-let toIterableReversed (set: t): (Iterable.t int) =>
-  if (isEmpty set) (Iterable.empty ())
-  else Iterable.create iterableReversedBase set;
-
-let navCollectionOps: NavigableCollection.Ops.t int t = {
-  count,
-  first,
-  firstOrRaise,
-  last,
-  lastOrRaise,
-  toCollection,
-  toSequentialCollection,
-  toIterable,
-  toIterableReversed,
-  toSequence,
-  toSequenceReversed,
-};
-
-let toNavigableCollection (set: t): (NavigableCollection.t int) =>
-  if (isEmpty set) (NavigableCollection.empty ())
-  else NavigableCollection.NavigableCollection set navCollectionOps;
 
 let setOps: ImmSet.Ops.t int t = {
   contains,

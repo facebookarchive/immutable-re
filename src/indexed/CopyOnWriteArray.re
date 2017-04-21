@@ -11,40 +11,7 @@ open Functions.Operators;
 
 type t 'a = array 'a;
 
-include (Collection.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let count (arr: t 'a): int => Array.length arr;
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (arr: t 'a): 'acc => {
-    let arrCount = count arr;
-    let rec loop acc index =>
-      if (index < arrCount) {
-        let next = arr.(index);
-
-        if (predicate acc next) {
-          let acc = f acc arr.(index);
-          loop acc (index + 1);
-        }
-        else acc
-      }
-      else acc;
-
-    loop acc 0;
-  };
-
-  let toSequence (arr: t 'a): (Sequence.t 'a) => {
-    let arrCount = count arr;
-    let rec loop index => fun () =>
-      if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
-      else Sequence.Completed;
-    loop 0;
-  };
-}: Collection.S1 with type t 'a := t 'a);
+let count (arr: t 'a): int => Array.length arr;
 
 let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
   arr.(index);
@@ -54,7 +21,13 @@ let get (index: int) (arr: t 'a): (option 'a) =>
 
 let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
 
-include (SequentialCollection.Make1 {
+let lastIndexOrRaise (arr: t 'a): int => {
+  let lastIndex = count arr - 1;
+  if (lastIndex >= 0) lastIndex
+  else failwith "empty";
+};
+
+include (NavigableCollection.Make1 {
   type nonrec t 'a = t 'a;
 
   let count = count;
@@ -62,6 +35,17 @@ include (SequentialCollection.Make1 {
   let first (arr: t 'a): (option 'a) => get 0 arr;
 
   let firstOrRaise (arr: t 'a): 'a => getOrRaise 0 arr;
+
+  let last (arr: t 'a): (option 'a) => {
+    let lastIndex = count arr - 1;
+    if (lastIndex >= 0) (get lastIndex arr)
+    else None;
+  };
+
+  let lastOrRaise (arr: t 'a): 'a => {
+    let lastIndex = count arr - 1;
+    arr.(lastIndex)
+  };
 
   let reduce
       while_::(predicate: 'acc => 'a => bool)
@@ -84,6 +68,27 @@ include (SequentialCollection.Make1 {
     loop acc 0;
   };
 
+  let reduceReversed
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (arr: t 'a): 'acc => {
+    let arrCount = count arr;
+    let rec loop acc index =>
+      if (index >= 0) {
+        let next = arr.(index);
+
+        if (predicate acc next) {
+          let acc = f acc arr.(index);
+          loop acc (index - 1);
+        }
+        else acc
+      }
+      else acc;
+
+    loop acc (arrCount - 1);
+  };
+
   let toSequence (arr: t 'a): (Sequence.t 'a) => {
     let arrCount = count arr;
     let rec loop index => fun () =>
@@ -91,7 +96,14 @@ include (SequentialCollection.Make1 {
       else Sequence.Completed;
     loop 0;
   };
-}: SequentialCollection.S1 with type t 'a := t 'a);
+
+  let toSequenceReversed (arr: t 'a): (Sequence.t 'a) => {
+    let rec loop index => fun () =>
+      if (index < 0) Sequence.Completed
+      else Sequence.Next arr.(index) (loop (index - 1));
+    loop (count arr - 1);
+  };
+}: NavigableCollection.S1 with type t 'a := t 'a);
 
 let addFirst (item: 'a) (arr: t 'a): (t 'a) => {
   let count = count arr;
@@ -110,23 +122,6 @@ let addLast (item: 'a) (arr: t 'a): (t 'a) => {
 };
 
 let empty (): (t 'a) => [||];
-
-let lastIndexOrRaise (arr: t 'a): int => {
-  let lastIndex = count arr - 1;
-  if (lastIndex >= 0) lastIndex
-  else failwith "empty";
-};
-
-let last (arr: t 'a): (option 'a) => {
-  let lastIndex = count arr - 1;
-  if (lastIndex >= 0) (get lastIndex arr)
-  else None;
-};
-
-let lastOrRaise (arr: t 'a): 'a => {
-  let lastIndex = count arr - 1;
-  arr.(lastIndex)
-};
 
 let init = Array.init;
 
@@ -170,34 +165,6 @@ let reduceWithIndex
     (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
     (arr: t 'a): 'acc => reduceWithIndexImpl while_::predicate f acc arr;
-
-let reduceReversedImpl
-    while_::(predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (arr: t 'a): 'acc => {
-  let arrCount = count arr;
-  let rec loop acc index =>
-    if (index >= 0) {
-      let next = arr.(index);
-
-      if (predicate acc next) {
-        let acc = f acc arr.(index);
-        loop acc (index - 1);
-      }
-      else acc
-    }
-    else acc;
-
-  loop acc (arrCount - 1);
-};
-
-let reduceReversed
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (arr: t 'a): 'acc =>
-  reduceReversedImpl while_::predicate f acc arr;
 
 let reduceReversedWithIndexImpl
     while_::(predicate: 'acc => int => 'a => bool)
@@ -270,12 +237,6 @@ let take (newCount: int) (arr: t 'a): (t 'a) => {
   else Array.sub arr 0 newCount;
 };
 
-let iterableReversedBase: Iterable.s (array 'a) 'a = { reduce: reduceReversedImpl };
-
-let toIterableReversed (arr: t 'a): (Iterable.t 'a) =>
-  if (isEmpty arr) (Iterable.empty ())
-  else Iterable.create iterableReversedBase arr;
-
 let keyedIterableBase: KeyedIterable.s (array 'a) int 'a = { reduce: reduceWithIndexImpl };
 
 let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
@@ -287,15 +248,6 @@ let keyedIterableReversedBase: KeyedIterable.s (array 'a) int 'a = { reduce: red
 let toKeyedIterableReversed (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) (KeyedIterable.empty ())
   else KeyedIterable.create keyedIterableReversedBase arr;
-
-let toSequenceReversed (arr: t 'a): (Sequence.t 'a) =>
-  if (isEmpty arr) (Sequence.empty ())
-  else {
-    let rec loop index => fun () =>
-      if (index < 0) Sequence.Completed
-      else Sequence.Next arr.(index) (loop (index - 1));
-    loop (count arr - 1);
-  };
 
 let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   let arrCount = count arr;
@@ -359,24 +311,6 @@ let mapOps (): ImmMap.Ops.t int 'v (t 'v) => {
 let toMap (arr: t 'a): (ImmMap.t int 'a) =>
   if (isEmpty arr) (ImmMap.empty ())
   else ImmMap.Map arr (mapOps ());
-
-let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  last,
-  lastOrRaise,
-  toCollection,
-  toSequentialCollection,
-  toIterable,
-  toIterableReversed,
-  toSequence,
-  toSequenceReversed,
-};
-
-let toNavigableCollection (arr: t 'a): (NavigableCollection.t 'a) =>
-  if (isEmpty arr) (NavigableCollection.empty ())
-  else NavigableCollection.NavigableCollection arr navCollectionOps;
 
 let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v) =>  {
   containsKey,

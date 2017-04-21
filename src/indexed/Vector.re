@@ -608,8 +608,6 @@ let addLast value => PersistentVector.addLast Transient.Owner.none value;
 let count = PersistentVector.count;
 let get = PersistentVector.get;
 let getOrRaise = PersistentVector.getOrRaise;
-let last = PersistentVector.last;
-let lastOrRaise = PersistentVector.lastOrRaise;
 let removeAll = PersistentVector.removeAll;
 let removeFirstOrRaise vector => PersistentVector.removeFirstOrRaise Transient.Owner.none vector;
 let removeLastOrRaise vector => PersistentVector.removeLastOrRaise Transient.Owner.none vector;
@@ -828,68 +826,6 @@ let reduceWhile
   acc;
 };
 
-include (SequentialCollection.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let count = count;
-
-  let first = PersistentVector.first;
-
-  let firstOrRaise = PersistentVector.firstOrRaise;
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (vec: t 'a): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (reduceImpl f acc vec)
-    else (reduceWhile while_::predicate f acc vec);
-
-  let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
-    CopyOnWriteArray.toSequence left,
-    IndexedTrie.toSequence middle,
-    CopyOnWriteArray.toSequence right,
-  ];
-}: SequentialCollection.S1 with type t 'a := t 'a);
-
-let reduceWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref 0;
-  let reducer acc next => {
-    let acc = f acc !index next;
-    index := !index + 1;
-    acc
-  };
-
-  reduce reducer acc vec;
-};
-
-let reduceWithIndexWhile
-    while_::(predicate: 'acc => int => 'a => bool)
-    (f: 'acc => int => 'a => 'acc)
-    (acc: 'acc)
-    (vec: t 'a): 'acc => {
-  /* kind of a hack, but a lot less code to write */
-  let index = ref 0;
-  let reducer acc next => {
-    let acc = f acc !index next;
-    index := !index + 1;
-    acc
-  };
-
-  let predicate acc next => predicate acc !index next;
-
-  reduceWhile while_::predicate reducer acc vec;
-};
-
-let reduceWithIndex
-    while_::(predicate: 'acc => int => 'a => bool)=Functions.alwaysTrue3
-    (f: 'acc => int => 'a => 'acc)
-    (acc: 'acc)
-    (vec: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue3) (reduceWithIndexImpl f acc vec)
-  else (reduceWithIndexWhile while_::predicate f acc vec);
-
 let reduceReversedImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
   let acc = right |> CopyOnWriteArray.reduceReversed f acc;
   let acc = middle |> IndexedTrie.reduceReversed f acc;
@@ -933,13 +869,86 @@ let reduceReversedWhile
   acc;
 };
 
-let reduceReversed
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
+include (NavigableCollection.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let count = count;
+
+  let first = PersistentVector.first;
+
+  let firstOrRaise = PersistentVector.firstOrRaise;
+
+  let last = PersistentVector.last;
+
+  let lastOrRaise = PersistentVector.lastOrRaise;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (vec: t 'a): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (reduceImpl f acc vec)
+    else (reduceWhile while_::predicate f acc vec);
+
+
+  let reduceReversed
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (vec: t 'a): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (reduceReversedImpl f acc vec)
+    else (reduceReversedWhile while_::predicate f acc vec);
+
+  let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
+    CopyOnWriteArray.toSequence left,
+    IndexedTrie.toSequence middle,
+    CopyOnWriteArray.toSequence right,
+  ];
+
+  let toSequenceReversed ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
+    CopyOnWriteArray.toSequenceReversed right,
+    IndexedTrie.toSequenceReversed middle,
+    CopyOnWriteArray.toSequenceReversed left,
+  ];
+}: NavigableCollection.S1 with type t 'a := t 'a);
+
+let reduceWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref 0;
+  let reducer acc next => {
+    let acc = f acc !index next;
+    index := !index + 1;
+    acc
+  };
+
+  reduce reducer acc vec;
+};
+
+let reduceWithIndexWhile
+    while_::(predicate: 'acc => int => 'a => bool)
+    (f: 'acc => int => 'a => 'acc)
+    (acc: 'acc)
+    (vec: t 'a): 'acc => {
+  /* kind of a hack, but a lot less code to write */
+  let index = ref 0;
+  let reducer acc next => {
+    let acc = f acc !index next;
+    index := !index + 1;
+    acc
+  };
+
+  let predicate acc next => predicate acc !index next;
+
+  reduceWhile while_::predicate reducer acc vec;
+};
+
+let reduceWithIndex
+    while_::(predicate: 'acc => int => 'a => bool)=Functions.alwaysTrue3
+    (f: 'acc => int => 'a => 'acc)
     (acc: 'acc)
     (vec: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue2) (reduceReversedImpl f acc vec)
-  else (reduceReversedWhile while_::predicate f acc vec);
+  if (predicate === Functions.alwaysTrue3) (reduceWithIndexImpl f acc vec)
+  else (reduceWithIndexWhile while_::predicate f acc vec);
 
 let reduceReversedWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec: t 'a): 'acc => {
   /* kind of a hack, but a lot less code to write */
@@ -950,7 +959,7 @@ let reduceReversedWithIndexImpl (f: 'acc => int => 'a => 'acc) (acc: 'acc) (vec:
     acc
   };
 
-  reduceReversed reducer acc vec;
+  reduceReversedImpl reducer acc vec;
 };
 
 let reduceReversedWithIndexWhile
@@ -1067,12 +1076,6 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) =
   else vec |> skip skipCount |> take takeCount;
 };
 
-let iterableReversedBase: Iterable.s (t 'a) 'a = { reduce: reduceReversedWhile };
-
-let toIterableReversed (vec: t 'a): (Iterable.t 'a) =>
-  if (isEmpty vec) (Iterable.empty ())
-  else Iterable.create iterableReversedBase vec;
-
 let keyedIterableBase: KeyedIterable.s (t 'a) int 'a = { reduce: reduceWithIndexWhile };
 
 let toKeyedIterable (vec: t 'a): (KeyedIterable.t int 'a) =>
@@ -1087,12 +1090,6 @@ let toKeyedIterableReversed (vec: t 'a): (KeyedIterable.t int 'a) =>
 
 let containsKey (index: int) (arr: t 'a): bool =>
     index >= 0 && index < count arr;
-
-let toSequenceReversed ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
-  CopyOnWriteArray.toSequenceReversed right,
-  IndexedTrie.toSequenceReversed middle,
-  CopyOnWriteArray.toSequenceReversed left,
-];
 
 let toSequenceWithIndex (vec: t 'a): (Sequence.t (int, 'a)) => Sequence.zip2With
   (fun a b => (a, b))
@@ -1147,24 +1144,6 @@ let mapOps (): ImmMap.Ops.t int 'a (t 'a) => {
 let toMap (vec: t 'a): (ImmMap.t int 'a) =>
   if (isEmpty vec) (ImmMap.empty ())
   else ImmMap.Map vec (mapOps ());
-
-let navCollectionOps: NavigableCollection.Ops.t 'a (t 'a) = {
-  count,
-  first,
-  firstOrRaise,
-  last,
-  lastOrRaise,
-  toCollection,
-  toSequentialCollection,
-  toIterable,
-  toIterableReversed,
-  toSequence,
-  toSequenceReversed,
-};
-
-let toNavigableCollection (set: (t 'a)): (NavigableCollection.t 'a) =>
-  if (isEmpty set) (NavigableCollection.empty ())
-  else NavigableCollection.NavigableCollection set navCollectionOps;
 
 let navigableKeyedCollectionOps (): NavigableKeyedCollection.Ops.t int 'v (t 'v) =>  {
   containsKey,

@@ -74,7 +74,7 @@ let module Make = fun (Comparable: Comparable.S) => {
   let from (iter: Iterable.t a): t =>
     emptyInstance |> addAll iter;
 
-  include (SequentialCollection.Make {
+  include (NavigableCollection.Make {
     type nonrec a = a;
     type nonrec t = t;
 
@@ -85,7 +85,13 @@ let module Make = fun (Comparable: Comparable.S) => {
 
     let firstOrRaise ({ tree }: t): a =>
       AVLTreeSet.firstOrRaise tree;
-    
+
+    let last ({ tree }: t): (option a) =>
+      AVLTreeSet.last tree;
+
+    let lastOrRaise ({ tree }: t): a =>
+      AVLTreeSet.lastOrRaise tree;
+
     let reduce
         while_::(predicate: 'acc => a => bool)
         (f: 'acc => a => 'acc)
@@ -94,24 +100,20 @@ let module Make = fun (Comparable: Comparable.S) => {
       if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduce f acc tree)
       else (AVLTreeSet.reduceWhile predicate f acc tree);
 
+    let reduceReversed
+        while_::(predicate: 'acc => a => bool)
+        (f: 'acc => a => 'acc)
+        (acc: 'acc)
+        ({ tree }: t): 'acc =>
+      if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduceReversed f acc tree)
+      else (AVLTreeSet.reduceReversedWhile predicate f acc tree);
+
     let toSequence ({ tree }: t): (Sequence.t a) =>
       tree |> AVLTreeSet.toSequence;
-  }: SequentialCollection.S with type t:= t and type a:= a);
 
-  let reduceReversedImpl
-      while_::(predicate: 'acc => a => bool)
-      (f: 'acc => a => 'acc)
-      (acc: 'acc)
-      ({ tree }: t): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduceReversed f acc tree)
-    else (AVLTreeSet.reduceReversedWhile predicate f acc tree);
-
-  let reduceReversed
-      while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
-      (f: 'acc => a => 'acc)
-      (acc: 'acc)
-      (set: t): 'acc =>
-    reduceReversedImpl while_::predicate f acc set;
+    let toSequenceReversed ({ tree }: t): (Sequence.t a) =>
+      tree |> AVLTreeSet.toSequenceReversed;
+  }: NavigableCollection.S with type t:= t and type a:= a);
 
   let remove (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = AVLTreeSet.remove comparator x tree;
@@ -130,9 +132,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     let newTree = AVLTreeSet.removeLastOrRaise tree;
     { count: count - 1, tree: newTree }
   };
-
-  let toSequenceReversed ({ tree }: t): (Sequence.t a) =>
-    tree |> AVLTreeSet.toSequenceReversed;
 
   let rec compareWith
       (valueCompare: Comparator.t 'a)
@@ -172,36 +171,6 @@ let module Make = fun (Comparable: Comparable.S) => {
         (toSequence this)
         (toSequence that)
     );
-
-  let last ({ tree }: t): (option a) =>
-    AVLTreeSet.last tree;
-
-  let lastOrRaise ({ tree }: t): a =>
-    AVLTreeSet.lastOrRaise tree;
-
-  let iterableReversedBase: Iterable.s t a = { reduce: reduceReversedImpl };
-
-  let toIterableReversed (set: t): (Iterable.t a) =>
-    if (isEmpty set) (Iterable.empty ())
-    else Iterable.create iterableReversedBase set;
-
-  let navCollectionOps: NavigableCollection.Ops.t a t = {
-    count,
-    first,
-    firstOrRaise,
-    last,
-    lastOrRaise,
-    toCollection,
-    toSequentialCollection,
-    toIterable,
-    toIterableReversed,
-    toSequence,
-    toSequenceReversed,
-  };
-
-  let toNavigableCollection (set: t): (NavigableCollection.t a) =>
-    if (isEmpty set) (NavigableCollection.empty ())
-    else NavigableCollection.NavigableCollection set navCollectionOps;
 
   let setOps: ImmSet.Ops.t a t = {
     contains,
