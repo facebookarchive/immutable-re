@@ -131,7 +131,7 @@ let toNavigableCollection (indexed: t 'a): (NavigableCollection.t 'a) => switch 
 
 let toNavigableCollectionReversed (indexed: t 'a): (NavigableCollection.t 'a) => switch indexed {
   | Empty => NavigableCollection.empty ()
-  | Indexed indexed { toNavigableCollection } => toNavigableCollection indexed
+  | Indexed indexed { toNavigableCollectionReversed } => toNavigableCollectionReversed indexed
 };
 
 let toNavigableKeyedCollection (indexed: t 'a): (NavigableKeyedCollection.t int 'a) => switch indexed {
