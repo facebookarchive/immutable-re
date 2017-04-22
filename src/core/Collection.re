@@ -23,9 +23,6 @@ let count (collection: t 'a): int => switch collection {
   | Instance collection { count } => count collection
 };
 
-let create (impl: s 'collection 'a) (instance: 'collection): (t 'a) =>
-  Instance instance impl;
-
 let empty (): (t 'a) => Empty;
 
 let isEmpty (collection: t 'a): bool =>

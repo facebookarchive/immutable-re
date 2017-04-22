@@ -133,7 +133,7 @@ let keyCollectionBase (): Collection.s (t 'k _) 'k  => {
 
 let toKeyCollection (map: t 'k _): Collection.t 'k =>
   if (isEmpty map) (Collection.empty ())
-  else Collection.create (keyCollectionBase ()) map;
+  else Collection.Instance map (keyCollectionBase ());
 
 let keySetOps (): ImmSet.s (t 'k _) 'k => {
   contains: containsKey,

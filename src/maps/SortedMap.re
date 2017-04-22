@@ -242,13 +242,13 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let toIterableReversed (map: t 'v): (Iterable.t (k, 'v)) =>
     if (isEmpty map) (Iterable.empty ())
-    else Iterable.create iterableReversedBase map;
+    else Iterable.Instance map iterableReversedBase;
 
   let keyedIterableReversedBase: KeyedIterable.s (t 'v) k 'v = { reduce: reduceReversedImpl };
 
   let toKeyedIterableReversed (map: t 'v): (KeyedIterable.t k 'v) =>
     if (isEmpty map) (KeyedIterable.empty ())
-    else KeyedIterable.create keyedIterableReversedBase map;
+    else KeyedIterable.Instance map keyedIterableReversedBase;
 
   let keysReversed (map: t 'v): (Iterable.t k) =>
     map |> toKeyedIterableReversed |> KeyedIterable.keys;
@@ -267,7 +267,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
   let toKeyCollection (map: t _): Collection.t k =>
     if (isEmpty map) (Collection.empty ())
-    else (Collection.create (keyCollectionOps ()) map);
+    else Collection.Instance map (keyCollectionOps ());
 
   let keySetBase (): ImmSet.s (t 'v) k => {
     contains: containsKey,

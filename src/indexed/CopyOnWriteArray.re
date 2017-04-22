@@ -241,13 +241,13 @@ let keyedIterableBase: KeyedIterable.s (array 'a) int 'a = { reduce: reduceWithI
 
 let toKeyedIterable (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) (KeyedIterable.empty ())
-  else KeyedIterable.create keyedIterableBase arr;
+  else KeyedIterable.Instance arr keyedIterableBase;
 
 let keyedIterableReversedBase: KeyedIterable.s (array 'a) int 'a = { reduce: reduceReversedWithIndexImpl };
 
 let toKeyedIterableReversed (arr: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty arr) (KeyedIterable.empty ())
-  else KeyedIterable.create keyedIterableReversedBase arr;
+  else KeyedIterable.Instance arr keyedIterableReversedBase;
 
 let toSequenceWithIndex (arr: t 'a): (Sequence.t (int, 'a)) => {
   let arrCount = count arr;

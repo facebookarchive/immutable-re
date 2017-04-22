@@ -106,7 +106,7 @@ let keyCollectionBase (): Collection.s (t 'v) int => {
 
 let toKeyCollection (map: t 'v): Collection.t int =>
   if (isEmpty map) (Collection.empty ())
-  else Collection.create (keyCollectionBase ()) map;
+  else Collection.Instance map (keyCollectionBase ());
 
 let keySetOps: ImmSet.s (t 'v) int = {
   contains: containsKey,

@@ -17,9 +17,6 @@ type t 'a =
   | Empty
   | Instance 'iterable (s 'iterable 'a): t 'a;
 
-let create (impl: s 'iterable 'a) (instance: 'iterable): (t 'a) =>
-  Instance instance impl;
-
 let empty (): t 'a => Empty;
 
 let reduce
@@ -51,7 +48,7 @@ let concatImpl: s 'iterable 'a  = {
 
 let concat (iters: list (t 'a)): (t 'a) => switch iters {
   | [] => empty ()
-  | _ => create concatImpl iters
+  | _ => Instance iters concatImpl
 };
 
 let increment acc _ => acc + 1;
@@ -64,7 +61,7 @@ let deferImpl: s 'iterable 'a = {
 };
 
 let defer (provider: unit => (t 'a)): (t 'a) =>
-  create deferImpl provider;
+  Instance provider deferImpl;
 
 let distinctUntilChangedWith
     (equals: Equality.t 'a)
@@ -158,7 +155,7 @@ let flattenImpl: s 'iterable 'a = {
 
 let flatten (iters: t (t 'a)): (t 'a) => switch iters {
   | Empty => Empty
-  | Instance _ _ => create flattenImpl iters
+  | Instance _ _ => Instance iters flattenImpl
 };
 
 let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (iterable: t 'a) =>
@@ -187,7 +184,7 @@ let generateImpl: s ('acc => 'acc, 'acc) 'acc  = {
 };
 
 let generate (gen: 'acc => 'acc) (initialValue: 'acc): (t 'acc) =>
-  create generateImpl (gen, initialValue);
+  Instance (gen, initialValue) generateImpl;
 
 let listAddFirstAll (iter: t 'a) (list: list 'a): (list 'a) =>
   iter |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
@@ -226,7 +223,7 @@ let listImpl: s (list 'a) 'a = { reduce: ImmList.reduceImpl };
 
 let ofList (list: list 'a): (t 'a) => switch list {
   | [] => Empty
-  | _ => create listImpl list
+  | _ => Instance list listImpl
 };
 
 let returnImpl: s 'a 'a = {
@@ -235,7 +232,7 @@ let returnImpl: s 'a 'a = {
     else acc
 };
 
-let return (value: 'a): (t 'a) => create returnImpl value;
+let return (value: 'a): (t 'a) => Instance value returnImpl;
 
 let scan
     (reducer: 'acc => 'a => 'acc)
@@ -408,7 +405,7 @@ let module Make = fun (Base: {
 
   let toIterable (iterable: t): (iterable 'a) =>
     if (isEmpty iterable) (empty ())
-    else create iterableBase iterable;
+    else Instance iterable iterableBase;
 }: S with type t := Base.t and type a := Base.a);
 
 let module Make1 = fun (Base: {
@@ -430,5 +427,5 @@ let module Make1 = fun (Base: {
 
   let toIterable (iterable: t 'a): (iterable 'a) =>
     if (isEmpty iterable) (empty ())
-    else create iterableBase iterable;
+    else Instance iterable iterableBase;
 }: S1 with type t 'a := Base.t 'a);

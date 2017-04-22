@@ -1080,13 +1080,13 @@ let keyedIterableBase: KeyedIterable.s (t 'a) int 'a = { reduce: reduceWithIndex
 
 let toKeyedIterable (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
-  else KeyedIterable.create keyedIterableBase vec;
+  else KeyedIterable.Instance vec keyedIterableBase;
 
 let keyedIterableReversedBase: KeyedIterable.s (t 'a) int 'a = { reduce: reduceReversedWithIndexWhile };
 
 let toKeyedIterableReversed (vec: t 'a): (KeyedIterable.t int 'a) =>
   if (isEmpty vec) (KeyedIterable.empty ())
-  else KeyedIterable.create keyedIterableReversedBase vec;
+  else KeyedIterable.Instance vec keyedIterableReversedBase;
 
 let containsKey (index: int) (arr: t 'a): bool =>
     index >= 0 && index < count arr;

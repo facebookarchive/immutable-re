@@ -15,9 +15,6 @@ type t 'k 'v =
   | Empty
   | Instance 'keyedIterable (s 'keyedIterable 'k 'v): t 'k 'v;
 
-let create (impl: s 'keyedIterable 'k 'v) (instance: 'keyedIterable): (t 'k 'v) =>
-  Instance instance impl;
-
 let empty (): t 'k 'v => Empty;
 
 let reduce
@@ -48,7 +45,7 @@ let concatImpl: s 'keyedIterable 'k 'v = {
 
 let concat (iters: list (t 'k 'v)): (t 'k 'v) => switch iters {
   | [] => Empty
-  | _ => create concatImpl iters
+  | _ => Instance iters concatImpl
 };
 
 let increment acc _ _ => acc + 1;
@@ -61,7 +58,7 @@ let deferImpl: s 'keyedIterable 'k 'v = {
 };
 
 let defer (provider: unit => (t 'k 'v)): (t 'k 'v) =>
-  create deferImpl provider;
+  Instance provider deferImpl;
 
 let distinctUntilChangedWith
     keyEquals::(keyEquals: Equality.t 'k)
@@ -240,7 +237,7 @@ let keysImpl: Iterable.s (t 'k _) 'k = {
 
 let keys (iter: t 'k 'v): (Iterable.t 'k) => switch iter {
   | Empty => Iterable.empty ()
-  | Instance _ _ => Iterable.create keysImpl iter
+  | Instance _ _ => Iterable.Instance iter keysImpl
 };
 
 let map
@@ -455,7 +452,7 @@ let toIterableImpl: Iterable.s (t 'k 'v) ('k, 'v) = {
 
 let toIterable (iter: t 'k 'v): (Iterable.t ('k, 'v)) => switch iter {
   | Empty => Iterable.empty ()
-  | Instance _ _ => Iterable.create toIterableImpl iter
+  | Instance _ _ => Iterable.Instance iter toIterableImpl
 };
 
 let toKeyedIterable (iter: t 'k 'v): (t 'k 'v) => iter;
@@ -469,7 +466,7 @@ let valuesImpl: Iterable.s (t _ 'v) 'v = {
 
 let values (iter: t 'k 'v): (Iterable.t 'v) => switch iter {
   | Empty => Iterable.empty ()
-  | Instance _ _ => Iterable.create valuesImpl iter
+  | Instance _ _ => Iterable.Instance iter valuesImpl
 };
 
 type keyedIterable 'k 'v = t 'k 'v;
@@ -564,25 +561,25 @@ let module Make1 = fun (Base: {
 
   let keys (keyedIterable: t _): Iterable.t k =>
     if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.create keysIterableBase keyedIterable;
+    else Iterable.Instance keyedIterable keysIterableBase;
 
   let iterableBase: Iterable.s (t 'v) (k, 'v) = { reduce: reduceKeyValuePairs };
 
   let toIterable (keyedIterable: t _): (Iterable.t (k, 'v)) =>
     if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.create iterableBase keyedIterable;
+    else Iterable.Instance keyedIterable iterableBase;
 
   let keyedIterableBase: s (t 'v) k 'v = { reduce: Base.reduce };
 
   let toKeyedIterable (keyedIterable: t _): (keyedIterable k 'v) =>
     if (isEmpty keyedIterable) (empty ())
-    else create keyedIterableBase keyedIterable;
+    else Instance keyedIterable keyedIterableBase;
 
   let valuesIterableBase: Iterable.s (t 'v) 'v = { reduce: reduceValues };
 
   let values (keyedIterable: t _): Iterable.t 'v =>
     if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.create valuesIterableBase keyedIterable;
+    else Iterable.Instance keyedIterable valuesIterableBase;
 
 }: S1 with type t 'v := Base.t 'v and type k := Base.k);
 
@@ -654,21 +651,21 @@ let module Make2 = fun (Base: {
   let keysIterableBase: Iterable.s (t 'k 'v) 'k = { reduce: reduceKeys };
 
   let keys (keyedIterable: t 'k _): Iterable.t 'k =>
-    Iterable.create keysIterableBase keyedIterable;
+    Iterable.Instance keyedIterable keysIterableBase;
 
   let iterableBase: Iterable.s (t 'k 'v) ('k, 'v) = { reduce: reduceKeyValuePairs };
 
   let toIterable (keyedIterable: t 'k _): (Iterable.t ('k, 'v)) =>
-    Iterable.create iterableBase keyedIterable;
+    Iterable.Instance keyedIterable iterableBase;
 
   let keyedIterableBase: s (t 'k 'v) 'k 'v = { reduce: Base.reduce };
 
   let toKeyedIterable (keyedIterable: t 'k _): (keyedIterable 'k 'v) =>
-    create keyedIterableBase keyedIterable;
+    Instance keyedIterable keyedIterableBase;
 
   let valuesIterableBase: Iterable.s (t 'k 'v) 'v = { reduce: reduceValues };
 
   let values (keyedIterable: t 'k _): Iterable.t 'v =>
-    Iterable.create valuesIterableBase keyedIterable;
+    Iterable.Instance keyedIterable valuesIterableBase;
 
 }: S2 with type t 'k 'v := Base.t 'k 'v);
