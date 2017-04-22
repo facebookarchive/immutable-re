@@ -10,6 +10,7 @@
 module type S = {
   type a;
   type t;
+
   let compare: Comparator.t t;
   let first: t => option a;
   let firstOrRaise: t => a;
@@ -18,10 +19,15 @@ module type S = {
   let lastOrRaise: t => a;
   let reduceReversed:
     while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toCollectionReversed: t => Collection.t a;
   let toIterableReversed: t => Iterable.t a;
   let toNavigableCollection: t => NavigableCollection.t a;
+  let toNavigableCollectionReversed: t => NavigableCollection.t a;
   let toSequenceReversed: t => Sequence.t a;
+  let toSequentialCollectionReversed: t => SequentialCollection.t a;
   let toNavigableSet: t => NavigableSet.t a;
+  let toNavigableSetReversed: t => NavigableSet.t a;
+  let toSetReversed: t => ImmSet.t a;
   let equals: Equality.t t;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;

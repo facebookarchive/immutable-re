@@ -698,14 +698,20 @@ let module rec NavigableCollection: {
      *  from the right most value, accumulating the result.
      */
 
+    let toCollectionReversed: t => (Collection.t a);
+
     let toIterableReversed: t => (Iterable.t a);
 
     let toNavigableCollection: t => (NavigableCollection.t a);
+
+    let toNavigableCollectionReversed: t => (NavigableCollection.t a);
 
     let toSequenceReversed: t => (Sequence.t a);
     /* [toSequenceReversed collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
      */
+
+    let toSequentialCollectionReversed: t => (SequentialCollection.t a);
   };
 
   module type S1 = {
@@ -727,14 +733,20 @@ let module rec NavigableCollection: {
      *  from the right most value, accumulating the result.
      */
 
+    let toCollectionReversed: t 'a => (Collection.t 'a);
+
     let toIterableReversed: t 'a => (Iterable.t 'a);
 
     let toNavigableCollection: (t 'a) => (NavigableCollection.t 'a);
+
+    let toNavigableCollectionReversed: (t 'a) => (NavigableCollection.t 'a);
 
     let toSequenceReversed: (t 'a) => (Sequence.t 'a);
     /* [toSequenceReversed collection] returns an Sequence that can be used to enumerate
      * the values in [collection] from right to left.
      */
+
+    let toSequentialCollectionReversed: t 'a => (SequentialCollection.t 'a);
   };
 
   type t 'a;
@@ -1028,6 +1040,10 @@ let module rec NavigableSet: {
 
     let toNavigableSet: t => NavigableSet.t a;
     /** [toNavigableSet set] returns a NavigableSet view of [set]. */
+
+    let toNavigableSetReversed: t => NavigableSet.t a;
+
+    let toSetReversed: t => Set.t a;
   };
 
   module type S1 = {
@@ -1040,6 +1056,10 @@ let module rec NavigableSet: {
 
     let toNavigableSet: (t 'a) => NavigableSet.t 'a;
     /** [toNavigableSet set] returns a NavigableSet view of [set]. */
+
+    let toNavigableSetReversed: t 'a => NavigableSet.t 'a;
+
+    let toSetReversed: t 'a => Set.t 'a;
   };
 
   type t 'a;
