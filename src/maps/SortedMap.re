@@ -309,11 +309,17 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     reduceReversed: fun while_::predicate reducer acc map =>
       map |> keysReversed |> Iterable.reduce while_::predicate reducer acc,
     toCollection: toKeyCollection,
+    /* FIXME: This is broken, will fix in future diff */
+    toCollectionReversed: toKeyCollection,
     toSequentialCollection: toSequentialKeyCollection,
     toIterable: toKeyedIterable >> KeyedIterable.keys,
     toIterableReversed: toKeyedIterable >> KeyedIterable.keys,
+    /* FIXME: This is broken, will fix in future diff */
+    toNavigableCollectionReversed: fun _ => failwith "unimplemented",
     toSequence: toKeySequence,
     toSequenceReversed: toKeySequenceReversed,
+    /* FIXME: This is broken, will fix in future diff */
+    toSequentialCollectionReversed: toSequentialKeyCollection,
   };
 
   let toNavigableKeyCollection (map: t 'v): (NavigableCollection.t k) =>
@@ -332,13 +338,23 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     reduceReversed: fun while_::predicate reducer acc map =>
       map |> keysReversed |> Iterable.reduce while_::predicate reducer acc,
     toCollection: toKeyCollection,
+    /* FIXME: This is broken, will fix in future diff */
+    toCollectionReversed: fun _ => failwith "unimplemented",
     toIterable: toKeyedIterable >> KeyedIterable.keys,
     toIterableReversed: toKeyedIterable >> KeyedIterable.keys,
     toNavigableCollection: toNavigableKeyCollection,
+    /* FIXME: This is broken, will fix in future diff */
+    toNavigableCollectionReversed: fun _ => failwith "unimplemented",
+    /* FIXME: This is broken, will fix in future diff */
+    toNavigableSetReversed: fun _ => failwith "unimplemented",
     toSequence: toKeySequence,
     toSequenceReversed: toKeySequenceReversed,
     toSequentialCollection: toSequentialKeyCollection,
+    /* FIXME: This is broken, will fix in future diff */
+    toSequentialCollectionReversed: fun _ => failwith "unimplemented",
     toSet: keySet,
+    /* FIXME: This is broken, will fix in future diff */
+    toSetReversed: keySet,
   };
 
   let navigableKeySet (map: t 'v): (NavigableSet.t k) =>

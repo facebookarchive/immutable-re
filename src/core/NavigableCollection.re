@@ -16,14 +16,17 @@ type s 'collection 'a = {
   reduce: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'collection => 'acc,
   reduceReversed: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'collection => 'acc,
   toCollection: 'collection => Collection.t 'a,
+  toCollectionReversed: 'collection => Collection.t 'a,
   toIterable: 'collection => Iterable.t 'a,
   toIterableReversed: 'collection => Iterable.t 'a,
+  toNavigableCollectionReversed: 'collection => t 'a,
   toSequence: 'collection => Sequence.t 'a,
   toSequenceReversed: 'collection => Sequence.t 'a,
   toSequentialCollection: 'collection => SequentialCollection.t 'a,
-};
+  toSequentialCollectionReversed: 'collection => SequentialCollection.t 'a,
+}
 
-type t 'a =
+and t 'a =
   | Empty
   | Instance 'collection (s 'collection 'a): t 'a;
 
@@ -85,6 +88,11 @@ let toCollection (collection: t 'a): (Collection.t 'a) => switch collection {
   | Instance collection { toCollection } => toCollection collection
 };
 
+let toCollectionReversed (collection: t 'a): (Collection.t 'a) => switch collection {
+  | Empty => Collection.empty ()
+  | Instance collection { toCollectionReversed } => toCollectionReversed collection
+};
+
 let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
   | Empty => Iterable.empty ()
   | Instance collection { toIterable } => toIterable collection
@@ -93,6 +101,15 @@ let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
 let toIterableReversed (collection: t 'a): (Iterable.t 'a) => switch collection {
   | Empty => Iterable.empty ()
   | Instance collection { toIterableReversed } => toIterableReversed collection
+};
+
+let toNavigableCollection (collection: t 'a): (t 'a) =>
+  collection;
+
+let toNavigableCollectionReversed (collection: t 'a): (t 'a) => switch collection {
+  | Empty => Empty
+  | Instance collection { toNavigableCollectionReversed } =>
+      toNavigableCollectionReversed collection
 };
 
 let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
@@ -110,8 +127,10 @@ let toSequentialCollection (collection: t 'a): (SequentialCollection.t 'a) => sw
   | Instance collection { toSequentialCollection } => toSequentialCollection collection
 };
 
-let toNavigableCollection (collection: t 'a): (t 'a) =>
-  collection;
+let toSequentialCollectionReversed (collection: t 'a): (SequentialCollection.t 'a) => switch collection {
+  | Empty => SequentialCollection.empty ()
+  | Instance collection { toSequentialCollectionReversed } => toSequentialCollectionReversed collection
+};
 
 type navigableCollection 'a = t 'a;
 
@@ -124,9 +143,12 @@ module type S = {
   let last: t => (option a);
   let lastOrRaise: t => a;
   let reduceReversed: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toCollectionReversed: t => (Collection.t a);
   let toIterableReversed: t => (Iterable.t a);
   let toNavigableCollection: t => (navigableCollection a);
+  let toNavigableCollectionReversed: t => (navigableCollection a);
   let toSequenceReversed: t => (Sequence.t a);
+  let toSequentialCollectionReversed: t => (SequentialCollection.t a);
 };
 
 module type S1 = {
@@ -137,9 +159,12 @@ module type S1 = {
   let last: (t 'a) => (option 'a);
   let lastOrRaise: (t 'a) => 'a;
   let reduceReversed: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let toCollectionReversed: t 'a => (Collection.t 'a);
   let toIterableReversed: t 'a => (Iterable.t 'a);
   let toNavigableCollection: (t 'a) => (navigableCollection 'a);
+  let toNavigableCollectionReversed: (t 'a) => (navigableCollection 'a);
   let toSequenceReversed: (t 'a) => (Sequence.t 'a);
+  let toSequentialCollectionReversed: t 'a => (SequentialCollection.t 'a);
 };
 
 let module Make = fun (Base: {
@@ -173,7 +198,36 @@ let module Make = fun (Base: {
     if (isEmpty collection) (Iterable.empty ())
     else Iterable.create iterableReversedBase collection;
 
-  let navigableCollectionBase: s t a = {
+  let toSequenceReversed (collection: t): (Sequence.t 'a) =>
+    if (isEmpty collection) (Sequence.empty ())
+    else (Base.toSequenceReversed collection);
+
+  let collectionReversedBase: Collection.s t a = {
+    count,
+    reduce: Base.reduceReversed,
+    toIterable: toIterableReversed,
+    toSequence: toSequenceReversed,
+  };
+
+  let toCollectionReversed (collection: t): (Collection.t 'a) =>
+    if (isEmpty collection) (Collection.empty ())
+    else Collection.Instance collection collectionReversedBase;
+
+  let sequentialCollectionReversedBase: SequentialCollection.s t a = {
+    count,
+    first: last,
+    firstOrRaise: lastOrRaise,
+    reduce: Base.reduceReversed,
+    toCollection: toCollectionReversed,
+    toIterable: toIterableReversed,
+    toSequence: toSequenceReversed,
+  };
+
+  let toSequentialCollectionReversed (collection: t): (SequentialCollection.t 'a) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection sequentialCollectionReversedBase;
+
+  let rec navigableCollectionBase: s t a = {
     count,
     first,
     firstOrRaise,
@@ -182,16 +236,42 @@ let module Make = fun (Base: {
     reduce: Base.reduce,
     reduceReversed: Base.reduceReversed,
     toCollection,
+    toCollectionReversed,
     toIterable,
     toIterableReversed,
+    toNavigableCollectionReversed,
     toSequence,
     toSequenceReversed,
     toSequentialCollection,
-  };
+    toSequentialCollectionReversed,
+  }
 
-  let toNavigableCollection (collection: t): (navigableCollection a) =>
+  and navigableCollectionReversedBase: s t a = {
+    count,
+    first: last,
+    firstOrRaise: lastOrRaise,
+    last: first,
+    lastOrRaise: firstOrRaise,
+    reduce: Base.reduceReversed,
+    reduceReversed: Base.reduce,
+    toCollection: toCollectionReversed,
+    toCollectionReversed: toCollection,
+    toIterable: toIterableReversed,
+    toIterableReversed: toIterable,
+    toNavigableCollectionReversed: toNavigableCollection,
+    toSequence: toSequenceReversed,
+    toSequenceReversed: toSequence,
+    toSequentialCollection: toSequentialCollectionReversed,
+    toSequentialCollectionReversed: toSequentialCollection,
+  }
+
+  and toNavigableCollection (collection: t): (navigableCollection a) =>
     if (isEmpty collection) (empty ())
-    else Instance collection navigableCollectionBase;
+    else Instance collection navigableCollectionBase
+
+  and toNavigableCollectionReversed  (collection: t): (navigableCollection a) =>
+    if (isEmpty collection) (empty ())
+    else Instance collection navigableCollectionReversedBase;
 
 }: S with type t := Base.t and type a := Base.a);
 
@@ -229,7 +309,32 @@ let module Make1 = fun (Base: {
     if (isEmpty collection) (Sequence.empty ())
     else (Base.toSequenceReversed collection);
 
-  let navigableCollectionBase: s (t 'a) 'a = {
+  let collectionReversedBase: Collection.s (t 'a) 'a = {
+    count,
+    reduce: Base.reduceReversed,
+    toIterable: toIterableReversed,
+    toSequence: toSequenceReversed,
+  };
+
+  let toCollectionReversed (collection: t 'a): (Collection.t 'a) =>
+    if (isEmpty collection) (Collection.empty ())
+    else Collection.Instance collection collectionReversedBase;
+
+  let sequentialCollectionReversedBase: SequentialCollection.s (t 'a) 'a = {
+    count,
+    first: last,
+    firstOrRaise: lastOrRaise,
+    reduce: Base.reduceReversed,
+    toCollection: toCollectionReversed,
+    toIterable: toIterableReversed,
+    toSequence: toSequenceReversed,
+  };
+
+  let toSequentialCollectionReversed (collection: t 'a): (SequentialCollection.t 'a) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection sequentialCollectionReversedBase;
+
+  let rec navigableCollectionBase: s (t 'a) 'a = {
     count,
     first,
     firstOrRaise,
@@ -238,15 +343,41 @@ let module Make1 = fun (Base: {
     reduce: Base.reduce,
     reduceReversed: Base.reduceReversed,
     toCollection,
+    toCollectionReversed,
     toIterable,
     toIterableReversed,
+    toNavigableCollectionReversed,
     toSequence,
     toSequenceReversed,
     toSequentialCollection,
-  };
+    toSequentialCollectionReversed,
+  }
 
-  let toNavigableCollection (collection: t 'a): (navigableCollection 'a) =>
+  and navigableCollectionReversedBase: s (t 'a) 'a = {
+    count,
+    first: last,
+    firstOrRaise: lastOrRaise,
+    last: first,
+    lastOrRaise: firstOrRaise,
+    reduce: Base.reduceReversed,
+    reduceReversed: Base.reduce,
+    toCollection: toCollectionReversed,
+    toCollectionReversed: toCollection,
+    toIterable: toIterableReversed,
+    toIterableReversed: toIterable,
+    toNavigableCollectionReversed: toNavigableCollection,
+    toSequence: toSequenceReversed,
+    toSequenceReversed: toSequence,
+    toSequentialCollection: toSequentialCollectionReversed,
+    toSequentialCollectionReversed: toSequentialCollection,
+  }
+
+  and toNavigableCollection (collection: t 'a): (navigableCollection 'a) =>
     if (isEmpty collection) (empty ())
-    else Instance collection navigableCollectionBase;
+    else Instance collection navigableCollectionBase
+
+  and toNavigableCollectionReversed (collection: t 'a): (navigableCollection 'a) =>
+    if (isEmpty collection) (empty ())
+    else Instance collection navigableCollectionReversedBase
 
 }: S1 with type t 'a := Base.t 'a);

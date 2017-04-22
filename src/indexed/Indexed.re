@@ -17,7 +17,9 @@ let module Ops = {
     last: 'indexed => (option 'a),
     lastOrRaise: 'indexed => 'a,
     toCollection: 'indexed => Collection.t 'a,
+    toCollectionReversed: 'indexed => Collection.t 'a,
     toSequentialCollection: 'indexed => SequentialCollection.t 'a,
+    toSequentialCollectionReversed: 'indexed => SequentialCollection.t 'a,
     toIterable: 'indexed => Iterable.t 'a,
     toIterableReversed: 'indexed => Iterable.t 'a,
     toKeyedCollection: 'indexed => (KeyedCollection.t int 'a),
@@ -25,6 +27,7 @@ let module Ops = {
     toKeyedIterableReversed: 'indexed => (KeyedIterable.t int 'a),
     toMap: 'indexed => (ImmMap.t int 'a),
     toNavigableCollection: 'indexed => (NavigableCollection.t 'a),
+    toNavigableCollectionReversed: 'indexed => (NavigableCollection.t 'a),
     toNavigableKeyedCollection: 'indexed => (NavigableKeyedCollection.t int 'a),
     toNavigableMap: 'indexed => (NavigableMap.t int 'a),
     toSequence: 'indexed => Sequence.t 'a,
@@ -84,6 +87,11 @@ let toCollection (indexed: t 'a): (Collection.t 'a) => switch indexed {
   | Indexed indexed { toCollection } => toCollection indexed
 };
 
+let toCollectionReversed (indexed: t 'a): (Collection.t 'a) => switch indexed {
+  | Empty => Collection.empty ()
+  | Indexed indexed { toCollectionReversed } => toCollectionReversed indexed
+};
+
 let toIndexed (indexed: t 'a): (t 'a) => indexed;
 
 let toIterable (indexed: t 'a): (Iterable.t 'a) => switch indexed {
@@ -121,6 +129,11 @@ let toNavigableCollection (indexed: t 'a): (NavigableCollection.t 'a) => switch 
   | Indexed indexed { toNavigableCollection } => toNavigableCollection indexed
 };
 
+let toNavigableCollectionReversed (indexed: t 'a): (NavigableCollection.t 'a) => switch indexed {
+  | Empty => NavigableCollection.empty ()
+  | Indexed indexed { toNavigableCollectionReversed } => toNavigableCollectionReversed indexed
+};
+
 let toNavigableKeyedCollection (indexed: t 'a): (NavigableKeyedCollection.t int 'a) => switch indexed {
   | Empty => NavigableKeyedCollection.empty ()
   | Indexed indexed { toNavigableKeyedCollection } => toNavigableKeyedCollection indexed
@@ -144,6 +157,11 @@ let toSequenceReversed (indexed: t 'a): (Sequence.t 'a) => switch indexed {
 let toSequentialCollection (indexed: t 'a): (SequentialCollection.t 'a) => switch indexed {
   | Empty => SequentialCollection.empty ()
   | Indexed indexed { toSequentialCollection } => toSequentialCollection indexed
+};
+
+let toSequentialCollectionReversed (indexed: t 'a): (SequentialCollection.t 'a) => switch indexed {
+  | Empty => SequentialCollection.empty ()
+  | Indexed indexed { toSequentialCollectionReversed } => toSequentialCollectionReversed indexed
 };
 
 let reduce
