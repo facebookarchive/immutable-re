@@ -50,7 +50,6 @@ let module Make = fun (Base: {
 
   let contains: a => t => bool;
   let count: t => int;
-  let equals: t => t => bool;
   let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toSequence: t => Sequence.t a;
 }) => ({
@@ -65,6 +64,12 @@ let module Make = fun (Base: {
     toSequence,
   };
 
+  let equals (this: t) (that: t): bool =>
+    if (this === that) true
+    else if ((count this) !== (count that)) false
+    else this |> reduce
+      while_::(fun acc _ => acc) (fun _ => flip contains that) true;
+
   let toSet (set: t): (set a) =>
     if (isEmpty set) Empty
     else Instance set setBase;
@@ -76,7 +81,6 @@ let module Make1 = fun (Base: {
 
   let contains: 'a => t 'a => bool;
   let count: t 'a => int;
-  let equals: t 'a => t 'a => bool;
   let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let toSequence: t 'a => Sequence.t 'a;
 }) => ({
@@ -90,6 +94,12 @@ let module Make1 = fun (Base: {
     reduce: Base.reduce,
     toSequence,
   };
+
+  let equals (this: t 'a) (that: t 'a): bool =>
+    if (this === that) true
+    else if ((count this) !== (count that)) false
+    else this |> reduce
+      while_::(fun acc _ => acc) (fun _ => flip contains that) true;
 
   let toSet (set: t 'a): (set 'a) =>
     if (isEmpty set) Empty
@@ -110,9 +120,6 @@ include(Make1 {
     | Instance set { count } => count set
   };
 
-  let equals (this: t 'a) (that: t 'a): bool =>
-    failwith "not implemented";
-
   let reduce
       while_::(predicate: 'acc => 'a => bool)
       (f: 'acc => 'a => 'acc)
@@ -130,14 +137,6 @@ include(Make1 {
 }: S1 with type t 'a := t 'a);
 
 let empty (): (t 'a) => Empty;
-
-let equals (this: t 'a) (that: t 'a): bool => switch (this, that) {
-  | (Instance _ _, Instance _ _) =>
-      if (this === that) true
-      else if ((count this) !== (count that)) false
-      else this |> toIterable |> Iterable.every (flip contains that)
-  | _ => false
-};
 
 let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
   this |> toIterable |> Iterable.filter (flip contains that);

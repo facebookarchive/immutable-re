@@ -14,6 +14,27 @@ type t = {
   root: BitmapTrieIntSet.t,
 };
 
+include (ImmSet.Make {
+  type nonrec a = int;
+  type nonrec t = t;
+
+  let contains (value: int) ({ root }: t): bool =>
+    root |> BitmapTrieIntSet.contains 0 value;
+
+  let count ({ count }: t): int => count;
+
+  let reduce
+      while_::(predicate: 'acc => int => bool)
+      (f: 'acc => int => 'acc)
+      (acc: 'acc)
+      ({ root }: t): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
+    else (BitmapTrieIntSet.reduceWhile predicate f acc root);
+
+  let toSequence ({ root }: t): (Sequence.t int) =>
+    root |> BitmapTrieIntSet.toSequence;
+}: ImmSet.S with type t := t and type a := a);
+
 let add (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.add
     BitmapTrieIntSet.updateLevelNodePersistent
@@ -29,6 +50,9 @@ let emptyInstance: t = { count: 0, root: BitmapTrieIntSet.Empty };
 
 let empty (): t => emptyInstance;
 
+let hash (set: t): int => set
+  |> reduce (fun acc next => acc + next) 0;
+
 let remove (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.remove
     BitmapTrieIntSet.updateLevelNodePersistent
@@ -42,36 +66,6 @@ let remove (value: int) ({ count, root } as set: t): t => {
 
 let removeAll (_: t): t =>
   emptyInstance;
-
-include (ImmSet.Make {
-  type nonrec a = int;
-  type nonrec t = t;
-
-  let contains (value: int) ({ root }: t): bool =>
-    root |> BitmapTrieIntSet.contains 0 value;
-
-  let count ({ count }: t): int => count;
-
-  let equals (this: t) (that: t): bool =>
-    failwith "not implemented";
-
-  let reduce
-      while_::(predicate: 'acc => int => bool)
-      (f: 'acc => int => 'acc)
-      (acc: 'acc)
-      ({ root }: t): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
-    else (BitmapTrieIntSet.reduceWhile predicate f acc root);
-
-  let toSequence ({ root }: t): (Sequence.t int) =>
-    root |> BitmapTrieIntSet.toSequence;
-}: ImmSet.S with type t := t and type a := a);
-
-let equals (this: t) (that: t): bool =>
-  ImmSet.equals (toSet this) (toSet that);
-
-let hash (set: t): int => set
-  |> reduce (fun acc next => acc + next) 0;
 
 let module Transient = {
   type a = int;

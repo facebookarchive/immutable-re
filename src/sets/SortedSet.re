@@ -62,21 +62,6 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let comparator = Comparable.compare;
 
-  let add (x: a) ({ count, tree } as sortedSet: t): t => {
-    let newTree = tree |> AVLTreeSet.add comparator x;
-    if (newTree === tree) sortedSet else { count: count + 1, tree: newTree }
-  };
-
-  let addAll (iter: Iterable.t a) (sortedSet: t): t => iter
-    |> Iterable.reduce (fun acc next => acc |> add next) sortedSet;
-
-  let emptyInstance: t = { count: 0, tree: AVLTreeSet.Empty };
-
-  let empty (): t => emptyInstance;
-
-  let from (iter: Iterable.t a): t =>
-    emptyInstance |> addAll iter;
-
   include (NavigableSet.Make {
     type nonrec a = a;
     type nonrec t = t;
@@ -85,9 +70,6 @@ let module Make = fun (Comparable: Comparable.S) => {
       AVLTreeSet.contains comparator x tree;
 
     let count ({ count }: t): int => count;
-
-    let equals (this: t) (that: t): bool =>
-      failwith "not implemented";
 
     let first ({ tree }: t): (option a) =>
       AVLTreeSet.first tree;
@@ -124,23 +106,13 @@ let module Make = fun (Comparable: Comparable.S) => {
       tree |> AVLTreeSet.toSequenceReversed;
   }: NavigableSet.S with type t:= t and type a:= a);
 
-  let remove (x: a) ({ count, tree } as sortedSet: t): t => {
-    let newTree = AVLTreeSet.remove comparator x tree;
-    if (newTree === tree) sortedSet else { count: count - 1, tree: newTree }
+  let add (x: a) ({ count, tree } as sortedSet: t): t => {
+    let newTree = tree |> AVLTreeSet.add comparator x;
+    if (newTree === tree) sortedSet else { count: count + 1, tree: newTree }
   };
 
-  let removeAll (_: t): t =>
-    emptyInstance;
-
-  let removeFirstOrRaise ({ count, tree }: t): t => {
-    let newTree = AVLTreeSet.removeFirstOrRaise tree;
-    { count: count - 1, tree: newTree }
-  };
-
-  let removeLastOrRaise ({ count, tree }: t): t => {
-    let newTree = AVLTreeSet.removeLastOrRaise tree;
-    { count: count - 1, tree: newTree }
-  };
+  let addAll (iter: Iterable.t a) (sortedSet: t): t => iter
+    |> Iterable.reduce (fun acc next => acc |> add next) sortedSet;
 
   let rec compareWith
       (valueCompare: Comparator.t 'a)
@@ -161,6 +133,10 @@ let module Make = fun (Comparable: Comparable.S) => {
       (that: t): Ordering.t =>
     compareWith comparator (toSequence this) (toSequence that);
 
+  let emptyInstance: t = { count: 0, tree: AVLTreeSet.Empty };
+
+  let empty (): t => emptyInstance;
+
   let rec equalsWith (equality: Equality.t 'a) (this: Sequence.t 'a) (that: Sequence.t 'a): bool =>
     (that === this) ||
     switch (that (), this ()) {
@@ -171,15 +147,32 @@ let module Make = fun (Comparable: Comparable.S) => {
       | _ => false
     };
 
-  let equals
-      (this: t)
-      (that: t): bool =>
-    (this === that) || (
-      equalsWith
-        (Comparator.toEquality comparator)
-        (toSequence this)
-        (toSequence that)
-    );
+  let equality = Comparator.toEquality comparator;
+  let equals (this: t) (that: t): bool => equalsWith
+    equality
+    (toSequence this)
+    (toSequence that);
+
+  let from (iter: Iterable.t a): t =>
+    emptyInstance |> addAll iter;
+
+  let remove (x: a) ({ count, tree } as sortedSet: t): t => {
+    let newTree = AVLTreeSet.remove comparator x tree;
+    if (newTree === tree) sortedSet else { count: count - 1, tree: newTree }
+  };
+
+  let removeAll (_: t): t =>
+    emptyInstance;
+
+  let removeFirstOrRaise ({ count, tree }: t): t => {
+    let newTree = AVLTreeSet.removeFirstOrRaise tree;
+    { count: count - 1, tree: newTree }
+  };
+
+  let removeLastOrRaise ({ count, tree }: t): t => {
+    let newTree = AVLTreeSet.removeLastOrRaise tree;
+    { count: count - 1, tree: newTree }
+  };
 
   let intersect (this: t) (that: t): t =>
     /* FIXME: Improve this implementation */

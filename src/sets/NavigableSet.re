@@ -54,7 +54,6 @@ let module Make = fun (Base: {
 
   let contains: a => t => bool;
   let count: t => int;
-  let equals: t => t => bool;
   let first: t => (option a);
   let firstOrRaise: t => a;
   let last: t => (option a);
@@ -75,7 +74,6 @@ let module Make = fun (Base: {
 
     let contains = contains;
     let count = count;
-    let equals = equals;
     let reduce = Base.reduceReversed;
     let toSequence = toSequenceReversed;
   };
@@ -115,7 +113,6 @@ let module Make1 = fun (Base: {
 
   let contains: 'a => t 'a => bool;
   let count: t 'a => int;
-  let equals: t 'a => t 'a => bool;
   let first: t 'a => (option 'a);
   let firstOrRaise: t 'a => 'a;
   let last: t 'a => (option 'a);
@@ -135,7 +132,6 @@ let module Make1 = fun (Base: {
 
     let contains = contains;
     let count = count;
-    let equals = equals;
     let reduce = Base.reduceReversed;
     let toSequence = toSequenceReversed;
   };
@@ -182,9 +178,6 @@ include(Make1 {
     | Empty => 0
     | Instance set { count } _ => count set
   };
-
-  let equals (this: t 'a) (that: t 'a): bool =>
-    failwith "not implemented";
 
   let first (set: t 'a): (option 'a) => switch set {
     | Empty => None
@@ -238,14 +231,6 @@ include(Make1 {
 }: S1 with type t 'a := t 'a);
 
 let empty (): (t 'a) => Empty;
-
-let equals (this: t 'a) (that: t 'a): bool => switch (this, that) {
-  | (Instance _ _ _, Instance _ _ _) =>
-      if (this === that) true
-      else if ((count this) !== (count that)) false
-      else this |> toIterable |> Iterable.every (flip contains that)
-  | _ => false
-};
 
 let toNavigableSet (set: t 'a): (t 'a) => set;
 

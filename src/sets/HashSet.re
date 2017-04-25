@@ -14,6 +14,28 @@ type t 'a = {
   hash: Hash.t 'a,
 };
 
+include (ImmSet.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
+    let keyHash = hash value;
+    root |> BitmapTrieSet.contains comparator 0 keyHash value;
+  };
+
+  let count ({ count }: t 'a): int => count;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      ({ root }: t 'a): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (BitmapTrieSet.reduce f acc root)
+    else (BitmapTrieSet.reduceWhile predicate f acc root);
+
+  let toSequence ({ root }: t 'a): (Sequence.t 'a) =>
+    root |> BitmapTrieSet.toSequence;
+}: ImmSet.S1 with type t 'a := t 'a);
+
 let add (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
   let keyHash = hash value;
   let newRoot = root |> BitmapTrieSet.add
@@ -37,6 +59,9 @@ let emptyWith
   hash,
 };
 
+let hash ({ hash } as set: t 'a): int =>
+  set |> reduce (fun acc next => acc + hash next) 0;
+
 let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
   let keyHash = hash value;
   let newRoot = root |> BitmapTrieSet.remove
@@ -53,37 +78,6 @@ let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) 
 
 let removeAll ({ hash, comparator }: t 'a): (t 'a) =>
   emptyWith hash::hash comparator::comparator;
-
-include (ImmSet.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
-    let keyHash = hash value;
-    root |> BitmapTrieSet.contains comparator 0 keyHash value;
-  };
-
-  let count ({ count }: t 'a): int => count;
-
-  let equals (this: t 'a) (that: t 'a): bool =>
-    failwith "not implemented";
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'a): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (BitmapTrieSet.reduce f acc root)
-    else (BitmapTrieSet.reduceWhile predicate f acc root);
-
-  let toSequence ({ root }: t 'a): (Sequence.t 'a) =>
-    root |> BitmapTrieSet.toSequence;
-}: ImmSet.S1 with type t 'a := t 'a);
-
-let equals (this: t 'a) (that: t 'a): bool =>
-  ImmSet.equals (toSet this) (toSet that);
-
-let hash ({ hash } as set: t 'a): int =>
-  set |> reduce (fun acc next => acc + hash next) 0;
 
 let module Transient = {
   type hashSet 'a = t 'a;

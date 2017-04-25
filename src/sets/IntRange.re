@@ -14,28 +14,6 @@ type t = {
   start: int,
 };
 
-let emptyInstance: t = {
-  start: 0,
-  count: 0,
-};
-
-let empty (): t => emptyInstance;
-
-let create start::(start: int) count::(count: int): t => {
-  Preconditions.failIf "count must be >= 0" (count < 0);
-  if (count === 0) emptyInstance
-  else { start, count };
-};
-
-let compare
-    ({ count: thisCount, start: thisStart }: t)
-    ({ count: thatCount, start: thatStart }: t): Ordering.t =>
-  if (thisStart > thatStart) Ordering.greaterThan
-  else if (thisStart < thatStart) Ordering.lessThan
-  else if (thisCount > thatCount) Ordering.greaterThan
-  else if (thisCount < thatCount) Ordering.lessThan
-  else Ordering.equal;
-
 include (NavigableSet.Make {
   type nonrec a = int;
   type nonrec t = t;
@@ -44,9 +22,6 @@ include (NavigableSet.Make {
     value >= start && value < (start + count);
 
   let count ({ count }: t): int => count;
-
-  let equals (this: t) (that: t): bool =>
-    this.start === that.start && this.count === that.count;
 
   let first ({ count, start }: t): (option int) =>
     if (count === 0) None
@@ -108,6 +83,31 @@ include (NavigableSet.Make {
     recurse (start + count - 1) count
   };
 }: NavigableSet.S with type t := t and type a := a);
+
+let emptyInstance: t = {
+  start: 0,
+  count: 0,
+};
+
+let create start::(start: int) count::(count: int): t => {
+  Preconditions.failIf "count must be >= 0" (count < 0);
+  if (count === 0) emptyInstance
+  else { start, count };
+};
+
+let compare
+    ({ count: thisCount, start: thisStart }: t)
+    ({ count: thatCount, start: thatStart }: t): Ordering.t =>
+  if (thisStart > thatStart) Ordering.greaterThan
+  else if (thisStart < thatStart) Ordering.lessThan
+  else if (thisCount > thatCount) Ordering.greaterThan
+  else if (thisCount < thatCount) Ordering.lessThan
+  else Ordering.equal;
+
+let empty (): t => emptyInstance;
+
+let equals (this: t) (that: t): bool =>
+  this.start === that.start && this.count === that.count;
 
 let hash ({ start, count }: t): int =>
   start + count;
