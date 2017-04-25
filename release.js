@@ -38,8 +38,8 @@ const writeFiles = async version => {
 opam-version: "1.2"
 name: "immutable"
 version: "${ version }"
-maintainer: "Dave Bordoley <bordoley>"
-authors: [ "Dave Bordoley <bordoley>" ]
+maintainer: "Dave Bordoley <bordoley@gmail.com>"
+authors: [ "Dave Bordoley <bordoley@gmail.com>" ]
 license: "BSD"
 homepage: "https://github.com/facebookincubator/immutable-re.git"
 dev-repo: "git://github.com/facebookincubator/immutable-re.git"
@@ -49,8 +49,8 @@ build: [
   [make "build"]
 ]
 depends: [
-  "topkg"       {build >=  "0.8.1" & < "0.9"}
-  "reason"      {build >=  "1.13.3"}
+  "topkg"       {build & >= "0.8.1" & < "0.9"}
+  "reason"      {build & >= "1.13.3"}
 ]
 available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
 `;
