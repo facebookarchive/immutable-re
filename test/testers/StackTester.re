@@ -17,6 +17,7 @@ module type S1 = {
 
   let empty: unit => t 'a;
   let fromReverse: (Iterable.t 'a) => t 'a;
+  let return: 'a => t 'a;
 };
 
 let module Make = fun (Stack: S1) (Config: TesterConfig.S) => {

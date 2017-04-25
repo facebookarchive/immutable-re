@@ -10,7 +10,7 @@
 include PersistentVector;
 
 let module Transient = TransientVector;
- 
+
 let mutate = Transient.mutate;
 
 let addFirstAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
@@ -34,9 +34,6 @@ let init (count: int) (f: int => 'a): (t 'a) => IntRange.create start::0 count::
       acc |> Transient.addLast (f next)) (mutate (empty ())
     )
   |> Transient.persist;
-
-let return (value: 'a): (t 'a) =>
-  empty () |> addLast value;
 
 let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   let vectorCount = count vec;

@@ -39,9 +39,7 @@ let module Streamable = {
     let filter: ('a => bool) => (t 'a) => (t 'a);
     let flatMap: ('a => t 'b) => (t 'a) => (t 'b);
     let flatten: (t (t 'a)) => (t 'a);
-    let generate: ('a => 'a) => 'a => (t 'a);
     let map: ('a => 'b) => (t 'a) => (t 'b);
-    let return: 'a => (t 'a);
     let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
     let skip: int => (t 'a) => (t 'a);
     let skipWhile: ('a => bool) => (t 'a) => (t 'a);
@@ -112,7 +110,6 @@ let module SequentialCollection = {
 
       let addFirst: 'a => (t 'a) => (t 'a);
       let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      let return: 'a => (t 'a);
       let removeFirstOrRaise: (t 'a) => (t 'a);
     };
   };
@@ -250,11 +247,9 @@ let module KeyedStreamable = {
     let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);
     let filter: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
     let flatMap: ('kA => 'vA => t 'kB 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
-    let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
     let map: keyMapper::('kA => 'vA => 'kB) => valueMapper::('kA => 'vA => 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
     let mapKeys: ('a => 'v => 'b) => (t 'a 'v) => (t 'b 'v);
     let mapValues: ('k => 'a => 'b) => (t 'k 'a) => (t 'k 'b);
-    let return: 'k => 'v => (t 'k 'v);
     let skip: int => (t 'k 'v) => (t 'k 'v);
     let skipWhile: ('k => 'v => bool) => (t 'k 'v) => (t 'k 'v);
     let startWith: 'k => 'v => (t 'k 'v) => (t 'k 'v);

@@ -186,16 +186,10 @@ let module rec Streamable: {
      *  a new [stream].
      */
 
-    let generate: ('a => 'a) => 'a => (t 'a);
-    /** [generate f initialValue] generates the infinite Streamable [x, f(x), f(f(x)), ...] */
-
     let map: ('a => 'b) => (t 'a) => (t 'b);
     /** [map f stream] Returns a Stream whose values are the result of
      *  applying the function [f] to each value in [stream].
      */
-
-    let return: 'a => (t 'a);
-    /** [return value] returns a single value Streamable containing [value]. */
 
     let scan: ('acc => 'a => 'acc) => 'acc => (t 'a) => (t 'acc);
     /** [scan f acc stream] returns a Streamable of accumulated values resulting from the
@@ -312,10 +306,16 @@ let module rec Iterable: {
    *  side effect function [f] to each value, while [predicate] returns true
    */
 
+  let generate: ('a => 'a) => 'a => (t 'a);
+  /** [generate f initialValue] generates the infinite Iterable [x, f(x), f(f(x)), ...] */
+
   let none: ('a => bool) => (t 'a) => bool;
   /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
    *  If [iterable] is empty, returns [true].
    */
+
+  let return: 'a => (t 'a);
+  /** [return value] returns a single value Iterable containing [value]. */
 
   let some: ('a => bool) => (t 'a) => bool;
   /** [some f iterable] returns true if the predicate [f] returns true for at
@@ -340,6 +340,12 @@ let module rec Sequence: {
 
   let empty: unit => (Sequence.t 'a);
   /** Returns an empty Sequence. */
+
+  let generate: ('a => 'a) => 'a => (t 'a);
+  /** [generate f initialValue] generates the infinite Sequence [x, f(x), f(f(x)), ...] */
+
+  let return: 'a => (t 'a);
+  /** [return value] returns a single value Sequence containing [value]. */
 
   let seek: int => (Sequence.t 'a) => (Sequence.t 'a);
   /** [seek count seq] scans forward [count] values in [seq]. It is the eagerly
@@ -620,9 +626,6 @@ let module rec SequentialCollection: {
       let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
       /** [addFirstAll iter collection] returns a SequentialCollection.Persistent with the values in [iter] prepended. */
 
-      let return: 'a => (t 'a);
-      /** [return value] returns a SequentialCollection.Persistent containing a single value, [value]. */
-
       let removeFirstOrRaise: (t 'a) => (t 'a);
       /** [removeFirstOrRaise collection] returns a SequentialCollection.Persistent without
        *  the first value or raises an exception if [collection] is empty.
@@ -649,7 +652,6 @@ let module rec SequentialCollection: {
 
       let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
       /** [addFirstAll iter transient] prepends all values in [iter] to [transient]. */
-
 
       let first: (t 'a) => option 'a;
       /** [first transient] returns first value in [transient] or None. */
@@ -1132,12 +1134,6 @@ let module KeyedStreamable: {
      *  [stream], flattening the results.
      */
 
-    let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
-    /** [generate genKey gen value k v] generates an infinite KeyedStreamable
-     *  where the keys are [k, genKey(k v), genKey(genKey(k v), v1), ...]
-     *  and values are [v, genValue(k, v), genValue(k1, genValue(k, v)), ...]
-     */
-
     let map: keyMapper::('kA => 'vA => 'kB) => valueMapper::('kA => 'vA => 'vB) => (t 'kA 'vA) => (t 'kB 'vB);
     /** [map keyMapper::keyMapper valueMapper::valueMapper stream] returns a KeyedStreamable
      *  whose keys are the result applying [keyMapper] to each key, and whose values are the result
@@ -1153,9 +1149,6 @@ let module KeyedStreamable: {
     /** [mapValues mapper stream] returns a KeyedStreamable with mapper applied
      *  to each value in [stream].
      */
-
-    let return: 'k => 'v => (t 'k 'v);
-    /** [return key value] returns a KeyedStreamable containing the pair ([key], [value]). */
 
     let skip: int => (t 'k 'v) => (t 'k 'v);
     /** [skip count stream] return a KeyedStreamable which skips the first [count]
@@ -1319,10 +1312,19 @@ let module rec KeyedIterable: {
   let fromEntries: Iterable.t ('k, 'v) => (KeyedIterable.t 'k 'v);
   /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */
 
+  let generate: genKey::('k => 'v => 'k) => genValue::('k => 'v => 'v) => 'k => 'v => (t 'k 'v);
+   /** [generate genKey genValue k v] generates an infinite KeyedIterable
+    *  where the keys are [k, genKey(k v), genKey(genKey(k v), v1), ...]
+    *  and values are [v, genValue(k, v), genValue(k1, genValue(k, v)), ...]
+    */
+
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
   /** [none f keyedIterable] returns true if the predicate [f] returns false
    *  for all key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
    */
+
+  let return: 'k => 'v => (t 'k 'v);
+  /** [return key value] returns a KeyedIterable containing the pair ([key], [value]). */
 
   let scan: ('acc => 'k => 'v => 'acc) => 'acc => (KeyedIterable.t 'k 'v) => (Iterable.t 'acc);
   /** [scan f acc stream] returns a KeyedStreamable of accumulated values resulting from the
@@ -2304,6 +2306,9 @@ let module rec Deque: {
 
   let mutate: (Deque.t 'a) => (Deque.Transient.t 'a);
   /** [mutate deque] returns a Transient Deque containing the same values as [deque]. */
+
+  let return: 'a => (t 'a);
+  /** [return value] returns a Deque containing a single value, [value]. */
 };
 
 let module rec HashMap: {
@@ -2595,6 +2600,9 @@ let module rec Stack: {
 
   let fromReverse: (Iterable.t 'a) => (Stack.t 'a);
 
+  let return: 'a => (t 'a);
+  /** [return value] returns a Stack containing a single value, [value]. */
+
   let toList: (Stack.t 'a) => (list 'a);
   /** [toList stack] returns the underlying List backing the stack */
 };
@@ -2682,4 +2690,7 @@ let module rec Vector: {
 
   let mutate: (Vector.t 'a) => (Vector.Transient.t 'a);
   /** [mutate vector] returns a Transient Vector containing the same values as [set]. */
+
+  let return: 'a => (t 'a);
+  /** [return value] returns a Vector containing a single value, [value]. */
 };
