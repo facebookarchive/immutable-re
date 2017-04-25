@@ -25,11 +25,10 @@
   ],
   "repository": { "type": "git", "url" : "https://github.com/facebookincubator/immutable-re.git" },
   "dependencies": {
-    "bs-platform": "https://github.com/bloomberg/bucklescript.git"
+    "bs-platform": "^1.7.1"
   },
   "devDependencies": {
-    "reunit": "./reUnit",
-    "bs-platform": "https://github.com/bloomberg/bucklescript.git"
+    "reunit": "./reUnit"
   },
   "scripts": {
     "start": "bsb -make-world -w",
