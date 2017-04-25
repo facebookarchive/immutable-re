@@ -9,7 +9,6 @@
 
 type t 'a = 'a => 'a => bool;
 
-
 let make (compare: 'a => 'a => int) (this: 'a) (that: 'a): bool => {
   let cmp = compare this that;
   cmp === 0;

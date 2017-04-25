@@ -9,7 +9,6 @@
 
 type s 'indexed 'a = {
   count: 'indexed => int,
-  get: int => 'indexed => (option 'a),
   getOrRaise: int => 'indexed => 'a,
   reduce: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'indexed => 'acc,
   toSequence: 'indexed => Sequence.t 'a,
@@ -45,7 +44,6 @@ let module Make1 = fun (Base: {
   type t 'a;
 
   let count: t 'a => int;
-  let get: int => (t 'a) => (option 'a);
   let getOrRaise: int => (t 'a) => 'a;
   let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let reduceReversed: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
@@ -53,6 +51,12 @@ let module Make1 = fun (Base: {
   let toSequenceReversed: t 'a => Sequence.t 'a;
 }) => ({
   include Base;
+
+  let getOrRaiseFlipped (indexed: t 'a) (index: int): 'a =>
+    indexed |> getOrRaise index;
+
+  let get (index: int) (indexed: t 'a): (option 'a) =>
+    Preconditions.noneIfIndexOutOfRange (count indexed) index (getOrRaiseFlipped indexed);
 
   include (NavigableCollection.Make1 {
     include Base;
@@ -230,7 +234,6 @@ let module Make1 = fun (Base: {
 
   let indexedBase = {
     count,
-    get,
     getOrRaise,
     reduce: Base.reduce,
     toSequence,
@@ -238,8 +241,6 @@ let module Make1 = fun (Base: {
 
   let indexedReversedBase = {
     count,
-    get: fun i indexed =>
-      get (count indexed - i - 1) indexed,
     getOrRaise: fun i indexed =>
       getOrRaise (count indexed - i - 1) indexed,
     reduce: Base.reduceReversed,
@@ -261,11 +262,6 @@ include (Make1 {
   let count (indexed: t 'a): int => switch indexed {
     | Empty => 0
     | Instance indexed { count } _ => count indexed
-  };
-
-  let get (index: int) (indexed: t 'a): (option 'a) => switch indexed {
-    | Empty => None
-    | Instance indexed { get } _ => get index indexed
   };
 
   let getOrRaise (index: int) (indexed: t 'a): 'a => switch indexed {

@@ -14,12 +14,6 @@ include (Indexed.Make1 {
 
   let count (arr: t 'a): int => Array.length arr;
 
-  let getOrRaiseFlipped (arr: t 'a) (index: int): 'a =>
-    arr.(index);
-
-  let get (index: int) (arr: t 'a): (option 'a) =>
-    Preconditions.noneIfIndexOutOfRange (count arr) index (getOrRaiseFlipped arr);
-
   let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
 
   let reduce
