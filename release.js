@@ -49,8 +49,8 @@ build: [
   [make "build"]
 ]
 depends: [
-  "topkg"       {build & >= "0.8.1" & < "0.9"}
-  "reason"      {build & >= "1.13.3"}
+  "topkg"       {>= "0.8.1" & < "0.9"}
+  "reason"      {>= "1.13.3"}
 ]
 available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
 `;
