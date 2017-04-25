@@ -14,60 +14,6 @@ type t 'k 'v = {
   hash: Hash.t 'k,
 };
 
-let emptyWith
-    hash::(hash: Hash.t 'k)
-    comparator::(comparator: Comparator.t 'k): (t 'k 'v) => {
-  count: 0,
-  root: BitmapTrieMap.Empty,
-  comparator,
-  hash,
-};
-
-let alter
-    (key: 'k)
-    (f: option 'v => option 'v)
-    ({ count, root, comparator, hash } as map: t 'k 'v): (t 'k 'v) => {
-  let hashKey = hash key;
-  let alterResult = ref AlterResult.NoChange;
-  let newRoot = root |> BitmapTrieMap.alter
-    comparator
-    BitmapTrieMap.updateLevelNodePersistent
-    Transient.Owner.none
-    alterResult
-    0
-    hashKey
-    key
-    f;
-
-  switch !alterResult {
-    | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
-    | AlterResult.NoChange => map
-    | AlterResult.Replace => { count, root: newRoot, comparator, hash }
-    | AlterResult.Removed => { count: count - 1, root: newRoot, comparator, hash }
-  };
-};
-
-let put (key: 'k) (value: 'v) ({ count, root, comparator, hash } as map: t 'k 'v): (t 'k 'v) => {
-  let hashKey = hash key;
-  let alterResult = ref AlterResult.NoChange;
-  let newRoot = root |> BitmapTrieMap.putWithResult
-    comparator
-    BitmapTrieMap.updateLevelNodePersistent
-    Transient.Owner.none
-    alterResult
-    0
-    hashKey
-    key
-    value;
-
-  switch !alterResult {
-    | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
-    | AlterResult.NoChange => map
-    | AlterResult.Replace => { count, root: newRoot, comparator, hash }
-    | AlterResult.Removed => failwith "invalid state"
-  };
-};
-
 include (ImmMap.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
 
@@ -121,6 +67,60 @@ include (ImmMap.Make2 {
   let valuesSequence ({ root }: t 'k 'v): (Sequence.t 'v) =>
     root |> BitmapTrieMap.valuesSequence;
 }: ImmMap.S2 with type t 'k 'v := t 'k 'v);
+
+let alter
+    (key: 'k)
+    (f: option 'v => option 'v)
+    ({ count, root, comparator, hash } as map: t 'k 'v): (t 'k 'v) => {
+  let hashKey = hash key;
+  let alterResult = ref AlterResult.NoChange;
+  let newRoot = root |> BitmapTrieMap.alter
+    comparator
+    BitmapTrieMap.updateLevelNodePersistent
+    Transient.Owner.none
+    alterResult
+    0
+    hashKey
+    key
+    f;
+
+  switch !alterResult {
+    | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
+    | AlterResult.NoChange => map
+    | AlterResult.Replace => { count, root: newRoot, comparator, hash }
+    | AlterResult.Removed => { count: count - 1, root: newRoot, comparator, hash }
+  };
+};
+
+let emptyWith
+    hash::(hash: Hash.t 'k)
+    comparator::(comparator: Comparator.t 'k): (t 'k 'v) => {
+  count: 0,
+  root: BitmapTrieMap.Empty,
+  comparator,
+  hash,
+};
+
+let put (key: 'k) (value: 'v) ({ count, root, comparator, hash } as map: t 'k 'v): (t 'k 'v) => {
+  let hashKey = hash key;
+  let alterResult = ref AlterResult.NoChange;
+  let newRoot = root |> BitmapTrieMap.putWithResult
+    comparator
+    BitmapTrieMap.updateLevelNodePersistent
+    Transient.Owner.none
+    alterResult
+    0
+    hashKey
+    key
+    value;
+
+  switch !alterResult {
+    | AlterResult.Added => { count: count + 1, root: newRoot, comparator, hash }
+    | AlterResult.NoChange => map
+    | AlterResult.Replace => { count, root: newRoot, comparator, hash }
+    | AlterResult.Removed => failwith "invalid state"
+  };
+};
 
 let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;

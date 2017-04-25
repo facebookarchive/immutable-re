@@ -14,44 +14,6 @@ type t 'v = {
   root: (BitmapTrieIntMap.t 'v),
 };
 
-let empty (): t 'v => { count: 0, root: BitmapTrieIntMap.Empty };
-
-let alter (key: int) (f: option 'v => option 'v) ({ count, root } as map: t 'v): (t 'v) => {
-  let alterResult = ref AlterResult.NoChange;
-  let newRoot = root |> BitmapTrieIntMap.alter
-    BitmapTrieIntMap.updateLevelNodePersistent
-    Transient.Owner.none
-    alterResult
-    0
-    key
-    f;
-
-  switch !alterResult {
-    | AlterResult.Added => { count: count + 1, root: newRoot }
-    | AlterResult.NoChange => map
-    | AlterResult.Replace => { count, root: newRoot }
-    | AlterResult.Removed => { count: count - 1, root: newRoot }
-  }
-};
-
-let put (key: int) (value: 'v) ({ count, root } as map: t 'v): (t 'v) => {
-  let alterResult = ref AlterResult.NoChange;
-  let newRoot = root |> BitmapTrieIntMap.putWithResult
-    BitmapTrieIntMap.updateLevelNodePersistent
-    Transient.Owner.none
-    alterResult
-    0
-    key
-    value;
-
-  switch !alterResult {
-    | AlterResult.Added => { count: count + 1, root: newRoot }
-    | AlterResult.NoChange => map
-    | AlterResult.Replace => { count, root: newRoot }
-    | AlterResult.Removed => failwith "invalid state"
-  }
-};
-
 include (ImmMap.Make1 {
   type nonrec k = k;
   type nonrec t 'v = t 'v;
@@ -99,8 +61,45 @@ include (ImmMap.Make1 {
 
   let valuesSequence ({ root }: t 'v): (Sequence.t 'v) =>
     root |> BitmapTrieIntMap.valuesSequence;
-
 }: ImmMap.S1 with type t 'v := t 'v and type k := k);
+
+let alter (key: int) (f: option 'v => option 'v) ({ count, root } as map: t 'v): (t 'v) => {
+  let alterResult = ref AlterResult.NoChange;
+  let newRoot = root |> BitmapTrieIntMap.alter
+    BitmapTrieIntMap.updateLevelNodePersistent
+    Transient.Owner.none
+    alterResult
+    0
+    key
+    f;
+
+  switch !alterResult {
+    | AlterResult.Added => { count: count + 1, root: newRoot }
+    | AlterResult.NoChange => map
+    | AlterResult.Replace => { count, root: newRoot }
+    | AlterResult.Removed => { count: count - 1, root: newRoot }
+  }
+};
+
+let empty (): t 'v => { count: 0, root: BitmapTrieIntMap.Empty };
+
+let put (key: int) (value: 'v) ({ count, root } as map: t 'v): (t 'v) => {
+  let alterResult = ref AlterResult.NoChange;
+  let newRoot = root |> BitmapTrieIntMap.putWithResult
+    BitmapTrieIntMap.updateLevelNodePersistent
+    Transient.Owner.none
+    alterResult
+    0
+    key
+    value;
+
+  switch !alterResult {
+    | AlterResult.Added => { count: count + 1, root: newRoot }
+    | AlterResult.NoChange => map
+    | AlterResult.Replace => { count, root: newRoot }
+    | AlterResult.Removed => failwith "invalid state"
+  }
+};
 
 let remove (key: int) (map: t 'v): (t 'v) =>
   map |> alter key Functions.alwaysNone;

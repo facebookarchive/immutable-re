@@ -110,49 +110,6 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     tree: AVLTreeMap.t k 'v,
   };
 
-  let empty (): (t 'v) => {
-    count: 0,
-    tree: AVLTreeMap.Empty,
-  };
-
-  let alter
-      (key: k)
-      (f: option 'v => option 'v)
-      ({ count, tree } as map: t 'v): (t 'v) => {
-    let alterResult = ref AlterResult.NoChange;
-    let newTree = tree |> AVLTreeMap.alter comparator alterResult key f;
-    switch !alterResult {
-      | AlterResult.Added => { count: count + 1, tree: newTree }
-      | AlterResult.NoChange => map
-      | AlterResult.Replace => { count, tree: newTree }
-      | AlterResult.Removed => { count: count - 1, tree: newTree }
-    };
-  };
-
-
-  let put (key: k) (value: 'v) ({ count, tree } as map: t 'v): (t 'v) => {
-    let alterResult = ref AlterResult.NoChange;
-    let newTree = tree |> AVLTreeMap.putWithResult comparator alterResult key value;
-    switch !alterResult {
-      | AlterResult.Added => { count: count + 1, tree: newTree }
-      | AlterResult.NoChange => map
-      | AlterResult.Replace => { count, tree: newTree }
-      | AlterResult.Removed => failwith "invalid state"
-    };
-  };
-
-  let putAll (iter: KeyedIterable.t k 'v) (map: t 'v): (t 'v) =>
-    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
-
-  let putAllEntries (iter: Iterable.t (k, 'v)) (map: t 'v): (t 'v) =>
-    iter |> Iterable.reduce (fun acc (k, v) => acc |> put k v) map;
-
-  let from (iter: KeyedIterable.t k 'v): (t 'v) =>
-    empty () |> putAll iter;
-
-  let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
-    empty () |> putAllEntries iter;
-
   include (NavigableMap.Make1 {
     type nonrec k = k;
     type nonrec t 'v = t 'v;
@@ -270,6 +227,48 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     let valuesSequenceReversed ({ tree }: t 'v): (Sequence.t 'v) =>
       tree |> AVLTreeMap.valuesSequenceReversed;
   }: NavigableMap.S1 with type t 'v:= t 'v and type k:= k);
+
+  let alter
+      (key: k)
+      (f: option 'v => option 'v)
+      ({ count, tree } as map: t 'v): (t 'v) => {
+    let alterResult = ref AlterResult.NoChange;
+    let newTree = tree |> AVLTreeMap.alter comparator alterResult key f;
+    switch !alterResult {
+      | AlterResult.Added => { count: count + 1, tree: newTree }
+      | AlterResult.NoChange => map
+      | AlterResult.Replace => { count, tree: newTree }
+      | AlterResult.Removed => { count: count - 1, tree: newTree }
+    };
+  };
+
+  let empty (): (t 'v) => {
+    count: 0,
+    tree: AVLTreeMap.Empty,
+  };
+
+  let put (key: k) (value: 'v) ({ count, tree } as map: t 'v): (t 'v) => {
+    let alterResult = ref AlterResult.NoChange;
+    let newTree = tree |> AVLTreeMap.putWithResult comparator alterResult key value;
+    switch !alterResult {
+      | AlterResult.Added => { count: count + 1, tree: newTree }
+      | AlterResult.NoChange => map
+      | AlterResult.Replace => { count, tree: newTree }
+      | AlterResult.Removed => failwith "invalid state"
+    };
+  };
+
+  let putAll (iter: KeyedIterable.t k 'v) (map: t 'v): (t 'v) =>
+    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
+
+  let putAllEntries (iter: Iterable.t (k, 'v)) (map: t 'v): (t 'v) =>
+    iter |> Iterable.reduce (fun acc (k, v) => acc |> put k v) map;
+
+  let from (iter: KeyedIterable.t k 'v): (t 'v) =>
+    empty () |> putAll iter;
+
+  let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
+    empty () |> putAllEntries iter;
 
   let remove (key: k) (map: t 'v): (t 'v) =>
     map |> alter key Functions.alwaysNone;
