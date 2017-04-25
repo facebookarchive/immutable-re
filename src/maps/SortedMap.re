@@ -298,68 +298,32 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     if (isEmpty map) (SequentialCollection.empty ())
     else SequentialCollection.create (sequentialKeyCollectionBase ()) map;
 
-  let navigableKeyCollectionBase (): NavigableCollection.s (t 'v) k => {
-    count,
-    first: firstKey,
-    firstOrRaise: firstKeyOrRaise,
-    last: lastKey,
-    lastOrRaise: lastKeyOrRaise,
-    reduce: fun while_::predicate reducer acc map =>
-      map |> keys |> Iterable.reduce while_::predicate reducer acc,
-    reduceReversed: fun while_::predicate reducer acc map =>
-      map |> keysReversed |> Iterable.reduce while_::predicate reducer acc,
-    toCollection: toKeyCollection,
-    /* FIXME: This is broken, will fix in future diff */
-    toCollectionReversed: toKeyCollection,
-    toSequentialCollection: toSequentialKeyCollection,
-    toIterable: toKeyedIterable >> KeyedIterable.keys,
-    toIterableReversed: toKeyedIterable >> KeyedIterable.keys,
-    /* FIXME: This is broken, will fix in future diff */
-    toNavigableCollectionReversed: fun _ => failwith "unimplemented",
-    toSequence: toKeySequence,
-    toSequenceReversed: toKeySequenceReversed,
-    /* FIXME: This is broken, will fix in future diff */
-    toSequentialCollectionReversed: toSequentialKeyCollection,
-  };
 
   let toNavigableKeyCollection (map: t 'v): (NavigableCollection.t k) =>
     if (isEmpty map) (NavigableCollection.empty ())
-    else NavigableCollection.Instance map (navigableKeyCollectionBase ());
+    else NavigableCollection.Instance map (sequentialKeyCollectionBase ()) (sequentialKeyCollectionBase ());
 
   let navigableKeySetBase (): NavigableSet.s (t 'v) k => {
     contains: containsKey,
     count,
     first: firstKey,
     firstOrRaise: firstKeyOrRaise,
-    last: lastKey,
-    lastOrRaise: lastKeyOrRaise,
     reduce: fun while_::predicate reducer acc map =>
       map |> keys |> Iterable.reduce while_::predicate reducer acc,
-    reduceReversed: fun while_::predicate reducer acc map =>
-      map |> keysReversed |> Iterable.reduce while_::predicate reducer acc,
     toCollection: toKeyCollection,
-    /* FIXME: This is broken, will fix in future diff */
-    toCollectionReversed: fun _ => failwith "unimplemented",
     toIterable: toKeyedIterable >> KeyedIterable.keys,
-    toIterableReversed: toKeyedIterable >> KeyedIterable.keys,
     toNavigableCollection: toNavigableKeyCollection,
-    /* FIXME: This is broken, will fix in future diff */
-    toNavigableCollectionReversed: fun _ => failwith "unimplemented",
-    /* FIXME: This is broken, will fix in future diff */
-    toNavigableSetReversed: fun _ => failwith "unimplemented",
     toSequence: toKeySequence,
-    toSequenceReversed: toKeySequenceReversed,
     toSequentialCollection: toSequentialKeyCollection,
-    /* FIXME: This is broken, will fix in future diff */
-    toSequentialCollectionReversed: fun _ => failwith "unimplemented",
     toSet: keySet,
-    /* FIXME: This is broken, will fix in future diff */
-    toSetReversed: keySet,
   };
 
   let navigableKeySet (map: t 'v): (NavigableSet.t k) =>
     if (isEmpty map) (NavigableSet.empty ())
-    else NavigableSet.Instance map (navigableKeySetBase ());
+    /* FIXME: Reversed is totally broken here, but this is temporary until
+     * refactoring KeyedCollection is complete.
+     */
+    else NavigableSet.Instance map (navigableKeySetBase ()) (navigableKeySetBase ());
 
   let keyedCollectionOps: KeyedCollection.Ops.t k 'v (t 'v) = {
     containsKey,
