@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
- open Functions.Operators;
-
 type t 'k 'v = {
   count: int,
   root: BitmapTrieMap.t 'k 'v,
@@ -49,29 +47,6 @@ let alter
   };
 };
 
-let containsKey (key: 'k) ({ root, comparator, hash }: t 'k 'v): bool => {
-  let hashKey = hash key;
-  root |> BitmapTrieMap.containsKey comparator 0 hashKey key;
-};
-
-let count ({ count }: t 'k 'v): int => count;
-
-let get (key: 'k) ({ root, comparator, hash }: t 'k 'v): (option 'v) => {
-  let hashKey = hash key;
-  root |> BitmapTrieMap.get comparator 0 hashKey key;
-};
-
-let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
-  let hashKey = hash key;
-  root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
-};
-
-let isEmpty ({ count }: t 'k 'v): bool =>
-  count === 0;
-
-let isNotEmpty ({ count }: t 'k 'v): bool =>
-  count !== 0;
-
 let put (key: 'k) (value: 'v) ({ count, root, comparator, hash } as map: t 'k 'v): (t 'k 'v) => {
   let hashKey = hash key;
   let alterResult = ref AlterResult.NoChange;
@@ -93,93 +68,65 @@ let put (key: 'k) (value: 'v) ({ count, root, comparator, hash } as map: t 'k 'v
   };
 };
 
-include (KeyedIterable.Make2 {
+include (ImmMap.Make2 {
   type nonrec t 'k 'v = t 'k 'v;
 
-  let isEmpty = isEmpty;
+  let containsKey (key: 'k) ({ root, comparator, hash }: t 'k 'v): bool => {
+    let hashKey = hash key;
+    root |> BitmapTrieMap.containsKey comparator 0 hashKey key;
+  };
+
+  let count ({ count }: t 'k 'v): int => count;
+
+  let get (key: 'k) ({ root, comparator, hash }: t 'k 'v): (option 'v) => {
+    let hashKey = hash key;
+    root |> BitmapTrieMap.get comparator 0 hashKey key;
+  };
+
+  let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
+    let hashKey = hash key;
+    root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
+  };
+
+  let keysSequence ({ root }: t 'k 'v): (Sequence.t 'k) =>
+    root |> BitmapTrieMap.keysSequence;
 
   let reduce
       while_::(predicate: 'acc => 'k => 'v => bool)
       (f: 'acc => 'k => 'v => 'acc)
       (acc: 'acc)
       ({ root }: t 'k 'v): 'acc =>
-    /* reduceWhile allocates some references, and is a little more complicated
-     * so provide an optimization when possible.
-     */
     if (predicate === Functions.alwaysTrue3) (root |> BitmapTrieMap.reduce f acc)
     else root |> BitmapTrieMap.reduceWhile predicate f acc;
-}: KeyedIterable.S2 with type t 'k 'v := t 'k 'v);
+
+  let reduceKeys
+      while_::(predicate: 'acc => 'k => bool)
+      (f: 'acc => 'k => 'acc)
+      (acc: 'acc)
+      ({ root }: t 'k 'v): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (root |> BitmapTrieMap.reduceKeys f acc)
+    else root |> BitmapTrieMap.reduceKeysWhile predicate f acc;
+
+  let reduceValues
+      while_::(predicate: 'acc => 'v => bool)
+      (f: 'acc => 'v => 'acc)
+      (acc: 'acc)
+      ({ root }: t 'k 'v): 'acc =>
+    if (predicate === Functions.alwaysTrue2) (root |> BitmapTrieMap.reduceValues f acc)
+    else root |> BitmapTrieMap.reduceValuesWhile predicate f acc;
+
+  let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
+    root |> BitmapTrieMap.toSequence;
+
+  let valuesSequence ({ root }: t 'k 'v): (Sequence.t 'v) =>
+    root |> BitmapTrieMap.valuesSequence;
+}: ImmMap.S2 with type t 'k 'v := t 'k 'v);
 
 let remove (key: 'k) (map: t 'k 'v): (t 'k 'v) =>
   map |> alter key Functions.alwaysNone;
 
 let removeAll ({ comparator, hash }: t 'k 'v): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator;
-
-let toKeySequence ({ root }: t 'k 'v): (Sequence.t 'k) =>
-  root |> BitmapTrieMap.toKeySequence;
-
-let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
-  root |> BitmapTrieMap.toSequence;
-
-let keyCollectionBase (): Collection.s (t 'k _) 'k  => {
-  count: count,
-  reduce: fun while_::predicate reducer acc collection =>
-    collection |> toKeyedIterable |> KeyedIterable.keys |> Iterable.reduce
-      while_::predicate reducer acc,
-  toIterable: toKeyedIterable >> KeyedIterable.keys,
-  toSequence: toKeySequence,
-};
-
-let toKeyCollection (map: t 'k _): Collection.t 'k =>
-  if (isEmpty map) (Collection.empty ())
-  else Collection.Instance map (keyCollectionBase ());
-
-let keySetOps (): ImmSet.s (t 'k _) 'k => {
-  contains: containsKey,
-  count,
-  reduce: fun while_::predicate reducer acc map =>
-    map |> keys |> Iterable.reduce while_::predicate reducer acc,
-  toCollection: toKeyCollection,
-  toIterable: keys,
-  toSequence: toKeySequence,
-};
-
-let keySet (map: t 'k 'v): (ImmSet.t 'k) =>
-  if (isEmpty map) (ImmSet.empty ())
-  else ImmSet.Instance map (keySetOps ());
-
-let keyedCollectionOps: KeyedCollection.Ops.t 'k 'v (t 'k 'v) = {
-  containsKey,
-  count,
-  keys,
-  toIterable,
-  toKeyedIterable,
-  toSequence,
-  values,
-};
-
-let toKeyedCollection (map: t 'k 'v): (KeyedCollection.t 'k 'v) =>
-  if (isEmpty map) (KeyedCollection.empty ())
-  else KeyedCollection.KeyedCollection map keyedCollectionOps;
-
-let mapOps: ImmMap.Ops.t 'k 'v (t 'k 'v) = {
-  containsKey,
-  count,
-  get,
-  getOrRaise,
-  keys,
-  keySet,
-  toIterable,
-  toKeyedCollection,
-  toKeyedIterable,
-  toSequence,
-  values,
-};
-
-let toMap (map: t 'k 'v): (ImmMap.t 'k 'v) =>
-  if (isEmpty map) (ImmMap.empty ())
-  else ImmMap.Map map mapOps;
 
 let module Transient = {
   type hashMap 'k 'v = t 'k 'v;
@@ -322,7 +269,7 @@ let fromEntriesWith
 let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (initialValue: t 'k 'vAcc)
-    (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keySet next) (keySet initialValue)
+    (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keysSet next) (keysSet initialValue)
   |> Iterable.reduce (
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);

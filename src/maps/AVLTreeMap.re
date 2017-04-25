@@ -181,6 +181,26 @@ let rec lastValueOrRaise (tree: t 'k 'v): 'v => switch tree {
   | Empty => failwith "empty"
 };
 
+let rec keysSequence (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
+  | Empty => Sequence.empty ()
+  | Leaf k _ => Sequence.return k
+  | Node _ left k _ right => Sequence.concat [
+      Sequence.defer(fun () => keysSequence left),
+      Sequence.return k,
+      Sequence.defer(fun () => keysSequence right),
+    ]
+};
+
+let rec keysSequenceReversed (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
+  | Empty => Sequence.empty ()
+  | Leaf k _ => Sequence.return k
+  | Node _ left k _ right => Sequence.concat [
+      Sequence.defer(fun () => keysSequenceReversed right),
+      Sequence.return k,
+      Sequence.defer(fun () => keysSequenceReversed left),
+    ]
+};
+
 let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
   | Empty  => acc
   | Leaf k v => f acc k v
@@ -188,6 +208,56 @@ let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc =
      let acc = reduce f acc left;
      let acc = f acc k v;
      let acc = reduce f acc right;
+     acc
+};
+
+let rec reduceReversed (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
+  | Empty => acc
+  | Leaf k v => f acc k v
+  | Node _ left k v right =>
+     let acc = reduceReversed f acc right;
+     let acc = f acc k v;
+     let acc = reduceReversed f acc left;
+     acc
+};
+
+let rec reduceKeys (f: 'acc => 'k => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
+  | Empty  => acc
+  | Leaf k _ => f acc k
+  | Node _ left k _ right =>
+     let acc = reduceKeys f acc left;
+     let acc = f acc k;
+     let acc = reduceKeys f acc right;
+     acc
+};
+
+let rec reduceKeysReversed (f: 'acc => 'k => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
+  | Empty  => acc
+  | Leaf k _ => f acc k
+  | Node _ left k _ right =>
+     let acc = reduceKeysReversed f acc right;
+     let acc = f acc k;
+     let acc = reduceKeysReversed f acc left;
+     acc
+};
+
+let rec reduceValues (f: 'acc => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
+  | Empty  => acc
+  | Leaf _ v => f acc v
+  | Node _ left _ v right =>
+     let acc = reduceValues f acc left;
+     let acc = f acc v;
+     let acc = reduceValues f acc right;
+     acc
+};
+
+let rec reduceValuesReversed (f: 'acc => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
+  | Empty  => acc
+  | Leaf _ v => f acc v
+  | Node _ left _ v right =>
+     let acc = reduceValuesReversed f acc right;
+     let acc = f acc v;
+     let acc = reduceValuesReversed f acc left;
      acc
 };
 
@@ -214,31 +284,6 @@ let rec reduceWhileWithResult
      acc
 };
 
-let reduceWhile
-    (predicate: 'acc => 'k => 'v => bool)
-    (f: 'acc => 'k => 'v => 'acc)
-    (acc: 'acc)
-    (tree: t 'k 'v): 'acc => {
-
-  let shouldContinue = ref true;
-  let predicate acc k v => {
-    let result = predicate acc k v;
-    shouldContinue := result;
-    result;
-  };
-  reduceWhileWithResult shouldContinue predicate f acc tree;
-};
-
-let rec reduceReversed (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
-  | Empty => acc
-  | Leaf k v => f acc k v
-  | Node _ left k v right =>
-     let acc = reduceReversed f acc right;
-     let acc = f acc k v;
-     let acc = reduceReversed f acc left;
-     acc
-};
-
 let rec reduceReversedWhileWithResult
     (shouldContinue: ref bool)
     (predicate: 'acc => 'k => 'v => bool)
@@ -262,6 +307,21 @@ let rec reduceReversedWhileWithResult
      acc
 };
 
+let reduceWhile
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc k v => {
+    let result = predicate acc k v;
+    shouldContinue := result;
+    result;
+  };
+  reduceWhileWithResult shouldContinue predicate f acc tree;
+};
+
 let reduceReversedWhile
     (predicate: 'acc => 'k => 'v => bool)
     (f: 'acc => 'k => 'v => 'acc)
@@ -277,14 +337,68 @@ let reduceReversedWhile
   reduceReversedWhileWithResult shouldContinue predicate f acc tree;
 };
 
-let rec toKeySequence (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
-  | Empty => Sequence.empty ()
-  | Leaf k _ => Sequence.return k
-  | Node _ left k _ right => Sequence.concat [
-      Sequence.defer(fun () => toKeySequence left),
-      Sequence.return k,
-      Sequence.defer(fun () => toKeySequence right),
-    ]
+let reduceKeysWhile
+    (predicate: 'acc => 'k => bool)
+    (f: 'acc => 'k => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc k _ => {
+    let result = predicate acc k;
+    shouldContinue := result;
+    result;
+  };
+  let f acc k _ => f acc k;
+  reduceWhileWithResult shouldContinue predicate f acc tree;
+};
+
+let reduceKeysReversedWhile
+    (predicate: 'acc => 'k => bool)
+    (f: 'acc => 'k => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc k _ => {
+    let result = predicate acc k;
+    shouldContinue := result;
+    result;
+  };
+  let f acc k _ => f acc k;
+  reduceReversedWhileWithResult shouldContinue predicate f acc tree;
+};
+
+let reduceValuesWhile
+    (predicate: 'acc => 'v => bool)
+    (f: 'acc => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc _ v => {
+    let result = predicate acc v;
+    shouldContinue := result;
+    result;
+  };
+  let f acc _ v => f acc v;
+  reduceWhileWithResult shouldContinue predicate f acc tree;
+};
+
+let reduceValuesReversedWhile
+    (predicate: 'acc => 'v => bool)
+    (f: 'acc => 'v => 'acc)
+    (acc: 'acc)
+    (tree: t 'k 'v): 'acc => {
+
+  let shouldContinue = ref true;
+  let predicate acc _ v => {
+    let result = predicate acc v;
+    shouldContinue := result;
+    result;
+  };
+  let f acc _ v => f acc v;
+  reduceReversedWhileWithResult shouldContinue predicate f acc tree;
 };
 
 let rec toKeySequenceReversed (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
@@ -355,6 +469,26 @@ let rec removeLastOrRaise (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Leaf _ _ => Empty
   | Node _ left _ _ Empty => left
   | Node _ left k v right => rebalance left k v (removeLastOrRaise right);
+};
+
+let rec valuesSequence (tree: t 'k 'v): (Sequence.t 'v) => switch tree {
+  | Empty => Sequence.empty ()
+  | Leaf _ v => Sequence.return v
+  | Node _ left _ v right => Sequence.concat [
+      Sequence.defer(fun () => valuesSequence left),
+      Sequence.return v,
+      Sequence.defer(fun () => valuesSequence right),
+    ]
+};
+
+let rec valuesSequenceReversed (tree: t 'k 'v): (Sequence.t 'v) => switch tree {
+  | Empty => Sequence.empty ()
+  | Leaf _ v => Sequence.return v
+  | Node _ left _ v right => Sequence.concat [
+      Sequence.defer(fun () => valuesSequenceReversed right),
+      Sequence.return v,
+      Sequence.defer(fun () => valuesSequenceReversed left),
+    ]
 };
 
 let rec alter

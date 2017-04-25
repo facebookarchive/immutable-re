@@ -1203,6 +1203,10 @@ let module rec KeyedIterable: {
      *  accumulating the result.
      */
 
+    let reduceKeys: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
+
+    let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+
     let toIterable: t 'v => Iterable.t (k, 'v);
     /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
@@ -1230,6 +1234,10 @@ let module rec KeyedIterable: {
      *  function [f] to each key/value pair in [keyedIterable], while [predicate] returns true,
      *  accumulating the result.
      */
+
+    let reduceKeys: while_::('acc => 'k => bool)? => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+
+    let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
 
     let toIterable: t 'k 'v => Iterable.t ('k, 'v);
     /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
@@ -1363,6 +1371,10 @@ let module rec KeyedCollection: {
      *  least one value, otherwise false.
      */
 
+    let keysCollection: (t 'v) => (Collection.t k);
+
+    let keysSequence: (t 'v) => (Sequence.t k);
+
     let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
     /* [toKeyedCollection keyed] returns KeyedCollection view. */
 
@@ -1370,6 +1382,10 @@ let module rec KeyedCollection: {
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples.
      */
+
+    let valuesCollection: (t 'v) => (Collection.t 'v);
+
+    let valuesSequence: (t 'v) => (Sequence.t 'v);
   };
 
   module type S2 = {
@@ -1397,6 +1413,10 @@ let module rec KeyedCollection: {
      *  least one value, otherwise false.
      */
 
+    let keysCollection: (t 'k 'v) => (Collection.t 'k);
+
+    let keysSequence: (t 'k 'v) => (Sequence.t 'k);
+
     let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
     /* [toKeyedCollection keyed] returns KeyedCollection view. */
 
@@ -1404,6 +1424,10 @@ let module rec KeyedCollection: {
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples.
      */
+
+    let valuesCollection: (t 'k 'v) => (Collection.t 'v);
+
+    let valuesSequence: (t 'k 'v) => (Sequence.t 'v);
   };
 
   type t 'k 'v;
@@ -1576,7 +1600,17 @@ let module rec NavigableKeyedCollection: {
 
     let firstValueOrRaise: (t 'v) => 'v;
 
-    let keysReversed: (t 'v) => Iterable.t k;
+    let keysCollectionReversed: (t 'v) => (Collection.t k);
+
+    let keysNavigableCollection: (t 'v) => (NavigableCollection.t k);
+
+    let keysNavigableCollectionReversed: (t 'v) => (NavigableCollection.t k);
+
+    let keysSequentialCollection: (t 'v) => (SequentialCollection.t k);
+
+    let keysSequentialCollectionReversed: (t 'v) => (SequentialCollection.t k);
+
+    let keysReversed: (t 'v) => (Iterable.t k);
 
     let last: (t 'v) => (option (k, 'v));
     /** [last keyed] returns last value in [keyed] or None.
@@ -1604,10 +1638,16 @@ let module rec NavigableKeyedCollection: {
      *  from the right most key/value pair, accumulating the result.
      */
 
+    let reduceKeysReversed: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
+
+    let reduceValuesReversed: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+
     let toIterableReversed: t 'v => Iterable.t (k, 'v);
     /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
+
+    let toKeyedCollectionReversed: t 'v => KeyedCollection.t k 'v;
 
     let toKeyedIterableReversed: t 'v => KeyedIterable.t k 'v;
     /** [toKeyedIterableReversed keyedIterable] returns a KeyedIterable that can be used to iterate over
@@ -1616,12 +1656,24 @@ let module rec NavigableKeyedCollection: {
 
     let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
 
+    let toNavigableKeyedCollectionReversed: t 'v => NavigableKeyedCollection.t k 'v;
+
     let toSequenceReversed: (t 'v) => (Sequence.t (k, 'v));
     /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
 
-    let valuesReversed: (t 'v) => Iterable.t 'v;
+    let valuesCollectionReversed: (t 'v) => (Collection.t 'v);
+
+    let valuesNavigableCollection: (t 'v) => (NavigableCollection.t 'v);
+
+    let valuesNavigableCollectionReversed: (t 'v) => (NavigableCollection.t 'v);
+
+    let valuesSequentialCollection: (t 'v) => (SequentialCollection.t 'v);
+
+    let valuesSequentialCollectionReversed: (t 'v) => (SequentialCollection.t 'v);
+
+    let valuesReversed: (t 'v) => (Iterable.t 'v);
   };
 
   module type S2 = {
@@ -1651,7 +1703,17 @@ let module rec NavigableKeyedCollection: {
 
     let firstValueOrRaise: (t 'k 'v) => 'v;
 
-    let keysReversed: (t 'k 'v) => Iterable.t 'k;
+    let keysCollectionReversed: (t 'k 'v) => (Collection.t 'k);
+
+    let keysNavigableCollection: (t 'k 'v) => (NavigableCollection.t 'k);
+
+    let keysNavigableCollectionReversed: (t 'k 'v) => (NavigableCollection.t 'k);
+
+    let keysSequentialCollection: (t 'k 'v) => (SequentialCollection.t 'k);
+
+    let keysSequentialCollectionReversed: (t 'k 'v) => (SequentialCollection.t 'k);
+
+    let keysReversed: (t 'k 'v) => (Iterable.t 'k);
 
     let last: (t 'k 'v) => (option ('k, 'v));
     /** [last keyed] returns last value in [keyed] or None.
@@ -1679,10 +1741,16 @@ let module rec NavigableKeyedCollection: {
      *  from the right most key/value pair, accumulating the result.
      */
 
+    let reduceKeysReversed: while_::('acc => 'k => bool)? => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+
+    let reduceValuesReversed: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+
     let toIterableReversed: t 'k 'v => Iterable.t ('k, 'v);
     /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
+
+    let toKeyedCollectionReversed: t 'k 'v => KeyedCollection.t 'k 'v;
 
     let toKeyedIterableReversed: t 'k 'v => KeyedIterable.t 'k 'v;
     /** [toKeyedIterableReversed keyedIterable] returns a KeyedIterable that can be used to iterate over
@@ -1691,12 +1759,24 @@ let module rec NavigableKeyedCollection: {
 
     let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
 
+    let toNavigableKeyedCollectionReversed: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
+
     let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
     /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
 
-    let valuesReversed: (t 'k 'v) => Iterable.t 'v;
+    let valuesCollectionReversed: (t 'k 'v) => (Collection.t 'v);
+
+    let valuesNavigableCollection: (t 'k 'v) => (NavigableCollection.t 'v);
+
+    let valuesNavigableCollectionReversed: (t 'k 'v) => (NavigableCollection.t 'v);
+
+    let valuesSequentialCollection: (t 'k 'v) => (SequentialCollection.t 'v);
+
+    let valuesSequentialCollectionReversed: (t 'k 'v) => (SequentialCollection.t 'v);
+
+    let valuesReversed: (t 'k 'v) => (Iterable.t 'v);
   };
 
   type t 'k 'v;
@@ -1713,46 +1793,46 @@ let module rec Map: {
    *  The complexity of functions in this module is dependent upon the underlying concrete implementation.
    */
 
-   module type S1 = {
-     /** Map module type signature for types with a parametric type arity of 1. */
+  module type S1 = {
+    /** Map module type signature for types with a parametric type arity of 1. */
 
-     type k;
-     type t 'v;
+    type k;
+    type t 'v;
 
-     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
+    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
-     let get: k => (t 'v) => (option 'v);
-     /** [get key map] returns the value associated with [key] in [map] or None */
+    let get: k => (t 'v) => (option 'v);
+    /** [get key map] returns the value associated with [key] in [map] or None */
 
-     let getOrRaise: k => (t 'v) => 'v;
-     /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
+    let getOrRaise: k => (t 'v) => 'v;
+    /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
 
-     let keySet: (t 'v) => (Set.t k);
-     /** [keys keyed] return a Set view of the keys in [keyed]. */
+    let keysSet: (t 'v) => (Set.t k);
+    /** [keys keyed] return a Set view of the keys in [keyed]. */
 
-     let toMap: (t 'v) => Map.t k 'v;
-     /** [toMap map] returns a Map view of [map] */
-   };
+    let toMap: (t 'v) => Map.t k 'v;
+    /** [toMap map] returns a Map view of [map] */
+  };
 
-   module type S2 = {
-     /** Map module type signature for types with a parametric type arity of 1. */
+  module type S2 = {
+    /** Map module type signature for types with a parametric type arity of 1. */
 
-     type t 'k 'v;
+    type t 'k 'v;
 
-     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
+    include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
-     let get: 'k => (t 'k 'v) => (option 'v);
-     /** [get key map] returns the value associated with [key] in [map] or None */
+    let get: 'k => (t 'k 'v) => (option 'v);
+    /** [get key map] returns the value associated with [key] in [map] or None */
 
-     let getOrRaise: 'k => (t 'k 'v) => 'v;
-     /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
+    let getOrRaise: 'k => (t 'k 'v) => 'v;
+    /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
 
-     let keySet: (t 'k 'v) => (Set.t 'k);
-     /** [keys keyed] return a Set view of the keys in [keyed]. */
+    let keysSet: (t 'k 'v) => (Set.t 'k);
+    /** [keys keyed] return a Set view of the keys in [keyed]. */
 
-     let toMap: (t 'k 'v) => Map.t 'k 'v;
-     /** [toMap map] returns a Map view of [map] */
-   };
+    let toMap: (t 'k 'v) => Map.t 'k 'v;
+    /** [toMap map] returns a Map view of [map] */
+  };
 
   type t 'k 'v;
   /** The map type. */
@@ -1965,10 +2045,12 @@ let module rec NavigableMap: {
     include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
     include Map.S1 with type k := k and type t 'v := t 'v;
 
-    let navigableKeySet: (t 'v) => (NavigableSet.t k);
-    /** [keys keyed] return a NavigableSet view of the keys in [keyed]. */
-
+    let keysNavigableSet: (t 'v) => (NavigableSet.t k);
+    let keysNavigableSetReversed: (t 'v) => (NavigableSet.t k);
+    let keysSet: (t 'v) => (ImmSet.t k);
+    let toMapReversed: (t 'v) => ImmMap.t k 'v;
     let toNavigableMap: (t 'v) => NavigableMap.t k 'v;
+    let toNavigableMapReversed: (t 'v) => NavigableMap.t k 'v;
   };
 
   module type S2 = {
@@ -1979,10 +2061,12 @@ let module rec NavigableMap: {
     include NavigableKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
     include Map.S2 with type t 'k 'v := t 'k 'v;
 
-    let navigableKeySet: (t 'k 'v) => (NavigableSet.t 'k);
-    /** [keys keyed] return a NavigableSet view of the keys in [keyed]. */
-
+    let keysNavigableSet: (t 'k 'v) => (NavigableSet.t 'k);
+    let keysNavigableSetReversed: (t 'k 'v) => (NavigableSet.t 'k);
+    let keysSet: (t 'k 'v) => (ImmSet.t 'k);
+    let toMapReversed: (t 'k 'v) => ImmMap.t 'k 'v;
     let toNavigableMap: (t 'k 'v) => NavigableMap.t 'k 'v;
+    let toNavigableMapReversed: (t 'k 'v) => NavigableMap.t 'k 'v;
   };
 
   type t 'k 'v;
@@ -2039,10 +2123,16 @@ let module rec Indexed: {
      *  raises an exception if [index] is out of bounds.
      */
 
+    let toIndexed: (t 'a) => (Indexed.t 'a);
+
+    let toIndexedReversed: (t 'a) => (Indexed.t 'a);
+
     let toKeyedCollection: (t 'a) => (KeyedCollection.t int 'a);
     /** [toKeyedCollection indexed] returns a KeyedCollection view of
      *  the index/value pairs in [indexed].
      */
+
+    let toKeyedCollectionReversed: (t 'a) => (KeyedCollection.t int 'a);
 
     let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
     /** [toKeyedIterable indexed] returns a KeyedIterable that can be used to iterate over
@@ -2057,9 +2147,15 @@ let module rec Indexed: {
     let toMap: (t 'a) => (Map.t int 'a);
     /** [toMap indexed] returns a Map view of [indexed]. */
 
+    let toMapReversed: (t 'a) => (Map.t int 'a);
+
     let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int 'a);
 
+    let toNavigableKeyedCollectionReversed: (t 'a) => (NavigableKeyedCollection.t int 'a);
+
     let toNavigableMap: (t 'a) => (NavigableMap.t int 'a);
+
+    let toNavigableMapReversed: (t 'a) => (NavigableMap.t int 'a);
   };
 
   type t 'a;

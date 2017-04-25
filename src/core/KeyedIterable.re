@@ -26,6 +26,42 @@ let reduce
   | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
 };
 
+let reduceKeys
+    while_::(predicate: 'acc => 'k => bool)
+    (f: 'acc => 'k => 'acc)
+    (acc: 'acc)
+    (iter: t 'k 'v): 'acc => switch iter {
+  | Empty => acc
+  | Instance iter { reduce } =>
+      let f acc k _ => f acc k;
+
+      if (predicate === Functions.alwaysTrue2) {
+        reduce while_::Functions.alwaysTrue3 f acc iter;
+      }
+      else {
+        let predicate acc k _ => predicate acc k;
+        reduce while_::predicate f acc iter;
+      }
+};
+
+let reduceValues
+    while_::(predicate: 'acc => 'v => bool)
+    (f: 'acc => 'v => 'acc)
+    (acc: 'acc)
+    (iter: t 'k 'v): 'acc => switch iter {
+  | Empty => acc
+  | Instance iter { reduce } =>
+      let f acc _ v => f acc v;
+
+      if (predicate === Functions.alwaysTrue2) {
+        reduce while_::Functions.alwaysTrue3 f acc iter;
+      }
+      else {
+        let predicate acc _ v => predicate acc v;
+        reduce while_::predicate f acc iter;
+      }
+};
+
 let concatImpl: s 'keyedIterable 'k 'v = {
   reduce: fun while_::predicate f acc iters => {
     let shouldContinue = ref true;
@@ -469,6 +505,20 @@ let values (iter: t 'k 'v): (Iterable.t 'v) => switch iter {
   | Instance _ _ => Iterable.Instance iter valuesImpl
 };
 
+let reduceKeys
+    while_::(predicate: 'acc => 'k => bool)=Functions.alwaysTrue2
+    (f: 'acc => 'k => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc =>
+  reduceKeys while_::predicate f acc map;
+
+let reduceValues
+    while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
+    (f: 'acc => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc =>
+  reduceValues while_::predicate f acc map;
+
 type keyedIterable 'k 'v = t 'k 'v;
 module type S1 = {
   type k;
@@ -476,6 +526,8 @@ module type S1 = {
 
   let keys: (t 'v) => (Iterable.t k);
   let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceKeys: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   let toIterable: t 'v => Iterable.t (k, 'v);
   let toKeyedIterable: t 'v => keyedIterable k 'v;
   let values: (t 'v) => Iterable.t 'v;
@@ -486,6 +538,8 @@ module type S2 = {
 
   let keys: (t 'k 'v) => (Iterable.t 'k);
   let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceKeys: while_::('acc => 'k => bool)? => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let toIterable: t 'k 'v => Iterable.t ('k, 'v);
   let toKeyedIterable: t 'k 'v => keyedIterable 'k 'v;
   let values: (t 'k 'v) => Iterable.t 'v;
@@ -497,6 +551,8 @@ let module Make1 = fun (Base: {
 
   let isEmpty: (t 'v) => bool;
   let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
 }) => ({
   include Base;
 
@@ -508,32 +564,18 @@ let module Make1 = fun (Base: {
     reduce while_::predicate f acc map;
 
   let reduceKeys
-      while_::(predicate: 'acc => k => bool)
+      while_::(predicate: 'acc => k => bool)=Functions.alwaysTrue2
       (f: 'acc => k => 'acc)
       (acc: 'acc)
-      (map: t 'v): 'acc => {
-    let f acc k _ => f acc k;
-
-    if (predicate === Functions.alwaysTrue2) { reduce f acc map; }
-    else {
-      let predicate acc k _ => predicate acc k;
-      reduce while_::predicate f acc map;
-    }
-  };
+      (map: t 'v): 'acc =>
+    reduceKeys while_::predicate f acc map;
 
   let reduceValues
-      while_::(predicate: 'acc => 'v => bool)
+      while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
       (f: 'acc => 'v => 'acc)
       (acc: 'acc)
-      (map: t 'v): 'acc => {
-    let f acc _ v => f acc v;
-
-    if (predicate === Functions.alwaysTrue2) { reduce f acc map; }
-    else {
-      let predicate acc _ v => predicate acc v;
-      reduce while_::predicate f acc map;
-    }
-  };
+      (map: t 'v): 'acc =>
+    reduceValues while_::predicate f acc map;
 
   let reduceKeyValuePairs
       while_::(predicate: 'acc => (k, 'v) => bool)
@@ -557,7 +599,7 @@ let module Make1 = fun (Base: {
       reduce while_::predicate f acc map;
     };
 
-  let keysIterableBase: Iterable.s (t 'v) k = { reduce: reduceKeys };
+  let keysIterableBase: Iterable.s (t 'v) k = { reduce: Base.reduceKeys };
 
   let keys (keyedIterable: t _): Iterable.t k =>
     if (isEmpty keyedIterable) (Iterable.empty ())
@@ -575,7 +617,7 @@ let module Make1 = fun (Base: {
     if (isEmpty keyedIterable) (empty ())
     else Instance keyedIterable keyedIterableBase;
 
-  let valuesIterableBase: Iterable.s (t 'v) 'v = { reduce: reduceValues };
+  let valuesIterableBase: Iterable.s (t 'v) 'v = { reduce: Base.reduceValues };
 
   let values (keyedIterable: t _): Iterable.t 'v =>
     if (isEmpty keyedIterable) (Iterable.empty ())
@@ -588,6 +630,8 @@ let module Make2 = fun (Base: {
 
   let isEmpty: (t 'k 'v) => bool;
   let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
 }) => ({
   include Base;
 
@@ -599,32 +643,18 @@ let module Make2 = fun (Base: {
     reduce while_::predicate f acc map;
 
   let reduceKeys
-      while_::(predicate: 'acc => 'k => bool)
+      while_::(predicate: 'acc => 'k => bool)=Functions.alwaysTrue2
       (f: 'acc => 'k => 'acc)
       (acc: 'acc)
-      (map: t 'k 'v): 'acc => {
-    let f acc k _ => f acc k;
-
-    if (predicate === Functions.alwaysTrue2) { reduce f acc map; }
-    else {
-      let predicate acc k _ => predicate acc k;
-      reduce while_::predicate f acc map;
-    }
-  };
+      (map: t 'k 'v): 'acc =>
+    reduceKeys while_::predicate f acc map;
 
   let reduceValues
-      while_::(predicate: 'acc => 'v => bool)
+      while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
       (f: 'acc => 'v => 'acc)
       (acc: 'acc)
-      (map: t 'k 'v): 'acc => {
-    let f acc _ v => f acc v;
-
-    if (predicate === Functions.alwaysTrue2) { reduce f acc map; }
-    else {
-      let predicate acc _ v => predicate acc v;
-      reduce while_::predicate f acc map;
-    }
-  };
+      (map: t 'k 'v): 'acc =>
+    reduceValues while_::predicate f acc map;
 
   let reduceKeyValuePairs
       while_::(predicate: 'acc => ('k, 'v) => bool)
@@ -648,7 +678,7 @@ let module Make2 = fun (Base: {
       reduce while_::predicate f acc map;
     };
 
-  let keysIterableBase: Iterable.s (t 'k 'v) 'k = { reduce: reduceKeys };
+  let keysIterableBase: Iterable.s (t 'k 'v) 'k = { reduce: Base.reduceKeys };
 
   let keys (keyedIterable: t 'k _): Iterable.t 'k =>
     Iterable.Instance keyedIterable keysIterableBase;
@@ -663,9 +693,8 @@ let module Make2 = fun (Base: {
   let toKeyedIterable (keyedIterable: t 'k _): (keyedIterable 'k 'v) =>
     Instance keyedIterable keyedIterableBase;
 
-  let valuesIterableBase: Iterable.s (t 'k 'v) 'v = { reduce: reduceValues };
+  let valuesIterableBase: Iterable.s (t 'k 'v) 'v = { reduce: Base.reduceValues };
 
   let values (keyedIterable: t 'k _): Iterable.t 'v =>
     Iterable.Instance keyedIterable valuesIterableBase;
-
 }: S2 with type t 'k 'v := Base.t 'k 'v);

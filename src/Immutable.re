@@ -268,33 +268,6 @@ let module KeyedIterable = KeyedIterable;
 let module KeyedCollection = {
   include KeyedCollection;
 
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    include KeyedIterable.S1 with type k := k and type t 'v := t 'v;
-
-    let containsKey: k => t 'v => bool;
-    let count: t 'v => int;
-    let isEmpty: (t 'v) => bool;
-    let isNotEmpty: (t 'v) => bool;
-    let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
-    let toSequence: (t 'v) => (Sequence.t (k, 'v));
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include KeyedIterable.S2 with type t 'k 'v := t 'k 'v;
-
-    let containsKey: 'k => t 'k 'v => bool;
-    let count: t 'k 'v => int;
-    let isEmpty: (t 'k 'v) => bool;
-    let isNotEmpty: (t 'k 'v) => bool;
-    let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
-    let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
-  };
-
   let module Persistent = {
     module type S1 = {
       type k;
@@ -346,90 +319,10 @@ let module KeyedCollection = {
   };
 };
 
-let module NavigableKeyedCollection = {
-  include NavigableKeyedCollection;
-
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
-
-    let first: (t 'v) => (option (k, 'v));
-    let firstOrRaise: (t 'v) => (k, 'v);
-    let firstKey: (t 'v) => (option k);
-    let firstKeyOrRaise: (t 'v) => k;
-    let firstValue: (t 'v) => (option 'v);
-    let firstValueOrRaise: (t 'v) => 'v;
-    let keysReversed: (t 'v) => (Iterable.t k);
-    let last: (t 'v) => (option (k, 'v));
-    let lastOrRaise: (t 'v) => (k, 'v);
-    let lastKey: (t 'v) => (option k);
-    let lastKeyOrRaise: (t 'v) => k;
-    let lastValue: (t 'v) => (option 'v);
-    let lastValueOrRaise: (t 'v) => 'v;
-    let reduceReversed: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-    let toIterableReversed: t 'v => Iterable.t (k, 'v);
-    let toKeyedIterableReversed: t 'v => KeyedIterable.t k 'v;
-    let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
-    let toSequenceReversed: (t 'v) => (Sequence.t (k, 'v));
-    let valuesReversed: (t 'v) => (Iterable.t 'v);
-  };
-
-  module type S2 = {
-    /** NavigableKeyedCollection module type signature for types with a parametric type arity of 2. */
-
-    type t 'k 'v;
-
-    include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
-
-    let first: (t 'k 'v) => (option ('k, 'v));
-    let firstOrRaise: (t 'k 'v) => ('k, 'v);
-    let firstKey: (t 'k 'v) => (option 'k);
-    let firstKeyOrRaise: (t 'k 'v) => 'k;
-    let firstValue: (t 'k 'v) => (option 'v);
-    let firstValueOrRaise: (t 'k 'v) => 'v;
-    let keysReversed: (t 'k 'v) => (Iterable.t 'k);
-    let last: (t 'k 'v) => (option ('k, 'v));
-    let lastOrRaise: (t 'k 'v) => ('k, 'v);
-    let lastKey: (t 'k 'v) => (option 'k);
-    let lastKeyOrRaise: (t 'k 'v) => 'k;
-    let lastValue: (t 'k 'v) => (option 'v);
-    let lastValueOrRaise: (t 'k 'v) => 'v;
-    let reduceReversed: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-    let toIterableReversed: t 'k 'v => Iterable.t ('k, 'v);
-    let toKeyedIterableReversed: t 'k 'v => KeyedIterable.t 'k 'v;
-    let toNavigableKeyedCollection: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
-    let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
-    let valuesReversed: (t 'k 'v) => (Iterable.t 'v);
-  };
-};
+let module NavigableKeyedCollection = NavigableKeyedCollection;
 
 let module Map = {
   include ImmMap;
-
-  module type S1 = {
-    type k;
-    type t 'v;
-
-    include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
-
-    let get: k => (t 'v) => (option 'v);
-    let getOrRaise: k => (t 'v) => 'v;
-    let keySet: (t 'v) => (ImmSet.t k);
-    let toMap: (t 'v) => ImmMap.t k 'v;
-  };
-
-  module type S2 = {
-    type t 'k 'v;
-
-    include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
-
-    let get: 'k => (t 'k 'v) => (option 'v);
-    let getOrRaise: 'k => (t 'k 'v) => 'v;
-    let keySet: (t 'k 'v) => (ImmSet.t 'k);
-    let toMap: (t 'k 'v) => ImmMap.t 'k 'v;
-  };
 
   let module Persistent = {
     module type S1 = {
@@ -489,38 +382,10 @@ let module Map = {
       let putAllEntries: (Iterable.t ('k, 'v)) => (t 'k 'v) => (t 'k 'v);
     };
   };
-
 };
 
 let module NavigableMap = {
   include NavigableMap;
-
-  module type S1 = {
-    /** NavigableMap module type signature for types with a parametric type arity of 1. */
-
-    type k;
-    type t 'v;
-
-    include NavigableKeyedCollection.S1 with type k := k and type t 'v := t 'v;
-    include Map.S1 with type k := k and type t 'v := t 'v;
-
-    let navigableKeySet: (t 'v) => (NavigableSet.t k);
-
-    let toNavigableMap: (t 'v) => NavigableMap.t k 'v;
-  };
-
-  module type S2 = {
-    /** NavigableMap module type signature for types with a parametric type arity of 1. */
-
-    type t 'k 'v;
-
-    include NavigableKeyedCollection.S2 with type t 'k 'v := t 'k 'v;
-    include Map.S2 with type t 'k 'v := t 'k 'v;
-
-    let navigableKeySet: (t 'k 'v) => (NavigableSet.t 'k);
-
-    let toNavigableMap: (t 'k 'v) => NavigableMap.t 'k 'v;
-  };
 
   let module Persistent = {
     module type S1 = {
@@ -538,21 +403,6 @@ let module NavigableMap = {
 
 let module Indexed = {
   include Indexed;
-
-  module type S1 = {
-    type t 'a;
-
-    include NavigableCollection.S1 with type t 'a := t 'a;
-
-    let get: int => (t 'a) => (option 'a);
-    let getOrRaise: int => (t 'a) => 'a;
-    let toKeyedCollection: (t 'a) => (KeyedCollection.t int 'a);
-    let toKeyedIterable: (t 'a) => (KeyedIterable.t int 'a);
-    let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int 'a);
-    let toMap: (t 'a) => (Map.t int 'a);
-    let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int 'a);
-    let toNavigableMap: (t 'a) => (NavigableMap.t int 'a);
-  };
 
   let module Persistent = {
     module type S1 = {

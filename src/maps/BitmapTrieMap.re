@@ -206,7 +206,6 @@ let rec alter
     }
 };
 
-
 let updateLevelNodePersistent
     (_: Transient.Owner.t)
     (index: int)
@@ -335,10 +334,71 @@ let reduceWhile
   reduceWhileWithResult shouldContinue predicate f acc map;
 };
 
-let rec toKeySequence (map: t 'k 'v): (Sequence.t 'k) => switch map {
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toKeySequence
-  | Collision _ entryMap => AVLTreeMap.toKeySequence entryMap
+let rec reduceKeys (f: 'acc => 'k => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc => switch map {
+  | Level _ nodes _ =>
+      let reducer acc node => node |> reduceKeys f acc;
+      nodes |> CopyOnWriteArray.reduce reducer acc
+  | Collision _ entryMap =>
+      entryMap |> AVLTreeMap.reduceKeys f acc
+  | Entry _ entryKey _  =>
+      f acc entryKey
+  | Empty => acc
+};
+
+let reduceKeysWhile
+    (predicate: 'acc => 'k => bool)
+    (f: 'acc => 'k => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc => {
+  let shouldContinue = ref true;
+  let predicate acc k  _ => {
+    let result = predicate acc k;
+    shouldContinue := result;
+    result;
+  };
+  let f acc k _ => f acc k;
+
+  reduceWhileWithResult shouldContinue predicate f acc map;
+};
+
+let rec reduceValues (f: 'acc => 'v => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc => switch map {
+  | Level _ nodes _ =>
+      let reducer acc node => node |> reduceValues f acc;
+      nodes |> CopyOnWriteArray.reduce reducer acc
+  | Collision _ entryMap =>
+      entryMap |> AVLTreeMap.reduceValues f acc
+  | Entry _ _ v  =>
+      f acc v
+  | Empty => acc
+};
+
+let reduceValuesWhile
+    (predicate: 'acc => 'v => bool)
+    (f: 'acc => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc => {
+  let shouldContinue = ref true;
+  let predicate acc _ v => {
+    let result = predicate acc v;
+    shouldContinue := result;
+    result;
+  };
+  let f acc _ v => f acc v;
+
+  reduceWhileWithResult shouldContinue predicate f acc map;
+};
+
+let rec keysSequence (map: t 'k 'v): (Sequence.t 'k) => switch map {
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap keysSequence
+  | Collision _ entryMap => AVLTreeMap.keysSequence entryMap
   | Entry _ entryKey _ => Sequence.return entryKey;
+  | Empty => Sequence.empty ();
+};
+
+let rec valuesSequence (map: t 'k 'v): (Sequence.t 'v) => switch map {
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap valuesSequence
+  | Collision _ entryMap => AVLTreeMap.valuesSequence entryMap
+  | Entry _ _ entryValue => Sequence.return entryValue;
   | Empty => Sequence.empty ();
 };
 

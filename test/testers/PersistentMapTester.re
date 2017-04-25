@@ -90,15 +90,15 @@ let test
       PersistentMap.empty () |> PersistentMap.isNotEmpty |> Expect.toBeEqualToFalse;
       mapHashed |> PersistentMap.isNotEmpty |> Expect.toBeEqualToTrue;
     }),
-    it "keySet" (fun () => {
-      let keySet = mapHashed |> PersistentMap.keySet;
+    it "keysSet" (fun () => {
+      let keysSet = mapHashed |> PersistentMap.keysSet;
 
       keyValuePairsHashed |> Iterable.forEach (fun (i, _) => {
-        keySet |> Set.contains i |> Expect.toBeEqualToTrue;
+        keysSet |> Set.contains i |> Expect.toBeEqualToTrue;
       });
 
-      map |> PersistentMap.keySet |> Set.contains (-1) |> Expect.toBeEqualToFalse;
-      map |> PersistentMap.keySet |> Set.contains count |> Expect.toBeEqualToFalse;
+      map |> PersistentMap.keysSet |> Set.contains (-1) |> Expect.toBeEqualToFalse;
+      map |> PersistentMap.keysSet |> Set.contains count |> Expect.toBeEqualToFalse;
     }),
     it "merge" (fun () => {
       let acc = IntRange.create start::0 count::countDiv2

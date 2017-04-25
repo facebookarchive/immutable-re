@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Functions.Operators;
-
  /** AVL tree based Map. */
 module type S1 = {
   type k;
@@ -20,6 +18,11 @@ module type S1 = {
   let firstKeyOrRaise: t 'v => k;
   let firstValue: t 'v => option 'v;
   let firstValueOrRaise: t 'v => 'v;
+  let keysCollectionReversed: t 'v => Collection.t k;
+  let keysNavigableCollection: t 'v => NavigableCollection.t k;
+  let keysNavigableCollectionReversed: t 'v => NavigableCollection.t k;
+  let keysSequentialCollection: t 'v => SequentialCollection.t k;
+  let keysSequentialCollectionReversed: t 'v => SequentialCollection.t k;
   let keysReversed: t 'v => Iterable.t k;
   let last: t 'v => option (k, 'v);
   let lastOrRaise: t 'v => (k, 'v);
@@ -30,19 +33,42 @@ module type S1 = {
   let reduceReversed:
     while_::('acc => k => 'v => bool)? =>
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let reduceKeysReversed:
+    while_::('acc => k => bool)? =>
+    ('acc => k => 'acc) => 'acc => t 'v => 'acc;
+  let reduceValuesReversed:
+    while_::('acc => 'v => bool)? =>
+    ('acc => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterableReversed: t 'v => Iterable.t (k, 'v);
+  let toKeyedCollectionReversed: t 'v => KeyedCollection.t k 'v;
   let toKeyedIterableReversed: t 'v => KeyedIterable.t k 'v;
   let toNavigableKeyedCollection: t 'v => NavigableKeyedCollection.t k 'v;
+  let toNavigableKeyedCollectionReversed:
+    t 'v => NavigableKeyedCollection.t k 'v;
   let toSequenceReversed: t 'v => Sequence.t (k, 'v);
+  let valuesCollectionReversed: t 'v => Collection.t 'v;
+  let valuesNavigableCollection: t 'v => NavigableCollection.t 'v;
+  let valuesNavigableCollectionReversed: t 'v => NavigableCollection.t 'v;
+  let valuesSequentialCollection: t 'v => SequentialCollection.t 'v;
+  let valuesSequentialCollectionReversed: t 'v => SequentialCollection.t 'v;
   let valuesReversed: t 'v => Iterable.t 'v;
-  let navigableKeySet: t 'v => NavigableSet.t k;
+  let keysNavigableSet: t 'v => NavigableSet.t k;
+  let keysNavigableSetReversed: t 'v => NavigableSet.t k;
+  let toMapReversed: t 'v => ImmMap.t k 'v;
   let toNavigableMap: t 'v => NavigableMap.t k 'v;
+  let toNavigableMapReversed: t 'v => NavigableMap.t k 'v;
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
   let keys: t 'v => Iterable.t k;
   let reduce:
     while_::('acc => k => 'v => bool)? =>
     ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let reduceKeys:
+    while_::('acc => k => bool)? =>
+    ('acc => k => 'acc) => 'acc => t 'v => 'acc;
+  let reduceValues:
+    while_::('acc => 'v => bool)? =>
+    ('acc => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toIterable: t 'v => Iterable.t (k, 'v);
   let toKeyedIterable: t 'v => KeyedIterable.t k 'v;
   let values: t 'v => Iterable.t 'v;
@@ -50,11 +76,15 @@ module type S1 = {
   let count: t 'v => int;
   let isEmpty: t 'v => bool;
   let isNotEmpty: t 'v => bool;
+  let keysCollection: t 'v => Collection.t k;
+  let keysSequence: t 'v => Sequence.t k;
   let toKeyedCollection: t 'v => KeyedCollection.t k 'v;
   let toSequence: t 'v => Sequence.t (k, 'v);
+  let valuesCollection: t 'v => Collection.t 'v;
+  let valuesSequence: t 'v => Sequence.t 'v;
   let get: k => t 'v => option 'v;
   let getOrRaise: k => t 'v => 'v;
-  let keySet: t 'v => ImmSet.t k;
+  let keysSet: t 'v => ImmSet.t k;
   let toMap: t 'v => ImmMap.t k 'v;
   let alter: k => (option 'v => option 'v) => t 'v => t 'v;
   let merge:
@@ -99,58 +129,6 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     };
   };
 
-  let containsKey (key: k) ({ tree }: t 'v): bool =>
-    tree |> AVLTreeMap.containsKey comparator key;
-
-  let count ({ count }: t 'v): int => count;
-
-  let first ({ tree }: t 'v): (option (k, 'v)) =>
-    tree |> AVLTreeMap.first;
-
-  let firstOrRaise ({ tree }: t 'v): (k, 'v) =>
-    tree |> AVLTreeMap.firstOrRaise;
-
-  let firstKey ({ tree }: t 'v): (option k) =>
-    tree |> AVLTreeMap.firstKey;
-
-  let firstKeyOrRaise ({ tree }: t 'v): k =>
-    tree |> AVLTreeMap.firstKeyOrRaise;
-
-  let firstValue ({ tree }: t 'v): (option 'v) =>
-    tree |> AVLTreeMap.firstValue;
-
-  let firstValueOrRaise ({ tree }: t 'v): 'v =>
-    tree |> AVLTreeMap.firstValueOrRaise;
-
-  let get (key: k) ({ tree }: t 'v): (option 'v) =>
-    tree |> AVLTreeMap.get comparator key;
-
-  let getOrRaise (key: k) ({ tree }: t 'v): 'v =>
-    tree |> AVLTreeMap.getOrRaise comparator key;
-
-  let isEmpty ({ count }: t 'v): bool =>
-    count === 0;
-
-  let isNotEmpty ({ count }: t 'v): bool =>
-    count !== 0;
-
-  let last ({ tree }: t 'v): (option (k, 'v)) =>
-    tree |> AVLTreeMap.last;
-
-  let lastOrRaise ({ tree }: t 'v): (k, 'v) =>
-    tree |> AVLTreeMap.lastOrRaise;
-
-  let lastKey ({ tree }: t 'v): (option k) =>
-    tree |> AVLTreeMap.lastKey;
-
-  let lastKeyOrRaise ({ tree }: t 'v): k =>
-    tree |> AVLTreeMap.lastKeyOrRaise;
-
-  let lastValue ({ tree }: t 'v): (option 'v) =>
-    tree |> AVLTreeMap.lastValue;
-
-  let lastValueOrRaise ({ tree }: t 'v): 'v =>
-    tree |> AVLTreeMap.lastValueOrRaise;
 
   let put (key: k) (value: 'v) ({ count, tree } as map: t 'v): (t 'v) => {
     let alterResult = ref AlterResult.NoChange;
@@ -175,11 +153,62 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
     empty () |> putAllEntries iter;
 
-  include (KeyedIterable.Make1 {
+  include (NavigableMap.Make1 {
     type nonrec k = k;
     type nonrec t 'v = t 'v;
 
-    let isEmpty = isEmpty;
+    let containsKey (key: k) ({ tree }: t 'v): bool =>
+      tree |> AVLTreeMap.containsKey comparator key;
+
+    let count ({ count }: t 'v): int => count;
+
+    let first ({ tree }: t 'v): (option (k, 'v)) =>
+      tree |> AVLTreeMap.first;
+
+    let firstOrRaise ({ tree }: t 'v): (k, 'v) =>
+      tree |> AVLTreeMap.firstOrRaise;
+
+    let firstKey ({ tree }: t 'v): (option k) =>
+      tree |> AVLTreeMap.firstKey;
+
+    let firstKeyOrRaise ({ tree }: t 'v): k =>
+      tree |> AVLTreeMap.firstKeyOrRaise;
+
+    let firstValue ({ tree }: t 'v): (option 'v) =>
+      tree |> AVLTreeMap.firstValue;
+
+    let firstValueOrRaise ({ tree }: t 'v): 'v =>
+      tree |> AVLTreeMap.firstValueOrRaise;
+
+    let get (key: k) ({ tree }: t 'v): (option 'v) =>
+      tree |> AVLTreeMap.get comparator key;
+
+    let getOrRaise (key: k) ({ tree }: t 'v): 'v =>
+      tree |> AVLTreeMap.getOrRaise comparator key;
+
+    let keysSequence ({ tree }: t 'v): (Sequence.t k) =>
+      tree |> AVLTreeMap.keysSequence;
+
+    let keysSequenceReversed ({ tree }: t 'v): (Sequence.t k) =>
+      tree |> AVLTreeMap.keysSequenceReversed;
+
+    let last ({ tree }: t 'v): (option (k, 'v)) =>
+      tree |> AVLTreeMap.last;
+
+    let lastOrRaise ({ tree }: t 'v): (k, 'v) =>
+      tree |> AVLTreeMap.lastOrRaise;
+
+    let lastKey ({ tree }: t 'v): (option k) =>
+      tree |> AVLTreeMap.lastKey;
+
+    let lastKeyOrRaise ({ tree }: t 'v): k =>
+      tree |> AVLTreeMap.lastKeyOrRaise;
+
+    let lastValue ({ tree }: t 'v): (option 'v) =>
+      tree |> AVLTreeMap.lastValue;
+
+    let lastValueOrRaise ({ tree }: t 'v): 'v =>
+      tree |> AVLTreeMap.lastValueOrRaise;
 
     let reduce
         while_::(predicate: 'acc => k => 'v => bool)
@@ -188,22 +217,59 @@ let module Make1 = fun (Comparable: Comparable.S) => {
         ({ tree }: t 'v): 'acc =>
       if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduce f acc tree)
       else (AVLTreeMap.reduceWhile predicate f acc tree);
-  }: KeyedIterable.S1 with type t 'v := t 'v and type k := k);
 
-  let reduceReversedImpl
-      while_::(predicate: 'acc => k => 'v => bool)
-      (f: 'acc => k => 'v => 'acc)
-      (acc: 'acc)
-      ({ tree }: t 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduceReversed f acc tree)
-    else (AVLTreeMap.reduceReversedWhile predicate f acc tree);
+    let reduceReversed
+        while_::(predicate: 'acc => k => 'v => bool)
+        (f: 'acc => k => 'v => 'acc)
+        (acc: 'acc)
+        ({ tree }: t 'v): 'acc =>
+      if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduceReversed f acc tree)
+      else (AVLTreeMap.reduceReversedWhile predicate f acc tree);
 
-  let reduceReversed
-      while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
-      (f: 'acc => k => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'v): 'acc =>
-    reduceReversedImpl while_::predicate f acc map;
+    let reduceKeys
+        while_::(predicate: 'acc => k => bool)
+        (f: 'acc => k => 'acc)
+        (acc: 'acc)
+        ({ tree }: t 'v): 'acc =>
+      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceKeys f acc tree)
+      else (AVLTreeMap.reduceKeysWhile predicate f acc tree);
+
+    let reduceKeysReversed
+        while_::(predicate: 'acc => k => bool)
+        (f: 'acc => k => 'acc)
+        (acc: 'acc)
+        ({ tree }: t 'v): 'acc =>
+      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceKeysReversed f acc tree)
+      else (AVLTreeMap.reduceKeysReversedWhile predicate f acc tree);
+
+    let reduceValues
+        while_::(predicate: 'acc => 'v => bool)
+        (f: 'acc => 'v => 'acc)
+        (acc: 'acc)
+        ({ tree }: t 'v): 'acc =>
+      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceValues f acc tree)
+      else (AVLTreeMap.reduceValuesWhile predicate f acc tree);
+
+    let reduceValuesReversed
+        while_::(predicate: 'acc => 'v => bool)
+        (f: 'acc => 'v => 'acc)
+        (acc: 'acc)
+        ({ tree }: t 'v): 'acc =>
+      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceValuesReversed f acc tree)
+      else (AVLTreeMap.reduceValuesReversedWhile predicate f acc tree);
+
+    let toSequence ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
+      tree |> AVLTreeMap.toSequence;
+
+    let toSequenceReversed ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
+      tree |> AVLTreeMap.toSequenceReversed;
+
+    let valuesSequence ({ tree }: t 'v): (Sequence.t 'v) =>
+      tree |> AVLTreeMap.valuesSequence;
+
+    let valuesSequenceReversed ({ tree }: t 'v): (Sequence.t 'v) =>
+      tree |> AVLTreeMap.valuesSequenceReversed;
+  }: NavigableMap.S1 with type t 'v:= t 'v and type k:= k);
 
   let remove (key: k) (map: t 'v): (t 'v) =>
     map |> alter key Functions.alwaysNone;
@@ -221,216 +287,10 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     { count: count - 1, tree: newTree }
   };
 
-  let toKeySequence ({ tree }: t 'v): (Sequence.t k) =>
-    tree |> AVLTreeMap.toKeySequence;
-
-  let toKeySequenceReversed ({ tree }: t 'v): (Sequence.t k) =>
-    tree |> AVLTreeMap.toKeySequenceReversed;
-
-  let toSequence ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
-    tree |> AVLTreeMap.toSequence;
-
-  let toSequenceReversed ({ tree }: t 'v): (Sequence.t (k, 'v)) =>
-    tree |> AVLTreeMap.toSequenceReversed;
-
-  let iterableReversedBase: Iterable.s (t 'v) (k, 'v) = {
-    reduce: fun while_::predicate f acc map => map |> reduceReversed
-      while_::(fun acc k v => predicate acc (k, v))
-      (fun acc k v => f acc (k, v))
-      acc
-  };
-
-  let toIterableReversed (map: t 'v): (Iterable.t (k, 'v)) =>
-    if (isEmpty map) (Iterable.empty ())
-    else Iterable.Instance map iterableReversedBase;
-
-  let keyedIterableReversedBase: KeyedIterable.s (t 'v) k 'v = { reduce: reduceReversedImpl };
-
-  let toKeyedIterableReversed (map: t 'v): (KeyedIterable.t k 'v) =>
-    if (isEmpty map) (KeyedIterable.empty ())
-    else KeyedIterable.Instance map keyedIterableReversedBase;
-
-  let keysReversed (map: t 'v): (Iterable.t k) =>
-    map |> toKeyedIterableReversed |> KeyedIterable.keys;
-
-  let valuesReversed (map: t 'v): (Iterable.t 'v) =>
-    map |> toKeyedIterableReversed |> KeyedIterable.values;
-
-  let keyCollectionOps (): Collection.s (t 'v) k  => {
-    count: count,
-    reduce: fun while_::predicate reducer acc collection =>
-      collection |> toKeyedIterable |> KeyedIterable.keys |> Iterable.reduce
-        while_::predicate reducer acc,
-    toIterable: toKeyedIterable >> KeyedIterable.keys,
-    toSequence: toKeySequence,
-  };
-
-  let toKeyCollection (map: t _): Collection.t k =>
-    if (isEmpty map) (Collection.empty ())
-    else Collection.Instance map (keyCollectionOps ());
-
-  let keySetBase (): ImmSet.s (t 'v) k => {
-    contains: containsKey,
-    count,
-    reduce: fun while_::predicate reducer acc map =>
-      map |> keys |> Iterable.reduce while_::predicate reducer acc,
-    toCollection: toKeyCollection,
-    toIterable: toKeyedIterable >> KeyedIterable.keys,
-    toSequence: toKeySequence,
-  };
-
-  let keySet (map: t 'v): (ImmSet.t k) =>
-    if (isEmpty map) (ImmSet.empty ())
-    else ImmSet.Instance map (keySetBase ());
-
-  let sequentialKeyCollectionBase (): SequentialCollection.s (t 'v) k => {
-    count,
-    first: firstKey,
-    firstOrRaise: firstKeyOrRaise,
-    reduce: fun while_::predicate reducer acc map =>
-      map |> toKeyedIterable |> KeyedIterable.keys |> Iterable.reduce while_::predicate reducer acc,
-    toCollection: toKeyCollection,
-    toIterable: toKeyedIterable >> KeyedIterable.keys,
-    toSequence: toKeySequence,
-  };
-
-  let toSequentialKeyCollection (map: t 'v): (SequentialCollection.t k) =>
-    if (isEmpty map) (SequentialCollection.empty ())
-    else SequentialCollection.create (sequentialKeyCollectionBase ()) map;
-
-
-  let toNavigableKeyCollection (map: t 'v): (NavigableCollection.t k) =>
-    if (isEmpty map) (NavigableCollection.empty ())
-    else NavigableCollection.Instance map (sequentialKeyCollectionBase ()) (sequentialKeyCollectionBase ());
-
-  let navigableKeySetBase (): NavigableSet.s (t 'v) k => {
-    contains: containsKey,
-    count,
-    first: firstKey,
-    firstOrRaise: firstKeyOrRaise,
-    reduce: fun while_::predicate reducer acc map =>
-      map |> keys |> Iterable.reduce while_::predicate reducer acc,
-    toCollection: toKeyCollection,
-    toIterable: toKeyedIterable >> KeyedIterable.keys,
-    toNavigableCollection: toNavigableKeyCollection,
-    toSequence: toKeySequence,
-    toSequentialCollection: toSequentialKeyCollection,
-    toSet: keySet,
-  };
-
-  let navigableKeySet (map: t 'v): (NavigableSet.t k) =>
-    if (isEmpty map) (NavigableSet.empty ())
-    /* FIXME: Reversed is totally broken here, but this is temporary until
-     * refactoring KeyedCollection is complete.
-     */
-    else NavigableSet.Instance map (navigableKeySetBase ()) (navigableKeySetBase ());
-
-  let keyedCollectionOps: KeyedCollection.Ops.t k 'v (t 'v) = {
-    containsKey,
-    count,
-    keys,
-    toIterable,
-    toKeyedIterable,
-    toSequence,
-    values,
-  };
-
-  let toKeyedCollection (map: t 'v): (KeyedCollection.t k 'v) =>
-    if (isEmpty map) (KeyedCollection.empty ())
-    else KeyedCollection.KeyedCollection map keyedCollectionOps;
-
-  let mapOps: ImmMap.Ops.t k 'v (t 'v) = {
-    containsKey,
-    count,
-    get,
-    getOrRaise,
-    keys,
-    keySet,
-    toIterable,
-    toKeyedCollection,
-    toKeyedIterable,
-    toSequence,
-    values,
-  };
-
-  let toMap (map: t 'v): (ImmMap.t k 'v) =>
-    if (isEmpty map) (ImmMap.empty ())
-    else ImmMap.Map map mapOps;
-
-  let navigableKeyedCollectionOps: NavigableKeyedCollection.Ops.t k 'v (t 'v) = {
-    containsKey,
-    count,
-    first,
-    firstOrRaise,
-    firstKey,
-    firstKeyOrRaise,
-    firstValue,
-    firstValueOrRaise,
-    keys,
-    keysReversed,
-    last,
-    lastOrRaise,
-    lastKey,
-    lastKeyOrRaise,
-    lastValue,
-    lastValueOrRaise,
-    toIterable,
-    toIterableReversed,
-    toKeyedCollection,
-    toKeyedIterable,
-    toKeyedIterableReversed,
-    toSequence,
-    toSequenceReversed,
-    values,
-    valuesReversed,
-  };
-
-  let toNavigableKeyedCollection (map: t 'v): (NavigableKeyedCollection.t k 'v) =>
-    if (isEmpty map) (NavigableKeyedCollection.empty ())
-    else NavigableKeyedCollection.NavigableKeyedCollection map navigableKeyedCollectionOps;
-
-  let navigableMap: NavigableMap.Ops.t k 'v (t 'v) = {
-    containsKey,
-    count,
-    first,
-    firstOrRaise,
-    firstKey,
-    firstKeyOrRaise,
-    firstValue,
-    firstValueOrRaise,
-    get,
-    getOrRaise,
-    keys,
-    keysReversed,
-    keySet,
-    last,
-    lastOrRaise,
-    lastKey,
-    lastKeyOrRaise,
-    lastValue,
-    lastValueOrRaise,
-    navigableKeySet,
-    toIterable,
-    toIterableReversed,
-    toKeyedCollection,
-    toKeyedIterable,
-    toKeyedIterableReversed,
-    toMap,
-    toNavigableKeyedCollection,
-    toSequence,
-    toSequenceReversed,
-    values,
-    valuesReversed
-  };
-
-  let toNavigableMap (map: t 'v): (NavigableMap.t k 'v) =>
-    if (isEmpty map) (NavigableMap.empty ())
-    else NavigableMap.NavigableMap map navigableMap;
-
   let merge
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
       (acc: t 'vAcc)
-      (next: t 'v): (t 'vAcc) =>  ImmSet.union (keySet next) (keySet acc)
+      (next: t 'v): (t 'vAcc) =>  ImmSet.union (keysSet next) (keysSet acc)
     |> Iterable.reduce (
         fun acc key => {
           let result = f key (acc |> get key) (next |> get key);
