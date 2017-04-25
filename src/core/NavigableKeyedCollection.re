@@ -177,8 +177,6 @@ let module Make1 = fun (Base: {
     first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
-    toCollection: keysCollection,
-    toIterable: keys,
     toSequence: keysSequence,
   };
 
@@ -187,8 +185,6 @@ let module Make1 = fun (Base: {
     first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
-    toCollection: keysCollectionReversed,
-    toIterable: keysReversed,
     toSequence: keysSequenceReversed,
   };
 
@@ -213,8 +209,6 @@ let module Make1 = fun (Base: {
     first: firstValue,
     firstOrRaise: firstValueOrRaise,
     reduce: Base.reduceValues,
-    toCollection: valuesCollection,
-    toIterable: values,
     toSequence: valuesSequence,
   };
 
@@ -223,8 +217,6 @@ let module Make1 = fun (Base: {
     first: lastValue,
     firstOrRaise: lastValueOrRaise,
     reduce: Base.reduceValuesReversed,
-    toCollection: valuesCollectionReversed,
-    toIterable: valuesReversed,
     toSequence: valuesSequenceReversed,
   };
 
@@ -352,8 +344,6 @@ let module Make2 = fun (Base: {
     first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
-    toCollection: keysCollection,
-    toIterable: keys,
     toSequence: keysSequence,
   };
 
@@ -362,8 +352,6 @@ let module Make2 = fun (Base: {
     first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
-    toCollection: keysCollectionReversed,
-    toIterable: keysReversed,
     toSequence: keysSequenceReversed,
   };
 
@@ -388,8 +376,6 @@ let module Make2 = fun (Base: {
     first: firstValue,
     firstOrRaise: firstValueOrRaise,
     reduce: Base.reduceValues,
-    toCollection: valuesCollection,
-    toIterable: values,
     toSequence: valuesSequence,
   };
 
@@ -398,8 +384,6 @@ let module Make2 = fun (Base: {
     first: lastValue,
     firstOrRaise: lastValueOrRaise,
     reduce: Base.reduceValuesReversed,
-    toCollection: valuesCollectionReversed,
-    toIterable: valuesReversed,
     toSequence: valuesSequenceReversed,
   };
 

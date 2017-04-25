@@ -71,8 +71,6 @@ let module Make1 = fun (Base: {
     contains: containsKey,
     count,
     reduce: Base.reduceKeys,
-    toCollection: keysCollection,
-    toIterable: keys,
     toSequence: keysSequence,
   };
 
@@ -121,8 +119,6 @@ let module Make2 = fun (Base: {
     contains: containsKey,
     count,
     reduce: Base.reduceKeys,
-    toCollection: keysCollection,
-    toIterable: keys,
     toSequence: keysSequence,
   };
 

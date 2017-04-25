@@ -14,78 +14,12 @@ type s 'set 'a = {
   contains: 'a => 'set => bool,
   count: 'set => int,
   reduce: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'set => 'acc,
-  toCollection: 'set => Collection.t 'a,
-  toIterable: 'set => Iterable.t 'a,
   toSequence: 'set => Sequence.t 'a,
 };
 
 type t 'a =
   | Empty
   | Instance 'set (s 'set 'a): t 'a;
-
-let contains (value: 'a) (set: t 'a): bool => switch set {
-  | Empty => false
-  | Instance set { contains } => contains value set
-};
-
-let count (set: t 'a): int => switch set {
-  | Empty => 0
-  | Instance set { count } => count set
-};
-
-let empty (): (t 'a) => Empty;
-
-let isEmpty (set: t 'a): bool =>
-  (count set) === 0;
-
-let isNotEmpty (set: t 'a): bool =>
-  (count set) !== 0;
-
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (collection: t 'a): 'acc => switch collection {
-  | Empty => acc
-  | Instance collection { reduce } =>
-      collection |> reduce while_::predicate f acc;
-};
-
-let toCollection (set: t 'a): (Collection.t 'a) => switch set {
-  | Empty => Collection.empty ()
-  | Instance set { toCollection } => toCollection set
-};
-
-let toIterable (set: t 'a): (Iterable.t 'a) => switch set {
-  | Empty => Iterable.empty ()
-  | Instance set { toIterable } => toIterable set
-};
-
-let toSequence (set: t 'a): (Sequence.t 'a) => switch set {
-  | Empty => Sequence.empty ()
-  | Instance set { toSequence } => toSequence set
-};
-
-let toSet (set: t 'a): (t 'a) => set;
-
-let equals (this: t 'a) (that: t 'a): bool => switch (this, that) {
-  | (Instance _ _, Instance _ _) =>
-      if (this === that) true
-      else if ((count this) !== (count that)) false
-      else this |> toIterable |> Iterable.every (flip contains that)
-  | _ => false
-};
-
-let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (flip contains that);
-
-let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (flip contains that >> not);
-
-let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
-  this |> toIterable,
-  subtract that this,
-];
 
 type set 'a = t 'a;
 
@@ -128,13 +62,11 @@ let module Make = fun (Base: {
     contains,
     count,
     reduce: Base.reduce,
-    toCollection,
-    toIterable,
     toSequence,
   };
 
   let toSet (set: t): (set a) =>
-    if (isEmpty set) (empty ())
+    if (isEmpty set) Empty
     else Instance set setBase;
 
 }: S with type t := Base.t and type a := Base.a);
@@ -156,13 +88,66 @@ let module Make1 = fun (Base: {
     contains,
     count,
     reduce: Base.reduce,
-    toCollection,
-    toIterable,
     toSequence,
   };
 
   let toSet (set: t 'a): (set 'a) =>
-    if (isEmpty set) (empty ())
+    if (isEmpty set) Empty
     else Instance set setBase;
 
 }: S1 with type t 'a := Base.t 'a);
+
+include(Make1 {
+  type nonrec t 'a = t 'a;
+
+  let contains (value: 'a) (set: t 'a): bool => switch set {
+    | Empty => false
+    | Instance set { contains } => contains value set
+  };
+
+  let count (set: t 'a): int => switch set {
+    | Empty => 0
+    | Instance set { count } => count set
+  };
+
+  let equals (this: t 'a) (that: t 'a): bool =>
+    failwith "not implemented";
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (collection: t 'a): 'acc => switch collection {
+    | Empty => acc
+    | Instance collection { reduce } =>
+        collection |> reduce while_::predicate f acc;
+  };
+
+  let toSequence (set: t 'a): (Sequence.t 'a) => switch set {
+    | Empty => Sequence.empty ()
+    | Instance set { toSequence } => toSequence set
+  };
+}: S1 with type t 'a := t 'a);
+
+let empty (): (t 'a) => Empty;
+
+let equals (this: t 'a) (that: t 'a): bool => switch (this, that) {
+  | (Instance _ _, Instance _ _) =>
+      if (this === that) true
+      else if ((count this) !== (count that)) false
+      else this |> toIterable |> Iterable.every (flip contains that)
+  | _ => false
+};
+
+let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+  this |> toIterable |> Iterable.filter (flip contains that);
+
+let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+  this |> toIterable |> Iterable.filter (flip contains that >> not);
+
+let toSet (set: t 'a): (t 'a) => set;
+
+let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
+  this |> toIterable,
+  subtract that this,
+];

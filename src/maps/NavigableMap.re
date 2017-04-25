@@ -114,7 +114,6 @@ let module Make1 = fun (Base: {
     let valuesSequence = valuesSequenceReversed;
   };
 
-  let keysSetReversed = ReversedImmMap.keysSet;
   let toMapReversed = ReversedImmMap.toMap;
 
   let keysNavigableSetImpl: NavigableSet.s (t 'v) k = {
@@ -123,12 +122,7 @@ let module Make1 = fun (Base: {
     first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
-    toCollection: keysCollection,
-    toIterable: keys,
-    toNavigableCollection: keysNavigableCollection,
     toSequence: keysSequence,
-    toSequentialCollection: keysSequentialCollection,
-    toSet: keysSet,
   };
 
   let keysNavigableSetReversedImpl: NavigableSet.s (t 'v) k = {
@@ -137,12 +131,7 @@ let module Make1 = fun (Base: {
     first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
-    toCollection: keysCollectionReversed,
-    toIterable: keysReversed,
-    toNavigableCollection: keysNavigableCollectionReversed,
     toSequence: keysSequenceReversed,
-    toSequentialCollection: keysSequentialCollectionReversed,
-    toSet: keysSetReversed,
   };
 
   let keysNavigableSet (map: t 'v): NavigableSet.t k =>
@@ -253,7 +242,6 @@ let module Make2 = fun (Base: {
     let valuesSequence = valuesSequenceReversed;
   };
 
-  let keysSetReversed = ReversedImmMap.keysSet;
   let toMapReversed = ReversedImmMap.toMap;
 
   let keysNavigableSetImpl: NavigableSet.s (t 'k 'v) 'k = {
@@ -262,12 +250,7 @@ let module Make2 = fun (Base: {
     first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
-    toCollection: keysCollection,
-    toIterable: keys,
-    toNavigableCollection: keysNavigableCollection,
     toSequence: keysSequence,
-    toSequentialCollection: keysSequentialCollection,
-    toSet: keysSet,
   };
 
   let keysNavigableSetReversedImpl: NavigableSet.s (t 'k 'v) 'k = {
@@ -276,12 +259,7 @@ let module Make2 = fun (Base: {
     first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
-    toCollection: keysCollectionReversed,
-    toIterable: keysReversed,
-    toNavigableCollection: keysNavigableCollectionReversed,
     toSequence: keysSequenceReversed,
-    toSequentialCollection: keysSequentialCollectionReversed,
-    toSet: keysSetReversed,
   };
 
   let keysNavigableSet (map: t 'k 'v): NavigableSet.t 'k =>

@@ -18,42 +18,6 @@ type t 'a =
   | Empty
   | Instance 'collection (s 'collection 'a): t 'a;
 
-let count (collection: t 'a): int => switch collection {
-  | Empty => 0
-  | Instance collection { count } => count collection
-};
-
-let empty (): (t 'a) => Empty;
-
-let isEmpty (collection: t 'a): bool =>
-  (count collection) === 0;
-
-let isNotEmpty (collection: t 'a): bool =>
-  (count collection) !== 0;
-
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (collection: t 'a): 'acc => switch collection {
-  | Empty => acc
-  | Instance collection { reduce } =>
-      collection |> reduce while_::predicate f acc;
-};
-
-let toIterable (collection: t 'a): (Iterable.t 'a) => switch collection {
-  | Empty => Iterable.empty ()
-  | Instance collection { toIterable } => toIterable collection
-};
-
-let toCollection (collection: t 'a): (t 'a) =>
-  collection;
-
-let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
-  | Empty => Sequence.empty ()
-  | Instance collection { toSequence } => toSequence collection
-};
-
 type collection 'a = t 'a;
 
 module type S = {
@@ -113,7 +77,7 @@ let module Make = fun (Base: {
   };
 
   let toCollection (collection: t): (collection a) =>
-    if (isEmpty collection) (empty ())
+    if (isEmpty collection) Empty
     else Instance collection collectionBase;
 
 }: S with type t := Base.t and type a := Base.a);
@@ -152,6 +116,35 @@ let module Make1 = fun (Base: {
   };
 
   let toCollection (collection: t 'a): (collection 'a) =>
-    if (isEmpty collection) (empty ())
+    if (isEmpty collection) Empty
     else Instance collection collectionBase;
 }: S1 with type t 'a := Base.t 'a);
+
+include(Make1 {
+  type nonrec t 'a = t 'a;
+
+  let count (collection: t 'a): int => switch collection {
+    | Empty => 0
+    | Instance collection { count } => count collection
+  };
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (collection: t 'a): 'acc => switch collection {
+    | Empty => acc
+    | Instance collection { reduce } =>
+        collection |> reduce while_::predicate f acc;
+  };
+
+  let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
+    | Empty => Sequence.empty ()
+    | Instance collection { toSequence } => toSequence collection
+  };
+}: S1 with type t 'a := t 'a);
+
+let empty (): (t 'a) => Empty;
+
+let toCollection (collection: t 'a): (t 'a) =>
+  collection;
