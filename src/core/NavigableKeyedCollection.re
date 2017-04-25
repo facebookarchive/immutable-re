@@ -16,307 +16,17 @@ type s 'keyed 'k 'v = {
   firstKeyOrRaise: 'keyed => 'k,
   firstValue: 'keyed => (option 'v),
   firstValueOrRaise: 'keyed => 'v,
-  keys: 'keyed => Iterable.t 'k,
-  keysCollection: 'keyed => Collection.t 'k,
-  keysNavigableCollection: 'keyed => (NavigableCollection.t 'k),
   keysSequence: 'keyed => Sequence.t 'k,
-  keysSequentialCollection: 'keyed => (SequentialCollection.t 'k),
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'keyed => 'acc),
   reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'keyed => 'acc,
   reduceValues: 'acc . while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => 'keyed => 'acc,
-  toIterable: 'keyed => Iterable.t ('k, 'v),
-  toKeyedCollection: 'keyed => KeyedCollection.t 'k 'v,
-  toKeyedIterable: 'keyed => KeyedIterable.t 'k 'v,
   toSequence: 'keyed => Sequence.t ('k, 'v),
-  values: 'keyed => Iterable.t 'v,
-  valuesCollection: 'keyed => Collection.t 'v,
-  valuesNavigableCollection: 'keyed => NavigableCollection.t 'v,
   valuesSequence: 'keyed => Sequence.t 'v,
-  valuesSequentialCollection: 'keyed => SequentialCollection.t 'v,
 };
 
 type t 'k 'v =
   | Empty
   | Instance 'keyed (s 'keyed 'k 'v) (s 'keyed 'k 'v): t 'k 'v;
-
-let containsKey (key: 'k) (keyed: t 'k 'v): bool => switch keyed {
-  | Empty => false
-  | Instance keyed { containsKey } _ => containsKey key keyed
-};
-
-let count (keyed: t 'k 'v): int => switch keyed {
-  | Empty => 0
-  | Instance keyed { count } _ => count keyed
-};
-
-let empty (): (t 'k 'v) => Empty;
-
-let first (keyed: t 'k 'v): option ('k, 'v) => switch keyed {
-  | Empty => None
-  | Instance keyed { first } _ => first keyed
-};
-
-let firstOrRaise (keyed: t 'k 'v): ('k, 'v) => switch keyed {
-  | Empty => failwith "empty"
-  | Instance keyed { firstOrRaise } _ => firstOrRaise keyed
-};
-
-let firstKey (keyed: t 'k 'v): option 'k => switch keyed {
-  | Empty => None
-  | Instance keyed { firstKey } _ => firstKey keyed
-};
-
-let firstKeyOrRaise (keyed: t 'k 'v): 'k => switch keyed {
-  | Empty => failwith "empty"
-  | Instance keyed { firstKeyOrRaise } _ => firstKeyOrRaise keyed
-};
-
-let firstValue (keyed: t 'k 'v): option 'v => switch keyed {
-  | Empty => None
-  | Instance keyed { firstValue } _ => firstValue keyed
-};
-
-let firstValueOrRaise (keyed: t 'k 'v): 'v => switch keyed {
-  | Empty => failwith "empty"
-  | Instance keyed { firstValueOrRaise } _ => firstValueOrRaise keyed
-};
-
-let isEmpty (keyed: t 'k 'v): bool =>
-  (count keyed) === 0;
-
-let isNotEmpty (keyed: t 'k 'v): bool =>
-  (count keyed) !== 0;
-
-let keys (keyed: t 'k 'v): Iterable.t 'k => switch keyed {
-  | Empty => Iterable.empty ()
-  | Instance keyed { keys } _ => keys keyed
-};
-
-let keysReversed (keyed: t 'k 'v): Iterable.t 'k => switch keyed {
-  | Empty => Iterable.empty ()
-  | Instance keyed _ { keys } => keys keyed
-};
-
-let keysCollection (keyed: t 'k 'v): Collection.t 'k => switch keyed {
-  | Empty => Collection.empty ()
-  | Instance keyed { keysCollection } _ => keysCollection keyed
-};
-
-let keysCollectionReversed (keyed: t 'k 'v): Collection.t 'k => switch keyed {
-  | Empty => Collection.empty ()
-  | Instance keyed _ { keysCollection } => keysCollection keyed
-};
-
-let keysNavigableCollection (keyed: t 'k 'v): NavigableCollection.t 'k => switch keyed {
-  | Empty => NavigableCollection.empty ()
-  | Instance keyed { keysNavigableCollection } _ => keysNavigableCollection keyed
-};
-
-let keysNavigableCollectionReversed (keyed: t 'k 'v): NavigableCollection.t 'k => switch keyed {
-  | Empty => NavigableCollection.empty ()
-  | Instance keyed _ { keysNavigableCollection } => keysNavigableCollection keyed
-};
-
-let keysSequence (keyed: t 'k 'v): Sequence.t 'k => switch keyed {
-  | Empty => Sequence.empty ()
-  | Instance keyed { keysSequence } _ => keysSequence keyed
-};
-
-let keysSequenceReversed (keyed: t 'k 'v): Sequence.t 'k => switch keyed {
-  | Empty => Sequence.empty ()
-  | Instance keyed _ { keysSequence } => keysSequence keyed
-};
-
-let keysSequentialCollection (keyed: t 'k 'v): SequentialCollection.t 'k => switch keyed {
-  | Empty => SequentialCollection.empty ()
-  | Instance keyed { keysSequentialCollection } _ => keysSequentialCollection keyed
-};
-
-let keysSequentialCollectionReversed (keyed: t 'k 'v): SequentialCollection.t 'k => switch keyed {
-  | Empty => SequentialCollection.empty ()
-  | Instance keyed _ { keysSequentialCollection } => keysSequentialCollection keyed
-};
-
-let last (keyed: t 'k 'v): option ('k, 'v) => switch keyed {
-  | Empty => None
-  | Instance keyed _ { first } => first keyed
-};
-
-let lastOrRaise (keyed: t 'k 'v): ('k, 'v) => switch keyed {
-  | Empty => failwith "empty"
-  | Instance keyed _ { firstOrRaise } => firstOrRaise keyed
-};
-
-let lastKey (keyed: t 'k 'v): option 'k => switch keyed {
-  | Empty => None
-  | Instance keyed _ { firstKey } => firstKey keyed
-};
-
-let lastKeyOrRaise (keyed: t 'k 'v): 'k => switch keyed {
-  | Empty => failwith "empty"
-  | Instance keyed _ { firstKeyOrRaise } => firstKeyOrRaise keyed
-};
-
-let lastValue (keyed: t 'k 'v): option 'v => switch keyed {
-  | Empty => None
-  | Instance keyed _ { firstValue } => firstValue keyed
-};
-
-let lastValueOrRaise (keyed: t 'k 'v): 'v => switch keyed {
-  | Empty => failwith "empty"
-  | Instance keyed _ { firstValueOrRaise } => firstValueOrRaise keyed
-};
-
-let reduce
-    while_::(predicate:'acc => 'k => 'v => bool)=Functions.alwaysTrue3
-    (f: 'acc => 'k => 'v => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter { reduce } _ => iter |> reduce while_::predicate f acc;
-};
-
-let reduceReversed
-    while_::(predicate:'acc => 'k => 'v => bool)=Functions.alwaysTrue3
-    (f: 'acc => 'k => 'v => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter _ { reduce } => iter |> reduce while_::predicate f acc;
-};
-
-let reduceKeys
-    while_::(predicate:'acc => 'k => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'k => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter { reduceKeys } _ => iter |> reduceKeys while_::predicate f acc;
-};
-
-let reduceKeysReversed
-    while_::(predicate:'acc => 'k => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'k => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter _ { reduceKeys } => iter |> reduceKeys while_::predicate f acc;
-};
-
-let reduceValues
-    while_::(predicate:'acc => 'v => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'v => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter { reduceValues } _ => iter |> reduceValues while_::predicate f acc;
-};
-
-let reduceValuesReversed
-    while_::(predicate:'acc => 'v => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'v => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter _ { reduceValues } => iter |> reduceValues while_::predicate f acc;
-};
-
-let toIterable (keyed: t 'k 'v): Iterable.t ('k, 'v) => switch keyed {
-  | Empty => Iterable.empty ()
-  | Instance keyed { toIterable } _ => toIterable keyed
-};
-
-let toIterableReversed (keyed: t 'k 'v): Iterable.t ('k, 'v) => switch keyed {
-  | Empty => Iterable.empty ()
-  | Instance keyed _ { toIterable } => toIterable keyed
-};
-
-let toKeyedCollection (keyed: t 'k 'v): (KeyedCollection.t 'k 'v) => switch keyed {
-  | Empty => KeyedCollection.empty ()
-  | Instance keyed { toKeyedCollection } _ => toKeyedCollection keyed
-};
-
-let toKeyedCollectionReversed (keyed: t 'k 'v): (KeyedCollection.t 'k 'v) => switch keyed {
-  | Empty => KeyedCollection.empty ()
-  | Instance keyed _ { toKeyedCollection } => toKeyedCollection keyed
-};
-
-let toKeyedIterable (keyed: t 'k 'v): KeyedIterable.t 'k 'v => switch keyed {
-  | Empty => KeyedIterable.empty ()
-  | Instance keyed { toKeyedIterable } _ => toKeyedIterable keyed
-};
-
-let toKeyedIterableReversed (keyed: t 'k 'v): KeyedIterable.t 'k 'v => switch keyed {
-  | Empty => KeyedIterable.empty ()
-  | Instance keyed _ { toKeyedIterable } => toKeyedIterable keyed
-};
-
-let toNavigableKeyedCollection (keyed: t 'k 'v): t 'k 'v => keyed;
-
-let toNavigableKeyedCollectionReversed (keyed: t 'k 'v): t 'k 'v => switch keyed {
-  | Empty => Empty
-  | Instance keyed impl implReversed => Instance keyed implReversed impl
-};
-
-let toSequence (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
-  | Empty => Sequence.empty ()
-  | Instance keyed { toSequence } _ => toSequence keyed
-};
-
-let toSequenceReversed (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
-  | Empty => Sequence.empty ()
-  | Instance keyed _ { toSequence } => toSequence keyed
-};
-
-let values (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
-  | Empty => Iterable.empty ()
-  | Instance keyed { values } _ => values keyed
-};
-
-let valuesReversed (keyed: t 'k 'v): Iterable.t 'v => switch keyed {
-  | Empty => Iterable.empty ()
-  | Instance keyed _ { values } => values keyed
-};
-
-let valuesCollection (keyed: t 'k 'v): Collection.t 'v => switch keyed {
-  | Empty => Collection.empty ()
-  | Instance keyed { valuesCollection } _ => valuesCollection keyed
-};
-
-let valuesCollectionReversed (keyed: t 'k 'v): Collection.t 'v => switch keyed {
-  | Empty => Collection.empty ()
-  | Instance keyed _ { valuesCollection } => valuesCollection keyed
-};
-
-let valuesNavigableCollection (keyed: t 'k 'v): NavigableCollection.t 'v => switch keyed {
-  | Empty => NavigableCollection.empty ()
-  | Instance keyed { valuesNavigableCollection } _ => valuesNavigableCollection keyed
-};
-
-let valuesNavigableCollectionReversed (keyed: t 'k 'v): NavigableCollection.t 'v => switch keyed {
-  | Empty => NavigableCollection.empty ()
-  | Instance keyed _ { valuesNavigableCollection } => valuesNavigableCollection keyed
-};
-
-let valuesSequence (keyed: t 'k 'v): Sequence.t 'v => switch keyed {
-  | Empty => Sequence.empty ()
-  | Instance keyed { valuesSequence } _ => valuesSequence keyed
-};
-
-let valuesSequenceReversed (keyed: t 'k 'v): Sequence.t 'v => switch keyed {
-  | Empty => Sequence.empty ()
-  | Instance keyed _ { valuesSequence } => valuesSequence keyed
-};
-
-let valuesSequentialCollection (keyed: t 'k 'v): SequentialCollection.t 'v => switch keyed {
-  | Empty => SequentialCollection.empty ()
-  | Instance keyed { valuesSequentialCollection } _ => valuesSequentialCollection keyed
-};
-
-let valuesSequentialCollectionReversed (keyed: t 'k 'v): SequentialCollection.t 'v => switch keyed {
-  | Empty => SequentialCollection.empty ()
-  | Instance keyed _ { valuesSequentialCollection } => valuesSequentialCollection keyed
-};
 
 type navigableKeyedCollection 'k 'v = t 'k 'v;
 
@@ -543,23 +253,12 @@ let module Make1 = fun (Base: {
     firstKeyOrRaise,
     firstValue,
     firstValueOrRaise,
-    keys,
-    keysCollection,
-    keysNavigableCollection,
     keysSequence,
-    keysSequentialCollection,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
     reduceValues: Base.reduceValues,
-    toIterable,
-    toKeyedCollection,
-    toKeyedIterable,
     toSequence,
-    values,
-    valuesCollection,
-    valuesNavigableCollection,
     valuesSequence,
-    valuesSequentialCollection,
   };
 
   let sequentialKeyedCollectionReversedBase: s (t 'v) k 'v  = {
@@ -568,34 +267,360 @@ let module Make1 = fun (Base: {
     first: last,
     firstOrRaise: lastOrRaise,
     firstKey: lastKey,
-    firstKeyOrRaise,
-    firstValue,
-    firstValueOrRaise,
-    keys,
-    keysCollection,
-    keysNavigableCollection,
-    keysSequence,
-    keysSequentialCollection,
-    reduce: Base.reduce,
-    reduceKeys: Base.reduceKeys,
-    reduceValues: Base.reduceValues,
-    toIterable,
-    toKeyedCollection,
-    toKeyedIterable,
-    toSequence,
-    values,
-    valuesCollection,
-    valuesNavigableCollection,
-    valuesSequence,
-    valuesSequentialCollection,
+    firstKeyOrRaise: lastKeyOrRaise,
+    firstValue: lastValue,
+    firstValueOrRaise: lastValueOrRaise,
+    keysSequence: keysSequenceReversed,
+    reduce: Base.reduceReversed,
+    reduceKeys: Base.reduceKeysReversed,
+    reduceValues: Base.reduceValuesReversed,
+    toSequence: toSequenceReversed,
+    valuesSequence: valuesSequenceReversed,
   };
 
   let toNavigableKeyedCollection (keyed: t 'v): navigableKeyedCollection k 'v =>
-    if (isEmpty keyed) (empty ())
+    if (isEmpty keyed) Empty
     else Instance keyed sequentialKeyedCollectionBase sequentialKeyedCollectionReversedBase;
 
   let toNavigableKeyedCollectionReversed (keyed: t 'v): navigableKeyedCollection k 'v =>
-    if (isEmpty keyed) (empty ())
+    if (isEmpty keyed) Empty
     else Instance keyed sequentialKeyedCollectionReversedBase sequentialKeyedCollectionBase;
 
 }: S1 with type k := Base.k and type t 'v := Base.t 'v);
+
+let module Make2 = fun (Base: {
+  type t 'k 'v;
+
+  let containsKey: 'k => t 'k 'v => bool;
+  let count: t 'k 'v => int;
+  let first: (t 'k 'v) => (option ('k, 'v));
+  let firstOrRaise: (t 'k 'v) => ('k, 'v);
+  let firstKey: (t 'k 'v) => (option 'k);
+  let firstKeyOrRaise: (t 'k 'v) => 'k;
+  let firstValue: (t 'k 'v) => (option 'v);
+  let firstValueOrRaise: (t 'k 'v) => 'v;
+  let keysSequence: (t 'k 'v) => Sequence.t 'k;
+  let keysSequenceReversed: (t 'k 'v) => Sequence.t 'k;
+  let last: (t 'k 'v) => (option ('k, 'v));
+  let lastOrRaise: (t 'k 'v) => ('k, 'v);
+  let lastKey: (t 'k 'v) => (option 'k);
+  let lastKeyOrRaise: (t 'k 'v) => 'k;
+  let lastValue: (t 'k 'v) => (option 'v);
+  let lastValueOrRaise: (t 'k 'v) => 'v;
+  let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceReversed: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceKeysReversed: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceValuesReversed: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let toSequence: (t 'k 'v) => Sequence.t ('k, 'v);
+  let toSequenceReversed: (t 'k 'v) => Sequence.t ('k, 'v);
+  let valuesSequence: (t 'k 'v) => Sequence.t 'v;
+  let valuesSequenceReversed: (t 'k 'v) => Sequence.t 'v;
+}) => ({
+  include Base;
+
+  include (KeyedCollection.Make2 Base: KeyedCollection.S2 with type t 'k 'v := t 'k 'v);
+
+  let module ReversedKeyedCollection = KeyedCollection.Make2 {
+    type nonrec t 'k 'v = t 'k 'v;
+
+    let containsKey = containsKey;
+    let count = count;
+    let keysSequence = keysSequenceReversed;
+    let reduce = Base.reduceReversed;
+    let reduceKeys = Base.reduceKeysReversed;
+    let reduceValues = Base.reduceValuesReversed;
+    let toSequence = toSequenceReversed;
+    let valuesSequence = valuesSequenceReversed;
+  };
+
+  let keysCollectionReversed = ReversedKeyedCollection.keysCollection;
+  let keysReversed = ReversedKeyedCollection.keys;
+  let reduceReversed = ReversedKeyedCollection.reduce;
+  let reduceKeysReversed = ReversedKeyedCollection.reduceKeys;
+  let reduceValuesReversed = ReversedKeyedCollection.reduceValues;
+  let toIterableReversed = ReversedKeyedCollection.toIterable;
+  let toKeyedCollectionReversed = ReversedKeyedCollection.toKeyedCollection;
+  let toKeyedIterableReversed = ReversedKeyedCollection.toKeyedIterable;
+  let toSequenceReversed = ReversedKeyedCollection.toSequence;
+  let valuesCollectionReversed = ReversedKeyedCollection.valuesCollection;
+  let valuesReversed = ReversedKeyedCollection.values;
+
+  let keysSequentialCollectionBase: SequentialCollection.s (t 'k 'v) 'k = {
+    count,
+    first: firstKey,
+    firstOrRaise: firstKeyOrRaise,
+    reduce: Base.reduceKeys,
+    toCollection: keysCollection,
+    toIterable: keys,
+    toSequence: keysSequence,
+  };
+
+  let keysSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) 'k = {
+    count,
+    first: lastKey,
+    firstOrRaise: lastKeyOrRaise,
+    reduce: Base.reduceKeysReversed,
+    toCollection: keysCollectionReversed,
+    toIterable: keysReversed,
+    toSequence: keysSequenceReversed,
+  };
+
+  let keysSequentialCollection (collection: t 'k 'v): (SequentialCollection.t 'k) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection keysSequentialCollectionBase;
+
+  let keysSequentialCollectionReversed (collection: t 'k 'v): (SequentialCollection.t 'k) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection keysSequentialCollectionReversedBase;
+
+  let keysNavigableCollection (collection: t 'k 'v): (NavigableCollection.t 'k) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection keysSequentialCollectionBase keysSequentialCollectionReversedBase;
+
+  let keysNavigableCollectionReversed (collection: t 'k 'v): (NavigableCollection.t 'k) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection keysSequentialCollectionReversedBase keysSequentialCollectionBase;
+
+  let valuesSequentialCollectionBase: SequentialCollection.s (t 'k 'v) 'v = {
+    count,
+    first: firstValue,
+    firstOrRaise: firstValueOrRaise,
+    reduce: Base.reduceValues,
+    toCollection: valuesCollection,
+    toIterable: values,
+    toSequence: valuesSequence,
+  };
+
+  let valuesSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) 'v = {
+    count,
+    first: lastValue,
+    firstOrRaise: lastValueOrRaise,
+    reduce: Base.reduceValuesReversed,
+    toCollection: valuesCollectionReversed,
+    toIterable: valuesReversed,
+    toSequence: valuesSequenceReversed,
+  };
+
+  let valuesSequentialCollection (collection: t 'k 'v): (SequentialCollection.t 'v) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection valuesSequentialCollectionBase;
+
+  let valuesSequentialCollectionReversed (collection: t 'k 'v): (SequentialCollection.t 'v) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection valuesSequentialCollectionReversedBase;
+
+  let valuesNavigableCollection (collection: t 'k 'v): (NavigableCollection.t 'v) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection valuesSequentialCollectionBase valuesSequentialCollectionReversedBase;
+
+  let valuesNavigableCollectionReversed (collection: t 'k 'v): (NavigableCollection.t 'v) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection valuesSequentialCollectionReversedBase valuesSequentialCollectionBase;
+
+  let sequentialKeyedCollectionBase: s (t 'k 'v) 'k 'v  = {
+    containsKey,
+    count,
+    first,
+    firstOrRaise,
+    firstKey,
+    firstKeyOrRaise,
+    firstValue,
+    firstValueOrRaise,
+    keysSequence,
+    reduce: Base.reduce,
+    reduceKeys: Base.reduceKeys,
+    reduceValues: Base.reduceValues,
+    toSequence,
+    valuesSequence,
+  };
+
+  let sequentialKeyedCollectionReversedBase: s (t 'k 'v) 'k 'v  = {
+    containsKey,
+    count,
+    first: last,
+    firstOrRaise: lastOrRaise,
+    firstKey: lastKey,
+    firstKeyOrRaise: lastKeyOrRaise,
+    firstValue: lastValue,
+    firstValueOrRaise: lastValueOrRaise,
+    keysSequence: keysSequenceReversed,
+    reduce: Base.reduceReversed,
+    reduceKeys: Base.reduceKeysReversed,
+    reduceValues: Base.reduceValuesReversed,
+    toSequence: toSequenceReversed,
+    valuesSequence: valuesSequenceReversed,
+  };
+
+  let toNavigableKeyedCollection (keyed: t 'k 'v): navigableKeyedCollection 'k 'v =>
+    if (isEmpty keyed) Empty
+    else Instance keyed sequentialKeyedCollectionBase sequentialKeyedCollectionReversedBase;
+
+  let toNavigableKeyedCollectionReversed (keyed: t 'k 'v): navigableKeyedCollection 'k 'v =>
+    if (isEmpty keyed) Empty
+    else Instance keyed sequentialKeyedCollectionReversedBase sequentialKeyedCollectionBase;
+
+}: S2 with type t 'k 'v := Base.t 'k 'v);
+
+include (Make2 {
+  type nonrec t 'k 'v = t 'k 'v;
+
+  let containsKey (key: 'k) (keyed: t 'k 'v): bool => switch keyed {
+    | Empty => false
+    | Instance keyed { containsKey } _ => containsKey key keyed
+  };
+
+  let count (keyed: t 'k 'v): int => switch keyed {
+    | Empty => 0
+    | Instance keyed { count } _ => count keyed
+  };
+
+  let first (keyed: t 'k 'v): option ('k, 'v) => switch keyed {
+    | Empty => None
+    | Instance keyed { first } _ => first keyed
+  };
+
+  let firstOrRaise (keyed: t 'k 'v): ('k, 'v) => switch keyed {
+    | Empty => failwith "empty"
+    | Instance keyed { firstOrRaise } _ => firstOrRaise keyed
+  };
+
+  let firstKey (keyed: t 'k 'v): option 'k => switch keyed {
+    | Empty => None
+    | Instance keyed { firstKey } _ => firstKey keyed
+  };
+
+  let firstKeyOrRaise (keyed: t 'k 'v): 'k => switch keyed {
+    | Empty => failwith "empty"
+    | Instance keyed { firstKeyOrRaise } _ => firstKeyOrRaise keyed
+  };
+
+  let firstValue (keyed: t 'k 'v): option 'v => switch keyed {
+    | Empty => None
+    | Instance keyed { firstValue } _ => firstValue keyed
+  };
+
+  let firstValueOrRaise (keyed: t 'k 'v): 'v => switch keyed {
+    | Empty => failwith "empty"
+    | Instance keyed { firstValueOrRaise } _ => firstValueOrRaise keyed
+  };
+
+  let keysSequence (keyed: t 'k 'v): Sequence.t 'k => switch keyed {
+    | Empty => Sequence.empty ()
+    | Instance keyed { keysSequence } _ => keysSequence keyed
+  };
+
+  let keysSequenceReversed (keyed: t 'k 'v): Sequence.t 'k => switch keyed {
+    | Empty => Sequence.empty ()
+    | Instance keyed _ { keysSequence } => keysSequence keyed
+  };
+
+  let last (keyed: t 'k 'v): option ('k, 'v) => switch keyed {
+    | Empty => None
+    | Instance keyed _ { first } => first keyed
+  };
+
+  let lastOrRaise (keyed: t 'k 'v): ('k, 'v) => switch keyed {
+    | Empty => failwith "empty"
+    | Instance keyed _ { firstOrRaise } => firstOrRaise keyed
+  };
+
+  let lastKey (keyed: t 'k 'v): option 'k => switch keyed {
+    | Empty => None
+    | Instance keyed _ { firstKey } => firstKey keyed
+  };
+
+  let lastKeyOrRaise (keyed: t 'k 'v): 'k => switch keyed {
+    | Empty => failwith "empty"
+    | Instance keyed _ { firstKeyOrRaise } => firstKeyOrRaise keyed
+  };
+
+  let lastValue (keyed: t 'k 'v): option 'v => switch keyed {
+    | Empty => None
+    | Instance keyed _ { firstValue } => firstValue keyed
+  };
+
+  let lastValueOrRaise (keyed: t 'k 'v): 'v => switch keyed {
+    | Empty => failwith "empty"
+    | Instance keyed _ { firstValueOrRaise } => firstValueOrRaise keyed
+  };
+
+  let reduce
+      while_::(predicate:'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } _ => iter |> reduce while_::predicate f acc;
+  };
+
+  let reduceReversed
+      while_::(predicate:'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter _ { reduce } => iter |> reduce while_::predicate f acc;
+  };
+
+  let reduceKeys
+      while_::(predicate:'acc => 'k => bool)
+      (f: 'acc => 'k => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduceKeys } _ => iter |> reduceKeys while_::predicate f acc;
+  };
+
+  let reduceKeysReversed
+      while_::(predicate:'acc => 'k => bool)
+      (f: 'acc => 'k => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter _ { reduceKeys } => iter |> reduceKeys while_::predicate f acc;
+  };
+
+  let reduceValues
+      while_::(predicate:'acc => 'v => bool)
+      (f: 'acc => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduceValues } _ => iter |> reduceValues while_::predicate f acc;
+  };
+
+  let reduceValuesReversed
+      while_::(predicate:'acc => 'v => bool)
+      (f: 'acc => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter _ { reduceValues } => iter |> reduceValues while_::predicate f acc;
+  };
+
+  let toSequence (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
+    | Empty => Sequence.empty ()
+    | Instance keyed { toSequence } _ => toSequence keyed
+  };
+
+  let toSequenceReversed (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
+    | Empty => Sequence.empty ()
+    | Instance keyed _ { toSequence } => toSequence keyed
+  };
+
+  let valuesSequence (keyed: t 'k 'v): Sequence.t 'v => switch keyed {
+    | Empty => Sequence.empty ()
+    | Instance keyed { valuesSequence } _ => valuesSequence keyed
+  };
+
+  let valuesSequenceReversed (keyed: t 'k 'v): Sequence.t 'v => switch keyed {
+    | Empty => Sequence.empty ()
+    | Instance keyed _ { valuesSequence } => valuesSequence keyed
+  };
+}: S2 with type t 'k 'v := t 'k 'v);
+
+let empty (): (t 'k 'v) => Empty;
+
+let toNavigableKeyedCollection (keyed: t 'k 'v): t 'k 'v => keyed;
