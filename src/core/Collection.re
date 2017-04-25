@@ -10,7 +10,6 @@
 type s 'collection 'a = {
   count: 'collection => int,
   reduce: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'collection => 'acc,
-  toIterable: 'collection => Iterable.t 'a,
   toSequence: 'collection => Sequence.t 'a,
 };
 
@@ -72,7 +71,6 @@ let module Make = fun (Base: {
   let collectionBase: s t a = {
     count,
     reduce: Base.reduce,
-    toIterable,
     toSequence,
   };
 
@@ -111,7 +109,6 @@ let module Make1 = fun (Base: {
   let collectionBase: s (t 'a) 'a = {
     count,
     reduce: Base.reduce,
-    toIterable,
     toSequence,
   };
 

@@ -93,7 +93,6 @@ let module Make1 = fun (Base: {
   let keysCollectionImpl: Collection.s (t 'v) k = {
     count,
     reduce: Base.reduceKeys,
-    toIterable: keys,
     toSequence: keysSequence,
   };
 
@@ -103,7 +102,6 @@ let module Make1 = fun (Base: {
   let valuesCollectionImpl: Collection.s (t 'v) 'v = {
     count,
     reduce: Base.reduceValues,
-    toIterable: values,
     toSequence: valuesSequence,
   };
 
@@ -158,7 +156,6 @@ let module Make2 = fun (Base: {
   let keysCollectionImpl: Collection.s (t 'k 'v) 'k = {
     count,
     reduce: Base.reduceKeys,
-    toIterable: keys,
     toSequence: keysSequence,
   };
 
@@ -168,7 +165,6 @@ let module Make2 = fun (Base: {
   let valuesCollectionImpl: Collection.s (t 'k 'v) 'v = {
     count,
     reduce: Base.reduceValues,
-    toIterable: values,
     toSequence: valuesSequence,
   };
 
