@@ -124,12 +124,33 @@ let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> Transient.updateAll f
   |> Transient.persist;
 
-/* Unimplemented functions */
-let concat (vectors: list (t 'a)): (t 'a) =>
-  failwith "Not Implemented";
+let concat (vectors: list (t 'a)): (t 'a) => switch vectors {
+  /* FIXME: This is a trivial O(N) implementation. The underlying vector
+   * is an RRB tree, and can support implementation of efficient log32N
+   * concatenation.
+   */
+  | [] => empty ()
+  | [ vector ] => vector
+  | [head, ...tail] => tail |> ImmList.reduce
+      (fun acc next => acc |> addLastAll (toIterable next))
+      head;
+};
 
-let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) =>
-  failwith "Not Implemented";
+let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) => {
+  /* FIXME: This is a trivial O(N) implementation. The underlying vector
+   * is an RRB tree, and can support implementation of efficient log32N
+   * concatenation.
+   */
+  let start = vec |> take index |> addLast value;
+  concat [start, (vec |> skip index)];
+};
 
-let removeAt (index: int) (vec: t 'a): (t 'a) =>
-  failwith "Not Implemented";
+let removeAt (index: int) (vec: t 'a): (t 'a) => {
+  /* FIXME: This is a trivial O(N) implementation. The underlying vector
+   * is an RRB tree, and can support implementation of efficient log32N
+   * concatenation.
+   */
+  let start = vec |> take index;
+  let end_ = vec |> skip (index + 1);
+  concat [start, end_];
+};
