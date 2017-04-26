@@ -543,12 +543,12 @@ let rec alter
         }
       }
       else if (cmp === Ordering.greaterThan) {
-        let newReversed = alter comparator result xK f right;
+        let newRight = alter comparator result xK f right;
         switch !result {
-        | AlterResult.Added => rebalance left k v newReversed
+        | AlterResult.Added => rebalance left k v newRight
         | AlterResult.NoChange => tree
-        | AlterResult.Removed => Node height left k v newReversed
-        | AlterResult.Replace => Node height left k v newReversed
+        | AlterResult.Removed => Node height left k v newRight
+        | AlterResult.Replace => Node height left k v newRight
       }}
       else (switch (f @@ Option.return @@ v) {
         | None => switch (left, right) {
@@ -589,8 +589,8 @@ let rec put
         let newLeft = put comparator xK xV left;
         if (newLeft === left) tree else rebalance newLeft k v right
       } else if (cmp === Ordering.greaterThan) {
-        let newReversed = put comparator xK xV right;
-        if (newReversed === right) tree else rebalance left k v newReversed
+        let newRight = put comparator xK xV right;
+        if (newRight === right) tree else rebalance left k v newRight
       } else if (xV === v) tree
       else (Node height left xK xV right)
 };
@@ -627,8 +627,8 @@ let rec putWithResult
         let newLeft = putWithResult comparator result xK xV left;
         if (newLeft === left) tree else rebalance newLeft k v right
       } else if (cmp === Ordering.greaterThan) {
-        let newReversed = putWithResult comparator result xK xV right;
-        if (newReversed === right) tree else rebalance left k v newReversed
+        let newRight = putWithResult comparator result xK xV right;
+        if (newRight === right) tree else rebalance left k v newRight
       } else if (xV === v) tree
       else {
         result := AlterResult.Replace;

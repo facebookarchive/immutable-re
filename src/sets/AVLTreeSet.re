@@ -85,8 +85,8 @@ let rec add (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => switch
         let newLeft = add comparator x left;
         if (newLeft === left) tree else rebalance newLeft v right
       } else if (cmp === Ordering.greaterThan) {
-        let newReversed = add comparator x right;
-        if (newReversed === right) tree else rebalance left v newReversed
+        let newRight = add comparator x right;
+        if (newRight === right) tree else rebalance left v newRight
       } else tree
 };
 
@@ -269,16 +269,16 @@ let rec remove (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): (t 'a) => swi
         let newLeft = remove comparator x left;
         if (newLeft === left) tree else rebalance newLeft v right
       } else if (cmp === Ordering.greaterThan) {
-        let newReversed = remove comparator x right;
-        if (newReversed === right) tree else rebalance left v newReversed
+        let newRight = remove comparator x right;
+        if (newRight === right) tree else rebalance left v newRight
       } else switch (left, right) {
         | (Empty, _) => right
         | (_, Empty) => left
         | _ =>
             if (height > 4) {
               let first = ref x;
-              let newReversed = removeFirstOrRaiseWithValue first right;
-              rebalance left (!first) newReversed
+              let newRight = removeFirstOrRaiseWithValue first right;
+              rebalance left (!first) newRight
             } else rebalance left (firstOrRaise right) (removeFirstOrRaise right)
       }
     }
