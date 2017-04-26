@@ -17,17 +17,142 @@ type t 'a =
   | Empty
   | Instance 'iterable (s 'iterable 'a): t 'a;
 
-let empty (): t 'a => Empty;
+type iterable 'a = t 'a;
 
-let reduce
-    while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    (iter: t 'a): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter { reduce } =>
-      iter |> reduce while_::predicate f acc;
+module type S = {
+  type a;
+  type t;
+
+  let every: (a => bool) => t => bool;
+  let find: (a => bool) => t => (option a);
+  let findOrRaise: (a => bool) => t => a;
+  let forEach: while_::(a => bool)? => (a => unit) => t  => unit;
+  let none: (a => bool) => t => bool;
+  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let some: (a => bool) => t => bool;
+  let toIterable: t => (iterable a);
 };
+
+module type S1 = {
+  type t 'a;
+
+  let every: ('a => bool) => (t 'a) => bool;
+  let find: ('a => bool) => (t 'a) => (option 'a);
+  let findOrRaise: ('a => bool) => (t 'a) => 'a;
+  let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
+  let none: ('a => bool) => (t 'a) => bool;
+  let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
+  let some: ('a => bool) => (t 'a) => bool;
+  let toIterable: t 'a => (iterable 'a);
+};
+
+let module Make = fun (Base: {
+  type a;
+  type t;
+
+  let isEmpty: t => bool;
+  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+}) => ({
+  include Base;
+
+  let every (f: a => bool) (iterable: t): bool =>
+    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f) true;
+
+  let find (f: a => bool) (iterable: t): (option a) =>
+    iterable |> Base.reduce while_::(fun acc _ => Option.isEmpty acc) (
+      fun _ next => if (f next) (Some next) else None
+    ) None;
+
+  let findOrRaise (f: a => bool) (iterable: t): a =>
+    find f iterable |> Option.firstOrRaise;
+
+  let forEach while_::(predicate: a => bool)=Functions.alwaysTrue (f: a => unit) (iterable: t) =>
+    if (predicate === Functions.alwaysTrue ) {
+      iterable |> Base.reduce while_::Functions.alwaysTrue2 (fun _ => f) ();
+    }
+    else iterable |> reduce while_::(fun _ => predicate) (fun _ => f) ();
+
+  let none (f: a => bool) (iterable: t): bool =>
+    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
+
+  let reduce
+      while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
+      (f: 'acc => a => 'acc)
+      (acc: 'acc)
+      (iterable: t): 'acc =>
+    reduce while_::predicate f acc iterable;
+
+  let some (f: a => bool) (iterable: t): bool =>
+    iterable |> reduce while_::(fun acc _ => not acc) (fun _ => f) false;
+
+  let iterableBase: s t a = { reduce: Base.reduce };
+
+  let toIterable (iterable: t): (iterable 'a) =>
+    if (isEmpty iterable) Empty
+    else Instance iterable iterableBase;
+}: S with type t := Base.t and type a := Base.a);
+
+let module Make1 = fun (Base: {
+  type t 'a;
+
+  let isEmpty: (t 'a) => bool;
+  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
+}) => ({
+  include Base;
+
+  let every (f: 'a => bool) (iterable: t 'a): bool =>
+    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f) true;
+
+  let find (f: 'a => bool) (iterable: t 'a): (option 'a) =>
+    iterable |> Base.reduce while_::(fun acc _ => Option.isEmpty acc) (
+      fun _ next => if (f next) (Some next) else None
+    ) None;
+
+  let findOrRaise (f: 'a => bool) (iterable: t 'a): 'a =>
+    find f iterable |> Option.firstOrRaise;
+
+  let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (iterable: t 'a) =>
+    if (predicate === Functions.alwaysTrue ) {
+      iterable |> Base.reduce while_::Functions.alwaysTrue2 (fun _ => f) ();
+    }
+    else iterable |> reduce while_::(fun _ => predicate) (fun _ => f) ();
+
+  let none (f: 'a => bool) (iterable: t 'a): bool =>
+    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (iterable: t 'a): 'acc =>
+    reduce while_::predicate f acc iterable;
+
+  let some (f: 'a => bool) (iterable: t 'a): bool =>
+    iterable |> Base.reduce while_::(fun acc _ => not acc) (fun _ => f) false;
+
+  let iterableBase: s (t 'a) 'a = { reduce: Base.reduce };
+
+  let toIterable (iterable: t 'a): (iterable 'a) =>
+    if (isEmpty iterable) Empty
+    else Instance iterable iterableBase;
+}: S1 with type t 'a := Base.t 'a);
+
+include (Make1 {
+  type nonrec t 'a = t 'a;
+
+  let isEmpty (iterable: t 'a): bool =>
+    iterable === Empty;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc)
+      (acc: 'acc)
+      (iter: t 'a): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } =>
+        iter |> reduce while_::predicate f acc;
+  };
+}: S1 with type t 'a := t 'a);
 
 let concatImpl: s 'iterable 'a  = {
   reduce: fun while_::predicate f acc iters => {
@@ -47,13 +172,9 @@ let concatImpl: s 'iterable 'a  = {
 };
 
 let concat (iters: list (t 'a)): (t 'a) => switch iters {
-  | [] => empty ()
+  | [] => Empty
   | _ => Instance iters concatImpl
 };
-
-let increment acc _ => acc + 1;
-let count (iterable: t 'a): int =>
-  iterable |> reduce increment 0;
 
 let deferImpl: s 'iterable 'a = {
   reduce: fun while_::predicate f acc provider =>
@@ -101,8 +222,7 @@ let doOnNext (sideEffect: 'a => unit) (iterable: t 'a): (t 'a) => switch iterabl
     }
 };
 
-let every (f: 'a => bool) (iterable: t 'a): bool =>
-  iterable |> reduce while_::(fun acc _ => acc) (fun _ => f) true;
+let empty (): t 'a => Empty;
 
 let filter (filter: 'a => bool) (iterable: t 'a): (t 'a) => switch iterable {
   | Empty => Empty
@@ -119,14 +239,6 @@ let filter (filter: 'a => bool) (iterable: t 'a): (t 'a) => switch iterable {
       }
     }
 };
-
-let find (f: 'a => bool) (iterable: t 'a): (option 'a) =>
-  iterable |> reduce while_::(fun acc _ => Option.isEmpty acc) (
-    fun _ next => if (f next) (Some next) else None
-  ) None;
-
-let findOrRaise (f: 'a => bool) (iterable: t 'a): 'a =>
-  find f iterable |> Option.firstOrRaise;
 
 let first (iterable: t 'a): (option 'a) =>
   iterable |> reduce
@@ -157,12 +269,6 @@ let flatten (iters: t (t 'a)): (t 'a) => switch iters {
   | Empty => Empty
   | Instance _ _ => Instance iters flattenImpl
 };
-
-let forEach while_::(predicate: 'a => bool)=Functions.alwaysTrue (f: 'a => unit) (iterable: t 'a) =>
-  if (predicate === Functions.alwaysTrue ) {
-    iterable |> reduce (fun _ => f) ();
-  }
-  else iterable |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
 let generateImpl: s ('acc => 'acc, 'acc) 'acc  = {
   reduce: fun while_::predicate f acc (gen, initialValue) => {
@@ -215,9 +321,6 @@ let map
 
 let flatMap (mapper: 'a => t 'b) (iter: t 'a): (t 'b) =>
   iter |> map mapper |> flatten;
-
-let none (f: 'a => bool) (iterable: t 'a): bool =>
-  iterable |> reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
 
 let listImpl: s (list 'a) 'a = { reduce: ImmList.reduceImpl };
 
@@ -310,9 +413,6 @@ let skipWhile (keepSkipping: 'a => bool) (iter: t 'a): (t 'a) => switch iter {
     }
 };
 
-let some (f: 'a => bool) (iterable: t 'a): bool =>
-  iterable |> reduce while_::(fun acc _ => not acc) (fun _ => f) false;
-
 let startWith (value: 'a) (iter: t 'a): (t 'a) =>
   concat [return value, iter];
 
@@ -367,65 +467,3 @@ let buffer
       ) ([], 0, 0)
     |> filter (fun (_, counted, skipped) => counted === count && skipped === skip)
     |> map (fun (lst, _, _) => lst);
-
-type iterable 'a = t 'a;
-
-module type S = {
-  type a;
-  type t;
-
-  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toIterable: t => (iterable a);
-};
-
-module type S1 = {
-  type t 'a;
-
-  let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
-  let toIterable: t 'a => (iterable 'a);
-};
-
-let module Make = fun (Base: {
-  type a;
-  type t;
-
-  let isEmpty: t => bool;
-  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-}) => ({
-  include Base;
-
-  let reduce
-      while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
-      (f: 'acc => a => 'acc)
-      (acc: 'acc)
-      (iterable: t): 'acc =>
-    reduce while_::predicate f acc iterable;
-
-  let iterableBase: s t a = { reduce: Base.reduce };
-
-  let toIterable (iterable: t): (iterable 'a) =>
-    if (isEmpty iterable) (empty ())
-    else Instance iterable iterableBase;
-}: S with type t := Base.t and type a := Base.a);
-
-let module Make1 = fun (Base: {
-  type t 'a;
-
-  let isEmpty: (t 'a) => bool;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-}) => ({
-  include Base;
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (iterable: t 'a): 'acc =>
-    reduce while_::predicate f acc iterable;
-
-  let iterableBase: s (t 'a) 'a = { reduce: Base.reduce };
-
-  let toIterable (iterable: t 'a): (iterable 'a) =>
-    if (isEmpty iterable) (empty ())
-    else Instance iterable iterableBase;
-}: S1 with type t 'a := Base.t 'a);

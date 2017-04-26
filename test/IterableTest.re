@@ -188,12 +188,6 @@ let test = describe "Iterable" [
     Pervasives.(===) (Iterable.takeWhile (fun _ => true) empty) empty
       |> Expect.toBeEqualToTrue;
   }),
-  it "count" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterable
-      |> Iterable.count
-      |> Expect.toBeEqualToInt 5;
-  }),
   it "every" (fun () => {
     Iterable.empty ()
       |> Iterable.every (fun _ => false) |> Expect.toBeEqualToTrue;

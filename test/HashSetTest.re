@@ -22,15 +22,21 @@ let module HashIntSet: PersistentSetTester.S = {
     hash::(fun i => i)
     comparator::Comparator.int;
   let equals = HashSet.equals;
+  let every = HashSet.every;
+  let find = HashSet.find;
+  let findOrRaise = HashSet.findOrRaise;
+  let forEach = HashSet.forEach;
   let from = HashSet.fromWith
     hash::(fun i => i)
     comparator::Comparator.int;
   let isEmpty = HashSet.isEmpty;
   let isNotEmpty = HashSet.isNotEmpty;
   let intersect = HashSet.intersect;
+  let none = HashSet.none;
   let reduce = HashSet.reduce;
   let remove = HashSet.remove;
   let removeAll = HashSet.removeAll;
+  let some = HashSet.some;
   let subtract = HashSet.subtract;
   let toCollection = HashSet.toCollection;
   let toIterable = HashSet.toIterable;
@@ -53,15 +59,21 @@ let module BadHashIntSet: PersistentSetTester.S = {
     hash::badHashFunction
     comparator::Comparator.int;
   let equals = HashSet.equals;
+  let every = HashSet.every;
+  let find = HashSet.find;
+  let findOrRaise = HashSet.findOrRaise;
+  let forEach = HashSet.forEach;
   let from = HashSet.fromWith
     hash::badHashFunction
     comparator::Comparator.int;
   let isEmpty = HashSet.isEmpty;
   let isNotEmpty = HashSet.isNotEmpty;
   let intersect = HashSet.intersect;
+  let none = HashSet.none;
   let reduce = HashSet.reduce;
   let remove = HashSet.remove;
   let removeAll = HashSet.removeAll;
+  let some = HashSet.some;
   let subtract = HashSet.subtract;
   let toCollection = HashSet.toCollection;
   let toIterable = HashSet.toIterable;

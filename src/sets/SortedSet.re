@@ -31,9 +31,14 @@ module type S = {
   let equals: Equality.t t;
   let contains: a => t => bool;
   let toSet: t => ImmSet.t a;
-  let reduce:
-    while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toIterable: t => Iterable.t a;
+  let every: (a => bool) => t => bool;
+  let find: (a => bool) => t => (option a);
+  let findOrRaise: (a => bool) => t => a;
+  let forEach: while_::(a => bool)? => (a => unit) => t => unit;
+  let none: (a => bool) => t => bool;
+  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let some: (a => bool) => t => bool;
+  let toIterable: t => (Iterable.t a);
   let count: t => int;
   let isEmpty: t => bool;
   let isNotEmpty: t => bool;

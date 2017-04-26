@@ -234,10 +234,40 @@ let module rec Iterable: {
     type a;
     type t;
 
+    let every: (a => bool) => t => bool;
+    /** [every f iterable] returns true if the predicate [f] returns true for all values in [iterable].
+     *  If [iterable] is empty, returns [true].
+     */
+
+    let find: (a => bool) => t => (option a);
+    /** [find f iterable] return the Some of the first value in [iterable] for which the
+     *  the predicate f returns [true]. Otherwise None.
+     */
+
+    let findOrRaise: (a => bool) => t => a;
+    /** [findOrRaise f iterable] return the the first value in [iterable] for which the
+     *  the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let forEach: while_::(a => bool)? => (a => unit) => t => unit;
+    /** [forEach while_::predicate f iterable] iterates through [iterable] applying the
+     *  side effect function [f] to each value, while [predicate] returns true
+     */
+
+    let none: (a => bool) => t => bool;
+    /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
+     *  If [iterable] is empty, returns [true].
+     */
+
     let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
     /** [reduce while_::predicate initialValue f iterable] applies the accumulator
      *  function [f] to each value in [iterable], while [predicate] returns true,
      *  accumulating the result.
+     */
+
+    let some: (a => bool) => t => bool;
+    /** [some f iterable] returns true if the predicate [f] returns true for at
+     *  least one value in [iterable]. If [iterable] is empty, returns [false].
      */
 
     let toIterable: t => (Iterable.t a);
@@ -251,10 +281,40 @@ let module rec Iterable: {
 
     type t 'a;
 
+    let every: ('a => bool) => (t 'a) => bool;
+    /** [every f iterable] returns true if the predicate [f] returns true for all values in [iterable].
+     *  If [iterable] is empty, returns [true].
+     */
+
+    let find: ('a => bool) => (t 'a) => (option 'a);
+    /** [find f iterable] return the Some of the first value in [iterable] for which the
+     *  the predicate f returns [true]. Otherwise None.
+     */
+
+    let findOrRaise: ('a => bool) => (t 'a) => 'a;
+    /** [findOrRaise f iterable] return the the first value in [iterable] for which the
+     *  the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
+    /** [forEach while_::predicate f iterable] iterates through [iterable] applying the
+     *  side effect function [f] to each value, while [predicate] returns true
+     */
+
+    let none: ('a => bool) => (t 'a) => bool;
+    /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
+     *  If [iterable] is empty, returns [true].
+     */
+
     let reduce: while_::('acc => 'a => bool)? => ('acc => 'a => 'acc) => 'acc => (t 'a) => 'acc;
     /** [reduce while_::predicate initialValue f iterable] applies the accumulator
      *  function [f] to each value in [iterable], while [predicate] returns true,
      *  accumulating the result.
+     */
+
+    let some: ('a => bool) => (t 'a) => bool;
+    /** [some f iterable] returns true if the predicate [f] returns true for at
+     *  least one value in [iterable]. If [iterable] is empty, returns [false].
      */
 
     let toIterable: t 'a => (Iterable.t 'a);
@@ -268,26 +328,8 @@ let module rec Iterable: {
   include Streamable.S1 with type t 'a := Iterable.t 'a;
   include S1 with type t 'a := Iterable.t 'a;
 
-  let count: t 'a => int;
-  /** [count iterable] returns the total number values produced by [iterable] */
-
   let empty: unit => (Iterable.t 'a);
   /** Returns an empty Iterable. */
-
-  let every: ('a => bool) => (t 'a) => bool;
-  /** [every f iterable] returns true if the predicate [f] returns true for all values in [iterable].
-   *  If [iterable] is empty, returns [true].
-   */
-
-  let find: ('a => bool) => (t 'a) => (option 'a);
-  /** [find f iterable] return the Some of the first value in [iterable] for which the
-   *  the predicate f returns [true]. Otherwise None.
-   */
-
-  let findOrRaise: ('a => bool) => (t 'a) => 'a;
-  /** [findOrRaise f iterable] return the the first value in [iterable] for which the
-   *  the predicate f returns [true]. Otherwise raises an exception.
-   */
 
   let first: t 'a => (option 'a);
   /** [first iterable] returns first value in [iterable] or None.
@@ -301,26 +343,11 @@ let module rec Iterable: {
    *  Computational Complexity: O(1)
    */
 
-  let forEach: while_::('a => bool)? => ('a => unit) => (t 'a) => unit;
-  /** [forEach while_::predicate f iterable] iterates through [iterable] applying the
-   *  side effect function [f] to each value, while [predicate] returns true
-   */
-
   let generate: ('a => 'a) => 'a => (t 'a);
   /** [generate f initialValue] generates the infinite Iterable [x, f(x), f(f(x)), ...] */
 
-  let none: ('a => bool) => (t 'a) => bool;
-  /** [none f iterable] returns true if the predicate [f] returns false for all values in [iterable].
-   *  If [iterable] is empty, returns [true].
-   */
-
   let return: 'a => (t 'a);
   /** [return value] returns a single value Iterable containing [value]. */
-
-  let some: ('a => bool) => (t 'a) => bool;
-  /** [some f iterable] returns true if the predicate [f] returns true for at
-   *  least one value in [iterable]. If [iterable] is empty, returns [false].
-   */
 };
 
 let module rec Sequence: {

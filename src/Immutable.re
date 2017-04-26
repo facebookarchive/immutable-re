@@ -450,6 +450,12 @@ let module IntSet = IntSet;
 let module List = {
   include ImmList;
 
+  include (Iterable.Make1 {
+    type t 'a = ImmList.t 'a;
+    let isEmpty = ImmList.isEmpty;
+    let reduce = ImmList.reduceImpl;
+  }: Iterable.S1 with type t 'a := ImmList.t 'a);
+
   let addFirstAll = Iterable.listAddFirstAll;
   let fromReverse = Iterable.listFromReverse;
   let toIterable = Iterable.ofList;
