@@ -172,14 +172,14 @@ let module Make1 = fun (Base: {
         (f: 'acc => int => 'v => 'acc)
         (acc: 'acc)
         (indexed: t 'v): 'acc => {
-      let index = ref 0;
+      let index = ref (count indexed - 1);
 
       let predicate acc next =>
         predicate acc !index next;
 
       let reducer acc next => {
         let acc = f acc !index next;
-        index := !index + 1;
+        index := !index - 1;
         acc
       };
 
