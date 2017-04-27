@@ -126,6 +126,18 @@ let test = describe "Iterable" [
       |> Expect.toBeEqualToInt 0;
   }),
   it "scan" (fun () => {
+    []
+      |> List.toIterable
+      |> Iterable.scan (fun _ i => i) 0
+      |> List.fromReverse
+      |> Expect.toBeEqualToListOfInt [0];
+
+    [1]
+      |> List.toIterable
+      |> Iterable.scan (fun _ i => i) 0
+      |> List.fromReverse
+      |> Expect.toBeEqualToListOfInt [1, 0];
+
     IntRange.create start::0 count::5
       |> IntRange.toIterable
       |> Iterable.scan (fun acc i => acc + i) 0

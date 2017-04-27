@@ -606,7 +606,7 @@ let scan
     (reducer: 'acc => 'k => 'v => 'acc)
     (initialValue: 'acc)
     (iter: t 'k 'v): (Iterable.t 'acc) => switch iter {
-  | Empty => Iterable.Empty
+  | Empty => Iterable.return initialValue
   | Instance iter { reduce } => Iterable.Instance iter {
       reduce: fun while_::predicate f acc iter =>
         if (predicate acc initialValue)  {

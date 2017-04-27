@@ -332,7 +332,7 @@ let scan
     (reducer: 'acc => 'a => 'acc)
     (initialValue: 'acc)
     (iter: t 'a): (t 'acc) => switch iter {
-  | Empty => Empty
+  | Empty => return initialValue
   | Instance iter { reduce } => Instance iter {
       reduce: fun while_::predicate f acc iter =>
         if (predicate acc initialValue) {
@@ -354,7 +354,7 @@ let scan
           iter |> reduce while_::predicate f initialValue |> ignore;
 
           !result
-      } else acc
+        } else acc
     }
 };
 

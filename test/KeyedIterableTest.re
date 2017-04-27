@@ -202,6 +202,17 @@ let test = describe "KeyedIterable" [
       |> Expect.toBeEqualToInt 0;
   }),
   it "scan" (fun () => {
+    KeyedIterable.empty ()
+      |> KeyedIterable.scan (fun _ k v => k + v) 1
+      |> List.fromReverse
+      |> Expect.toBeEqualToListOfInt [1];
+
+    KeyedIterable.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
+      |> KeyedIterable.take 1
+      |> KeyedIterable.scan (fun _ k v => k + v) 1
+      |> List.fromReverse
+      |> Expect.toBeEqualToListOfInt [5, 1];
+
     KeyedIterable.generate genKey::(fun k _ => k) genValue::(fun _ v => v) 2 3
       |> KeyedIterable.scan (fun _ k v => k + v) 0
       |> Iterable.take 5
