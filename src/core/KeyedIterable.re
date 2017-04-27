@@ -464,15 +464,6 @@ let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) => switch iter 
     }
 };
 
-let first (iter: t 'k 'v): (option ('k, 'v)) =>
-  iter |> reduce
-    while_::(fun acc _ _ => Option.isEmpty acc)
-    (fun _ k v => Option.return (k, v))
-    None;
-
-let firstOrRaise (iter: t 'k 'v): ('k, 'v) =>
-  iter |> first |> Option.firstOrRaise;
-
 let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) => switch iter {
   | Empty => Empty
   | Instance iter { reduce: reduceIter } => Instance iter {

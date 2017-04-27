@@ -320,28 +320,6 @@ let test = describe "KeyedIterable" [
       |> KeyedIterable.findOrRaise (fun k v => k ===5 && v ===5)
     ) |> Expect.shouldRaise;
   }),
-  it "first" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
-      |> HashMap.toKeyedIterable
-      |> KeyedIterable.first
-      |> expectToBeEqualToSomeOfIntPair (0, 0);
-
-    KeyedIterable.empty ()
-      |> KeyedIterable.first
-      |> expectToBeEqualToNoneOfIntPair;
-  }),
-  it "firstOrRaise" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
-      |> HashMap.toKeyedIterable
-      |> KeyedIterable.firstOrRaise
-      |> expectToBeEqualToIntPair (0, 0);
-
-    (fun () => KeyedIterable.empty ()
-      |> KeyedIterable.firstOrRaise
-    ) |> Expect.shouldRaise;
-  }),
   it "forEach" (fun () => {
     let last = ref 0;
     IntRange.create start::0 count::5

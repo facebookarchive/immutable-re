@@ -331,18 +331,6 @@ let module rec Iterable: {
   let empty: unit => (Iterable.t 'a);
   /** Returns an empty Iterable. */
 
-  let first: t 'a => (option 'a);
-  /** [first iterable] returns first value in [iterable] or None.
-   *
-   *  Computational Complexity: O(1)
-   */
-
-  let firstOrRaise: t 'a => 'a;
-  /** [firstOrRaise iterable] returns the first value in [iterable] or raises an exception.
-   *
-   *  Computational Complexity: O(1)
-   */
-
   let generate: ('a => 'a) => 'a => (t 'a);
   /** [generate f initialValue] generates the infinite Iterable [x, f(x), f(f(x)), ...] */
 
@@ -367,6 +355,18 @@ let module rec Sequence: {
 
   let empty: unit => (Sequence.t 'a);
   /** Returns an empty Sequence. */
+
+  let first: (t 'a) => (option 'a);
+  /** [first seq] returns first value in [seq] or None.
+   *
+   *  Computational Complexity: O(1)
+   */
+
+  let firstOrRaise: (t 'a) => 'a;
+  /** [firstOrRaise seq] returns the first value in [seq] or raises an exception.
+   *
+   *  Computational Complexity: O(1)
+   */
 
   let generate: ('a => 'a) => 'a => (t 'a);
   /** [generate f initialValue] generates the infinite Sequence [x, f(x), f(f(x)), ...] */
@@ -1380,18 +1380,6 @@ let module rec KeyedIterable: {
 
   let empty: unit => (KeyedIterable.t 'k 'v);
   /** The empty KeyedCollection. */
-
-  let first: (t 'k 'v) => (option ('k, 'v));
-  /** [first keyedIterable] returns first key/value pair in [keyedIterable] or None.
-   *
-   *  Computational Complexity: O(1)
-   */
-
-  let firstOrRaise: (t 'k 'v) => ('k, 'v);
-  /** [firstOrRaise keyedIterable] returns the first key/value pair in [keyedIterable] or raises an exception.
-   *
-   *  Computational Complexity: O(1)
-   */
 
   let fromEntries: Iterable.t ('k, 'v) => (KeyedIterable.t 'k 'v);
   /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */

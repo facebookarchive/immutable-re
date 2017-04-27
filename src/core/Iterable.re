@@ -240,15 +240,6 @@ let filter (filter: 'a => bool) (iterable: t 'a): (t 'a) => switch iterable {
     }
 };
 
-let first (iterable: t 'a): (option 'a) =>
-  iterable |> reduce
-    while_::(fun acc _ => Option.isEmpty acc)
-    (fun _ => Option.return)
-    None;
-
-let firstOrRaise (iterable: t 'a): 'a =>
-  iterable |> first |> Option.firstOrRaise;
-
 let flattenImpl: s 'iterable 'a = {
   reduce: fun while_::predicate f acc iters => {
     let shouldContinue = ref true;

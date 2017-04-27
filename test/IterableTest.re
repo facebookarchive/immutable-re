@@ -227,25 +227,6 @@ let test = describe "Iterable" [
     (fun () => Iterable.empty () |> Iterable.findOrRaise (fun i => i ===2))
       |> Expect.shouldRaise;
   }),
-  it "first" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterable
-      |> Iterable.first
-      |> Expect.toBeEqualToSomeOfInt 0;
-
-    IntRange.empty ()
-      |> IntRange.toIterable
-      |> Iterable.first
-      |> Expect.toBeEqualToNoneOfInt;
-  }),
-  it "firstOrRaise" (fun () => {
-    IntRange.create start::0 count::5
-      |> IntRange.toIterable
-      |> Iterable.firstOrRaise
-      |> Expect.toBeEqualToInt 0;
-
-    (fun () => Iterable.empty () |> Iterable.firstOrRaise) |> Expect.shouldRaise;
-  }),
   it "forEach" (fun () => {
     let last = ref 0;
     IntRange.create start::0 count::5
