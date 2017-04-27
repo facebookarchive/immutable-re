@@ -15,52 +15,362 @@ type t 'k 'v =
   | Empty
   | Instance 'keyedIterable (s 'keyedIterable 'k 'v): t 'k 'v;
 
-let empty (): t 'k 'v => Empty;
+type keyedIterable 'k 'v = t 'k 'v;
+module type S1 = {
+  type k;
+  type t 'v;
 
-let reduce
-    while_::(predicate:'acc => 'k => 'v => bool)=Functions.alwaysTrue3
-    (f: 'acc => 'k => 'v => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
+  let every: (k => 'v => bool) => (t 'v) => bool;
+  let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+  let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+  let findKey: (k => 'v => bool) => (t 'v) => (option k);
+  let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
+  let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
+  let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+  let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
+  let keys: (t 'v) => (Iterable.t k);
+  let none: (k => 'v => bool) => (t 'v) => bool;
+  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceKeys: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  let some: (k => 'v => bool) => (t 'v) => bool;
+  let toIterable: t 'v => Iterable.t (k, 'v);
+  let toKeyedIterable: t 'v => keyedIterable k 'v;
+  let values: (t 'v) => Iterable.t 'v;
 };
 
-let reduceKeys
-    while_::(predicate: 'acc => 'k => bool)
-    (f: 'acc => 'k => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter { reduce } =>
-      let f acc k _ => f acc k;
+module type S2 = {
+  type t 'k 'v;
 
-      if (predicate === Functions.alwaysTrue2) {
-        reduce while_::Functions.alwaysTrue3 f acc iter;
-      }
-      else {
-        let predicate acc k _ => predicate acc k;
-        reduce while_::predicate f acc iter;
-      }
+  let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+  let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+  let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+  let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
+  let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
+  let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
+  let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+  let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
+  let keys: (t 'k 'v) => (Iterable.t 'k);
+  let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+  let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceKeys: while_::('acc => 'k => bool)? => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+  let toIterable: t 'k 'v => Iterable.t ('k, 'v);
+  let toKeyedIterable: t 'k 'v => keyedIterable 'k 'v;
+  let values: (t 'k 'v) => Iterable.t 'v;
 };
 
-let reduceValues
-    while_::(predicate: 'acc => 'v => bool)
-    (f: 'acc => 'v => 'acc)
-    (acc: 'acc)
-    (iter: t 'k 'v): 'acc => switch iter {
-  | Empty => acc
-  | Instance iter { reduce } =>
-      let f acc _ v => f acc v;
+let module Make1 = fun (Base: {
+  type k;
+  type t 'v;
 
-      if (predicate === Functions.alwaysTrue2) {
-        reduce while_::Functions.alwaysTrue3 f acc iter;
-      }
-      else {
-        let predicate acc _ v => predicate acc v;
-        reduce while_::predicate f acc iter;
-      }
-};
+  let isEmpty: (t 'v) => bool;
+  let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+}) => ({
+  include Base;
+
+  let every (f: k => 'v => bool) (iter: t 'v): bool =>
+    iter |> reduce
+      while_::(fun acc _ _ => acc)
+      (fun _ => f)
+      true;
+
+  let find (f: k => 'v => bool) (iter: t 'v): (option (k, 'v)) =>
+    iter |> reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => if (f k v) (Some (k, v)) else None)
+      None;
+
+  let findOrRaise (f: k => 'v => bool) (iter: t 'v): (k, 'v) =>
+    find f iter |> Option.firstOrRaise;
+
+  let findKey (f: k => 'v => bool) (iter: t 'v): (option k) =>
+    iter |> reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => if (f k v) (Some k) else None)
+      None;
+
+  let findKeyOrRaise (f: k => 'v => bool) (iter: t 'v): k =>
+    findKey f iter |> Option.firstOrRaise;
+
+  let findValue (f: k => 'v => bool) (iter: t 'v): (option 'v) =>
+    iter |> reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => if (f k v) (Some v) else None)
+      None;
+
+  let findValueOrRaise (f: k => 'v => bool) (iter: t 'v): 'v =>
+    findValue f iter |> Option.firstOrRaise;
+
+  let forEach
+      while_::(predicate: k => 'v => bool)=Functions.alwaysTrue2
+      (f: k => 'v => unit)
+      (iter: t 'v) =>
+    iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
+
+  let none (f: k => 'v => bool) (iter: t 'v): bool =>
+    iter |> reduce
+      while_::(fun acc _ _ => acc)
+      (fun _ k v => f k v |> not)
+      true;
+
+  let reduce
+      while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
+      (f: 'acc => k => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc =>
+    reduce while_::predicate f acc map;
+
+  let reduceKeys
+      while_::(predicate: 'acc => k => bool)=Functions.alwaysTrue2
+      (f: 'acc => k => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc =>
+    reduceKeys while_::predicate f acc map;
+
+  let reduceValues
+      while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
+      (f: 'acc => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc =>
+    reduceValues while_::predicate f acc map;
+
+  let reduceKeyValuePairs
+      while_::(predicate: 'acc => (k, 'v) => bool)
+      (f: 'acc => (k, 'v) => 'acc)
+      (acc: 'acc)
+      (map: t 'v): 'acc =>
+    if (predicate === Functions.alwaysTrue2) {
+      let f acc k v => f acc (k, v);
+      reduce f acc map;
+    }
+    else {
+      let memoizedPair = MutableOption.empty ();
+
+      let predicate acc k v => {
+        let pair = (k, v);
+        memoizedPair |> MutableOption.set pair;
+        predicate acc pair;
+      };
+
+      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
+      reduce while_::predicate f acc map;
+    };
+
+  let some (f: k => 'v => bool) (iter: t 'v): bool =>
+    iter |> reduce
+      while_::(fun acc _ _ => not acc)
+      (fun _ => f)
+      false;
+
+  let keysIterableBase: Iterable.s (t 'v) k = { reduce: Base.reduceKeys };
+
+  let keys (keyedIterable: t _): Iterable.t k =>
+    if (isEmpty keyedIterable) (Iterable.empty ())
+    else Iterable.Instance keyedIterable keysIterableBase;
+
+  let iterableBase: Iterable.s (t 'v) (k, 'v) = { reduce: reduceKeyValuePairs };
+
+  let toIterable (keyedIterable: t _): (Iterable.t (k, 'v)) =>
+    if (isEmpty keyedIterable) (Iterable.empty ())
+    else Iterable.Instance keyedIterable iterableBase;
+
+  let keyedIterableBase: s (t 'v) k 'v = { reduce: Base.reduce };
+
+  let toKeyedIterable (keyedIterable: t _): (keyedIterable k 'v) =>
+    if (isEmpty keyedIterable) Empty
+    else Instance keyedIterable keyedIterableBase;
+
+  let valuesIterableBase: Iterable.s (t 'v) 'v = { reduce: Base.reduceValues };
+
+  let values (keyedIterable: t _): Iterable.t 'v =>
+    if (isEmpty keyedIterable) (Iterable.empty ())
+    else Iterable.Instance keyedIterable valuesIterableBase;
+}: S1 with type t 'v := Base.t 'v and type k := Base.k);
+
+let module Make2 = fun (Base: {
+  type t 'k 'v;
+
+  let isEmpty: (t 'k 'v) => bool;
+  let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+}) => ({
+  include Base;
+
+  let every (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
+    iter |> reduce
+      while_::(fun acc _ _ => acc)
+      (fun _ => f)
+      true;
+
+  let find (f: 'k => 'v => bool) (iter: t 'k 'v): (option ('k, 'v)) =>
+    iter |> reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => if (f k v) (Some (k, v)) else None)
+      None;
+
+  let findOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): ('k, 'v) =>
+    find f iter |> Option.firstOrRaise;
+
+  let findKey (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'k) =>
+    iter |> reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => if (f k v) (Some k) else None)
+      None;
+
+  let findKeyOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'k =>
+    findKey f iter |> Option.firstOrRaise;
+
+  let findValue (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'v) =>
+    iter |> reduce
+      while_::(fun acc _ _ => Option.isEmpty acc)
+      (fun _ k v => if (f k v) (Some v) else None)
+      None;
+
+  let findValueOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'v =>
+    findValue f iter |> Option.firstOrRaise;
+
+  let forEach
+      while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2
+      (f: 'k => 'v => unit)
+      (iter: t 'k 'v) =>
+    iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
+
+  let none (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
+    iter |> reduce
+      while_::(fun acc _ _ => acc)
+      (fun _ k v => f k v |> not)
+      true;
+
+  let reduce
+      while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'k 'v): 'acc =>
+    reduce while_::predicate f acc map;
+
+  let reduceKeys
+      while_::(predicate: 'acc => 'k => bool)=Functions.alwaysTrue2
+      (f: 'acc => 'k => 'acc)
+      (acc: 'acc)
+      (map: t 'k 'v): 'acc =>
+    reduceKeys while_::predicate f acc map;
+
+  let reduceValues
+      while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
+      (f: 'acc => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'k 'v): 'acc =>
+    reduceValues while_::predicate f acc map;
+
+  let reduceKeyValuePairs
+      while_::(predicate: 'acc => ('k, 'v) => bool)
+      (f: 'acc => ('k, 'v) => 'acc)
+      (acc: 'acc)
+      (map: t 'k 'v): 'acc =>
+    if (predicate === Functions.alwaysTrue2) {
+      let f acc k v => f acc (k, v);
+      reduce f acc map;
+    }
+    else {
+      let memoizedPair = MutableOption.empty ();
+
+      let predicate acc k v => {
+        let pair = (k, v);
+        memoizedPair |> MutableOption.set pair;
+        predicate acc pair;
+      };
+
+      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
+      reduce while_::predicate f acc map;
+    };
+
+  let some (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
+    iter |> reduce
+      while_::(fun acc _ _ => not acc)
+      (fun _ => f)
+      false;
+
+  let keysIterableBase: Iterable.s (t 'k 'v) 'k = { reduce: Base.reduceKeys };
+
+  let keys (keyedIterable: t 'k _): Iterable.t 'k =>
+    if (isEmpty keyedIterable) (Iterable.empty ())
+    else Iterable.Instance keyedIterable keysIterableBase;
+
+  let iterableBase: Iterable.s (t 'k 'v) ('k, 'v) = { reduce: reduceKeyValuePairs };
+
+  let toIterable (keyedIterable: t 'k _): (Iterable.t ('k, 'v)) =>
+    if (isEmpty keyedIterable) (Iterable.empty ())
+    else Iterable.Instance keyedIterable iterableBase;
+
+  let keyedIterableBase: s (t 'k 'v) 'k 'v = { reduce: Base.reduce };
+
+  let toKeyedIterable (keyedIterable: t 'k _): (keyedIterable 'k 'v) =>
+    if (isEmpty keyedIterable) Empty
+    else Instance keyedIterable keyedIterableBase;
+
+  let valuesIterableBase: Iterable.s (t 'k 'v) 'v = { reduce: Base.reduceValues };
+
+  let values (keyedIterable: t 'k _): Iterable.t 'v =>
+    if (isEmpty keyedIterable) (Iterable.empty ())
+    else Iterable.Instance keyedIterable valuesIterableBase;
+}: S2 with type t 'k 'v := Base.t 'k 'v);
+
+include (Make2 {
+  type nonrec t 'k 'v = t 'k 'v;
+
+  let isEmpty (iter: t 'k 'v): bool =>
+    iter === Empty;
+
+  let reduce
+      while_::(predicate:'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
+  };
+
+  let reduceKeys
+      while_::(predicate: 'acc => 'k => bool)
+      (f: 'acc => 'k => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } =>
+        let f acc k _ => f acc k;
+
+        if (predicate === Functions.alwaysTrue2) {
+          reduce while_::Functions.alwaysTrue3 f acc iter;
+        }
+        else {
+          let predicate acc k _ => predicate acc k;
+          reduce while_::predicate f acc iter;
+        }
+  };
+
+  let reduceValues
+      while_::(predicate: 'acc => 'v => bool)
+      (f: 'acc => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } =>
+        let f acc _ v => f acc v;
+
+        if (predicate === Functions.alwaysTrue2) {
+          reduce while_::Functions.alwaysTrue3 f acc iter;
+        }
+        else {
+          let predicate acc _ v => predicate acc v;
+          reduce while_::predicate f acc iter;
+        }
+  };
+}: S2 with type t 'k 'v := t 'k 'v);
 
 let concatImpl: s 'keyedIterable 'k 'v = {
   reduce: fun while_::predicate f acc iters => {
@@ -83,10 +393,6 @@ let concat (iters: list (t 'k 'v)): (t 'k 'v) => switch iters {
   | [] => Empty
   | _ => Instance iters concatImpl
 };
-
-let increment acc _ _ => acc + 1;
-let count (reducer: t 'k 'v): int =>
-  reducer |> reduce increment 0;
 
 let deferImpl: s 'keyedIterable 'k 'v = {
   reduce: fun while_::predicate f acc provider =>
@@ -140,11 +446,7 @@ let doOnNext (sideEffect: 'k => 'v => unit) (iter: t 'k 'v): (t 'k 'v) => switch
     }
 };
 
-let every (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
-  iter |> reduce
-    while_::(fun acc _ _ => acc)
-    (fun _ => f)
-    true;
+let empty (): t 'k 'v => Empty;
 
 let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) => switch iter {
   | Empty => Empty
@@ -161,33 +463,6 @@ let filter (filter: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) => switch iter 
       }
     }
 };
-
-let find (f: 'k => 'v => bool) (iter: t 'k 'v): (option ('k, 'v)) =>
-  iter |> reduce
-    while_::(fun acc _ _ => Option.isEmpty acc)
-    (fun _ k v => if (f k v) (Some (k, v)) else None)
-    None;
-
-let findOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): ('k, 'v) =>
-  find f iter |> Option.firstOrRaise;
-
-let findKey (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'k) =>
-  iter |> reduce
-    while_::(fun acc _ _ => Option.isEmpty acc)
-    (fun _ k v => if (f k v) (Some k) else None)
-    None;
-
-let findKeyOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'k =>
-  findKey f iter |> Option.firstOrRaise;
-
-let findValue (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'v) =>
-  iter |> reduce
-    while_::(fun acc _ _ => Option.isEmpty acc)
-    (fun _ k v => if (f k v) (Some v) else None)
-    None;
-
-let findValueOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'v =>
-  findValue f iter |> Option.firstOrRaise;
 
 let first (iter: t 'k 'v): (option ('k, 'v)) =>
   iter |> reduce
@@ -216,12 +491,6 @@ let flatMap (mapper: 'kA => 'vA => t 'kB 'vB) (iter: t 'kA 'vA): (t 'kB 'vB) => 
       }
     }
 };
-
-let forEach
-    while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2
-    (f: 'k => 'v => unit)
-    (iter: t 'k 'v) =>
-  iter |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
 let fromEntriesImpl: s (Iterable.t ('k, 'v)) 'k 'v  = {
   reduce: fun while_::predicate f acc iter => {
@@ -263,18 +532,6 @@ let generate
     (initialKey: 'k)
     (initialValue: 'v): (t 'k 'v) =>
   Instance (genKey, genValue, initialKey, initialValue) generateImpl;
-
-let keysImpl: Iterable.s (t 'k _) 'k = {
-  reduce: fun while_::predicate f acc iter => iter |> reduce
-    while_::(fun acc k _ => predicate acc k)
-    (fun acc k _ => f acc k)
-    acc
-};
-
-let keys (iter: t 'k 'v): (Iterable.t 'k) => switch iter {
-  | Empty => Iterable.empty ()
-  | Instance _ _ => Iterable.Instance iter keysImpl
-};
 
 let map
     keyMapper::(keyMapper: 'kA => 'vA => 'kB)
@@ -344,12 +601,6 @@ let mapValues (mapper: 'k => 'a => 'b) (iter: t 'k 'a): (t 'k 'b) => switch iter
       }
     }
 };
-
-let none (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
-  iter |> reduce
-    while_::(fun acc _ _ => acc)
-    (fun _ k v => f k v |> not)
-    true;
 
 let returnImpl: s ('k, 'v) 'k 'v = {
   reduce: fun while_::predicate f acc (key, value) =>
@@ -436,12 +687,6 @@ let skipWhile (keepSkipping: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) => swi
     }
 };
 
-let some (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
-  iter |> reduce
-    while_::(fun acc _ _ => not acc)
-    (fun _ => f)
-    false;
-
 let startWith (key: 'k) (value: 'v) (iter: t 'k 'v): (t 'k 'v) =>
   concat [return key value, iter];
 
@@ -479,222 +724,4 @@ let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) => switc
     }
 };
 
-let toIterableImpl: Iterable.s (t 'k 'v) ('k, 'v) = {
-  reduce: fun while_::predicate f acc iter => iter |> reduce
-    while_::(fun acc k v => predicate acc (k, v))
-    (fun acc k v => f acc (k, v))
-    acc
-};
-
-let toIterable (iter: t 'k 'v): (Iterable.t ('k, 'v)) => switch iter {
-  | Empty => Iterable.empty ()
-  | Instance _ _ => Iterable.Instance iter toIterableImpl
-};
-
 let toKeyedIterable (iter: t 'k 'v): (t 'k 'v) => iter;
-
-let valuesImpl: Iterable.s (t _ 'v) 'v = {
-  reduce: fun while_::predicate f acc iter => iter |> reduce
-    while_::(fun acc _ v => predicate acc v)
-    (fun acc _ v => f acc v)
-    acc
-};
-
-let values (iter: t 'k 'v): (Iterable.t 'v) => switch iter {
-  | Empty => Iterable.empty ()
-  | Instance _ _ => Iterable.Instance iter valuesImpl
-};
-
-let reduceKeys
-    while_::(predicate: 'acc => 'k => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'k => 'acc)
-    (acc: 'acc)
-    (map: t 'k 'v): 'acc =>
-  reduceKeys while_::predicate f acc map;
-
-let reduceValues
-    while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
-    (f: 'acc => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'k 'v): 'acc =>
-  reduceValues while_::predicate f acc map;
-
-type keyedIterable 'k 'v = t 'k 'v;
-module type S1 = {
-  type k;
-  type t 'v;
-
-  let keys: (t 'v) => (Iterable.t k);
-  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  let reduceKeys: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
-  let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  let toIterable: t 'v => Iterable.t (k, 'v);
-  let toKeyedIterable: t 'v => keyedIterable k 'v;
-  let values: (t 'v) => Iterable.t 'v;
-};
-
-module type S2 = {
-  type t 'k 'v;
-
-  let keys: (t 'k 'v) => (Iterable.t 'k);
-  let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let reduceKeys: while_::('acc => 'k => bool)? => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let toIterable: t 'k 'v => Iterable.t ('k, 'v);
-  let toKeyedIterable: t 'k 'v => keyedIterable 'k 'v;
-  let values: (t 'k 'v) => Iterable.t 'v;
-};
-
-let module Make1 = fun (Base: {
-  type k;
-  type t 'v;
-
-  let isEmpty: (t 'v) => bool;
-  let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
-  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-}) => ({
-  include Base;
-
-  let reduce
-      while_::(predicate: 'acc => k => 'v => bool)=Functions.alwaysTrue3
-      (f: 'acc => k => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'v): 'acc =>
-    reduce while_::predicate f acc map;
-
-  let reduceKeys
-      while_::(predicate: 'acc => k => bool)=Functions.alwaysTrue2
-      (f: 'acc => k => 'acc)
-      (acc: 'acc)
-      (map: t 'v): 'acc =>
-    reduceKeys while_::predicate f acc map;
-
-  let reduceValues
-      while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
-      (f: 'acc => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'v): 'acc =>
-    reduceValues while_::predicate f acc map;
-
-  let reduceKeyValuePairs
-      while_::(predicate: 'acc => (k, 'v) => bool)
-      (f: 'acc => (k, 'v) => 'acc)
-      (acc: 'acc)
-      (map: t 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) {
-      let f acc k v => f acc (k, v);
-      reduce f acc map;
-    }
-    else {
-      let memoizedPair = MutableOption.empty ();
-
-      let predicate acc k v => {
-        let pair = (k, v);
-        memoizedPair |> MutableOption.set pair;
-        predicate acc pair;
-      };
-
-      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
-      reduce while_::predicate f acc map;
-    };
-
-  let keysIterableBase: Iterable.s (t 'v) k = { reduce: Base.reduceKeys };
-
-  let keys (keyedIterable: t _): Iterable.t k =>
-    if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.Instance keyedIterable keysIterableBase;
-
-  let iterableBase: Iterable.s (t 'v) (k, 'v) = { reduce: reduceKeyValuePairs };
-
-  let toIterable (keyedIterable: t _): (Iterable.t (k, 'v)) =>
-    if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.Instance keyedIterable iterableBase;
-
-  let keyedIterableBase: s (t 'v) k 'v = { reduce: Base.reduce };
-
-  let toKeyedIterable (keyedIterable: t _): (keyedIterable k 'v) =>
-    if (isEmpty keyedIterable) (empty ())
-    else Instance keyedIterable keyedIterableBase;
-
-  let valuesIterableBase: Iterable.s (t 'v) 'v = { reduce: Base.reduceValues };
-
-  let values (keyedIterable: t _): Iterable.t 'v =>
-    if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.Instance keyedIterable valuesIterableBase;
-
-}: S1 with type t 'v := Base.t 'v and type k := Base.k);
-
-let module Make2 = fun (Base: {
-  type t 'k 'v;
-
-  let isEmpty: (t 'k 'v) => bool;
-  let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-}) => ({
-  include Base;
-
-  let reduce
-      while_::(predicate: 'acc => 'k => 'v => bool)=Functions.alwaysTrue3
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc =>
-    reduce while_::predicate f acc map;
-
-  let reduceKeys
-      while_::(predicate: 'acc => 'k => bool)=Functions.alwaysTrue2
-      (f: 'acc => 'k => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc =>
-    reduceKeys while_::predicate f acc map;
-
-  let reduceValues
-      while_::(predicate: 'acc => 'v => bool)=Functions.alwaysTrue2
-      (f: 'acc => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc =>
-    reduceValues while_::predicate f acc map;
-
-  let reduceKeyValuePairs
-      while_::(predicate: 'acc => ('k, 'v) => bool)
-      (f: 'acc => ('k, 'v) => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) {
-      let f acc k v => f acc (k, v);
-      reduce f acc map;
-    }
-    else {
-      let memoizedPair = MutableOption.empty ();
-
-      let predicate acc k v => {
-        let pair = (k, v);
-        memoizedPair |> MutableOption.set pair;
-        predicate acc pair;
-      };
-
-      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
-      reduce while_::predicate f acc map;
-    };
-
-  let keysIterableBase: Iterable.s (t 'k 'v) 'k = { reduce: Base.reduceKeys };
-
-  let keys (keyedIterable: t 'k _): Iterable.t 'k =>
-    Iterable.Instance keyedIterable keysIterableBase;
-
-  let iterableBase: Iterable.s (t 'k 'v) ('k, 'v) = { reduce: reduceKeyValuePairs };
-
-  let toIterable (keyedIterable: t 'k _): (Iterable.t ('k, 'v)) =>
-    Iterable.Instance keyedIterable iterableBase;
-
-  let keyedIterableBase: s (t 'k 'v) 'k 'v = { reduce: Base.reduce };
-
-  let toKeyedIterable (keyedIterable: t 'k _): (keyedIterable 'k 'v) =>
-    Instance keyedIterable keyedIterableBase;
-
-  let valuesIterableBase: Iterable.s (t 'k 'v) 'v = { reduce: Base.reduceValues };
-
-  let values (keyedIterable: t 'k _): Iterable.t 'v =>
-    Iterable.Instance keyedIterable valuesIterableBase;
-}: S2 with type t 'k 'v := Base.t 'k 'v);

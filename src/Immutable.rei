@@ -1214,8 +1214,53 @@ let module rec KeyedIterable: {
     type k;
     type t 'v;
 
+    let every: (k => 'v => bool) => (t 'v) => bool;
+    /** [every f keyedIterable] returns true if the predicate [f] returns true for all
+     *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+     */
+
+    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+    /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
+    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+    /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let findKey: (k => 'v => bool) => (t 'v) => (option k);
+    /** [findKey f keyedIterable] return the Some of the first key in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
+    let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
+    /** [findOrRaise f keyedIterable] return the the first key in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
+    /** [findValue f keyedIterable] return the Some of the first value in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
+    let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+    /** [findOrRaise f keyedIterable] return the the first value in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
+    /** [forEach while_::predicate f keyedIterable] iterates through [keyedIterable] applying the
+     *  side effect function [f] to each key/value pair, while [predicate] returns true
+     */
+
     let keys: (t 'v) => (Iterable.t k);
     /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
+
+    let none: (k => 'v => bool) => (t 'v) => bool;
+    /** [none f keyedIterable] returns true if the predicate [f] returns false
+     *  for all key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+     */
 
     let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1226,6 +1271,11 @@ let module rec KeyedIterable: {
     let reduceKeys: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
 
     let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+
+    let some: (k => 'v => bool) => (t 'v) => bool;
+    /** [some f keyedIterable] returns true if the predicate [f] returns true for at least
+     *  one key/value pair in [keyedIterable]. If [keyedIterable] is empty, returns [false].
+     */
 
     let toIterable: t 'v => Iterable.t (k, 'v);
     /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
@@ -1246,8 +1296,53 @@ let module rec KeyedIterable: {
 
     type t 'k 'v;
 
+    let every: ('k => 'v => bool) => (t 'k 'v) => bool;
+    /** [every f keyedIterable] returns true if the predicate [f] returns true for all
+     *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+     */
+
+    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+    /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
+    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+    /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
+    /** [findKey f keyedIterable] return the Some of the first key in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
+    let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
+    /** [findOrRaise f keyedIterable] return the the first key in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
+    /** [findValue f keyedIterable] return the Some of the first value in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise None.
+     */
+
+    let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+    /** [findOrRaise f keyedIterable] return the the first value in [keyedIterable]
+     *  for which the the predicate f returns [true]. Otherwise raises an exception.
+     */
+
+    let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
+    /** [forEach while_::predicate f keyedIterable] iterates through [keyedIterable] applying the
+     *  side effect function [f] to each key/value pair, while [predicate] returns true
+     */
+
     let keys: (t 'k 'v) => (Iterable.t 'k);
     /** [keys keyedIter] returns an Iterable view of the keys in [keyedIter] */
+
+    let none: ('k => 'v => bool) => (t 'k 'v) => bool;
+    /** [none f keyedIterable] returns true if the predicate [f] returns false
+     *  for all key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
+     */
 
     let reduce: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     /** [reduce while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1258,6 +1353,11 @@ let module rec KeyedIterable: {
     let reduceKeys: while_::('acc => 'k => bool)? => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
 
     let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+
+    let some: ('k => 'v => bool) => (t 'k 'v) => bool;
+    /** [some f keyedIterable] returns true if the predicate [f] returns true for at least
+     *  one key/value pair in [keyedIterable]. If [keyedIterable] is empty, returns [false].
+     */
 
     let toIterable: t 'k 'v => Iterable.t ('k, 'v);
     /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
@@ -1278,46 +1378,8 @@ let module rec KeyedIterable: {
   include KeyedStreamable.S2 with type t 'k 'v := KeyedIterable.t 'k 'v;
   include S2 with type t 'k 'v := KeyedIterable.t 'k 'v;
 
-  let count: (t 'k 'v) => int;
-  /** [count keyedIterable] returns the total number key/value pairs produced by [keyedIterable] */
-
   let empty: unit => (KeyedIterable.t 'k 'v);
   /** The empty KeyedCollection. */
-
-  let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [every f keyedIterable] returns true if the predicate [f] returns true for all
-   *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
-   */
-
-  let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
-   *  for which the the predicate f returns [true]. Otherwise None.
-   */
-
-  let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
-   *  for which the the predicate f returns [true]. Otherwise raises an exception.
-   */
-
-  let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
-  /** [findKey f keyedIterable] return the Some of the first key in [keyedIterable]
-   *  for which the the predicate f returns [true]. Otherwise None.
-   */
-
-  let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
-  /** [findOrRaise f keyedIterable] return the the first key in [keyedIterable]
-   *  for which the the predicate f returns [true]. Otherwise raises an exception.
-   */
-
-  let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
-  /** [findValue f keyedIterable] return the Some of the first value in [keyedIterable]
-   *  for which the the predicate f returns [true]. Otherwise None.
-   */
-
-  let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
-  /** [findOrRaise f keyedIterable] return the the first value in [keyedIterable]
-   *  for which the the predicate f returns [true]. Otherwise raises an exception.
-   */
 
   let first: (t 'k 'v) => (option ('k, 'v));
   /** [first keyedIterable] returns first key/value pair in [keyedIterable] or None.
@@ -1331,11 +1393,6 @@ let module rec KeyedIterable: {
    *  Computational Complexity: O(1)
    */
 
-  let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
-  /** [forEach while_::predicate f keyedIterable] iterates through [keyedIterable] applying the
-   *  side effect function [f] to each key/value pair, while [predicate] returns true
-   */
-
   let fromEntries: Iterable.t ('k, 'v) => (KeyedIterable.t 'k 'v);
   /** [fromEntries iter] returns a KeyedIterable view of key/value tuples in [iter]. */
 
@@ -1345,11 +1402,6 @@ let module rec KeyedIterable: {
     *  and values are [v, genValue(k, v), genValue(k1, genValue(k, v)), ...]
     */
 
-  let none: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [none f keyedIterable] returns true if the predicate [f] returns false
-   *  for all key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
-   */
-
   let return: 'k => 'v => (t 'k 'v);
   /** [return key value] returns a KeyedIterable containing the pair ([key], [value]). */
 
@@ -1357,11 +1409,6 @@ let module rec KeyedIterable: {
   /** [scan f acc stream] returns a KeyedStreamable of accumulated values resulting from the
    *  application of the accumulator function [f] to each value in [stream] with the
    *  specified initial value [acc].
-   */
-
-  let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  /** [some f keyedIterable] returns true if the predicate [f] returns true for at least
-   *  one key/value pair in [keyedIterable]. If [keyedIterable] is empty, returns [false].
    */
 };
 

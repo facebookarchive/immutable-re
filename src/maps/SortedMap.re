@@ -59,19 +59,23 @@ module type S1 = {
   let toNavigableMapReversed: t 'v => NavigableMap.t k 'v;
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
-  let keys: t 'v => Iterable.t k;
-  let reduce:
-    while_::('acc => k => 'v => bool)? =>
-    ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let reduceKeys:
-    while_::('acc => k => bool)? =>
-    ('acc => k => 'acc) => 'acc => t 'v => 'acc;
-  let reduceValues:
-    while_::('acc => 'v => bool)? =>
-    ('acc => 'v => 'acc) => 'acc => t 'v => 'acc;
+  let every: (k => 'v => bool) => (t 'v) => bool;
+  let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+  let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+  let findKey: (k => 'v => bool) => (t 'v) => (option k);
+  let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
+  let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
+  let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+  let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
+  let keys: (t 'v) => (Iterable.t k);
+  let none: (k => 'v => bool) => (t 'v) => bool;
+  let reduce: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceKeys: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
+  let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
+  let some: (k => 'v => bool) => (t 'v) => bool;
   let toIterable: t 'v => Iterable.t (k, 'v);
   let toKeyedIterable: t 'v => KeyedIterable.t k 'v;
-  let values: t 'v => Iterable.t 'v;
+  let values: (t 'v) => Iterable.t 'v;
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
   let isEmpty: t 'v => bool;

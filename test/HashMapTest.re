@@ -20,6 +20,14 @@ let module HashIntMap: PersistentMapTester.S = {
   let empty () => HashMap.emptyWith
     hash::(fun i => i)
     comparator::Comparator.int;
+  let every = HashMap.every;
+  let find = HashMap.find;
+  let findOrRaise = HashMap.findOrRaise;
+  let findKey = HashMap.findKey;
+  let findKeyOrRaise = HashMap.findKeyOrRaise;
+  let findValue = HashMap.findValue;
+  let findValueOrRaise = HashMap.findValueOrRaise;
+  let forEach = HashMap.forEach;
   let from iter => HashMap.fromWith
     hash::(fun i => i)
     comparator::Comparator.int
@@ -37,6 +45,7 @@ let module HashIntMap: PersistentMapTester.S = {
   let keysSequence = HashMap.keysSequence;
   let keysSet = HashMap.keysSet;
   let merge = HashMap.merge;
+  let none = HashMap.none;
   let put = HashMap.put;
   let putAll = HashMap.putAll;
   let putAllEntries = HashMap.putAllEntries;
@@ -45,6 +54,7 @@ let module HashIntMap: PersistentMapTester.S = {
   let reduceValues = HashMap.reduceValues;
   let remove = HashMap.remove;
   let removeAll = HashMap.removeAll;
+  let some = HashMap.some;
   let toIterable = HashMap.toIterable;
   let toKeyedCollection = HashMap.toKeyedCollection;
   let toKeyedIterable = HashMap.toKeyedIterable;
@@ -67,6 +77,14 @@ let module BadHashIntMap: PersistentMapTester.S with type k = int = {
   let empty () => HashMap.emptyWith
     hash::badHashFunction
     comparator::Comparator.int;
+  let every = HashMap.every;
+  let find = HashMap.find;
+  let findOrRaise = HashMap.findOrRaise;
+  let findKey = HashMap.findKey;
+  let findKeyOrRaise = HashMap.findKeyOrRaise;
+  let findValue = HashMap.findValue;
+  let findValueOrRaise = HashMap.findValueOrRaise;
+  let forEach = HashMap.forEach;
   let from iter => HashMap.fromWith
     hash::badHashFunction
     comparator::Comparator.int
@@ -84,6 +102,7 @@ let module BadHashIntMap: PersistentMapTester.S with type k = int = {
   let keysSequence = HashMap.keysSequence;
   let keysSet = HashMap.keysSet;
   let merge = HashMap.merge;
+  let none = HashMap.none;
   let put = HashMap.put;
   let putAll = HashMap.putAll;
   let putAllEntries = HashMap.putAllEntries;
@@ -92,6 +111,7 @@ let module BadHashIntMap: PersistentMapTester.S with type k = int = {
   let reduceValues = HashMap.reduceValues;
   let remove = HashMap.remove;
   let removeAll = HashMap.removeAll;
+  let some = HashMap.some;
   let toIterable = HashMap.toIterable;
   let toKeyedCollection = HashMap.toKeyedCollection;
   let toKeyedIterable = HashMap.toKeyedIterable;

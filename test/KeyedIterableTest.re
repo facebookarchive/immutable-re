@@ -269,14 +269,6 @@ let test = describe "KeyedIterable" [
       |> Expect.toBeEqualToTrue;
   }),
   it "values" (fun () => ()),
-  it "count" (fun () => {
-      IntRange.create start::0 count::5
-        |> IntRange.toIterable
-        |> Iterable.map (fun i => (i, i))
-        |> KeyedIterable.fromEntries
-        |> KeyedIterable.count
-        |> Expect.toBeEqualToInt 5;
-  }),
   it "every" (fun () => {
     KeyedIterable.empty ()
       |> KeyedIterable.every (fun _ _ => false)
