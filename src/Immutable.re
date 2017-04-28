@@ -31,7 +31,6 @@ let module Streamable = {
   module type S1 = {
     type t 'a;
 
-    let concat: (list (t 'a)) => (t 'a);
     let defer: (unit => t 'a) => (t 'a);
     let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
     let doOnNext: ('a => unit) => (t 'a) => (t 'a);
@@ -240,7 +239,6 @@ let module KeyedStreamable = {
   module type S2 = {
     type t 'k 'v;
 
-    let concat: (list (t 'k 'v)) => (t 'k 'v);
     let defer: (unit => t 'k 'v) => (t 'k 'v);
     let distinctUntilChangedWith: keyEquals::(Equality.t 'k) => valueEquals::(Equality.t 'v) => (t 'k 'v) => (t 'k 'v);
     let doOnNext: ('k => 'v => unit) => (t 'k 'v) => (t 'k 'v);

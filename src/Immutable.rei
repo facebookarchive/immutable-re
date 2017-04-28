@@ -144,13 +144,6 @@ let module rec Streamable: {
 
     type t 'a;
 
-    let concat: (list (t 'a)) => (t 'a);
-    /** [concat streams] returns a Streamable that lazily concatenates all the
-     *  Streamables in [streams]. The resulting Streamable returns all the values
-     *  in the first Streamable, followed by all the values in the second Streamable,
-     *  and continues until the last Streamable completes.
-     */
-
     let defer: (unit => t 'a) => (t 'a);
     /** [defer f] returns a Streamable that invokes the function [f] whenever enumerated. */
 
@@ -321,6 +314,13 @@ let module rec Iterable: {
   include Streamable.S1 with type t 'a := Iterable.t 'a;
   include S1 with type t 'a := Iterable.t 'a;
 
+  let concat: (list (t 'a)) => (t 'a);
+  /** [concat iters] returns an Iterable that lazily concatenates all the
+   *  Iterables in [iters]. The resulting Iterable returns all the values
+   *  in the first Iterable, followed by all the values in the second Iterable,
+   *  and continues until the last Iterable completes.
+   */
+
   let empty: unit => (Iterable.t 'a);
   /** Returns an empty Iterable. */
 
@@ -345,6 +345,13 @@ let module rec Sequence: {
 
   include Iterable.S1 with type t 'a := t 'a;
   include Streamable.S1 with type t 'a := t 'a;
+
+  let concat: (list (t 'a)) => (t 'a);
+  /** [concat seqs] returns an Sequence that lazily concatenates all the
+   *  Sequence in [seqs]. The resulting Sequence returns all the values
+   *  in the first Sequence, followed by all the values in the second Sequence,
+   *  and continues until the last Sequence completes.
+   */
 
   let empty: unit => (Sequence.t 'a);
   /** Returns an empty Sequence. */
@@ -1123,13 +1130,6 @@ let module KeyedStreamable: {
   module type S2 = {
     type t 'k 'v;
 
-    let concat: (list (t 'k 'v)) => (t 'k 'v);
-    /** [concat stream] returns a KeyedStreamable that lazily concatenates all the
-     *  KeyedStreamables in [stream]. The resulting KeyedStreamable returns all the key/value pairs
-     *  in the first KeyedStreamable, followed by all the key/value pairs in the second KeyedStreamable,
-     *  and continues until the last KeyedStreamable completes.
-     */
-
     let defer: (unit => t 'k 'v) => (t 'k 'v);
     /** [defer f] returns a KeyedStreamable that invokes the function [f] whenever iterated. */
 
@@ -1370,6 +1370,13 @@ let module rec KeyedIterable: {
 
   include KeyedStreamable.S2 with type t 'k 'v := KeyedIterable.t 'k 'v;
   include S2 with type t 'k 'v := KeyedIterable.t 'k 'v;
+
+  let concat: (list (t 'k 'v)) => (t 'k 'v);
+  /** [concat stream] returns a KeyedIterable that lazily concatenates all the
+   *  KeyedStreamables in [stream]. The resulting KeyedIterable returns all the key/value pairs
+   *  in the first KeyedIterable, followed by all the key/value pairs in the second KeyedIterable,
+   *  and continues until the last KeyedIterable completes.
+   */
 
   let empty: unit => (KeyedIterable.t 'k 'v);
   /** The empty KeyedCollection. */
