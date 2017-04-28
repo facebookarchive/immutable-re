@@ -29,20 +29,16 @@ let generateTests
       |> ignore;
   }),
 
-  it (sprintf "map with %i elements, remove %i elements" n (n / 3)) (fun () => {
+  it (sprintf "map with %i elements, remove %i elements" n n) (fun () => {
     let map = getTestData ();
-    let keysToRemove = keys ()
-      |> Iterable.buffer count::1 skip::3
-      |> Iterable.map (fun [i] => i);
+    let keysToRemove = keys ();
 
     keysToRemove |> Iterable.reduce (fun acc i => acc |> remove i) map |> ignore;
   }),
 
-  it (sprintf "map with %i elements, update %i elements" n (n / 3)) (fun () => {
+  it (sprintf "map with %i elements, update %i elements" n n) (fun () => {
     let map = getTestData ();
-    let keysToUpdate = keys ()
-      |> Iterable.buffer count::1 skip::3
-      |> Iterable.map (fun [i] => i);
+    let keysToUpdate = keys ();
 
     /* Multiply the updated value to avoid optimizations */
     keysToUpdate |> Iterable.reduce (fun acc i => acc |> put i (i + 1)) map |> ignore;
