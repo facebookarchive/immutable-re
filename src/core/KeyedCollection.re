@@ -87,7 +87,8 @@ let module Make1 = fun (Base: {
   }: KeyedIterable.S1 with type t 'v := t 'v and type k := k);
 
   let keysSequence (keyed: t 'v): (Sequence.t k) =>
-    toSequence Functions.getKey keyed;
+    if (isEmpty keyed) (Sequence.empty ())
+    else toSequence Functions.getKey keyed;
 
   let keysCollectionImpl: Collection.s (t 'v) k = {
     count,
@@ -96,10 +97,12 @@ let module Make1 = fun (Base: {
   };
 
   let keysCollection (keyed: t 'v): (Collection.t k) =>
-    Collection.Instance keyed keysCollectionImpl;
+    if (isEmpty keyed) (Collection.empty ())
+    else Collection.Instance keyed keysCollectionImpl;
 
   let valuesSequence (keyed: t 'v): (Sequence.t 'v) =>
-    toSequence Functions.getValue keyed;
+    if (isEmpty keyed) (Sequence.empty ())
+    else toSequence Functions.getValue keyed;
 
   let valuesCollectionImpl: Collection.s (t 'v) 'v = {
     count,
@@ -108,7 +111,8 @@ let module Make1 = fun (Base: {
   };
 
   let valuesCollection (keyed: t 'v): (Collection.t 'v) =>
-    Collection.Instance keyed valuesCollectionImpl;
+    if (isEmpty keyed) (Collection.empty ())
+    else Collection.Instance keyed valuesCollectionImpl;
 
   let keyedCollectionBase: s (t 'v) k 'v = {
     containsKey,
@@ -152,7 +156,8 @@ let module Make2 = fun (Base: {
   }: KeyedIterable.S2 with type t 'k 'v := t 'k 'v);
 
   let keysSequence (keyed: t 'k 'v): (Sequence.t 'k) =>
-    toSequence Functions.getKey keyed;
+    if (isEmpty keyed) (Sequence.empty ())
+    else toSequence Functions.getKey keyed;
 
   let keysCollectionImpl: Collection.s (t 'k 'v) 'k = {
     count,
@@ -161,10 +166,12 @@ let module Make2 = fun (Base: {
   };
 
   let keysCollection (keyed: t 'k 'v): (Collection.t 'k) =>
-    Collection.Instance keyed keysCollectionImpl;
+    if (isEmpty keyed) (Collection.empty ())
+    else Collection.Instance keyed keysCollectionImpl;
 
   let valuesSequence (keyed: t 'k 'v): (Sequence.t 'v) =>
-    toSequence Functions.getValue keyed;
+    if (isEmpty keyed) (Sequence.empty ())
+    else toSequence Functions.getValue keyed;
 
   let valuesCollectionImpl: Collection.s (t 'k 'v) 'v = {
     count,
@@ -173,7 +180,8 @@ let module Make2 = fun (Base: {
   };
 
   let valuesCollection (keyed: t 'k 'v): (Collection.t 'v) =>
-    Collection.Instance keyed valuesCollectionImpl;
+    if (isEmpty keyed) (Collection.empty ())
+    else Collection.Instance keyed valuesCollectionImpl;
 
   let keyedCollectionBase: s (t 'k 'v) 'k 'v = {
     containsKey,
