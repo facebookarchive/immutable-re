@@ -12,34 +12,6 @@ open ReUnit;
 open ReUnit.Test;
 
 let test = describe "Sequence" [
-  it "buffer" (fun () => {
-    let src = [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ] |> List.toSequence;
-
-    Sequence.buffer count::3 skip::3 src
-      |> Sequence.toIterable
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt [ 7, 8, 9, 4, 5, 6, 1, 2, 3 ];
-
-    Sequence.buffer count::2 skip::3 src
-      |> Sequence.toIterable
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt [ 7, 8, 4, 5, 1, 2 ];
-
-    Sequence.buffer count::2 skip::1 src
-      |> Sequence.toIterable
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt [ 8, 9, 7, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1, 2 ];
-
-    (Sequence.empty ())
-      |> Sequence.buffer count::3 skip::3
-      |> Sequence.toIterable
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt []
-  }),
   it "concat" (fun () => {
     Sequence.concat [
         IntRange.create start::0 count::2 |> IntRange.toSequence,
@@ -466,9 +438,9 @@ let test = describe "Sequence" [
         (List.toSequence [4, 5, 6])
         (List.toSequence [7, 8, 9])
       |> Sequence.flatMap List.toSequence
+      |> Sequence.filter Option.isNotEmpty
+      |> Sequence.map Option.firstOrRaise
       |> Sequence.toIterable
-      |> Iterable.filter Option.isNotEmpty
-      |> Iterable.map Option.firstOrRaise
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 9, 6, 8, 5, 2, 7, 4, 1];
 
@@ -478,9 +450,9 @@ let test = describe "Sequence" [
         (List.toSequence [4, 5, 6])
         (List.toSequence [7, 8])
       |> Sequence.flatMap List.toSequence
+      |> Sequence.filter Option.isNotEmpty
+      |> Sequence.map Option.firstOrRaise
       |> Sequence.toIterable
-      |> Iterable.filter Option.isNotEmpty
-      |> Iterable.map Option.firstOrRaise
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 6, 3, 8, 5, 2, 7, 4, 1];
 
@@ -490,9 +462,9 @@ let test = describe "Sequence" [
         (List.toSequence [4, 5])
         (List.toSequence [7, 8, 9])
       |> Sequence.flatMap List.toSequence
+      |> Sequence.filter Option.isNotEmpty
+      |> Sequence.map Option.firstOrRaise
       |> Sequence.toIterable
-      |> Iterable.filter Option.isNotEmpty
-      |> Iterable.map Option.firstOrRaise
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 9, 3, 8, 5, 2, 7, 4, 1];
 
@@ -502,9 +474,9 @@ let test = describe "Sequence" [
         (List.toSequence [4, 5])
         (List.toSequence [7, 8, 9])
       |> Sequence.flatMap List.toSequence
+      |> Sequence.filter Option.isNotEmpty
+      |> Sequence.map Option.firstOrRaise
       |> Sequence.toIterable
-      |> Iterable.filter Option.isNotEmpty
-      |> Iterable.map Option.firstOrRaise
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 9, 8, 5, 2, 7, 4, 1];
 
@@ -514,9 +486,9 @@ let test = describe "Sequence" [
         (List.toSequence [4, 5, 6])
         (List.toSequence [7, 8])
       |> Sequence.flatMap List.toSequence
+      |> Sequence.filter Option.isNotEmpty
+      |> Sequence.map Option.firstOrRaise
       |> Sequence.toIterable
-      |> Iterable.filter Option.isNotEmpty
-      |> Iterable.map Option.firstOrRaise
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 6, 8, 5, 2, 7, 4, 1];
 
@@ -526,9 +498,9 @@ let test = describe "Sequence" [
         (List.toSequence [4, 5])
         (List.toSequence [7, 8])
       |> Sequence.flatMap List.toSequence
+      |> Sequence.filter Option.isNotEmpty
+      |> Sequence.map Option.firstOrRaise
       |> Sequence.toIterable
-      |> Iterable.filter Option.isNotEmpty
-      |> Iterable.map Option.firstOrRaise
       |> List.fromReverse
       |> Expect.toBeEqualToListOfInt [ 3, 8, 5, 2, 7, 4, 1];
   }),

@@ -12,30 +12,6 @@ open ReUnit;
 open ReUnit.Test;
 
 let test = describe "Iterable" [
-  it "buffer" (fun () => {
-    let src = [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ] |> List.toIterable;
-
-    Iterable.buffer count::3 skip::3 src
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt [ 7, 8, 9, 4, 5, 6, 1, 2, 3 ];
-
-    Iterable.buffer count::2 skip::3 src
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt [ 7, 8, 4, 5, 1, 2 ];
-
-    Iterable.buffer count::2 skip::1 src
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt [ 8, 9, 7, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1, 2 ];
-
-    (Iterable.empty ())
-      |> Iterable.buffer count::3 skip::3
-      |> Iterable.flatMap List.toIterable
-      |> List.fromReverse
-      |> Expect.toBeEqualToListOfInt []
-  }),
   it "concat" (fun () => {
     Iterable.concat [
         IntRange.create start::0 count::2 |> IntRange.toIterable,

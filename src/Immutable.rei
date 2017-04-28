@@ -144,13 +144,6 @@ let module rec Streamable: {
 
     type t 'a;
 
-    let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
-    /** [buffer count skip stream] returns a Streamable that collects values from [stream]
-     *  into list buffers of size [count], skipping [skip] number of values in between the
-     *  creation of new buffers. The returned buffers are guaranteed to be of size [count],
-     *  and values are dropped if [stream] completes before filling the last buffer.
-     */
-
     let concat: (list (t 'a)) => (t 'a);
     /** [concat streams] returns a Streamable that lazily concatenates all the
      *  Streamables in [streams]. The resulting Streamable returns all the values

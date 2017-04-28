@@ -122,31 +122,6 @@ let scan
   fun () => Next acc (recurse reducer acc seq);
 };
 
-let buffer
-    count::(count: int)
-    skip::(skip: int)
-    (seq: t 'a): (t (list 'a)) => {
-  if (count <= 0 || skip <= 0) (failwith "out of range");
-
-  let rec recurse (lst: list 'a) (counted: int) (skipped: int) (seq: t 'a) => fun () => switch (seq ()) {
-    | Next value next =>
-        let nextSequence =
-          if (counted < count && skipped < skip) (recurse [value, ...lst] (counted + 1) (skipped + 1) next)
-          else if (skipped < skip) (recurse lst counted (skipped + 1) next)
-          else if (counted < count) (recurse [value, ...lst] (counted + 1) skipped next)
-          else if (skip < count) (recurse [value, ...(ImmList.take (count - skip) lst)] counted skipped next)
-          else (recurse [value] 1 1 next);
-
-        if (counted === count && skipped === skip) (Next lst nextSequence)
-        else (nextSequence ())
-    | Completed =>
-        if (counted === count && skipped === skip) (Next lst (empty ()))
-        else Completed
-  };
-
-  recurse [] 0 0 seq;
-};
-
 let distinctUntilChangedWith
     (equality: Equality.t 'a)
     (seq: t 'a): (t 'a) => fun () => {

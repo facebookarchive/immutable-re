@@ -442,19 +442,3 @@ let takeWhile (keepTaking: 'a => bool) (iter: t 'a): (t 'a) => switch iter {
 };
 
 let toIterable (iter: t 'a): (t 'a) => iter;
-
-let buffer
-    count::(count: int)
-    skip::(skip: int)
-    (iter: t 'a): (t (list 'a)) =>
-  if (count <= 0 || skip <= 0) (failwith "out of range")
-  else iter |> scan (
-      fun (lst, counted, skipped) next =>
-        if (counted < count && skipped < skip) ([next, ...lst], counted + 1, skipped + 1)
-        else if (skipped < skip) (lst, counted, skipped + 1)
-        else if (counted < count) ([next, ...lst], counted + 1, skipped)
-        else if (skip < count) ([next, ...(ImmList.take (count - skip) lst)], counted, skipped)
-        else ([next], 1, 1)
-      ) ([], 0, 0)
-    |> filter (fun (_, counted, skipped) => counted === count && skipped === skip)
-    |> map (fun (lst, _, _) => lst);

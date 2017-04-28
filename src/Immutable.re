@@ -31,7 +31,6 @@ let module Streamable = {
   module type S1 = {
     type t 'a;
 
-    let buffer: count::int => skip::int => (t 'a) => (t (list 'a));
     let concat: (list (t 'a)) => (t 'a);
     let defer: (unit => t 'a) => (t 'a);
     let distinctUntilChangedWith: (Equality.t 'a) => (t 'a) => (t 'a);
