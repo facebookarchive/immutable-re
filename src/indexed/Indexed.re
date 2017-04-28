@@ -86,61 +86,27 @@ let module Make1 = fun (Base: {
 
     let count = count;
 
-    let firstValue = first;
-
-    let firstValueOrRaise = firstOrRaise;
-
-    let first (indexed: t 'v): (option (int, 'v)) =>
-      if (count indexed > 0) (Some (0, indexed |> getOrRaise 0))
+    let first (selector: int => 'v => 'c) (indexed: t 'v): (option 'c) =>
+      if (count indexed > 0) (Some (selector 0 (getOrRaise 0 indexed)))
       else None;
 
-    let firstOrRaise (indexed: t 'v): (int, 'v) =>
-      if (count indexed > 0) (0, indexed |> getOrRaise 0)
-      else failwith "empty";
-
-    let firstKey (indexed: t 'v): (option int) =>
-      if (count indexed > 0) (Some 0)
-      else None;
-
-    let firstKeyOrRaise (indexed: t 'v): int =>
-      if (count indexed > 0) 0
+    let firstOrRaise (selector: int => 'v => 'c) (indexed: t 'v): 'c =>
+      if (count indexed > 0) (selector 0 (getOrRaise 0 indexed))
       else failwith "empty";
 
     let get = get;
 
     let getOrRaise = getOrRaise;
 
-    let keysSequence (indexed: t 'v): (Sequence.t int) =>
-      IntRange.create start::0 count::(count indexed) |> IntRange.toSequence;
-
-    let keysSequenceReversed (indexed: t 'v): (Sequence.t int) =>
-      IntRange.create start::0 count::(count indexed) |> IntRange.toSequenceReversed;
-
-    let lastValue = last;
-
-    let lastValueOrRaise = lastOrRaise;
-
-    let last (indexed: t 'v): (option (int, 'v)) => {
+    let last (selector: int => 'v => 'c) (indexed: t 'v): (option 'c) => {
       let lastIndex = count indexed - 1;
-      if (lastIndex >= 0) (Some (lastIndex, indexed |> getOrRaise lastIndex))
+      if (lastIndex >= 0) (Some (selector lastIndex (getOrRaise lastIndex indexed)))
       else None;
     };
 
-    let lastOrRaise (indexed: t 'v): (int, 'v) => {
+    let lastOrRaise (selector: int => 'v => 'c) (indexed: t 'v): 'c => {
       let lastIndex = count indexed - 1;
-      if (lastIndex >= 0) (lastIndex, indexed |> getOrRaise lastIndex)
-      else failwith "empty";
-    };
-
-    let lastKey (indexed: t 'v): (option int) => {
-      let lastIndex = count indexed - 1;
-      if (lastIndex >= 0) (Some lastIndex)
-      else None;
-    };
-
-    let lastKeyOrRaise (indexed: t 'v): int => {
-      let lastIndex = count indexed - 1;
-      if (lastIndex >= 0) lastIndex
+      if (lastIndex >= 0) (selector lastIndex (getOrRaise lastIndex indexed))
       else failwith "empty";
     };
 
@@ -202,23 +168,17 @@ let module Make1 = fun (Base: {
       IntRange.create start::0 count::(count indexed)
         |> IntRange.reduceReversed while_::predicate f acc;
 
-    let toSequence (indexed: t 'v): (Sequence.t (int, 'v)) =>
+    let toSequence (selector: int => 'v => 'c) (indexed: t 'v): (Sequence.t 'c) =>
       Sequence.zip2With
-        (fun a b => (a, b))
+        selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequence)
         (Base.toSequence indexed);
 
-    let toSequenceReversed (indexed: t 'v): (Sequence.t (int, 'v)) =>
+    let toSequenceReversed (selector: int => 'v => 'c) (indexed: t 'v): (Sequence.t 'c) =>
       Sequence.zip2With
-        (fun a b => (a, b))
+        selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequenceReversed)
         (Base.toSequenceReversed indexed);
-
-    let valuesSequence (indexed: t 'v): (Sequence.t 'v) =>
-      Base.toSequence indexed;
-
-    let valuesSequenceReversed (indexed: t 'v): (Sequence.t 'v) =>
-      Base.toSequenceReversed indexed;
   };
 
   let toKeyedCollection = NavigableMap.toKeyedCollection;

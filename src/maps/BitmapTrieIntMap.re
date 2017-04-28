@@ -210,7 +210,6 @@ let rec reduceKeys (f: 'acc => int => 'acc) (acc: 'acc) (map: t 'v): 'acc => swi
   | Empty => acc;
 };
 
-
 let reduceKeysWhile
     (predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
@@ -253,21 +252,9 @@ let reduceValuesWhile
   reduceWhileWithResult shouldContinue predicate f acc map;
 };
 
-let rec keysSequence (map: t 'v): (Sequence.t int) => switch map {
-  | Entry key _ => Sequence.return key
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap keysSequence
-  | Empty => Sequence.empty ();
-};
-
-let rec toSequence (map: t 'v): (Sequence.t (int, 'v)) => switch map {
-  | Entry key value => Sequence.return (key, value)
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
-  | Empty => Sequence.empty ();
-};
-
-let rec valuesSequence (map: t 'v): (Sequence.t 'v) => switch map {
-  | Entry _ value => Sequence.return value
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap valuesSequence
+let rec toSequence (selector: int => 'v => 'c) (map: t 'v): (Sequence.t 'c) => switch map {
+  | Entry key value => Sequence.return (selector key value)
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap (toSequence selector)
   | Empty => Sequence.empty ();
 };
 

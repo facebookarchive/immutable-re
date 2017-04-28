@@ -61,45 +61,17 @@ let rec containsKey
     }
 };
 
-let rec first (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
+let rec first (selector: 'k => 'v => 'c) (tree: t 'k 'v): (option 'c) => switch tree {
   | Empty => None
-  | Leaf k v => Some (k, v)
-  | Node _ Empty k v _ => Some (k, v)
-  | Node _ left _ _ _ => first left
+  | Leaf k v => Some (selector k v)
+  | Node _ Empty k v _ => Some (selector k v)
+  | Node _ left _ _ _ => first selector left
 };
 
-let rec firstOrRaise (tree: t 'k 'v): ('k, 'v) => switch tree {
-  | Leaf k v => (k, v)
-  | Node _ Empty k v _ => (k, v)
-  | Node _ left _ _ _ => firstOrRaise left
-  | Empty => failwith "empty"
-};
-
-let rec firstKey (tree: t 'k 'v): (option 'k) => switch tree {
-  | Empty => None
-  | Leaf k _ => Some k
-  | Node _ Empty k _ _ => Some k
-  | Node _ left _ _ _ => firstKey left
-};
-
-let rec firstKeyOrRaise (tree: t 'k 'v): 'k => switch tree {
-  | Leaf k _ => k
-  | Node _ Empty k _ _ => k
-  | Node _ left _ _ _ => firstKeyOrRaise left
-  | Empty => failwith "empty"
-};
-
-let rec firstValue (tree: t 'k 'v): (option 'v) => switch tree {
-  | Empty => None
-  | Leaf _ v => Some v
-  | Node _ Empty _ v _ => Some v
-  | Node _ left _ _ _ => firstValue left
-};
-
-let rec firstValueOrRaise (tree: t 'k 'v): 'v => switch tree {
-  | Leaf _ v => v
-  | Node _ Empty _ v _ => v
-  | Node _ left _ _ _ => firstValueOrRaise left
+let rec firstOrRaise (selector: 'k => 'v => 'c) (tree: t 'k 'v): 'c => switch tree {
+  | Leaf k v => (selector k v)
+  | Node _ Empty k v _ => (selector k v)
+  | Node _ left _ _ _ => firstOrRaise selector left
   | Empty => failwith "empty"
 };
 
@@ -139,66 +111,18 @@ let rec getOrRaise
     }
 };
 
-let rec last (tree: t 'k 'v): (option ('k, 'v)) => switch tree {
+let rec last (selector: 'k => 'v => 'c) (tree: t 'k 'v): (option 'c) => switch tree {
   | Empty => None
-  | Leaf k v  => Some (k, v)
-  | Node _ _ k v Empty => Some (k, v)
-  | Node _ _ _ _ right => last right
+  | Leaf k v  => Some (selector k v)
+  | Node _ _ k v Empty => Some (selector k v)
+  | Node _ _ _ _ right => last selector right
 };
 
-let rec lastOrRaise (tree: t 'k 'v): ('k, 'v) => switch tree {
-  | Leaf k v => (k, v)
-  | Node _ _ k v Empty => (k, v)
-  | Node _ _ _ _ right => lastOrRaise right
+let rec lastOrRaise (selector: 'k => 'v => 'c) (tree: t 'k 'v): 'c => switch tree {
+  | Leaf k v => (selector k v)
+  | Node _ _ k v Empty => (selector k v)
+  | Node _ _ _ _ right => lastOrRaise selector right
   | Empty => failwith "empty"
-};
-
-let rec lastKey (tree: t 'k 'v): (option 'k) => switch tree {
-  | Empty => None
-  | Leaf k _  => Some k
-  | Node _ _ k _ Empty => Some k
-  | Node _ _ _ _ right => lastKey right
-};
-
-let rec lastKeyOrRaise (tree: t 'k 'v): 'k => switch tree {
-  | Leaf k _ => k
-  | Node _ _ k _ Empty => k
-  | Node _ _ _ _ right => lastKeyOrRaise right
-  | Empty => failwith "empty"
-};
-
-let rec lastValue (tree: t 'k 'v): (option 'v) => switch tree {
-  | Empty => None
-  | Leaf _ v  => Some v
-  | Node _ _ _ v Empty => Some v
-  | Node _ _ _ _ right => lastValue right
-};
-
-let rec lastValueOrRaise (tree: t 'k 'v): 'v => switch tree {
-  | Leaf _ v => v
-  | Node _ _ _ v Empty => v
-  | Node _ _ _ _ right => lastValueOrRaise right
-  | Empty => failwith "empty"
-};
-
-let rec keysSequence (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
-  | Empty => Sequence.empty ()
-  | Leaf k _ => Sequence.return k
-  | Node _ left k _ right => Sequence.concat [
-      Sequence.defer(fun () => keysSequence left),
-      Sequence.return k,
-      Sequence.defer(fun () => keysSequence right),
-    ]
-};
-
-let rec keysSequenceReversed (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
-  | Empty => Sequence.empty ()
-  | Leaf k _ => Sequence.return k
-  | Node _ left k _ right => Sequence.concat [
-      Sequence.defer(fun () => keysSequenceReversed right),
-      Sequence.return k,
-      Sequence.defer(fun () => keysSequenceReversed left),
-    ]
 };
 
 let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (tree: t 'k 'v): 'acc => switch tree {
@@ -401,33 +325,23 @@ let reduceValuesReversedWhile
   reduceReversedWhileWithResult shouldContinue predicate f acc tree;
 };
 
-let rec toKeySequenceReversed (tree: t 'k 'v): (Sequence.t 'k) => switch tree {
+let rec toSequence (selector: 'k => 'v => 'c) (tree: t 'k 'v): (Sequence.t 'c) => switch tree {
   | Empty => Sequence.empty ()
-  | Leaf k _ => Sequence.return k
-  | Node _ left k _ right => Sequence.concat [
-      Sequence.defer(fun () => toKeySequenceReversed right),
-      Sequence.return k,
-      Sequence.defer(fun () => toKeySequenceReversed left),
+  | Leaf k v => Sequence.return (selector k v)
+  | Node _ left k v right => Sequence.concat [
+      Sequence.defer(fun () => toSequence selector left),
+      Sequence.return (selector k v),
+      Sequence.defer(fun () => toSequence selector right),
     ]
 };
 
-let rec toSequence (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
+let rec toSequenceReversed (selector: 'k => 'v => 'c) (tree: t 'k 'v): (Sequence.t 'c) => switch tree {
   | Empty => Sequence.empty ()
-  | Leaf k v => Sequence.return (k, v)
+  | Leaf k v => Sequence.return (selector k v)
   | Node _ left k v right => Sequence.concat [
-      Sequence.defer(fun () => toSequence left),
-      Sequence.return (k, v),
-      Sequence.defer(fun () => toSequence right),
-    ]
-};
-
-let rec toSequenceReversed (tree: t 'k 'v): (Sequence.t ('k, 'v)) => switch tree {
-  | Empty => Sequence.empty ()
-  | Leaf k v => Sequence.return (k, v)
-  | Node _ left k v right => Sequence.concat [
-      Sequence.defer(fun () => toSequenceReversed right),
-      Sequence.return (k, v),
-      Sequence.defer(fun () => toSequenceReversed left),
+      Sequence.defer(fun () => toSequenceReversed selector right),
+      Sequence.return (selector k v),
+      Sequence.defer(fun () => toSequenceReversed selector left),
     ]
 };
 
@@ -469,26 +383,6 @@ let rec removeLastOrRaise (tree: t 'k 'v): (t 'k 'v) => switch tree {
   | Leaf _ _ => Empty
   | Node _ left _ _ Empty => left
   | Node _ left k v right => rebalance left k v (removeLastOrRaise right);
-};
-
-let rec valuesSequence (tree: t 'k 'v): (Sequence.t 'v) => switch tree {
-  | Empty => Sequence.empty ()
-  | Leaf _ v => Sequence.return v
-  | Node _ left _ v right => Sequence.concat [
-      Sequence.defer(fun () => valuesSequence left),
-      Sequence.return v,
-      Sequence.defer(fun () => valuesSequence right),
-    ]
-};
-
-let rec valuesSequenceReversed (tree: t 'k 'v): (Sequence.t 'v) => switch tree {
-  | Empty => Sequence.empty ()
-  | Leaf _ v => Sequence.return v
-  | Node _ left _ v right => Sequence.concat [
-      Sequence.defer(fun () => valuesSequenceReversed right),
-      Sequence.return v,
-      Sequence.defer(fun () => valuesSequenceReversed left),
-    ]
 };
 
 let rec alter
@@ -560,7 +454,7 @@ let rec alter
                 left
             | _ =>
               result := AlterResult.Removed;
-              let (k, v) = firstOrRaise right;
+              let (k, v) = firstOrRaise Functions.pairify right;
               rebalance left k v (removeFirstOrRaise right);
           }
         | Some xV =>

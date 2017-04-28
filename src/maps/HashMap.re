@@ -34,9 +34,6 @@ include (ImmMap.Make2 {
     root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
   };
 
-  let keysSequence ({ root }: t 'k 'v): (Sequence.t 'k) =>
-    root |> BitmapTrieMap.keysSequence;
-
   let reduce
       while_::(predicate: 'acc => 'k => 'v => bool)
       (f: 'acc => 'k => 'v => 'acc)
@@ -61,11 +58,8 @@ include (ImmMap.Make2 {
     if (predicate === Functions.alwaysTrue2) (root |> BitmapTrieMap.reduceValues f acc)
     else root |> BitmapTrieMap.reduceValuesWhile predicate f acc;
 
-  let toSequence ({ root }: t 'k 'v): (Sequence.t ('k, 'v)) =>
-    root |> BitmapTrieMap.toSequence;
-
-  let valuesSequence ({ root }: t 'k 'v): (Sequence.t 'v) =>
-    root |> BitmapTrieMap.valuesSequence;
+  let toSequence (selector: 'k => 'v => 'c)({ root }: t 'k 'v): (Sequence.t 'c) =>
+    root |> BitmapTrieMap.toSequence selector;
 }: ImmMap.S2 with type t 'k 'v := t 'k 'v);
 
 let alter

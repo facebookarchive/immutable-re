@@ -14,7 +14,10 @@ let alwaysTrue3 _ _ _: bool => true;
 let call (f: unit => 'a): 'a => f ();
 let compose (f1: 'a => 'b) (f2: 'b => 'c) (a: 'a): 'c => f2 (f1 a);
 let flip (f: 'a => 'b => 'c): ('b => 'a => 'c) => fun b a => f a b;
+let getKey k _ => k;
+let getValue _ v => v;
 let identity (a: 'a): 'a => a;
+let pairify k v => (k, v);
 let returnSome (a: 'a) _ => Some a;
 
 let module Operators = {

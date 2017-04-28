@@ -23,10 +23,6 @@ let module HashIntMap: PersistentMapTester.S = {
   let every = HashMap.every;
   let find = HashMap.find;
   let findOrRaise = HashMap.findOrRaise;
-  let findKey = HashMap.findKey;
-  let findKeyOrRaise = HashMap.findKeyOrRaise;
-  let findValue = HashMap.findValue;
-  let findValueOrRaise = HashMap.findValueOrRaise;
   let forEach = HashMap.forEach;
   let from iter => HashMap.fromWith
     hash::(fun i => i)
@@ -80,10 +76,6 @@ let module BadHashIntMap: PersistentMapTester.S with type k = int = {
   let every = HashMap.every;
   let find = HashMap.find;
   let findOrRaise = HashMap.findOrRaise;
-  let findKey = HashMap.findKey;
-  let findKeyOrRaise = HashMap.findKeyOrRaise;
-  let findValue = HashMap.findValue;
-  let findValueOrRaise = HashMap.findValueOrRaise;
   let forEach = HashMap.forEach;
   let from iter => HashMap.fromWith
     hash::badHashFunction

@@ -10,12 +10,10 @@
 type s 'keyed 'k 'v = {
   containsKey: 'k => 'keyed => bool,
   count: 'keyed => int,
-  keysSequence: 'keyed => Sequence.t 'k,
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'keyed => 'acc),
   reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'keyed => 'acc,
   reduceValues: 'acc . while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => 'keyed => 'acc,
-  toSequence: 'keyed => Sequence.t ('k, 'v),
-  valuesSequence: 'keyed => Sequence.t 'v,
+  toSequence: 'c . ('k => 'v => 'c) => 'keyed => Sequence.t 'c,
 };
 
 type t 'k 'v =
@@ -37,7 +35,7 @@ module type S1 = {
   let keysCollection: (t 'v) => Collection.t k;
   let keysSequence: (t 'v) => Sequence.t k;
   let toKeyedCollection: (t 'v) => (keyedCollection k 'v);
-  let toSequence: (t 'v) => (Sequence.t (k, 'v));
+  let toSequence: (k => 'v => 'c) => (t 'v) => (Sequence.t 'c);
   let valuesCollection: (t 'v) => Collection.t 'v;
   let valuesSequence: (t 'v) => Sequence.t 'v;
 };
@@ -54,7 +52,7 @@ module type S2 = {
   let keysCollection: (t 'k 'v) => Collection.t 'k;
   let keysSequence: (t 'k 'v) => Sequence.t 'k;
   let toKeyedCollection: (t 'k 'v) => (keyedCollection 'k 'v);
-  let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+  let toSequence: ('k => 'v => 'c) => (t 'k 'v) => (Sequence.t 'c);
   let valuesCollection: (t 'k 'v) => Collection.t 'v;
   let valuesSequence: (t 'k 'v) => Sequence.t 'v;
 };
@@ -65,12 +63,10 @@ let module Make1 = fun (Base: {
 
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
-  let keysSequence: (t 'v) => Sequence.t k;
   let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  let toSequence: (t 'v) => Sequence.t (k, 'v);
-  let valuesSequence: (t 'v) => Sequence.t 'v;
+  let toSequence: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
 }) => ({
   include Base;
 
@@ -90,6 +86,9 @@ let module Make1 = fun (Base: {
     let reduceValues = reduceValues;
   }: KeyedIterable.S1 with type t 'v := t 'v and type k := k);
 
+  let keysSequence (keyed: t 'v): (Sequence.t k) =>
+    toSequence Functions.getKey keyed;
+
   let keysCollectionImpl: Collection.s (t 'v) k = {
     count,
     reduce: Base.reduceKeys,
@@ -98,6 +97,9 @@ let module Make1 = fun (Base: {
 
   let keysCollection (keyed: t 'v): (Collection.t k) =>
     Collection.Instance keyed keysCollectionImpl;
+
+  let valuesSequence (keyed: t 'v): (Sequence.t 'v) =>
+    toSequence Functions.getValue keyed;
 
   let valuesCollectionImpl: Collection.s (t 'v) 'v = {
     count,
@@ -111,12 +113,10 @@ let module Make1 = fun (Base: {
   let keyedCollectionBase: s (t 'v) k 'v = {
     containsKey,
     count,
-    keysSequence,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
     reduceValues: Base.reduceValues,
     toSequence,
-    valuesSequence,
   };
 
   let toKeyedCollection (keyed: t 'v): (keyedCollection k 'v) =>
@@ -129,12 +129,10 @@ let module Make2 = fun (Base: {
 
   let containsKey: 'k => t 'k 'v => bool;
   let count: t 'k 'v => int;
-  let keysSequence: (t 'k 'v) => Sequence.t 'k;
   let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
-  let toSequence: (t 'k 'v) => Sequence.t ('k, 'v);
-  let valuesSequence: (t 'k 'v) => Sequence.t 'v;
+  let toSequence: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
 }) => ({
   include Base;
 
@@ -153,6 +151,9 @@ let module Make2 = fun (Base: {
     let reduceValues = reduceValues;
   }: KeyedIterable.S2 with type t 'k 'v := t 'k 'v);
 
+  let keysSequence (keyed: t 'k 'v): (Sequence.t 'k) =>
+    toSequence Functions.getKey keyed;
+
   let keysCollectionImpl: Collection.s (t 'k 'v) 'k = {
     count,
     reduce: Base.reduceKeys,
@@ -161,6 +162,9 @@ let module Make2 = fun (Base: {
 
   let keysCollection (keyed: t 'k 'v): (Collection.t 'k) =>
     Collection.Instance keyed keysCollectionImpl;
+
+  let valuesSequence (keyed: t 'k 'v): (Sequence.t 'v) =>
+    toSequence Functions.getValue keyed;
 
   let valuesCollectionImpl: Collection.s (t 'k 'v) 'v = {
     count,
@@ -174,12 +178,10 @@ let module Make2 = fun (Base: {
   let keyedCollectionBase: s (t 'k 'v) 'k 'v = {
     containsKey,
     count,
-    keysSequence,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
     reduceValues: Base.reduceValues,
     toSequence,
-    valuesSequence,
   };
 
   let toKeyedCollection (keyed: t 'k 'v): (keyedCollection 'k 'v) =>
@@ -198,11 +200,6 @@ include (Make2 {
   let count (keyed: t 'k 'v): int => switch keyed {
     | Empty => 0
     | Instance keyed { count } => count keyed
-  };
-
-  let keysSequence (keyed: t 'k 'v): Sequence.t 'k => switch keyed {
-    | Empty => Sequence.empty ()
-    | Instance keyed { keysSequence } => keysSequence keyed
   };
 
   let reduce
@@ -232,14 +229,9 @@ include (Make2 {
     | Instance iter { reduceValues } => iter |> reduceValues while_::predicate f acc;
   };
 
-  let toSequence (keyed: t 'k 'v): Sequence.t ('k, 'v) => switch keyed {
+  let toSequence (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
     | Empty => Sequence.empty ()
-    | Instance keyed { toSequence } => toSequence keyed
-  };
-
-  let valuesSequence (keyed: t 'k 'v): Sequence.t 'v => switch keyed {
-    | Empty => Sequence.empty ()
-    | Instance keyed { valuesSequence } => valuesSequence keyed
+    | Instance keyed { toSequence } => toSequence selector keyed
   };
 }: S2 with type t 'k 'v := t 'k 'v);
 

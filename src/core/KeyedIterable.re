@@ -21,12 +21,8 @@ module type S1 = {
   type t 'v;
 
   let every: (k => 'v => bool) => (t 'v) => bool;
-  let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
-  let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
-  let findKey: (k => 'v => bool) => (t 'v) => (option k);
-  let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
-  let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
-  let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
+  let find: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => (option 'c);
+  let findOrRaise: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => 'c;
   let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
   let keys: (t 'v) => (Iterable.t k);
   let none: (k => 'v => bool) => (t 'v) => bool;
@@ -34,7 +30,7 @@ module type S1 = {
   let reduceKeys: while_::('acc => k => bool)? => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   let some: (k => 'v => bool) => (t 'v) => bool;
-  let toIterable: t 'v => Iterable.t (k, 'v);
+  let toIterable: (k => 'v => 'c) => t 'v => Iterable.t 'c;
   let toKeyedIterable: t 'v => keyedIterable k 'v;
   let values: (t 'v) => Iterable.t 'v;
 };
@@ -43,12 +39,8 @@ module type S2 = {
   type t 'k 'v;
 
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
-  let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
-  let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
-  let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
-  let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
-  let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
+  let find: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => (option 'c);
+  let findOrRaise: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => 'c;
   let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
   let keys: (t 'k 'v) => (Iterable.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
@@ -56,7 +48,7 @@ module type S2 = {
   let reduceKeys: while_::('acc => 'k => bool)? => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let some: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let toIterable: t 'k 'v => Iterable.t ('k, 'v);
+  let toIterable: ('k => 'v => 'c) => t 'k 'v => Iterable.t 'c;
   let toKeyedIterable: t 'k 'v => keyedIterable 'k 'v;
   let values: (t 'k 'v) => Iterable.t 'v;
 };
@@ -78,32 +70,14 @@ let module Make1 = fun (Base: {
       (fun _ => f)
       true;
 
-  let find (f: k => 'v => bool) (iter: t 'v): (option (k, 'v)) =>
+  let find (selector: k => 'v => 'c) (f: k => 'v => bool) (iter: t 'v): (option 'c) =>
     iter |> reduce
       while_::(fun acc _ _ => Option.isEmpty acc)
-      (fun _ k v => if (f k v) (Some (k, v)) else None)
+      (fun _ k v => if (f k v) (Some (selector k v)) else None)
       None;
 
-  let findOrRaise (f: k => 'v => bool) (iter: t 'v): (k, 'v) =>
-    find f iter |> Option.firstOrRaise;
-
-  let findKey (f: k => 'v => bool) (iter: t 'v): (option k) =>
-    iter |> reduce
-      while_::(fun acc _ _ => Option.isEmpty acc)
-      (fun _ k v => if (f k v) (Some k) else None)
-      None;
-
-  let findKeyOrRaise (f: k => 'v => bool) (iter: t 'v): k =>
-    findKey f iter |> Option.firstOrRaise;
-
-  let findValue (f: k => 'v => bool) (iter: t 'v): (option 'v) =>
-    iter |> reduce
-      while_::(fun acc _ _ => Option.isEmpty acc)
-      (fun _ k v => if (f k v) (Some v) else None)
-      None;
-
-  let findValueOrRaise (f: k => 'v => bool) (iter: t 'v): 'v =>
-    findValue f iter |> Option.firstOrRaise;
+  let findOrRaise (selector: k => 'v => 'c) (f: k => 'v => bool) (iter: t 'v): 'c =>
+    find selector f iter |> Option.firstOrRaise;
 
   let forEach
       while_::(predicate: k => 'v => bool)=Functions.alwaysTrue2
@@ -138,28 +112,6 @@ let module Make1 = fun (Base: {
       (map: t 'v): 'acc =>
     reduceValues while_::predicate f acc map;
 
-  let reduceKeyValuePairs
-      while_::(predicate: 'acc => (k, 'v) => bool)
-      (f: 'acc => (k, 'v) => 'acc)
-      (acc: 'acc)
-      (map: t 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) {
-      let f acc k v => f acc (k, v);
-      reduce f acc map;
-    }
-    else {
-      let memoizedPair = MutableOption.empty ();
-
-      let predicate acc k v => {
-        let pair = (k, v);
-        memoizedPair |> MutableOption.set pair;
-        predicate acc pair;
-      };
-
-      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
-      reduce while_::predicate f acc map;
-    };
-
   let some (f: k => 'v => bool) (iter: t 'v): bool =>
     iter |> reduce
       while_::(fun acc _ _ => not acc)
@@ -172,11 +124,27 @@ let module Make1 = fun (Base: {
     if (isEmpty keyedIterable) (Iterable.empty ())
     else Iterable.Instance keyedIterable keysIterableBase;
 
-  let iterableBase: Iterable.s (t 'v) (k, 'v) = { reduce: reduceKeyValuePairs };
-
-  let toIterable (keyedIterable: t _): (Iterable.t (k, 'v)) =>
+  let toIterable (selector: 'k => 'v => 'c) (keyedIterable: t _): (Iterable.t 'c) =>
     if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.Instance keyedIterable iterableBase;
+    else Iterable.Instance keyedIterable {
+      reduce: fun while_::predicate f acc map =>
+      if (predicate === Functions.alwaysTrue2) {
+        let f acc k v => f acc (selector k v);
+        reduce f acc map;
+      }
+      else {
+        let memoizedPair = MutableOption.empty ();
+
+        let predicate acc k v => {
+          let pair = (selector k v);
+          memoizedPair |> MutableOption.set pair;
+          predicate acc pair;
+        };
+
+        let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
+        reduce while_::predicate f acc map;
+      }
+    };
 
   let keyedIterableBase: s (t 'v) k 'v = { reduce: Base.reduce };
 
@@ -207,32 +175,14 @@ let module Make2 = fun (Base: {
       (fun _ => f)
       true;
 
-  let find (f: 'k => 'v => bool) (iter: t 'k 'v): (option ('k, 'v)) =>
+  let find (selector: 'k => 'v => 'c) (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'c) =>
     iter |> reduce
       while_::(fun acc _ _ => Option.isEmpty acc)
-      (fun _ k v => if (f k v) (Some (k, v)) else None)
+      (fun _ k v => if (f k v) (Some (selector k v)) else None)
       None;
 
-  let findOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): ('k, 'v) =>
-    find f iter |> Option.firstOrRaise;
-
-  let findKey (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'k) =>
-    iter |> reduce
-      while_::(fun acc _ _ => Option.isEmpty acc)
-      (fun _ k v => if (f k v) (Some k) else None)
-      None;
-
-  let findKeyOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'k =>
-    findKey f iter |> Option.firstOrRaise;
-
-  let findValue (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'v) =>
-    iter |> reduce
-      while_::(fun acc _ _ => Option.isEmpty acc)
-      (fun _ k v => if (f k v) (Some v) else None)
-      None;
-
-  let findValueOrRaise (f: 'k => 'v => bool) (iter: t 'k 'v): 'v =>
-    findValue f iter |> Option.firstOrRaise;
+  let findOrRaise (selector: 'k => 'v => 'c) (f: 'k => 'v => bool) (iter: t 'k 'v): 'c =>
+    find selector f iter |> Option.firstOrRaise;
 
   let forEach
       while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2
@@ -267,28 +217,6 @@ let module Make2 = fun (Base: {
       (map: t 'k 'v): 'acc =>
     reduceValues while_::predicate f acc map;
 
-  let reduceKeyValuePairs
-      while_::(predicate: 'acc => ('k, 'v) => bool)
-      (f: 'acc => ('k, 'v) => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) {
-      let f acc k v => f acc (k, v);
-      reduce f acc map;
-    }
-    else {
-      let memoizedPair = MutableOption.empty ();
-
-      let predicate acc k v => {
-        let pair = (k, v);
-        memoizedPair |> MutableOption.set pair;
-        predicate acc pair;
-      };
-
-      let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
-      reduce while_::predicate f acc map;
-    };
-
   let some (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
     iter |> reduce
       while_::(fun acc _ _ => not acc)
@@ -301,11 +229,27 @@ let module Make2 = fun (Base: {
     if (isEmpty keyedIterable) (Iterable.empty ())
     else Iterable.Instance keyedIterable keysIterableBase;
 
-  let iterableBase: Iterable.s (t 'k 'v) ('k, 'v) = { reduce: reduceKeyValuePairs };
-
-  let toIterable (keyedIterable: t 'k _): (Iterable.t ('k, 'v)) =>
+  let toIterable (selector: 'k => 'v => 'c) (keyedIterable: t 'k 'v): (Iterable.t 'c) =>
     if (isEmpty keyedIterable) (Iterable.empty ())
-    else Iterable.Instance keyedIterable iterableBase;
+    else Iterable.Instance keyedIterable {
+      reduce: fun while_::predicate f acc map =>
+      if (predicate === Functions.alwaysTrue2) {
+        let f acc k v => f acc (selector k v);
+        reduce f acc map;
+      }
+      else {
+        let memoizedPair = MutableOption.empty ();
+
+        let predicate acc k v => {
+          let pair = (selector k v);
+          memoizedPair |> MutableOption.set pair;
+          predicate acc pair;
+        };
+
+        let f acc _ _ => f acc (MutableOption.firstOrRaise memoizedPair);
+        reduce while_::predicate f acc map;
+      }
+    };
 
   let keyedIterableBase: s (t 'k 'v) 'k 'v = { reduce: Base.reduce };
 

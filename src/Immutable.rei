@@ -1212,33 +1212,13 @@ let module rec KeyedIterable: {
      *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
      */
 
-    let find: (k => 'v => bool) => (t 'v) => (option (k, 'v));
+    let find: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => (option 'c);
     /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise None.
      */
 
-    let findOrRaise: (k => 'v => bool) => (t 'v) => (k, 'v);
+    let findOrRaise: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => 'c;
     /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let findKey: (k => 'v => bool) => (t 'v) => (option k);
-    /** [findKey f keyedIterable] return the Some of the first key in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise None.
-     */
-
-    let findKeyOrRaise: (k => 'v => bool) => (t 'v) => k;
-    /** [findOrRaise f keyedIterable] return the the first key in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let findValue: (k => 'v => bool) => (t 'v) => (option 'v);
-    /** [findValue f keyedIterable] return the Some of the first value in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise None.
-     */
-
-    let findValueOrRaise: (k => 'v => bool) => (t 'v) => 'v;
-    /** [findOrRaise f keyedIterable] return the the first value in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise raises an exception.
      */
 
@@ -1270,7 +1250,7 @@ let module rec KeyedIterable: {
      *  one key/value pair in [keyedIterable]. If [keyedIterable] is empty, returns [false].
      */
 
-    let toIterable: t 'v => Iterable.t (k, 'v);
+    let toIterable: (k => 'v => 'c) => t 'v => Iterable.t 'c;
     /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
@@ -1294,33 +1274,13 @@ let module rec KeyedIterable: {
      *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
      */
 
-    let find: ('k => 'v => bool) => (t 'k 'v) => (option ('k, 'v));
+    let find: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => (option 'c);
     /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise None.
      */
 
-    let findOrRaise: ('k => 'v => bool) => (t 'k 'v) => ('k, 'v);
+    let findOrRaise: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => 'c;
     /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let findKey: ('k => 'v => bool) => (t 'k 'v) => (option 'k);
-    /** [findKey f keyedIterable] return the Some of the first key in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise None.
-     */
-
-    let findKeyOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'k;
-    /** [findOrRaise f keyedIterable] return the the first key in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise raises an exception.
-     */
-
-    let findValue: ('k => 'v => bool) => (t 'k 'v) => (option 'v);
-    /** [findValue f keyedIterable] return the Some of the first value in [keyedIterable]
-     *  for which the the predicate f returns [true]. Otherwise None.
-     */
-
-    let findValueOrRaise: ('k => 'v => bool) => (t 'k 'v) => 'v;
-    /** [findOrRaise f keyedIterable] return the the first value in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise raises an exception.
      */
 
@@ -1352,7 +1312,7 @@ let module rec KeyedIterable: {
      *  one key/value pair in [keyedIterable]. If [keyedIterable] is empty, returns [false].
      */
 
-    let toIterable: t 'k 'v => Iterable.t ('k, 'v);
+    let toIterable: ('k => 'v => 'c) => t 'k 'v => Iterable.t 'c;
     /** [toIterable keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
@@ -1442,7 +1402,7 @@ let module rec KeyedCollection: {
     let toKeyedCollection: (t 'v) => (KeyedCollection.t k 'v);
     /* [toKeyedCollection keyed] returns KeyedCollection view. */
 
-    let toSequence: (t 'v) => (Sequence.t (k, 'v));
+    let toSequence: (k => 'v => 'c) => (t 'v) => (Sequence.t 'c);
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples.
      */
@@ -1484,7 +1444,7 @@ let module rec KeyedCollection: {
     let toKeyedCollection: (t 'k 'v) => (KeyedCollection.t 'k 'v);
     /* [toKeyedCollection keyed] returns KeyedCollection view. */
 
-    let toSequence: (t 'k 'v) => (Sequence.t ('k, 'v));
+    let toSequence: ('k => 'v => 'c) => (t 'k 'v) => (Sequence.t 'c);
     /* [toSequence keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples.
      */
@@ -1644,25 +1604,17 @@ let module rec NavigableKeyedCollection: {
 
     include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
-    let first: (t 'v) => (option (k, 'v));
+    let first: (k => 'v => 'c) => (t 'v) => (option 'c);
     /** [first keyed] returns first value in [keyed] or None.
      *
      *  By contract, no worst than O(log N) performance.
      */
 
-    let firstOrRaise: (t 'v) => (k, 'v);
+    let firstOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
     /** [firstOrRaise keyed] returns first value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
      */
-
-    let firstKey: (t 'v) => (option k);
-
-    let firstKeyOrRaise: (t 'v) => k;
-
-    let firstValue: (t 'v) => (option 'v);
-
-    let firstValueOrRaise: (t 'v) => 'v;
 
     let keysCollectionReversed: (t 'v) => (Collection.t k);
 
@@ -1670,31 +1622,25 @@ let module rec NavigableKeyedCollection: {
 
     let keysNavigableCollectionReversed: (t 'v) => (NavigableCollection.t k);
 
+    let keysReversed: (t 'v) => (Iterable.t k);
+
     let keysSequentialCollection: (t 'v) => (SequentialCollection.t k);
 
     let keysSequentialCollectionReversed: (t 'v) => (SequentialCollection.t k);
 
-    let keysReversed: (t 'v) => (Iterable.t k);
+    let keysSequenceReversed: (t 'v) => (Sequence.t k);
 
-    let last: (t 'v) => (option (k, 'v));
+    let last: (k => 'v => 'c) => (t 'v) => (option 'c);
     /** [last keyed] returns last value in [keyed] or None.
      *
      *  By contract, no worst than O(log N) performance.
      */
 
-    let lastOrRaise: (t 'v) => (k, 'v);
+    let lastOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
     /** [lastOrRaise keyed] returns last value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
      */
-
-    let lastKey: (t 'v) => (option k);
-
-    let lastKeyOrRaise: (t 'v) => k;
-
-    let lastValue: (t 'v) => (option 'v);
-
-    let lastValueOrRaise: (t 'v) => 'v;
 
     let reduceReversed: while_::('acc => k => 'v => bool)? => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
     /** [reduceReversed while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1706,7 +1652,7 @@ let module rec NavigableKeyedCollection: {
 
     let reduceValuesReversed: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
 
-    let toIterableReversed: t 'v => Iterable.t (k, 'v);
+    let toIterableReversed: (k => 'v => 'c) => t 'v => Iterable.t 'c;
     /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
@@ -1722,7 +1668,7 @@ let module rec NavigableKeyedCollection: {
 
     let toNavigableKeyedCollectionReversed: t 'v => NavigableKeyedCollection.t k 'v;
 
-    let toSequenceReversed: (t 'v) => (Sequence.t (k, 'v));
+    let toSequenceReversed: (k => 'v => 'c) => (t 'v) => (Sequence.t 'c);
     /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
@@ -1733,11 +1679,13 @@ let module rec NavigableKeyedCollection: {
 
     let valuesNavigableCollectionReversed: (t 'v) => (NavigableCollection.t 'v);
 
+    let valuesReversed: (t 'v) => (Iterable.t 'v);
+
     let valuesSequentialCollection: (t 'v) => (SequentialCollection.t 'v);
 
     let valuesSequentialCollectionReversed: (t 'v) => (SequentialCollection.t 'v);
 
-    let valuesReversed: (t 'v) => (Iterable.t 'v);
+    let valuesSequenceReversed: (t 'v) => (Sequence.t 'v);
   };
 
   module type S2 = {
@@ -1747,25 +1695,17 @@ let module rec NavigableKeyedCollection: {
 
     include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
-    let first: (t 'k 'v) => (option ('k, 'v));
+    let first: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
     /** [first keyed] returns first value in [keyed] or None.
      *
      *  By contract, no worst than O(log N) performance.
      */
 
-    let firstOrRaise: (t 'k 'v) => ('k, 'v);
+    let firstOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
     /** [firstOrRaise keyed] returns first value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
      */
-
-    let firstKey: (t 'k 'v) => (option 'k);
-
-    let firstKeyOrRaise: (t 'k 'v) => 'k;
-
-    let firstValue: (t 'k 'v) => (option 'v);
-
-    let firstValueOrRaise: (t 'k 'v) => 'v;
 
     let keysCollectionReversed: (t 'k 'v) => (Collection.t 'k);
 
@@ -1773,31 +1713,25 @@ let module rec NavigableKeyedCollection: {
 
     let keysNavigableCollectionReversed: (t 'k 'v) => (NavigableCollection.t 'k);
 
+    let keysReversed: (t 'k 'v) => (Iterable.t 'k);
+
     let keysSequentialCollection: (t 'k 'v) => (SequentialCollection.t 'k);
 
     let keysSequentialCollectionReversed: (t 'k 'v) => (SequentialCollection.t 'k);
 
-    let keysReversed: (t 'k 'v) => (Iterable.t 'k);
+    let keysSequenceReversed: (t 'k 'v) => (Sequence.t 'k);
 
-    let last: (t 'k 'v) => (option ('k, 'v));
+    let last: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
     /** [last keyed] returns last value in [keyed] or None.
      *
      *  By contract, no worst than O(log N) performance.
      */
 
-    let lastOrRaise: (t 'k 'v) => ('k, 'v);
+    let lastOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
     /** [lastOrRaise keyed] returns last value in [keyed] or raises an exception.
      *
      *  By contract, no worst than O(log N) performance.
      */
-
-    let lastKey: (t 'k 'v) => (option 'k);
-
-    let lastKeyOrRaise: (t 'k 'v) => 'k;
-
-    let lastValue: (t 'k 'v) => (option 'v);
-
-    let lastValueOrRaise: (t 'k 'v) => 'v;
 
     let reduceReversed: while_::('acc => 'k => 'v => bool)? => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
     /** [reduceReversed while_::predicate initialValue f keyedIterable] applies the accumulator
@@ -1809,7 +1743,7 @@ let module rec NavigableKeyedCollection: {
 
     let reduceValuesReversed: while_::('acc => 'v => bool)? => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
 
-    let toIterableReversed: t 'k 'v => Iterable.t ('k, 'v);
+    let toIterableReversed: ('k => 'v => 'c) => t 'k 'v => Iterable.t 'c;
     /** [toIterableReversed keyedIterable] returns an Iterable that can be used to iterate over
      *  the key/value pairs in [keyedIterable] as tuples.
      */
@@ -1825,7 +1759,7 @@ let module rec NavigableKeyedCollection: {
 
     let toNavigableKeyedCollectionReversed: t 'k 'v => NavigableKeyedCollection.t 'k 'v;
 
-    let toSequenceReversed: (t 'k 'v) => (Sequence.t ('k, 'v));
+    let toSequenceReversed: ('k => 'v => 'c) => (t 'k 'v) => (Sequence.t 'c);
     /* [toSequenceReversed keyed] returns an Sequence that can be used to enumerate
      * the key/value pairs in [keyed] as tuples from right to left.
      */
@@ -1836,11 +1770,13 @@ let module rec NavigableKeyedCollection: {
 
     let valuesNavigableCollectionReversed: (t 'k 'v) => (NavigableCollection.t 'v);
 
+    let valuesReversed: (t 'k 'v) => (Iterable.t 'v);
+
     let valuesSequentialCollection: (t 'k 'v) => (SequentialCollection.t 'v);
 
     let valuesSequentialCollectionReversed: (t 'k 'v) => (SequentialCollection.t 'v);
 
-    let valuesReversed: (t 'k 'v) => (Iterable.t 'v);
+    let valuesSequenceReversed: (t 'k 'v) => (Sequence.t 'v);
   };
 
   type t 'k 'v;

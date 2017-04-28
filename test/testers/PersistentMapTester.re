@@ -190,7 +190,7 @@ let test
         |> Expect.toBeEqualToTrue;
     }),
     it "toIterable" (fun () => {
-      PersistentMap.toIterable map
+      PersistentMap.toIterable (fun k v => (k, v)) map
         |> Iterable.reduce (fun acc (k, v) => {
             k === v |> Expect.toBeEqualToTrue;
             acc + 1;
@@ -239,7 +239,7 @@ let test
         |> Expect.toBeEqualToInt countDiv4;
     }),
     it "toSequence" (fun () => {
-      PersistentMap.toSequence map
+      PersistentMap.toSequence (fun k v => (k, v)) map
         |> Sequence.reduce (fun acc (k, v) => {
             map |> PersistentMap.getOrRaise k |> Expect.toBeEqualToInt v;
             acc + 1;

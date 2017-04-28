@@ -388,23 +388,9 @@ let reduceValuesWhile
   reduceWhileWithResult shouldContinue predicate f acc map;
 };
 
-let rec keysSequence (map: t 'k 'v): (Sequence.t 'k) => switch map {
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap keysSequence
-  | Collision _ entryMap => AVLTreeMap.keysSequence entryMap
-  | Entry _ entryKey _ => Sequence.return entryKey;
-  | Empty => Sequence.empty ();
-};
-
-let rec valuesSequence (map: t 'k 'v): (Sequence.t 'v) => switch map {
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap valuesSequence
-  | Collision _ entryMap => AVLTreeMap.valuesSequence entryMap
-  | Entry _ _ entryValue => Sequence.return entryValue;
-  | Empty => Sequence.empty ();
-};
-
-let rec toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap toSequence
-  | Collision _ entryMap => AVLTreeMap.toSequence entryMap
-  | Entry _ entryKey entryValue => Sequence.return (entryKey, entryValue);
+let rec toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap (toSequence selector)
+  | Collision _ entryMap => AVLTreeMap.toSequence selector entryMap
+  | Entry _ entryKey entryValue => Sequence.return (selector entryKey entryValue);
   | Empty => Sequence.empty ();
 };

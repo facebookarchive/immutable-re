@@ -29,9 +29,6 @@ include (ImmMap.Make1 {
   let getOrRaise (key: int) ({ root }: t 'v): 'v =>
     root |> BitmapTrieIntMap.get 0 key |> Option.firstOrRaise;
 
-  let keysSequence ({ root }: t 'v): (Sequence.t int) =>
-    root |> BitmapTrieIntMap.keysSequence;
-
   let reduce
       while_::(predicate: 'acc => int => 'v => bool)
       (f: 'acc => int => 'v => 'acc)
@@ -56,11 +53,8 @@ include (ImmMap.Make1 {
     if (predicate === Functions.alwaysTrue2) (BitmapTrieIntMap.reduceValues f acc root)
     else (BitmapTrieIntMap.reduceValuesWhile predicate f acc root);
 
-  let toSequence ({ root }: t 'v): (Sequence.t ((int, 'v))) =>
-    root |> BitmapTrieIntMap.toSequence;
-
-  let valuesSequence ({ root }: t 'v): (Sequence.t 'v) =>
-    root |> BitmapTrieIntMap.valuesSequence;
+  let toSequence (selector: int => 'v => 'c) ({ root }: t 'v): (Sequence.t 'c) =>
+    root |> BitmapTrieIntMap.toSequence selector;
 }: ImmMap.S1 with type t 'v := t 'v and type k := k);
 
 let alter (key: int) (f: option 'v => option 'v) ({ count, root } as map: t 'v): (t 'v) => {

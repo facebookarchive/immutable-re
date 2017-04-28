@@ -12,12 +12,10 @@ type s 'map 'k 'v = {
   count: 'map => int,
   get: 'k => 'map => (option 'v),
   getOrRaise: 'k => 'map => 'v,
-  keysSequence: 'map => Sequence.t 'k,
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'map => 'acc),
   reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'map => 'acc,
   reduceValues: 'acc . while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => 'map => 'acc,
-  toSequence: 'map => Sequence.t ('k, 'v),
-  valuesSequence: 'map => Sequence.t 'v,
+  toSequence: 'c . ('k => 'v => 'c) => 'map => Sequence.t 'c,
 };
 
 type t 'k 'v =
@@ -56,12 +54,10 @@ let module Make1 = fun (Base: {
   let count: t 'v => int;
   let get: k => (t 'v) => (option 'v);
   let getOrRaise: k => (t 'v) => 'v;
-  let keysSequence: (t 'v) => Sequence.t k;
   let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  let toSequence: (t 'v) => Sequence.t (k, 'v);
-  let valuesSequence: (t 'v) => Sequence.t 'v;
+  let toSequence: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
 }) => ({
   include Base;
 
@@ -83,12 +79,10 @@ let module Make1 = fun (Base: {
     count,
     get,
     getOrRaise,
-    keysSequence,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
     reduceValues: Base.reduceValues,
     toSequence,
-    valuesSequence,
   };
 
   let toMap (map: t 'v): (map k 'v) =>
@@ -104,12 +98,10 @@ let module Make2 = fun (Base: {
   let count: t 'k 'v => int;
   let get: 'k => (t 'k 'v) => (option 'v);
   let getOrRaise: 'k => (t 'k 'v) => 'v;
-  let keysSequence: (t 'k 'v) => Sequence.t 'k;
   let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-  let toSequence: (t 'k 'v) => Sequence.t ('k, 'v);
-  let valuesSequence: (t 'k 'v) => Sequence.t 'v;
+  let toSequence: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
 }) => ({
   include Base;
 
@@ -131,12 +123,10 @@ let module Make2 = fun (Base: {
     count,
     get,
     getOrRaise,
-    keysSequence,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
     reduceValues: Base.reduceValues,
     toSequence,
-    valuesSequence,
   };
 
   let toMap (map: t 'k 'v): (map 'k 'v) =>
@@ -168,11 +158,6 @@ include (Make2 {
     | Instance map { getOrRaise } => getOrRaise key map
   };
 
-  let keysSequence (map: t 'k 'v): Sequence.t 'k => switch map {
-    | Empty => Sequence.empty ()
-    | Instance map { keysSequence } => keysSequence map
-  };
-
   let reduce
       while_::(predicate: 'acc => 'k => 'v => bool)
       (f: 'acc => 'k => 'v => 'acc)
@@ -200,14 +185,9 @@ include (Make2 {
     | Instance map { reduceValues } => reduceValues while_::predicate f acc map
   };
 
-  let toSequence (map: t 'k 'v): (Sequence.t ('k, 'v)) => switch map {
+  let toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
     | Empty => Sequence.empty ()
-    | Instance map { toSequence } => toSequence map
-  };
-
-  let valuesSequence (map: t 'k 'v): Sequence.t 'v => switch map {
-    | Empty => Sequence.empty ()
-    | Instance map { valuesSequence } => valuesSequence map
+    | Instance map { toSequence } => toSequence selector map
   };
 }: S2 with type t 'k 'v := t 'k 'v);
 

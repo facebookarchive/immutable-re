@@ -301,34 +301,34 @@ let test = describe "KeyedIterable" [
     IntRange.create start::0 count::5
       |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
       |> HashMap.toKeyedIterable
-      |> KeyedIterable.find (fun k v => k ===2 && v ===2)
+      |> KeyedIterable.find (fun k v => (k, v)) (fun k v => k === 2 && v ===2)
       |> expectToBeEqualToSomeOfIntPair (2, 2);
 
     KeyedIterable.empty ()
-      |> KeyedIterable.find (fun k v => k ===2 && v ===2)
+      |> KeyedIterable.find (fun k v => (k, v)) (fun k v => k ===2 && v ===2)
       |> expectToBeEqualToNoneOfIntPair;
 
     IntRange.create start::0 count::5
       |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
       |> HashMap.toKeyedIterable
-      |> KeyedIterable.find (fun k v => k ===5 && v ===5)
+      |> KeyedIterable.find (fun k v => (k, v)) (fun k v => k ===5 && v ===5)
       |> expectToBeEqualToNoneOfIntPair;
   }),
   it "findOrRaise" (fun () => {
     IntRange.create start::0 count::5
       |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
       |> HashMap.toKeyedIterable
-      |> KeyedIterable.findOrRaise (fun k v => k ===2 && v ===2)
+      |> KeyedIterable.findOrRaise (fun k v => (k, v)) (fun k v => k ===2 && v ===2)
       |> expectToBeEqualToIntPair (2, 2);
 
     (fun () => KeyedIterable.empty ()
-      |> KeyedIterable.findOrRaise (fun k v => k ===2 && v ===2)
+      |> KeyedIterable.findOrRaise (fun k v => (k, v)) (fun k v => k ===2 && v ===2)
     ) |> Expect.shouldRaise;
 
     (fun () => IntRange.create start::0 count::5
       |> IntRange.reduce (fun acc i => acc |> HashMap.put i i) (emptyHashIntMap ())
       |> HashMap.toKeyedIterable
-      |> KeyedIterable.findOrRaise (fun k v => k ===5 && v ===5)
+      |> KeyedIterable.findOrRaise (fun k v => (k, v)) (fun k v => k ===5 && v ===5)
     ) |> Expect.shouldRaise;
   }),
   it "forEach" (fun () => {
