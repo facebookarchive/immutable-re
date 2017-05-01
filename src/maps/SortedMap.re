@@ -121,9 +121,6 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
     let count ({ count }: t 'v): int => count;
 
-    let first (selector: k => 'v => 'c) ({ tree }: t 'v): (option 'c) =>
-      tree |> AVLTreeMap.first selector;
-
     let firstOrRaise (selector: k => 'v => 'c) ({ tree }: t 'v): 'c =>
       tree |> AVLTreeMap.firstOrRaise selector;
 
@@ -135,9 +132,6 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
     let getOrRaise (key: k) ({ tree }: t 'v): 'v =>
       tree |> AVLTreeMap.getOrRaise comparator key;
-
-    let last (selector: k => 'v => 'c) ({ tree }: t 'v): (option 'c) =>
-      tree |> AVLTreeMap.last selector;
 
     let lastOrRaise (selector: k => 'v => 'c) ({ tree }: t 'v): 'c =>
       tree |> AVLTreeMap.lastOrRaise selector;

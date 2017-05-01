@@ -13,7 +13,6 @@ open Functions.Operators;
 type s 'set 'a = {
   contains: 'a => 'set => bool,
   count: 'set => int,
-  first: 'set => (option 'a),
   firstOrRaise: 'set => 'a,
   reduce: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'set => 'acc,
   toSequence: 'set => Sequence.t 'a,
@@ -54,9 +53,7 @@ let module Make = fun (Base: {
 
   let contains: a => t => bool;
   let count: t => int;
-  let first: t => (option a);
   let firstOrRaise: t => a;
-  let last: t => (option a);
   let lastOrRaise: t => a;
   let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let reduceReversed: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -83,7 +80,6 @@ let module Make = fun (Base: {
   let navigableSetBase: s t a = {
     contains,
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     toSequence,
@@ -92,7 +88,6 @@ let module Make = fun (Base: {
   let navigableSetReversedBase: s t a = {
     contains,
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
     toSequence: toSequenceReversed,
@@ -113,9 +108,7 @@ let module Make1 = fun (Base: {
 
   let contains: 'a => t 'a => bool;
   let count: t 'a => int;
-  let first: t 'a => (option 'a);
   let firstOrRaise: t 'a => 'a;
-  let last: t 'a => (option 'a);
   let lastOrRaise: t 'a => 'a;
   let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let reduceReversed: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
@@ -141,7 +134,6 @@ let module Make1 = fun (Base: {
   let navigableSetBase: s (t 'a) 'a = {
     contains,
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     toSequence,
@@ -150,7 +142,6 @@ let module Make1 = fun (Base: {
   let navigableSetReversedBase: s (t 'a) 'a = {
     contains,
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
     toSequence: toSequenceReversed,
@@ -179,19 +170,9 @@ include(Make1 {
     | Instance set { count } _ => count set
   };
 
-  let first (set: t 'a): (option 'a) => switch set {
-    | Empty => None
-    | Instance set { first } _ => first set
-  };
-
   let firstOrRaise (set: t 'a): 'a => switch set {
     | Empty => failwith "empty"
     | Instance set { firstOrRaise } _ => firstOrRaise set
-  };
-
-  let last (set: t 'a): (option 'a) => switch set {
-    | Empty => None
-    | Instance set _ { first } => first set
   };
 
   let lastOrRaise (set: t 'a): 'a => switch set {

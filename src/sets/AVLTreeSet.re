@@ -104,25 +104,11 @@ let rec contains (comparator: Comparator.t 'a) (x: 'a) (tree: t 'a): bool => swi
     }
 };
 
-let rec first (tree: t 'a): (option 'a) => switch tree {
-  | Empty => None
-  | Leaf v => Some v
-  | Node _ Empty v _ => Some v
-  | Node _ left _ _ => first left
-};
-
 let rec firstOrRaise (tree: t 'a): 'a => switch tree {
   | Leaf v => v
   | Node _ Empty v _ => v
   | Node _ left _ _ => firstOrRaise left
   | Empty => failwith "empty"
-};
-
-let rec last (tree: t 'a): (option 'a) => switch tree {
-  | Empty => None
-  | Leaf v => Some v
-  | Node _ _ v Empty => Some v
-  | Node _ _ _ right => last right
 };
 
 let rec lastOrRaise (tree: t 'a): 'a => switch tree {

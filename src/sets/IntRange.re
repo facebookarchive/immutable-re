@@ -23,17 +23,9 @@ include (NavigableSet.Make {
 
   let count ({ count }: t): int => count;
 
-  let first ({ count, start }: t): (option int) =>
-    if (count === 0) None
-    else (Some start);
-
   let firstOrRaise ({ count, start }: t): int =>
     if (count === 0) (failwith "empty")
     else start;
-
-  let last ({ count, start }: t): (option int) =>
-    if (count === 0) None
-    else (start + count - 1) |> Option.return;
 
   let lastOrRaise ({ count, start }: t): int =>
     if (count === 0) (failwith "empty")

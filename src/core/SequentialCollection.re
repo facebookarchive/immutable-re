@@ -9,7 +9,6 @@
 
 type s 'collection 'a  = {
   count: 'collection => int,
-  first: 'collection => (option 'a),
   firstOrRaise: 'collection => 'a,
   reduce: 'acc . while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => 'collection => 'acc,
   toSequence: 'collection => Sequence.t 'a,
@@ -47,7 +46,6 @@ let module Make = fun (Base: {
   type t;
 
   let count: t => int;
-  let first: t => (option a);
   let firstOrRaise: t => a;
   let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toSequence: t => Sequence.t a;
@@ -56,9 +54,12 @@ let module Make = fun (Base: {
 
   include (Collection.Make Base: Collection.S with type t := t and type a := a);
 
+  let first (collection: t): (option a) =>
+    if (isEmpty collection) None
+    else Some (firstOrRaise collection);
+
   let sequentialCollectionBase: s t a = {
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     toSequence,
@@ -74,7 +75,6 @@ let module Make1 = fun (Base: {
   type t 'a;
 
   let count: t 'a => int;
-  let first: t 'a => (option 'a);
   let firstOrRaise: t 'a => 'a;
   let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let toSequence: t 'a => Sequence.t 'a;
@@ -83,9 +83,12 @@ let module Make1 = fun (Base: {
 
   include (Collection.Make1 Base: Collection.S1 with type t 'a := t 'a);
 
+  let first (collection: t 'a): (option 'a) =>
+    if (isEmpty collection) None
+    else Some (firstOrRaise collection);
+
   let sequentialCollectionBase: s (t 'a) 'a = {
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     toSequence,
@@ -103,11 +106,6 @@ include(Make1 {
   let count (collection: t 'a): int => switch collection {
     | Empty => 0
     | Instance collection { count } => count collection
-  };
-
-  let first (collection: t 'a): (option 'a) => switch collection {
-    | Empty => None
-    | Instance collection { first } => first collection
   };
 
   let firstOrRaise (collection: t 'a): 'a => switch collection {

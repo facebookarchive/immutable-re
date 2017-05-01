@@ -10,7 +10,6 @@
 type s 'map 'k 'v = {
   containsKey: 'k => 'map => bool,
   count: 'map => int,
-  first: 'c . ('k => 'v => 'c) => 'map => (option 'c),
   firstOrRaise: 'c . ('k => 'v => 'c) => 'map => 'c,
   get: 'k => 'map => (option 'v),
   getOrDefault: default::'v => 'k => 'map => 'v,
@@ -61,12 +60,10 @@ let module Make1 = fun (Base: {
 
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
-  let first: (k => 'v => 'c) => (t 'v) => (option 'c);
   let firstOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
   let get: k => (t 'v) => (option 'v);
   let getOrDefault: default::'v => k => (t 'v) => 'v;
   let getOrRaise: k => (t 'v) => 'v;
-  let last: (k => 'v => 'c) => (t 'v) => (option 'c);
   let lastOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
   let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceReversed: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
@@ -99,15 +96,12 @@ let module Make1 = fun (Base: {
 
   let toMapReversed = ReversedImmMap.toMap;
 
-  let firstKey collection => first Functions.getKey collection;
   let firstKeyOrRaise collection => firstOrRaise Functions.getKey collection;
-  let lastKey collection => last Functions.getKey collection;
   let lastKeyOrRaise collection => lastOrRaise Functions.getKey collection;
 
   let keysNavigableSetImpl: NavigableSet.s (t 'v) k = {
     contains: containsKey,
     count,
-    first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
     toSequence: keysSequence,
@@ -116,7 +110,6 @@ let module Make1 = fun (Base: {
   let keysNavigableSetReversedImpl: NavigableSet.s (t 'v) k = {
     contains: containsKey,
     count,
-    first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
     toSequence: keysSequenceReversed,
@@ -133,7 +126,6 @@ let module Make1 = fun (Base: {
   let sequentialMapImpl: s (t 'v) k 'v = {
     containsKey,
     count,
-    first,
     firstOrRaise,
     get,
     getOrDefault,
@@ -147,7 +139,6 @@ let module Make1 = fun (Base: {
   let sequentialMapReversedImpl: s (t 'v) k 'v = {
     containsKey,
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     get,
     getOrDefault,
@@ -173,12 +164,10 @@ let module Make2 = fun (Base: {
 
   let containsKey: 'k => t 'k 'v => bool;
   let count: t 'k 'v => int;
-  let first: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
   let firstOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
   let get: 'k => (t 'k 'v) => (option 'v);
   let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
   let getOrRaise: 'k => (t 'k 'v) => 'v;
-  let last: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
   let lastOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
   let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceReversed: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
@@ -210,15 +199,12 @@ let module Make2 = fun (Base: {
 
   let toMapReversed = ReversedImmMap.toMap;
 
-  let firstKey collection => first Functions.getKey collection;
   let firstKeyOrRaise collection => firstOrRaise Functions.getKey collection;
-  let lastKey collection => last Functions.getKey collection;
   let lastKeyOrRaise collection => lastOrRaise Functions.getKey collection;
 
   let keysNavigableSetImpl: NavigableSet.s (t 'k 'v) 'k = {
     contains: containsKey,
     count,
-    first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
     toSequence: keysSequence,
@@ -227,7 +213,6 @@ let module Make2 = fun (Base: {
   let keysNavigableSetReversedImpl: NavigableSet.s (t 'k 'v) 'k = {
     contains: containsKey,
     count,
-    first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
     toSequence: keysSequenceReversed,
@@ -244,7 +229,6 @@ let module Make2 = fun (Base: {
   let sequentialMapImpl: s (t 'k 'v) 'k 'v = {
     containsKey,
     count,
-    first,
     firstOrRaise,
     get,
     getOrDefault,
@@ -258,7 +242,6 @@ let module Make2 = fun (Base: {
   let sequentialMapReversedImpl: s (t 'k 'v) 'k 'v = {
     containsKey,
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     get,
     getOrDefault,
@@ -292,11 +275,6 @@ include (Make2 {
     | Instance map { count } _ => count map
   };
 
-  let first (selector: 'k => 'v => 'c) (map: t 'k 'v): option 'c => switch map {
-    | Empty => None
-    | Instance map { first } _ => first selector map
-  };
-
   let firstOrRaise (selector: 'k => 'v => 'c) (map: t 'k 'v): 'c => switch map {
     | Empty => failwith "empty"
     | Instance map { firstOrRaise } _ => firstOrRaise selector map
@@ -315,11 +293,6 @@ include (Make2 {
   let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {
     | Empty => failwith "not found"
     | Instance map { getOrRaise } _ => getOrRaise key map
-  };
-
-  let last (selector: 'k => 'v => 'c) (map: t 'k 'v): option 'c => switch map {
-    | Empty => None
-    | Instance map _ { first } => first selector map
   };
 
   let lastOrRaise (selector: 'k => 'v => 'c) (map: t 'k 'v): 'c => switch map {

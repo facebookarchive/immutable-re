@@ -61,13 +61,6 @@ let rec containsKey
     }
 };
 
-let rec first (selector: 'k => 'v => 'c) (tree: t 'k 'v): (option 'c) => switch tree {
-  | Empty => None
-  | Leaf k v => Some (selector k v)
-  | Node _ Empty k v _ => Some (selector k v)
-  | Node _ left _ _ _ => first selector left
-};
-
 let rec firstOrRaise (selector: 'k => 'v => 'c) (tree: t 'k 'v): 'c => switch tree {
   | Leaf k v => (selector k v)
   | Node _ Empty k v _ => (selector k v)
@@ -128,13 +121,6 @@ let rec getOrRaise
       else if (cmp === Ordering.greaterThan) (getOrRaise comparator xK right)
       else v
     }
-};
-
-let rec last (selector: 'k => 'v => 'c) (tree: t 'k 'v): (option 'c) => switch tree {
-  | Empty => None
-  | Leaf k v  => Some (selector k v)
-  | Node _ _ k v Empty => Some (selector k v)
-  | Node _ _ _ _ right => last selector right
 };
 
 let rec lastOrRaise (selector: 'k => 'v => 'c) (tree: t 'k 'v): 'c => switch tree {

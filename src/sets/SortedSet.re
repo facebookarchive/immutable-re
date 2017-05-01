@@ -76,14 +76,8 @@ let module Make = fun (Comparable: Comparable.S) => {
 
     let count ({ count }: t): int => count;
 
-    let first ({ tree }: t): (option a) =>
-      AVLTreeSet.first tree;
-
     let firstOrRaise ({ tree }: t): a =>
       AVLTreeSet.firstOrRaise tree;
-
-    let last ({ tree }: t): (option a) =>
-      AVLTreeSet.last tree;
 
     let lastOrRaise ({ tree }: t): a =>
       AVLTreeSet.lastOrRaise tree;

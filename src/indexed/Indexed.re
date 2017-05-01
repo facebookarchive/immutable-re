@@ -66,14 +66,7 @@ let module Make1 = fun (Base: {
   include (NavigableCollection.Make1 {
     include Base;
 
-    let first (indexed: t 'a): (option 'a) => get 0 indexed;
-
     let firstOrRaise (indexed: t 'a): 'a => getOrRaise 0 indexed;
-
-    let last (indexed: t 'a): (option 'a) => {
-      let lastIndex = (count indexed) - 1;
-      get lastIndex indexed;
-    };
 
     let lastOrRaise (indexed: t 'a): 'a => {
       let lastIndex = (count indexed) - 1;
@@ -91,10 +84,6 @@ let module Make1 = fun (Base: {
 
     let count = count;
 
-    let first (selector: int => 'v => 'c) (indexed: t 'v): (option 'c) =>
-      if (count indexed > 0) (Some (selector 0 (getOrRaise 0 indexed)))
-      else None;
-
     let firstOrRaise (selector: int => 'v => 'c) (indexed: t 'v): 'c =>
       if (count indexed > 0) (selector 0 (getOrRaise 0 indexed))
       else failwith "empty";
@@ -104,12 +93,6 @@ let module Make1 = fun (Base: {
     let getOrDefault = getOrDefault;
 
     let getOrRaise = getOrRaise;
-
-    let last (selector: int => 'v => 'c) (indexed: t 'v): (option 'c) => {
-      let lastIndex = count indexed - 1;
-      if (lastIndex >= 0) (Some (selector lastIndex (getOrRaise lastIndex indexed)))
-      else None;
-    };
 
     let lastOrRaise (selector: int => 'v => 'c) (indexed: t 'v): 'c => {
       let lastIndex = count indexed - 1;

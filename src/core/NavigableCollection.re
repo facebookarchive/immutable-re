@@ -54,9 +54,7 @@ let module Make = fun (Base: {
   type t;
 
   let count: t => int;
-  let first: t => (option a);
   let firstOrRaise: t => a;
-  let last: t => (option a);
   let lastOrRaise: t => a;
   let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let reduceReversed: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
@@ -67,12 +65,15 @@ let module Make = fun (Base: {
 
   include (SequentialCollection.Make Base: SequentialCollection.S with type t := t and type a := a);
 
+  let last (collection: t): (option a) =>
+    if (isEmpty collection) None
+    else Some (lastOrRaise collection);
+
   let module ReversedSequentialCollection = SequentialCollection.Make {
     type nonrec t = t;
     type nonrec a = a;
 
     let count = count;
-    let first = last;
     let firstOrRaise = lastOrRaise;
     let reduce = Base.reduceReversed;
     let toSequence = toSequenceReversed;
@@ -90,7 +91,6 @@ let module Make = fun (Base: {
 
   let navigableCollectionBase: SequentialCollection.s t a = {
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     toSequence,
@@ -98,7 +98,6 @@ let module Make = fun (Base: {
 
   let navigableCollectionReversedBase: SequentialCollection.s t a = {
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
     toSequence: toSequenceReversed,
@@ -118,9 +117,7 @@ let module Make1 = fun (Base: {
   type t 'a;
 
   let count: t 'a => int;
-  let first: t 'a => (option 'a);
   let firstOrRaise: t 'a => 'a;
-  let last: t 'a => (option 'a);
   let lastOrRaise: t 'a => 'a;
   let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let reduceReversed: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
@@ -131,11 +128,14 @@ let module Make1 = fun (Base: {
 
   include (SequentialCollection.Make1 Base: SequentialCollection.S1 with type t 'a := t 'a);
 
+  let last (collection: t 'a): (option 'a) =>
+    if (isEmpty collection) None
+    else Some (lastOrRaise collection);
+
   let module ReversedSequentialCollection = SequentialCollection.Make1 {
     type nonrec t 'a = t 'a;
 
     let count = count;
-    let first = last;
     let firstOrRaise = lastOrRaise;
     let reduce = Base.reduceReversed;
     let toSequence = toSequenceReversed;
@@ -153,7 +153,6 @@ let module Make1 = fun (Base: {
 
   let navigableCollectionBase: SequentialCollection.s (t 'a) 'a = {
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     toSequence,
@@ -161,7 +160,6 @@ let module Make1 = fun (Base: {
 
   let navigableCollectionReversedBase: SequentialCollection.s (t 'a) 'a = {
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
     toSequence: toSequenceReversed,
@@ -185,19 +183,9 @@ include(Make1 {
     | Instance collection { count } _ => count collection
   };
 
-  let first (collection: t 'a): (option 'a) => switch collection {
-    | Empty => None
-    | Instance collection { first } _ => first collection
-  };
-
   let firstOrRaise (collection: t 'a): 'a => switch collection {
     | Empty => failwith "empty"
     | Instance collection { firstOrRaise } _ => firstOrRaise collection
-  };
-
-  let last (collection: t 'a): (option 'a) => switch collection {
-    | Empty => None
-    | Instance collection _ { first } => first collection
   };
 
   let lastOrRaise (collection: t 'a): 'a => switch collection {

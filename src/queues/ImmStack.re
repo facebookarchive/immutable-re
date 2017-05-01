@@ -47,8 +47,6 @@ include (SequentialCollection.Make1 {
 
   let count ({ count }: t 'a): int => count;
 
-  let first ({ list }: t 'a): (option 'a) => list |> ImmList.first;
-
   let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
 
   let reduce

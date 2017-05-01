@@ -57,19 +57,9 @@ include (NavigableCollection.Make1 {
     | Descending vector => Vector.count vector
   };
 
-  let first (deque: t 'a): (option 'a) => switch deque {
-    | Ascending vector => vector |> Vector.first
-    | Descending vector => vector |> Vector.last
-  };
-
   let firstOrRaise (deque: t 'a): 'a => switch deque {
     | Ascending vector => Vector.firstOrRaise vector
     | Descending vector => Vector.lastOrRaise vector
-  };
-
-  let last (deque: t 'a): (option 'a) => switch deque {
-    | Ascending vector => vector |> Vector.last
-    | Descending vector => vector |> Vector.first
   };
 
   let lastOrRaise (deque: t 'a): 'a => switch deque {

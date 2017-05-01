@@ -10,7 +10,6 @@
 type s 'keyed 'k 'v = {
   containsKey: 'k => 'keyed => bool,
   count: 'keyed => int,
-  first: 'c . ('k => 'v => 'c) => 'keyed => (option 'c),
   firstOrRaise: 'c . ('k => 'v => 'c) => 'keyed => 'c,
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'keyed => 'acc),
   reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'keyed => 'acc,
@@ -99,9 +98,7 @@ let module Make1 = fun (Base: {
 
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
-  let first: (k => 'v => 'c) => (t 'v) => (option 'c);
   let firstOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
-  let last: (k => 'v => 'c) => (t 'v) => (option 'c);
   let lastOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
   let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceReversed: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
@@ -115,6 +112,14 @@ let module Make1 = fun (Base: {
   include Base;
 
   include (KeyedCollection.Make1 Base: KeyedCollection.S1 with type k := k and type t 'v := t 'v);
+
+  let first (selector: k => 'v => 'c) (keyed: t 'v): (option 'c) =>
+    if (isEmpty keyed) None
+    else Some (firstOrRaise selector keyed);
+
+  let last (selector: k => 'v => 'c) (keyed: t 'v): (option 'c) =>
+    if (isEmpty keyed) None
+    else Some (lastOrRaise selector keyed);
 
   let module ReversedKeyedCollection = KeyedCollection.Make1 {
     type nonrec k = k;
@@ -142,18 +147,13 @@ let module Make1 = fun (Base: {
   let valuesReversed = ReversedKeyedCollection.values;
   let valuesSequenceReversed = ReversedKeyedCollection.valuesSequence;
 
-  let firstKey collection => first Functions.getKey collection;
   let firstKeyOrRaise collection => firstOrRaise Functions.getKey collection;
-  let lastKey collection => last Functions.getKey collection;
   let lastKeyOrRaise collection => lastOrRaise Functions.getKey collection;
-  let firstValue collection => first Functions.getValue collection;
   let firstValueOrRaise collection => firstOrRaise Functions.getValue collection;
-  let lastValue collection => last Functions.getValue collection;
   let lastValueOrRaise collection => lastOrRaise Functions.getValue collection;
 
   let keysSequentialCollectionBase: SequentialCollection.s (t 'v) k = {
     count,
-    first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
     toSequence: keysSequence,
@@ -161,7 +161,6 @@ let module Make1 = fun (Base: {
 
   let keysSequentialCollectionReversedBase: SequentialCollection.s (t 'v) k = {
     count,
-    first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
     toSequence: keysSequenceReversed,
@@ -185,7 +184,6 @@ let module Make1 = fun (Base: {
 
   let valuesSequentialCollectionBase: SequentialCollection.s (t 'v) 'v = {
     count,
-    first: firstValue,
     firstOrRaise: firstValueOrRaise,
     reduce: Base.reduceValues,
     toSequence: valuesSequence,
@@ -193,7 +191,6 @@ let module Make1 = fun (Base: {
 
   let valuesSequentialCollectionReversedBase: SequentialCollection.s (t 'v) 'v = {
     count,
-    first: lastValue,
     firstOrRaise: lastValueOrRaise,
     reduce: Base.reduceValuesReversed,
     toSequence: valuesSequenceReversed,
@@ -218,7 +215,6 @@ let module Make1 = fun (Base: {
   let sequentialKeyedCollectionBase: s (t 'v) k 'v  = {
     containsKey,
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
@@ -229,7 +225,6 @@ let module Make1 = fun (Base: {
   let sequentialKeyedCollectionReversedBase: s (t 'v) k 'v  = {
     containsKey,
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
     reduceKeys: Base.reduceKeysReversed,
@@ -252,9 +247,7 @@ let module Make2 = fun (Base: {
 
   let containsKey: 'k => t 'k 'v => bool;
   let count: t 'k 'v => int;
-  let first: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
   let firstOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
-  let last: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
   let lastOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
   let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceReversed: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
@@ -268,6 +261,14 @@ let module Make2 = fun (Base: {
   include Base;
 
   include (KeyedCollection.Make2 Base: KeyedCollection.S2 with type t 'k 'v := t 'k 'v);
+
+  let first (selector: 'k => 'v => 'c) (keyed: t 'k 'v): (option 'c) =>
+    if (isEmpty keyed) None
+    else Some (firstOrRaise selector keyed);
+
+  let last (selector: 'k => 'v => 'c) (keyed: t 'k 'v): (option 'c) =>
+    if (isEmpty keyed) None
+    else Some (lastOrRaise selector keyed);
 
   let module ReversedKeyedCollection = KeyedCollection.Make2 {
     type nonrec t 'k 'v = t 'k 'v;
@@ -294,18 +295,13 @@ let module Make2 = fun (Base: {
   let valuesReversed = ReversedKeyedCollection.values;
   let valuesSequenceReversed = ReversedKeyedCollection.valuesSequence;
 
-  let firstKey collection => first Functions.getKey collection;
   let firstKeyOrRaise collection => firstOrRaise Functions.getKey collection;
-  let lastKey collection => last Functions.getKey collection;
   let lastKeyOrRaise collection => lastOrRaise Functions.getKey collection;
-  let firstValue collection => first Functions.getValue collection;
   let firstValueOrRaise collection => firstOrRaise Functions.getValue collection;
-  let lastValue collection => last Functions.getValue collection;
   let lastValueOrRaise collection => lastOrRaise Functions.getValue collection;
 
   let keysSequentialCollectionBase: SequentialCollection.s (t 'k 'v) 'k = {
     count,
-    first: firstKey,
     firstOrRaise: firstKeyOrRaise,
     reduce: Base.reduceKeys,
     toSequence: keysSequence,
@@ -313,7 +309,6 @@ let module Make2 = fun (Base: {
 
   let keysSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) 'k = {
     count,
-    first: lastKey,
     firstOrRaise: lastKeyOrRaise,
     reduce: Base.reduceKeysReversed,
     toSequence: keysSequenceReversed,
@@ -337,7 +332,6 @@ let module Make2 = fun (Base: {
 
   let valuesSequentialCollectionBase: SequentialCollection.s (t 'k 'v) 'v = {
     count,
-    first: firstValue,
     firstOrRaise: firstValueOrRaise,
     reduce: Base.reduceValues,
     toSequence: valuesSequence,
@@ -345,7 +339,6 @@ let module Make2 = fun (Base: {
 
   let valuesSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) 'v = {
     count,
-    first: lastValue,
     firstOrRaise: lastValueOrRaise,
     reduce: Base.reduceValuesReversed,
     toSequence: valuesSequenceReversed,
@@ -370,7 +363,6 @@ let module Make2 = fun (Base: {
   let sequentialKeyedCollectionBase: s (t 'k 'v) 'k 'v  = {
     containsKey,
     count,
-    first,
     firstOrRaise,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
@@ -381,7 +373,6 @@ let module Make2 = fun (Base: {
   let sequentialKeyedCollectionReversedBase: s (t 'k 'v) 'k 'v  = {
     containsKey,
     count,
-    first: last,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
     reduceKeys: Base.reduceKeysReversed,
@@ -412,19 +403,9 @@ include (Make2 {
     | Instance keyed { count } _ => count keyed
   };
 
-  let first (selector: 'k => 'v => 'c) (keyed: t 'k 'v): option 'c => switch keyed {
-    | Empty => None
-    | Instance keyed { first } _ => first selector keyed
-  };
-
   let firstOrRaise (selector: 'k => 'v => 'c) (keyed: t 'k 'v): 'c => switch keyed {
     | Empty => failwith "empty"
     | Instance keyed { firstOrRaise } _ => firstOrRaise selector keyed
-  };
-
-  let last (selector: 'k => 'v => 'c) (keyed: t 'k 'v): option 'c => switch keyed {
-    | Empty => None
-    | Instance keyed _ { first } => first selector keyed
   };
 
   let lastOrRaise (selector: 'k => 'v => 'c) (keyed: t 'k 'v): 'c => switch keyed {
