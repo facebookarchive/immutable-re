@@ -1804,6 +1804,8 @@ let module rec Map: {
     let get: k => (t 'v) => (option 'v);
     /** [get key map] returns the value associated with [key] in [map] or None */
 
+    let getOrDefault: default::'v => k => (t 'v) => 'v;
+
     let getOrRaise: k => (t 'v) => 'v;
     /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
 
@@ -1823,6 +1825,8 @@ let module rec Map: {
 
     let get: 'k => (t 'k 'v) => (option 'v);
     /** [get key map] returns the value associated with [key] in [map] or None */
+
+    let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
 
     let getOrRaise: 'k => (t 'k 'v) => 'v;
     /** [getOrRaise key map] returns the value associated with [key] in [map] or raises an exception */
@@ -1970,6 +1974,8 @@ let module rec Map: {
       let get: k => (t 'v) => (option 'v);
       /** [get key transient] returns the value associated with [key] in [transient] or None */
 
+      let getOrDefault: default::'v => k => (t 'v) => 'v;
+
       let getOrRaise: k => (t 'v) => 'v;
       /** [getOrRaise key transient] returns the value associated with [key] in [transient] or raises an exception */
 
@@ -2008,6 +2014,8 @@ let module rec Map: {
 
       let get: 'k => (t 'k 'v) => (option 'v);
       /** [get key transient] returns the value associated with [key] in [transient] or None */
+
+      let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
 
       let getOrRaise: 'k => (t 'k 'v) => 'v;
       /** [getOrRaise key transient] returns the value associated with [key] in [transient] or raises an exception */
@@ -2117,6 +2125,8 @@ let module rec Indexed: {
 
     let get: int => (t 'a) => (option 'a);
     /** [get index indexed] returns the value at [index] or None if [index] is out of bounds. */
+
+    let getOrDefault: default::'a => int => (t 'a) => 'a;
 
     let getOrRaise: int => (t 'a) => 'a;
     /** [getOrRaise index indexed] returns the value at [index] or
@@ -2228,6 +2238,8 @@ let module rec Indexed: {
 
       let get: int => (t 'a) => (option 'a);
       /** [get index transient] returns the value at [index] or None if [index] is out of bounds. */
+
+      let getOrDefault: default::'a => int => (t 'a) => 'a;
 
       let getOrRaise: int => (t 'a) => 'a;
       /** [getOrRaise index transient] returns the value at [index] or

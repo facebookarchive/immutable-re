@@ -265,6 +265,29 @@ let rec get
   | Empty => None;
 };
 
+let rec getOrDefault
+    (comparator: Comparator.t 'k)
+    (depth: int)
+    (default: 'v)
+    (hash: int)
+    (key: 'k)
+    (map: t 'k 'v): 'v => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos hash depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (getOrDefault comparator (depth + 1) default hash key nodes.(index))
+      else default
+  | Collision entryHash entryMap =>
+      if (hash === entryHash) (AVLTreeMap.getOrDefault comparator ::default key entryMap)
+      else default
+  | Entry entryHash entryKey entryValue =>
+      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
+        entryValue
+      } else default
+  | Empty => default;
+};
+
 let rec getOrRaise
     (comparator: Comparator.t 'k)
     (depth: int)

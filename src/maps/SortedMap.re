@@ -84,6 +84,7 @@ module type S1 = {
   let valuesCollection: t 'v => Collection.t 'v;
   let valuesSequence: t 'v => Sequence.t 'v;
   let get: k => t 'v => option 'v;
+  let getOrDefault: default::'v => k => (t 'v) => 'v;
   let getOrRaise: k => t 'v => 'v;
   let keysSet: t 'v => ImmSet.t k;
   let toMap: t 'v => ImmMap.t k 'v;
@@ -128,6 +129,9 @@ let module Make1 = fun (Comparable: Comparable.S) => {
 
     let get (key: k) ({ tree }: t 'v): (option 'v) =>
       tree |> AVLTreeMap.get comparator key;
+
+    let getOrDefault default::(default: 'v) (key: k) ({ tree }: t 'v): 'v =>
+      tree |> AVLTreeMap.getOrDefault comparator ::default key;
 
     let getOrRaise (key: k) ({ tree }: t 'v): 'v =>
       tree |> AVLTreeMap.getOrRaise comparator key;

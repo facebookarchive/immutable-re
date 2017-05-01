@@ -268,3 +268,27 @@ let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
   | Entry entryKey entryValue when key === entryKey => Some entryValue
   | _ => None
 };
+
+
+let rec getOrDefault (depth: int) (default: 'v) (key: int) (map: t 'v): 'v => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos key depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (getOrDefault (depth + 1) default key nodes.(index))
+      else default;
+  | Entry entryKey entryValue when key === entryKey => entryValue
+  | _ => default
+};
+
+
+let rec getOrRaise (depth: int) (key: int) (map: t 'v): 'v => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos key depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (getOrRaise (depth + 1) key nodes.(index))
+      else failwith "not found";
+  | Entry entryKey entryValue when key === entryKey => entryValue
+  | _ => failwith "not found"
+};

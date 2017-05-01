@@ -26,8 +26,11 @@ include (ImmMap.Make1 {
   let get (key: int) ({ root }: t 'v): (option 'v) =>
     root |> BitmapTrieIntMap.get 0 key;
 
+  let getOrDefault default::(default: 'v) (key: int) ({ root }: t 'v): 'v =>
+    root |> BitmapTrieIntMap.getOrDefault 0 default key;
+
   let getOrRaise (key: int) ({ root }: t 'v): 'v =>
-    root |> BitmapTrieIntMap.get 0 key |> Option.firstOrRaise;
+    root |> BitmapTrieIntMap.getOrRaise 0 key;
 
   let reduce
       while_::(predicate: 'acc => int => 'v => bool)
@@ -147,6 +150,9 @@ let module Transient = {
 
   let get (key: int) (transient: t 'v): (option 'v) =>
     transient |> Transient.get |> get key;
+
+  let getOrDefault default::(default: 'v) (key: 'k) (transient: t 'v): 'v =>
+    transient |> Transient.get |> getOrDefault ::default key;
 
   let getOrRaise (key: int) (transient: t 'v): 'v =>
     transient |> Transient.get |> getOrRaise key;

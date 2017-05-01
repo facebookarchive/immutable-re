@@ -35,6 +35,7 @@ let module HashIntMap: PersistentMapTester.S = {
   let isEmpty = HashMap.isEmpty;
   let isNotEmpty = HashMap.isNotEmpty;
   let get = HashMap.get;
+  let getOrDefault = HashMap.getOrDefault;
   let getOrRaise = HashMap.getOrRaise;
   let keys = HashMap.keys;
   let keysCollection = HashMap.keysCollection;
@@ -88,6 +89,7 @@ let module BadHashIntMap: PersistentMapTester.S with type k = int = {
   let isEmpty = HashMap.isEmpty;
   let isNotEmpty = HashMap.isNotEmpty;
   let get = HashMap.get;
+  let getOrDefault = HashMap.getOrDefault;
   let getOrRaise = HashMap.getOrRaise;
   let keys = HashMap.keys;
   let keysCollection = HashMap.keysCollection;

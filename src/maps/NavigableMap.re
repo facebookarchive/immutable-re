@@ -13,6 +13,7 @@ type s 'map 'k 'v = {
   first: 'c . ('k => 'v => 'c) => 'map => (option 'c),
   firstOrRaise: 'c . ('k => 'v => 'c) => 'map => 'c,
   get: 'k => 'map => (option 'v),
+  getOrDefault: default::'v => 'k => 'map => 'v,
   getOrRaise: 'k => 'map => 'v,
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'map => 'acc),
   reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'map => 'acc,
@@ -63,6 +64,7 @@ let module Make1 = fun (Base: {
   let first: (k => 'v => 'c) => (t 'v) => (option 'c);
   let firstOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
   let get: k => (t 'v) => (option 'v);
+  let getOrDefault: default::'v => k => (t 'v) => 'v;
   let getOrRaise: k => (t 'v) => 'v;
   let last: (k => 'v => 'c) => (t 'v) => (option 'c);
   let lastOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
@@ -87,6 +89,7 @@ let module Make1 = fun (Base: {
     let containsKey = containsKey;
     let count = count;
     let get = get;
+    let getOrDefault = getOrDefault;
     let getOrRaise = getOrRaise;
     let reduce = Base.reduceReversed;
     let reduceKeys = Base.reduceKeysReversed;
@@ -133,6 +136,7 @@ let module Make1 = fun (Base: {
     first,
     firstOrRaise,
     get,
+    getOrDefault,
     getOrRaise,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
@@ -146,6 +150,7 @@ let module Make1 = fun (Base: {
     first: last,
     firstOrRaise: lastOrRaise,
     get,
+    getOrDefault,
     getOrRaise,
     reduce: Base.reduceReversed,
     reduceKeys: Base.reduceKeysReversed,
@@ -171,6 +176,7 @@ let module Make2 = fun (Base: {
   let first: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
   let firstOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
   let get: 'k => (t 'k 'v) => (option 'v);
+  let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
   let getOrRaise: 'k => (t 'k 'v) => 'v;
   let last: ('k => 'v => 'c) => (t 'k 'v) => (option 'c);
   let lastOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
@@ -194,6 +200,7 @@ let module Make2 = fun (Base: {
     let containsKey = containsKey;
     let count = count;
     let get = get;
+    let getOrDefault = getOrDefault;
     let getOrRaise = getOrRaise;
     let reduce = Base.reduceReversed;
     let reduceKeys = Base.reduceKeysReversed;
@@ -240,6 +247,7 @@ let module Make2 = fun (Base: {
     first,
     firstOrRaise,
     get,
+    getOrDefault,
     getOrRaise,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
@@ -253,6 +261,7 @@ let module Make2 = fun (Base: {
     first: last,
     firstOrRaise: lastOrRaise,
     get,
+    getOrDefault,
     getOrRaise,
     reduce: Base.reduceReversed,
     reduceKeys: Base.reduceKeysReversed,
@@ -296,6 +305,11 @@ include (Make2 {
   let get (key: 'k) (map: t 'k 'v): (option 'v) => switch map {
     | Empty => None
     | Instance map { get } _ => get key map
+  };
+
+  let getOrDefault default::(default: 'v) (key: 'k) (map: t 'k 'v): 'v => switch map {
+    | Empty => default
+    | Instance map { getOrDefault } _ => getOrDefault ::default key map
   };
 
   let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {

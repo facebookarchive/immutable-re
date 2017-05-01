@@ -247,6 +247,10 @@ let module TransientVectorImpl = {
     }
   };
 
+  let getOrDefault default::(default: 'a) (index: int) (vector: t 'a): 'a =>
+    if (index < 0 || index >= (count vector)) default
+    else getOrRaise index vector;
+
   let get (index: int) (vector: t 'a): (option 'a) => {
     let trieCount = count vector;
     Preconditions.noneIfIndexOutOfRange
@@ -408,6 +412,9 @@ let removeLastOrRaise (transient: t 'a): (t 'a) =>
 
 let get (index: int) (transient: t 'a): (option 'a) =>
   transient |> Transient.get |> TransientVectorImpl.get index;
+
+let getOrDefault default::(default: 'v) (index: int) (transient: t 'a): 'a =>
+  transient |> Transient.get |> TransientVectorImpl.getOrDefault ::default index;
 
 let getOrRaise (index: int) (transient: t 'a): 'a =>
   transient |> Transient.get |> TransientVectorImpl.getOrRaise index;

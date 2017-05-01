@@ -25,6 +25,7 @@ module type S1 = {
   include NavigableCollection.S1 with type t 'a := t 'a;
 
   let get: int => (t 'a) => (option 'a);
+  let getOrDefault: default::'v => int => (t 'v) => 'v;
   let getOrRaise: int => (t 'a) => 'a;
   let toIndexed: (t 'a) => (indexed 'a);
   let toIndexedReversed: (t 'a) => (indexed 'a);
@@ -57,6 +58,10 @@ let module Make1 = fun (Base: {
 
   let get (index: int) (indexed: t 'a): (option 'a) =>
     Preconditions.noneIfIndexOutOfRange (count indexed) index (getOrRaiseFlipped indexed);
+
+  let getOrDefault default::(default: 'a) (index: int) (indexed: t 'a): 'a =>
+    if (index < 0 || index >= (count indexed)) default
+    else getOrRaise index indexed;
 
   include (NavigableCollection.Make1 {
     include Base;
@@ -95,6 +100,8 @@ let module Make1 = fun (Base: {
       else failwith "empty";
 
     let get = get;
+
+    let getOrDefault = getOrDefault;
 
     let getOrRaise = getOrRaise;
 

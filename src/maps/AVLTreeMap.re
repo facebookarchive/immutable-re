@@ -93,6 +93,25 @@ let rec get
     }
 };
 
+let rec getOrDefault
+    (comparator: Comparator.t 'k)
+    default::(default: 'v)
+    (xK: 'k)
+    (tree: t 'k 'v): 'v => switch tree {
+  | Empty => default
+  | Leaf k v => if (xK === k) v else {
+      let cmp = comparator xK k;
+      if (cmp === Ordering.equal) v
+      else default
+    }
+  | Node _ left k v right => if (xK === k) v else {
+      let cmp = comparator xK k;
+      if (cmp === Ordering.lessThan) (getOrDefault comparator ::default xK left)
+      else if (cmp === Ordering.greaterThan) (getOrDefault comparator ::default xK right)
+      else v
+    }
+};
+
 let rec getOrRaise
     (comparator: Comparator.t 'k)
     (xK: 'k)

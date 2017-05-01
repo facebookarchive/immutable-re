@@ -29,6 +29,11 @@ include (ImmMap.Make2 {
     root |> BitmapTrieMap.get comparator 0 hashKey key;
   };
 
+  let getOrDefault default::(default: 'v) (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
+    let hashKey = hash key;
+    root |> BitmapTrieMap.getOrDefault comparator 0 default hashKey key;
+  };
+
   let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
     let hashKey = hash key;
     root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
@@ -179,6 +184,9 @@ let module Transient = {
 
   let get (key: 'k) (transient: t 'k 'v): (option 'v) =>
    transient |> Transient.get |> get key;
+
+  let getOrDefault default::(default: 'v) (key: 'k) (transient: t 'k 'v): 'v =>
+    transient |> Transient.get |> getOrDefault ::default key;
 
   let getOrRaise (key: 'k) (transient: t 'k 'v): 'v =>
     transient |> Transient.get |> getOrRaise key;

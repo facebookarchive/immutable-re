@@ -11,6 +11,7 @@ type s 'map 'k 'v = {
   containsKey: 'k => 'map => bool,
   count: 'map => int,
   get: 'k => 'map => (option 'v),
+  getOrDefault: default::'v => 'k => 'map => 'v,
   getOrRaise: 'k => 'map => 'v,
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'map => 'acc),
   reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'map => 'acc,
@@ -30,6 +31,7 @@ module type S1 = {
   include KeyedCollection.S1 with type k := k and type t 'v := t 'v;
 
   let get: k => (t 'v) => (option 'v);
+  let getOrDefault: default::'v => k => (t 'v) => 'v;
   let getOrRaise: k => (t 'v) => 'v;
   let keysSet: (t 'v) => (ImmSet.t k);
   let toMap: (t 'v) => map k 'v;
@@ -41,6 +43,7 @@ module type S2 = {
   include KeyedCollection.S2 with type t 'k 'v := t 'k 'v;
 
   let get: 'k => (t 'k 'v) => (option 'v);
+  let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
   let getOrRaise: 'k => (t 'k 'v) => 'v;
   let keysSet: (t 'k 'v) => (ImmSet.t 'k);
   let toMap: (t 'k 'v) => map 'k 'v;
@@ -53,6 +56,7 @@ let module Make1 = fun (Base: {
   let containsKey: k => t 'v => bool;
   let count: t 'v => int;
   let get: k => (t 'v) => (option 'v);
+  let getOrDefault: default::'v => k => (t 'v) => 'v;
   let getOrRaise: k => (t 'v) => 'v;
   let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
   let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
@@ -78,6 +82,7 @@ let module Make1 = fun (Base: {
     containsKey,
     count,
     get,
+    getOrDefault,
     getOrRaise,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
@@ -97,6 +102,7 @@ let module Make2 = fun (Base: {
   let containsKey: 'k => t 'k 'v => bool;
   let count: t 'k 'v => int;
   let get: 'k => (t 'k 'v) => (option 'v);
+  let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
   let getOrRaise: 'k => (t 'k 'v) => 'v;
   let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
@@ -122,6 +128,7 @@ let module Make2 = fun (Base: {
     containsKey,
     count,
     get,
+    getOrDefault,
     getOrRaise,
     reduce: Base.reduce,
     reduceKeys: Base.reduceKeys,
@@ -151,6 +158,11 @@ include (Make2 {
   let get (key: 'k) (map: t 'k 'v): (option 'v) => switch map {
     | Empty => None
     | Instance map { get } => get key map
+  };
+
+  let getOrDefault default::(default: 'v) (key: 'k) (map: t 'k 'v): 'v => switch map {
+    | Empty => default
+    | Instance map { getOrDefault } => getOrDefault ::default key map
   };
 
   let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {

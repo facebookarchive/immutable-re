@@ -355,6 +355,7 @@ let module Map = {
 
       let alter: k => (option 'v => option 'v) => (t 'v) => (t 'v);
       let get: k => (t 'v) => (option 'v);
+      let getOrDefault: default::'v => k => (t 'v) => 'v;
       let getOrRaise: k => (t 'v) => 'v;
       let put: k => 'v => (t 'v) => (t 'v);
       let putAll: (KeyedIterable.t k 'v) => (t 'v) => (t 'v);
@@ -368,6 +369,7 @@ let module Map = {
 
       let alter: 'k => (option 'v => option 'v) => (t 'k 'v) => (t 'k 'v);
       let get: 'k => (t 'k 'v) => (option 'v);
+      let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
       let getOrRaise: 'k => (t 'k 'v) => 'v;
       let put: 'k => 'v => (t 'k 'v) => (t 'k 'v);
       let putAll: (KeyedIterable.t 'k 'v) => (t 'k 'v) => (t 'k 'v);
@@ -422,6 +424,7 @@ let module Indexed = {
       include NavigableCollection.Transient.S1 with type t 'a := t 'a;
 
       let get: int => (t 'a) => (option 'a);
+      let getOrDefault: default::'a => int => (t 'a) => 'a;
       let getOrRaise: int => (t 'a) => 'a;
       let insertAt: int => 'a => (t 'a) => (t 'a);
       let removeAt: int => (t 'a) => (t 'a);
