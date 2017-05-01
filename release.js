@@ -31,7 +31,6 @@ const main = async () => {
 
   await exec(`git add ${ opamFile } ${ metaFile } ${ packageJSONFile }`)
   await exec(`git commit -m "Version ${ version }"`);
-  
   await exec(`git tag -a ${ version } -m "Version ${ version }."`);
   await exec('git push "git@github.com:facebookincubator/immutable-re.git"');
   await exec(`git push "git@github.com:facebookincubator/immutable-re.git" tag ${version}`);
