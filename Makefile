@@ -1,8 +1,8 @@
-build:
-	ocamlbuild -package topkg pkg/build.native
-	./build.native build
-
 SRC_DIRS=src,src/sets,src/core,src/queues,src/indexed,src/maps,src/utils
+build:
+	rebuild -use-ocamlfind -Is $(SRC_DIRS) src/Immutable.cma
+	rebuild -use-ocamlfind -Is $(SRC_DIRS) src/Immutable.cmxa
+
 
 test-debug:
 	rebuild -cflag -g -Is $(SRC_DIRS) -Is reUnit/src,test/testers,test ./test/ImmutableTest.byte
@@ -17,4 +17,4 @@ perf-native:
 	./PerfTest.native
 
 clean:
-	ocamlbuild -clean
+	rebuild -clean
