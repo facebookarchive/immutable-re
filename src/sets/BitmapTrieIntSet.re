@@ -60,46 +60,47 @@ let rec contains
   | Empty => false;
 };
 
-let rec reduce (f: 'acc => int => 'acc) (acc: 'acc) (map: t): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc map => reduce f acc map;
-      nodes |> CopyOnWriteArray.reduce reducer acc;
-  | Entry value => f acc value;
-  | Empty => acc;
-};
-
-let rec reduceWhileWithResult
-    (shouldContinue: ref bool)
+let reduceWhile
+    (levelPredicate: option ('acc => t => bool))
+    (levelReducer: 'acc => t => 'acc)
     (predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     (map: t): 'acc => switch map {
   | Level _ nodes _ =>
-      let reducer acc node => node
-        |> reduceWhileWithResult shouldContinue predicate f acc;
-      let predicate _ _ => !shouldContinue;
-
-      nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
-  | Entry value =>
-      if (!shouldContinue && (predicate acc value)) (f acc value)
-      else acc
+      nodes |> CopyOnWriteArray.reduce while_::?levelPredicate levelReducer acc
+  | Entry entryValue =>
+      if (predicate acc entryValue) (f acc entryValue) else acc
   | Empty => acc
 };
 
-let reduceWhile
-    (predicate: 'acc => int => bool)
+let reduce
+    while_::(predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
     (acc: 'acc)
-    (map: t): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc v => {
-    let result = predicate acc v;
-    shouldContinue := result;
-    result;
-  };
+    (map: t): 'acc =>
+  if (predicate === Functions.alwaysTrue2) {
+    let rec levelReducer acc node => node
+      |> reduceWhile None levelReducer Functions.alwaysTrue2 f acc;
+    levelReducer acc map
+  }
+  else {
+    let shouldContinue = ref true;
 
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
+    let predicate acc v =>
+      if (!shouldContinue) {
+        let result = predicate acc v;
+        shouldContinue := result;
+        result;
+      }
+      else false;
+
+    let levelPredicate = Some (fun _ _ => !shouldContinue);
+    let rec levelReducer acc node => node
+      |> reduceWhile levelPredicate levelReducer predicate f acc;
+
+    levelReducer acc map
+  };
 
 let rec remove
     (updateLevelNode: updateLevelNode)

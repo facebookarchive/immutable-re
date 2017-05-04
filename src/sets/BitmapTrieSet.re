@@ -77,49 +77,49 @@ let rec contains
   | Empty => false;
 };
 
-let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (map: t 'a): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc map => reduce f acc map;
-      nodes |> CopyOnWriteArray.reduce reducer acc;
-  | Collision _ entrySet => entrySet |> AVLTreeSet.reduce f acc;
-  | Entry _ entryValue => f acc entryValue;
-  | Empty => acc;
-};
-
-let rec reduceWhileWithResult
-    (shouldContinue: ref bool)
+let reduceWhile
+    (levelPredicate: option ('acc => t 'a => bool))
+    (levelReducer: 'acc => t 'a => 'acc)
     (predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (map: t 'a): 'acc => switch map {
   | Level _ nodes _ =>
-      let reducer acc node => node
-        |> reduceWhileWithResult shouldContinue predicate f acc;
-      let predicate _ _ => !shouldContinue;
-
-      nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
-  | Collision _ entrySet => entrySet
-      |> AVLTreeSet.reduceWhileWithResult shouldContinue predicate f acc
+      nodes |> CopyOnWriteArray.reduce while_::?levelPredicate levelReducer acc
+  | Collision _ entrySet =>
+      entrySet |> AVLTreeSet.reduceWhile predicate f acc
   | Entry _ entryValue =>
-      if (!shouldContinue && (predicate acc entryValue)) (f acc entryValue)
-      else acc
+      if (predicate acc entryValue) (f acc entryValue) else acc
   | Empty => acc
 };
 
-let reduceWhile
-    (predicate: 'acc => 'a => bool)
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    (map: t 'a): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc v => {
-    let result = predicate acc v;
-    shouldContinue := result;
-    result;
-  };
+    (map: t 'a): 'acc =>
+  if (predicate === Functions.alwaysTrue2) {
+    let rec levelReducer acc node => node
+      |> reduceWhile None levelReducer Functions.alwaysTrue2 f acc;
+    levelReducer acc map
+  }
+  else {
+    let shouldContinue = ref true;
 
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
+    let predicate acc v =>
+      if (!shouldContinue) {
+        let result = predicate acc v;
+        shouldContinue := result;
+        result;
+      }
+      else false;
+
+    let levelPredicate = Some (fun _ _ => !shouldContinue);
+    let rec levelReducer acc node => node
+      |> reduceWhile levelPredicate levelReducer predicate f acc;
+
+    levelReducer acc map
+  };
 
 let rec remove
     (comparator: Comparator.t 'a)

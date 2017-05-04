@@ -87,16 +87,14 @@ let module Make = fun (Comparable: Comparable.S) => {
         (f: 'acc => a => 'acc)
         (acc: 'acc)
         ({ tree }: t): 'acc =>
-      if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduce f acc tree)
-      else (AVLTreeSet.reduceWhile predicate f acc tree);
+      AVLTreeSet.reduce while_::predicate f acc tree;
 
     let reduceReversed
         while_::(predicate: 'acc => a => bool)
         (f: 'acc => a => 'acc)
         (acc: 'acc)
         ({ tree }: t): 'acc =>
-      if (predicate === Functions.alwaysTrue2) (AVLTreeSet.reduceReversed f acc tree)
-      else (AVLTreeSet.reduceReversedWhile predicate f acc tree);
+      AVLTreeSet.reduceReversed while_::predicate f acc tree;
 
     let toSequence ({ tree }: t): (Sequence.t a) =>
       tree |> AVLTreeSet.toSequence;

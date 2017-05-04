@@ -18,20 +18,6 @@ let height (tree: t 'a): int => switch tree {
   | Node h _ _ _=> h
 };
 
-let rec validate (tree: t 'a): (t 'a) => switch tree {
-  | Empty => tree
-  | Leaf _ => tree
-  | Node _ left _ right =>
-      let lh = height left;
-      let rh = height right;
-      if ((lh - rh) > 2 || (lh - rh) < -2) (failwith "invalid")
-      else {
-        validate left |> ignore;
-        validate right |> ignore;
-        tree
-      };
-};
-
 let makeTree (left: t 'a) (v: 'a) (right: t 'a): (t 'a) => {
   let lh = height left;
   let rh = height right;
@@ -118,101 +104,78 @@ let rec lastOrRaise (tree: t 'a): 'a => switch tree {
   | Empty => failwith "empty"
 };
 
-let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch tree {
-  | Empty  => acc
-  | Leaf v => f acc v
-  | Node _ left v right =>
-     let acc = reduce f acc left;
-     let acc = f acc v;
-     let acc = reduce f acc right;
-     acc
-};
-
-let rec reduceWhileWithResult
-    (shouldContinue: ref bool)
+let rec reduceWhile
     (predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (tree: t 'a): 'acc => switch tree {
   | Empty => acc
-  | Leaf v =>
-      if (!shouldContinue && (predicate acc v)) (f acc v)
-      else acc
+  | Leaf v => if (predicate acc v) (f acc v) else acc
   | Node _ left v right =>
-     let acc =
-       if (!shouldContinue) (reduceWhileWithResult shouldContinue predicate f acc left)
-       else acc;
-     let acc =
-       if (!shouldContinue && (predicate acc v)) (f acc v)
-       else acc;
-     let acc =
-       if (!shouldContinue) (reduceWhileWithResult shouldContinue predicate f acc right)
-       else acc;
-     acc
+     let acc = reduceWhile predicate f acc left;
+     if (predicate acc v)  {
+       let acc = f acc v;
+       reduceWhile predicate f acc right;
+     }
+     else acc;
 };
 
-let reduceWhile
-    (predicate: 'acc => 'v => bool)
-    (f: 'acc => 'v => 'acc)
-    (acc: 'acc)
-    (tree: t 'v): 'acc => {
-
-  let shouldContinue = ref true;
-  let predicate acc v => {
-    let result = predicate acc v;
-    shouldContinue := result;
-    result;
-  };
-  reduceWhileWithResult shouldContinue predicate f acc tree;
-};
-
-let rec reduceReversed (f: 'acc => 'a => 'acc) (acc: 'acc) (tree: t 'a): 'acc => switch tree {
-  | Empty => acc
-  | Leaf v => f acc v
-  | Node _ left v right =>
-     let acc = reduceReversed f acc right;
-     let acc = f acc v;
-     let acc = reduceReversed f acc left;
-     acc
-};
-
-let rec reduceReversedWhileWithResult
-    (shouldContinue: ref bool)
-    (predicate: 'acc => 'a => bool)
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (tree: t 'a): 'acc =>
+  if (predicate === Functions.alwaysTrue2) {
+    reduceWhile Functions.alwaysTrue2 f acc tree
+  }
+  else {
+    let shouldContinue = ref true;
+    let predicate acc v =>
+      if (!shouldContinue) {
+        let result = predicate acc v;
+        shouldContinue := result;
+        result;
+      }
+      else false;
+
+    reduceWhile predicate f acc tree;
+  };
+
+let rec reduceReversedWhile
+    (predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a=> 'acc)
     (acc: 'acc)
     (tree: t 'a): 'acc => switch tree {
   | Empty => acc
-  | Leaf v =>
-      if (!shouldContinue && (predicate acc v)) (f acc v)
-      else acc
+  | Leaf v =>  if (predicate acc v) (f acc v) else acc
   | Node _ left v right =>
-    let acc =
-      if (!shouldContinue) (reduceReversedWhileWithResult shouldContinue predicate f acc right)
-      else acc;
-     let acc =
-       if (!shouldContinue && (predicate acc v)) (f acc v)
-       else acc;
-     let acc =
-       if (!shouldContinue) (reduceReversedWhileWithResult shouldContinue predicate f acc left)
-       else acc;
-     acc
+     let acc = reduceReversedWhile predicate f acc right;
+     if (predicate acc v) {
+       let acc = f acc v;
+       reduceReversedWhile predicate f acc left;
+     }
+     else acc;
 };
 
-let reduceReversedWhile
-    (predicate: 'acc => 'a => bool)
-    (f: 'acc => 'ka => 'acc)
+let reduceReversed
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    (tree: t 'a): 'acc => {
-
-  let shouldContinue = ref true;
-  let predicate acc v => {
-    let result = predicate acc v;
-    shouldContinue := result;
-    result;
+    (tree: t 'a): 'acc =>
+  if (predicate === Functions.alwaysTrue2) {
+    reduceReversedWhile Functions.alwaysTrue2 f acc tree
+  }
+  else {
+    let shouldContinue = ref true;
+    let predicate acc v =>
+      if (!shouldContinue) {
+        let result = predicate acc v;
+        shouldContinue := result;
+        result;
+      }
+      else false;
+    reduceReversedWhile predicate f acc tree;
   };
-  reduceReversedWhileWithResult shouldContinue predicate f acc tree;
-};
 
 let rec removeFirstOrRaise (tree: t 'a): (t 'a) => switch tree {
   | Empty => failwith "empty"

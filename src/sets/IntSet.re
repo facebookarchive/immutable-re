@@ -28,8 +28,7 @@ include (ImmSet.Make {
       (f: 'acc => int => 'acc)
       (acc: 'acc)
       ({ root }: t): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (BitmapTrieIntSet.reduce f acc root)
-    else (BitmapTrieIntSet.reduceWhile predicate f acc root);
+    BitmapTrieIntSet.reduce while_::predicate f acc root;
 
   let toSequence ({ root }: t): (Sequence.t int) =>
     root |> BitmapTrieIntSet.toSequence;
