@@ -39,29 +39,16 @@ include (ImmMap.Make2 {
     root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
   };
 
-  let reduce
-      while_::(predicate: 'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'k 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue3) (root |> BitmapTrieMap.reduce f acc)
-    else root |> BitmapTrieMap.reduceWhile predicate f acc;
+  include (KeyedReducer.Make2 {
+    type nonrec t 'k 'v = t 'k 'v;
 
-  let reduceKeys
-      while_::(predicate: 'acc => 'k => bool)
-      (f: 'acc => 'k => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'k 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (root |> BitmapTrieMap.reduceKeys f acc)
-    else root |> BitmapTrieMap.reduceKeysWhile predicate f acc;
-
-  let reduceValues
-      while_::(predicate: 'acc => 'v => bool)
-      (f: 'acc => 'v => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'k 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (root |> BitmapTrieMap.reduceValues f acc)
-    else root |> BitmapTrieMap.reduceValuesWhile predicate f acc;
+    let reduce
+        while_::(predicate: 'acc => 'k => 'v => bool)
+        (f: 'acc => 'k => 'v => 'acc)
+        (acc: 'acc)
+        ({ root }: t 'k 'v): 'acc =>
+      root |> BitmapTrieMap.reduce while_::predicate f acc;
+  }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
   let toSequence (selector: 'k => 'v => 'c)({ root }: t 'k 'v): (Sequence.t 'c) =>
     root |> BitmapTrieMap.toSequence selector;

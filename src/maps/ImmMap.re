@@ -14,8 +14,6 @@ type s 'map 'k 'v = {
   getOrDefault: default::'v => 'k => 'map => 'v,
   getOrRaise: 'k => 'map => 'v,
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'map => 'acc),
-  reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'map => 'acc,
-  reduceValues: 'acc . while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => 'map => 'acc,
   toSequence: 'c . ('k => 'v => 'c) => 'map => Sequence.t 'c,
 };
 
@@ -85,8 +83,6 @@ let module Make1 = fun (Base: {
     getOrDefault,
     getOrRaise,
     reduce: Base.reduce,
-    reduceKeys: Base.reduceKeys,
-    reduceValues: Base.reduceValues,
     toSequence,
   };
 
@@ -131,8 +127,6 @@ let module Make2 = fun (Base: {
     getOrDefault,
     getOrRaise,
     reduce: Base.reduce,
-    reduceKeys: Base.reduceKeys,
-    reduceValues: Base.reduceValues,
     toSequence,
   };
 
@@ -170,32 +164,18 @@ include (Make2 {
     | Instance map { getOrRaise } => getOrRaise key map
   };
 
-  let reduce
-      while_::(predicate: 'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc => switch map {
-    | Empty => acc
-    | Instance map { reduce } => reduce while_::predicate f acc map
-  };
+  include (KeyedReducer.Make2 {
+    type nonrec t 'k 'v = t 'k 'v;
 
-  let reduceKeys
-      while_::(predicate: 'acc => 'k => bool)
-      (f: 'acc => 'k => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc => switch map {
-    | Empty => acc
-    | Instance map { reduceKeys } => reduceKeys while_::predicate f acc map
-  };
-
-  let reduceValues
-      while_::(predicate: 'acc => 'v => bool)
-      (f: 'acc => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc => switch map {
-    | Empty => acc
-    | Instance map { reduceValues } => reduceValues while_::predicate f acc map
-  };
+    let reduce
+        while_::(predicate: 'acc => 'k => 'v => bool)
+        (f: 'acc => 'k => 'v => 'acc)
+        (acc: 'acc)
+        (map: t 'k 'v): 'acc => switch map {
+      | Empty => acc
+      | Instance map { reduce } => reduce while_::predicate f acc map
+    };
+  }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
 
   let toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
     | Empty => Sequence.empty ()

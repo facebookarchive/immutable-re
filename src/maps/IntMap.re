@@ -32,29 +32,17 @@ include (ImmMap.Make1 {
   let getOrRaise (key: int) ({ root }: t 'v): 'v =>
     root |> BitmapTrieIntMap.getOrRaise 0 key;
 
-  let reduce
-      while_::(predicate: 'acc => int => 'v => bool)
-      (f: 'acc => int => 'v => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue3) (BitmapTrieIntMap.reduce f acc root)
-    else (BitmapTrieIntMap.reduceWhile predicate f acc root);
+  include (KeyedReducer.Make1 {
+    type k = int;
+    type nonrec t 'v = t 'v;
 
-  let reduceKeys
-      while_::(predicate: 'acc => int => bool)
-      (f: 'acc => int => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (BitmapTrieIntMap.reduceKeys f acc root)
-    else (BitmapTrieIntMap.reduceKeysWhile predicate f acc root);
-
-  let reduceValues
-      while_::(predicate: 'acc => 'v => bool)
-      (f: 'acc => 'v => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'v): 'acc =>
-    if (predicate === Functions.alwaysTrue2) (BitmapTrieIntMap.reduceValues f acc root)
-    else (BitmapTrieIntMap.reduceValuesWhile predicate f acc root);
+    let reduce
+        while_::(predicate: 'acc => int => 'v => bool)
+        (f: 'acc => int => 'v => 'acc)
+        (acc: 'acc)
+        ({ root }: t 'v): 'acc =>
+      BitmapTrieIntMap.reduce while_::predicate f acc root;
+  }: KeyedReducer.S1 with type t 'v:= t 'v and type k := int);
 
   let toSequence (selector: int => 'v => 'c) ({ root }: t 'v): (Sequence.t 'c) =>
     root |> BitmapTrieIntMap.toSequence selector;

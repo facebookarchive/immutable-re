@@ -12,8 +12,6 @@ type s 'keyed 'k 'v = {
   count: 'keyed => int,
   firstOrRaise: 'c . ('k => 'v => 'c) => 'keyed => 'c,
   reduce: 'acc . (while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => 'keyed => 'acc),
-  reduceKeys: 'acc . while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => 'keyed => 'acc,
-  reduceValues: 'acc . while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => 'keyed => 'acc,
   toSequence: 'c . ('k => 'v => 'c) => 'keyed => Sequence.t 'c,
 };
 
@@ -217,8 +215,6 @@ let module Make1 = fun (Base: {
     count,
     firstOrRaise,
     reduce: Base.reduce,
-    reduceKeys: Base.reduceKeys,
-    reduceValues: Base.reduceValues,
     toSequence,
   };
 
@@ -227,8 +223,6 @@ let module Make1 = fun (Base: {
     count,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
-    reduceKeys: Base.reduceKeysReversed,
-    reduceValues: Base.reduceValuesReversed,
     toSequence: toSequenceReversed,
   };
 
@@ -365,8 +359,6 @@ let module Make2 = fun (Base: {
     count,
     firstOrRaise,
     reduce: Base.reduce,
-    reduceKeys: Base.reduceKeys,
-    reduceValues: Base.reduceValues,
     toSequence,
   };
 
@@ -375,8 +367,6 @@ let module Make2 = fun (Base: {
     count,
     firstOrRaise: lastOrRaise,
     reduce: Base.reduceReversed,
-    reduceKeys: Base.reduceKeysReversed,
-    reduceValues: Base.reduceValuesReversed,
     toSequence: toSequenceReversed,
   };
 
@@ -413,59 +403,37 @@ include (Make2 {
     | Instance keyed _ { firstOrRaise } => firstOrRaise selector keyed
   };
 
-  let reduce
-      while_::(predicate:'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter { reduce } _ => iter |> reduce while_::predicate f acc;
-  };
+  include (KeyedReducer.Make2 {
+    type nonrec t 'k 'v = t 'k 'v;
 
-  let reduceReversed
-      while_::(predicate:'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter _ { reduce } => iter |> reduce while_::predicate f acc;
-  };
+    let reduce
+        while_::(predicate:'acc => 'k => 'v => bool)
+        (f: 'acc => 'k => 'v => 'acc)
+        (acc: 'acc)
+        (iter: t 'k 'v): 'acc => switch iter {
+      | Empty => acc
+      | Instance iter { reduce } _ => iter |> reduce while_::predicate f acc;
+    };
+  }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
-  let reduceKeys
-      while_::(predicate:'acc => 'k => bool)
-      (f: 'acc => 'k => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter { reduceKeys } _ => iter |> reduceKeys while_::predicate f acc;
-  };
+  let module KeyedReducerReversed = (KeyedReducer.Make2 {
+    type nonrec t 'k 'v = t 'k 'v;
 
-  let reduceKeysReversed
-      while_::(predicate:'acc => 'k => bool)
-      (f: 'acc => 'k => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter _ { reduceKeys } => iter |> reduceKeys while_::predicate f acc;
-  };
+    let reduce
+        while_::(predicate:'acc => 'k => 'v => bool)
+        (f: 'acc => 'k => 'v => 'acc)
+        (acc: 'acc)
+        (iter: t 'k 'v): 'acc => switch iter {
+      | Empty => acc
+      | Instance iter _ { reduce } => iter |> reduce while_::predicate f acc;
+    };
+  }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
-  let reduceValues
-      while_::(predicate:'acc => 'v => bool)
-      (f: 'acc => 'v => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter { reduceValues } _ => iter |> reduceValues while_::predicate f acc;
-  };
+  let reduceReversed = KeyedReducerReversed.reduce;
 
-  let reduceValuesReversed
-      while_::(predicate:'acc => 'v => bool)
-      (f: 'acc => 'v => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter _ { reduceValues } => iter |> reduceValues while_::predicate f acc;
-  };
+  let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
+
+  let reduceValuesReversed = KeyedReducerReversed.reduceValues;
 
   let toSequence (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
     | Empty => Sequence.empty ()

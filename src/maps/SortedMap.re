@@ -136,53 +136,33 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     let lastOrRaise (selector: k => 'v => 'c) ({ tree }: t 'v): 'c =>
       tree |> AVLTreeMap.lastOrRaise selector;
 
-    let reduce
-        while_::(predicate: 'acc => k => 'v => bool)
-        (f: 'acc => k => 'v => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'v): 'acc =>
-      if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduce f acc tree)
-      else (AVLTreeMap.reduceWhile predicate f acc tree);
+    include (KeyedReducer.Make1 {
+      type nonrec k = k;
+      type nonrec t 'v = t 'v;
 
-    let reduceReversed
-        while_::(predicate: 'acc => k => 'v => bool)
-        (f: 'acc => k => 'v => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'v): 'acc =>
-      if (predicate === Functions.alwaysTrue3) (AVLTreeMap.reduceReversed f acc tree)
-      else (AVLTreeMap.reduceReversedWhile predicate f acc tree);
+      let reduce
+          while_::(predicate: 'acc => k => 'v => bool)
+          (f: 'acc => k => 'v => 'acc)
+          (acc: 'acc)
+          ({ tree }: t 'v): 'acc =>
+        AVLTreeMap.reduce while_::predicate f acc tree;
+    }: KeyedReducer.S1 with type t 'v:= t 'v and type k:= k);
 
-    let reduceKeys
-        while_::(predicate: 'acc => k => bool)
-        (f: 'acc => k => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'v): 'acc =>
-      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceKeys f acc tree)
-      else (AVLTreeMap.reduceKeysWhile predicate f acc tree);
+    let module KeyedReducerReversed = (KeyedReducer.Make1 {
+      type nonrec k = k;
+      type nonrec t 'v = t 'v;
 
-    let reduceKeysReversed
-        while_::(predicate: 'acc => k => bool)
-        (f: 'acc => k => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'v): 'acc =>
-      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceKeysReversed f acc tree)
-      else (AVLTreeMap.reduceKeysReversedWhile predicate f acc tree);
+      let reduce
+          while_::(predicate: 'acc => k => 'v => bool)
+          (f: 'acc => k => 'v => 'acc)
+          (acc: 'acc)
+          ({ tree }: t 'v): 'acc =>
+        AVLTreeMap.reduceReversed while_::predicate f acc tree;
+    }: KeyedReducer.S1 with type t 'v:= t 'v and type k:= k);
 
-    let reduceValues
-        while_::(predicate: 'acc => 'v => bool)
-        (f: 'acc => 'v => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'v): 'acc =>
-      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceValues f acc tree)
-      else (AVLTreeMap.reduceValuesWhile predicate f acc tree);
-
-    let reduceValuesReversed
-        while_::(predicate: 'acc => 'v => bool)
-        (f: 'acc => 'v => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'v): 'acc =>
-      if (predicate === Functions.alwaysTrue2) (AVLTreeMap.reduceValuesReversed f acc tree)
-      else (AVLTreeMap.reduceValuesReversedWhile predicate f acc tree);
+    let reduceReversed = KeyedReducerReversed.reduce;
+    let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
+    let reduceValuesReversed = KeyedReducerReversed.reduceValues;
 
     let toSequence (selector: k => 'v => 'c) ({ tree }: t 'v): (Sequence.t 'c) =>
       tree |> AVLTreeMap.toSequence selector;

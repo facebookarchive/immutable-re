@@ -14,6 +14,101 @@ type t 'v =
 
 type updateLevelNode 'v = Transient.Owner.t => int => (t 'v) => (t 'v) => (t 'v);
 
+let rec containsKey
+    (depth: int)
+    (key: int)
+    (map: t 'v): bool => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos key depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      (BitmapTrie.containsNode bitmap bit) &&
+      (containsKey (depth + 1) key nodes.(index));
+  | Entry entryKey _ => key === entryKey;
+  | Empty => false;
+};
+
+let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos key depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (get (depth + 1) key nodes.(index))
+      else None;
+  | Entry entryKey entryValue when key === entryKey => Some entryValue
+  | _ => None
+};
+
+let rec getOrDefault (depth: int) (default: 'v) (key: int) (map: t 'v): 'v => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos key depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (getOrDefault (depth + 1) default key nodes.(index))
+      else default;
+  | Entry entryKey entryValue when key === entryKey => entryValue
+  | _ => default
+};
+
+let rec getOrRaise (depth: int) (key: int) (map: t 'v): 'v => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos key depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (getOrRaise (depth + 1) key nodes.(index))
+      else failwith "not found";
+  | Entry entryKey entryValue when key === entryKey => entryValue
+  | _ => failwith "not found"
+};
+
+let reduceWhile
+    (levelPredicate: option ('acc => t 'v => bool))
+    (levelReducer: 'acc => t 'v => 'acc)
+    (predicate: 'acc => int => 'v => bool)
+    (f: 'acc => int => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'v): 'acc => switch map {
+  | Level _ nodes _ =>
+      nodes |> CopyOnWriteArray.reduce while_::?levelPredicate levelReducer acc
+  | Entry key value =>
+      if (predicate acc key value) (f acc key value) else acc
+  | Empty => acc
+};
+
+let reduce
+    while_::(predicate: 'acc => int => 'v => bool)
+    (f: 'acc => int => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'v): 'acc =>
+  if (predicate === Functions.alwaysTrue3) {
+    let rec levelReducer acc node => node
+      |> reduceWhile None levelReducer Functions.alwaysTrue3 f acc;
+    levelReducer acc map
+  }
+  else {
+    let shouldContinue = ref true;
+
+    let predicate acc k v =>
+      if (!shouldContinue) {
+        let result = predicate acc k v;
+        shouldContinue := result;
+        result;
+      }
+      else false;
+
+    let levelPredicate = Some (fun _ _ => !shouldContinue);
+    let rec levelReducer acc node => node
+      |> reduceWhile levelPredicate levelReducer predicate f acc;
+
+    levelReducer acc map
+  };
+
+let rec toSequence (selector: int => 'v => 'c) (map: t 'v): (Sequence.t 'c) => switch map {
+  | Entry key value => Sequence.return (selector key value)
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap (toSequence selector)
+  | Empty => Sequence.empty ();
+};
+
 let rec putWithResult
     (updateLevelNode: updateLevelNode 'v)
     (owner: Transient.Owner.t)
@@ -136,20 +231,6 @@ let updateLevelNodePersistent
     (Level bitmap nodes _: (t 'v)): (t 'v) =>
   Level bitmap (CopyOnWriteArray.update index childNode nodes) Transient.Owner.none;
 
-let rec containsKey
-    (depth: int)
-    (key: int)
-    (map: t 'v): bool => switch map {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos key depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      (BitmapTrie.containsNode bitmap bit) &&
-      (containsKey (depth + 1) key nodes.(index));
-  | Entry entryKey _ => key === entryKey;
-  | Empty => false;
-};
-
 let updateLevelNodeTransient
     (owner: Transient.Owner.t)
     (index: int)
@@ -160,135 +241,3 @@ let updateLevelNodeTransient
       node
   }
   else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner;
-
-let rec reduce (f: 'acc => int => 'v => 'acc) (acc: 'acc) (map: t 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc map => reduce f acc map;
-      nodes |> CopyOnWriteArray.reduce reducer acc;
-  | Entry key value => f acc key value;
-  | Empty => acc;
-};
-
-let rec reduceWhileWithResult
-    (shouldContinue: ref bool)
-    (predicate: 'acc => int => 'v => bool)
-    (f: 'acc => int => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc node => node
-        |> reduceWhileWithResult shouldContinue predicate f acc;
-      let predicate _ _ => !shouldContinue;
-
-      nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
-  | Entry key value =>
-      if (!shouldContinue && (predicate acc key value)) (f acc key value)
-      else acc
-  | Empty => acc
-};
-
-let reduceWhile
-    (predicate: 'acc => int => 'v => bool)
-    (f: 'acc => int => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'v): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc k v => {
-    let result = predicate acc k v;
-    shouldContinue := result;
-    result;
-  };
-
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
-
-let rec reduceKeys (f: 'acc => int => 'acc) (acc: 'acc) (map: t 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc map => reduceKeys f acc map;
-      nodes |> CopyOnWriteArray.reduce reducer acc;
-  | Entry key _ => f acc key;
-  | Empty => acc;
-};
-
-let reduceKeysWhile
-    (predicate: 'acc => int => bool)
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    (map: t 'v): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc k _ => {
-    let result = predicate acc k;
-    shouldContinue := result;
-    result;
-  };
-
-  let f acc k _ => f acc k;
-
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
-
-let rec reduceValues (f: 'acc => 'v => 'acc) (acc: 'acc) (map: t 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc map => reduceValues f acc map;
-      nodes |> CopyOnWriteArray.reduce reducer acc;
-  | Entry _ v => f acc v;
-  | Empty => acc;
-};
-
-let reduceValuesWhile
-    (predicate: 'acc => 'v => bool)
-    (f: 'acc => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'v): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc _ v => {
-    let result = predicate acc v;
-    shouldContinue := result;
-    result;
-  };
-
-  let f acc _ v => f acc v;
-
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
-
-let rec toSequence (selector: int => 'v => 'c) (map: t 'v): (Sequence.t 'c) => switch map {
-  | Entry key value => Sequence.return (selector key value)
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap (toSequence selector)
-  | Empty => Sequence.empty ();
-};
-
-let rec get (depth: int) (key: int) (map: t 'v): (option 'v) => switch map {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos key depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      if (BitmapTrie.containsNode bitmap bit) (get (depth + 1) key nodes.(index))
-      else None;
-  | Entry entryKey entryValue when key === entryKey => Some entryValue
-  | _ => None
-};
-
-
-let rec getOrDefault (depth: int) (default: 'v) (key: int) (map: t 'v): 'v => switch map {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos key depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      if (BitmapTrie.containsNode bitmap bit) (getOrDefault (depth + 1) default key nodes.(index))
-      else default;
-  | Entry entryKey entryValue when key === entryKey => entryValue
-  | _ => default
-};
-
-
-let rec getOrRaise (depth: int) (key: int) (map: t 'v): 'v => switch map {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos key depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      if (BitmapTrie.containsNode bitmap bit) (getOrRaise (depth + 1) key nodes.(index))
-      else failwith "not found";
-  | Entry entryKey entryValue when key === entryKey => entryValue
-  | _ => failwith "not found"
-};

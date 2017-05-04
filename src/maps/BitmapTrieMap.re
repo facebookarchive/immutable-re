@@ -15,6 +15,143 @@ type t 'k 'v =
 
 type updateLevelNode 'k 'v = Transient.Owner.t => int => (t 'k 'v) => (t 'k 'v) => (t 'k 'v);
 
+let rec containsKey
+    (comparator: Comparator.t 'k)
+    (depth: int)
+    (hash: int)
+    (key: 'k)
+    (set: t 'k 'v): bool => switch set {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos hash depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      (BitmapTrie.containsNode bitmap bit) &&
+      (containsKey comparator (depth + 1) hash key nodes.(index));
+  | Collision entryHash entryMap =>
+      (hash === entryHash) && (AVLTreeMap.containsKey comparator key entryMap);
+  | Entry entryHash entryKey _ =>
+      (hash === entryHash) && (Comparator.toEquality comparator entryKey key);
+  | Empty => false;
+};
+
+let rec get
+    (comparator: Comparator.t 'k)
+    (depth: int)
+    (hash: int)
+    (key: 'k)
+    (map: t 'k 'v): (option 'v) => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos hash depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (get comparator (depth + 1) hash key nodes.(index))
+      else None
+  | Collision entryHash entryMap =>
+      if (hash === entryHash) (AVLTreeMap.get comparator key entryMap)
+      else None
+  | Entry entryHash entryKey entryValue =>
+      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
+        Some entryValue
+      } else None
+  | Empty => None;
+};
+
+let rec getOrDefault
+    (comparator: Comparator.t 'k)
+    (depth: int)
+    (default: 'v)
+    (hash: int)
+    (key: 'k)
+    (map: t 'k 'v): 'v => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos hash depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (getOrDefault comparator (depth + 1) default hash key nodes.(index))
+      else default
+  | Collision entryHash entryMap =>
+      if (hash === entryHash) (AVLTreeMap.getOrDefault comparator ::default key entryMap)
+      else default
+  | Entry entryHash entryKey entryValue =>
+      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
+        entryValue
+      } else default
+  | Empty => default;
+};
+
+let rec getOrRaise
+    (comparator: Comparator.t 'k)
+    (depth: int)
+    (hash: int)
+    (key: 'k)
+    (map: t 'k 'v): 'v => switch map {
+  | Level bitmap nodes _ =>
+      let bit = BitmapTrie.bitPos hash depth;
+      let index = BitmapTrie.index bitmap bit;
+
+      if (BitmapTrie.containsNode bitmap bit) (getOrRaise comparator (depth + 1) hash key nodes.(index))
+      else (failwith "NotFound")
+  | Collision entryHash entryMap =>
+      if (hash === entryHash) (AVLTreeMap.getOrRaise comparator key entryMap)
+      else (failwith "NotFound")
+  | Entry entryHash entryKey entryValue =>
+      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
+        entryValue
+      } else (failwith "NotFound")
+  | Empty => failwith "NotFound";
+};
+
+let reduceWhile
+    (levelPredicate: option ('acc => t 'k 'v => bool))
+    (levelReducer: 'acc => t 'k 'v => 'acc)
+    (predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc => switch map {
+  | Level _ nodes _ =>
+      nodes |> CopyOnWriteArray.reduce while_::?levelPredicate levelReducer acc
+  | Collision _ entryMap =>
+      entryMap |> AVLTreeMap.reduceWhile predicate f acc
+  | Entry _ entryKey entryValue =>
+      if (predicate acc entryKey entryValue) (f acc entryKey entryValue) else acc
+  | Empty => acc
+};
+
+let reduce
+    while_::(predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc =>
+  if (predicate === Functions.alwaysTrue3) {
+    let rec levelReducer acc node => node
+      |> reduceWhile None levelReducer Functions.alwaysTrue3 f acc;
+    levelReducer acc map
+  }
+  else {
+    let shouldContinue = ref true;
+
+    let predicate acc k v =>
+      if (!shouldContinue) {
+        let result = predicate acc k v;
+        shouldContinue := result;
+        result;
+      }
+      else false;
+
+    let levelPredicate = Some (fun _ _ => !shouldContinue);
+    let rec levelReducer acc node => node
+      |> reduceWhile levelPredicate levelReducer predicate f acc;
+
+    levelReducer acc map
+  };
+
+let rec toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
+  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap (toSequence selector)
+  | Collision _ entryMap => AVLTreeMap.toSequence selector entryMap
+  | Entry _ entryKey entryValue => Sequence.return (selector entryKey entryValue);
+  | Empty => Sequence.empty ();
+};
+
 let rec putWithResult
     (comparator: Comparator.t 'k)
     (updateLevelNode: updateLevelNode 'k 'v)
@@ -223,197 +360,3 @@ let updateLevelNodeTransient
     node
   }
   else Level bitmap (CopyOnWriteArray.update index childNode nodes) owner;
-
-let rec containsKey
-    (comparator: Comparator.t 'k)
-    (depth: int)
-    (hash: int)
-    (key: 'k)
-    (set: t 'k 'v): bool => switch set {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos hash depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      (BitmapTrie.containsNode bitmap bit) &&
-      (containsKey comparator (depth + 1) hash key nodes.(index));
-  | Collision entryHash entryMap =>
-      (hash === entryHash) && (AVLTreeMap.containsKey comparator key entryMap);
-  | Entry entryHash entryKey _ =>
-      (hash === entryHash) && (Comparator.toEquality comparator entryKey key);
-  | Empty => false;
-};
-
-let rec get
-    (comparator: Comparator.t 'k)
-    (depth: int)
-    (hash: int)
-    (key: 'k)
-    (map: t 'k 'v): (option 'v) => switch map {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos hash depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      if (BitmapTrie.containsNode bitmap bit) (get comparator (depth + 1) hash key nodes.(index))
-      else None
-  | Collision entryHash entryMap =>
-      if (hash === entryHash) (AVLTreeMap.get comparator key entryMap)
-      else None
-  | Entry entryHash entryKey entryValue =>
-      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
-        Some entryValue
-      } else None
-  | Empty => None;
-};
-
-let rec getOrDefault
-    (comparator: Comparator.t 'k)
-    (depth: int)
-    (default: 'v)
-    (hash: int)
-    (key: 'k)
-    (map: t 'k 'v): 'v => switch map {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos hash depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      if (BitmapTrie.containsNode bitmap bit) (getOrDefault comparator (depth + 1) default hash key nodes.(index))
-      else default
-  | Collision entryHash entryMap =>
-      if (hash === entryHash) (AVLTreeMap.getOrDefault comparator ::default key entryMap)
-      else default
-  | Entry entryHash entryKey entryValue =>
-      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
-        entryValue
-      } else default
-  | Empty => default;
-};
-
-let rec getOrRaise
-    (comparator: Comparator.t 'k)
-    (depth: int)
-    (hash: int)
-    (key: 'k)
-    (map: t 'k 'v): 'v => switch map {
-  | Level bitmap nodes _ =>
-      let bit = BitmapTrie.bitPos hash depth;
-      let index = BitmapTrie.index bitmap bit;
-
-      if (BitmapTrie.containsNode bitmap bit) (getOrRaise comparator (depth + 1) hash key nodes.(index))
-      else (failwith "NotFound")
-  | Collision entryHash entryMap =>
-      if (hash === entryHash) (AVLTreeMap.getOrRaise comparator key entryMap)
-      else (failwith "NotFound")
-  | Entry entryHash entryKey entryValue =>
-      if ((hash === entryHash) && (Comparator.toEquality comparator entryKey key)) {
-        entryValue
-      } else (failwith "NotFound")
-  | Empty => failwith "NotFound";
-};
-
-let rec reduce (f: 'acc => 'k => 'v => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc node => node |> reduce f acc;
-      nodes |> CopyOnWriteArray.reduce reducer acc
-  | Collision _ entryMap =>
-      entryMap |> AVLTreeMap.reduce f acc
-  | Entry _ entryKey entryValue =>
-      f acc entryKey entryValue
-  | Empty => acc
-};
-
-let rec reduceWhileWithResult
-    (shouldContinue: ref bool)
-    (predicate: 'acc => 'k => 'v => bool)
-    (f: 'acc => 'k => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'k 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc node => node
-        |> reduceWhileWithResult shouldContinue predicate f acc;
-
-      let predicate _ _ => !shouldContinue;
-
-      nodes |> CopyOnWriteArray.reduce while_::predicate reducer acc
-  | Collision _ entryMap =>
-      entryMap |> AVLTreeMap.reduceWhileWithResult shouldContinue predicate f acc
-  | Entry _ entryKey entryValue =>
-      if (!shouldContinue && (predicate acc entryKey entryValue)) (f acc entryKey entryValue)
-      else acc
-  | Empty => acc
-};
-
-let reduceWhile
-    (predicate: 'acc => 'k => 'v => bool)
-    (f: 'acc => 'k => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'k 'v): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc k v => {
-    let result = predicate acc k v;
-    shouldContinue := result;
-    result;
-  };
-
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
-
-let rec reduceKeys (f: 'acc => 'k => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc node => node |> reduceKeys f acc;
-      nodes |> CopyOnWriteArray.reduce reducer acc
-  | Collision _ entryMap =>
-      entryMap |> AVLTreeMap.reduceKeys f acc
-  | Entry _ entryKey _  =>
-      f acc entryKey
-  | Empty => acc
-};
-
-let reduceKeysWhile
-    (predicate: 'acc => 'k => bool)
-    (f: 'acc => 'k => 'acc)
-    (acc: 'acc)
-    (map: t 'k 'v): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc k  _ => {
-    let result = predicate acc k;
-    shouldContinue := result;
-    result;
-  };
-  let f acc k _ => f acc k;
-
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
-
-let rec reduceValues (f: 'acc => 'v => 'acc) (acc: 'acc) (map: t 'k 'v): 'acc => switch map {
-  | Level _ nodes _ =>
-      let reducer acc node => node |> reduceValues f acc;
-      nodes |> CopyOnWriteArray.reduce reducer acc
-  | Collision _ entryMap =>
-      entryMap |> AVLTreeMap.reduceValues f acc
-  | Entry _ _ v  =>
-      f acc v
-  | Empty => acc
-};
-
-let reduceValuesWhile
-    (predicate: 'acc => 'v => bool)
-    (f: 'acc => 'v => 'acc)
-    (acc: 'acc)
-    (map: t 'k 'v): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc _ v => {
-    let result = predicate acc v;
-    shouldContinue := result;
-    result;
-  };
-  let f acc _ v => f acc v;
-
-  reduceWhileWithResult shouldContinue predicate f acc map;
-};
-
-let rec toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
-  | Level _ nodes _ => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap (toSequence selector)
-  | Collision _ entryMap => AVLTreeMap.toSequence selector entryMap
-  | Entry _ entryKey entryValue => Sequence.return (selector entryKey entryValue);
-  | Empty => Sequence.empty ();
-};
