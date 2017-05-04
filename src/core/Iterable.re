@@ -46,6 +46,11 @@ module type S1 = {
   let toIterable: t 'a => (iterable 'a);
 };
 
+let everyPredicate acc _ => acc;
+let findPredicate acc _ => Option.isEmpty acc;
+let nonePredicate = everyPredicate;
+let somePredicate acc _ => not acc;
+
 let module Make = fun (Base: {
   type a;
   type t;
@@ -56,10 +61,10 @@ let module Make = fun (Base: {
   include Base;
 
   let every (f: a => bool) (iterable: t): bool =>
-    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f) true;
+    iterable |> Base.reduce while_::everyPredicate (fun _ => f) true;
 
   let find (f: a => bool) (iterable: t): (option a) =>
-    iterable |> Base.reduce while_::(fun acc _ => Option.isEmpty acc) (
+    iterable |> Base.reduce while_::findPredicate (
       fun _ next => if (f next) (Some next) else None
     ) None;
 
@@ -73,7 +78,7 @@ let module Make = fun (Base: {
     else iterable |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
   let none (f: a => bool) (iterable: t): bool =>
-    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
+    iterable |> Base.reduce while_::nonePredicate (fun _ => f >> not) true;
 
   let reduce
       while_::(predicate: 'acc => a => bool)=Functions.alwaysTrue2
@@ -83,7 +88,7 @@ let module Make = fun (Base: {
     reduce while_::predicate f acc iterable;
 
   let some (f: a => bool) (iterable: t): bool =>
-    iterable |> reduce while_::(fun acc _ => not acc) (fun _ => f) false;
+    iterable |> reduce while_::somePredicate (fun _ => f) false;
 
   let iterableBase: s t a = { reduce: Base.reduce };
 
@@ -101,10 +106,10 @@ let module Make1 = fun (Base: {
   include Base;
 
   let every (f: 'a => bool) (iterable: t 'a): bool =>
-    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f) true;
+    iterable |> Base.reduce while_::everyPredicate (fun _ => f) true;
 
   let find (f: 'a => bool) (iterable: t 'a): (option 'a) =>
-    iterable |> Base.reduce while_::(fun acc _ => Option.isEmpty acc) (
+    iterable |> Base.reduce while_::findPredicate (
       fun _ next => if (f next) (Some next) else None
     ) None;
 
@@ -118,7 +123,7 @@ let module Make1 = fun (Base: {
     else iterable |> reduce while_::(fun _ => predicate) (fun _ => f) ();
 
   let none (f: 'a => bool) (iterable: t 'a): bool =>
-    iterable |> Base.reduce while_::(fun acc _ => acc) (fun _ => f >> not) true;
+    iterable |> Base.reduce while_::nonePredicate (fun _ => f >> not) true;
 
   let reduce
       while_::(predicate: 'acc => 'a => bool)=Functions.alwaysTrue2
@@ -128,7 +133,7 @@ let module Make1 = fun (Base: {
     reduce while_::predicate f acc iterable;
 
   let some (f: 'a => bool) (iterable: t 'a): bool =>
-    iterable |> Base.reduce while_::(fun acc _ => not acc) (fun _ => f) false;
+    iterable |> Base.reduce while_::somePredicate (fun _ => f) false;
 
   let iterableBase: s (t 'a) 'a = { reduce: Base.reduce };
 
