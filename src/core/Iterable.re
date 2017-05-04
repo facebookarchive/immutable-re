@@ -67,7 +67,7 @@ let module Make = fun (Base: {
     find f iterable |> Option.firstOrRaise;
 
   let forEach while_::(predicate: a => bool)=Functions.alwaysTrue (f: a => unit) (iterable: t) =>
-    if (predicate === Functions.alwaysTrue ) {
+    if (predicate === Functions.alwaysTrue) {
       iterable |> Base.reduce while_::Functions.alwaysTrue2 (fun _ => f) ();
     }
     else iterable |> reduce while_::(fun _ => predicate) (fun _ => f) ();

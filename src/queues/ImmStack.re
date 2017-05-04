@@ -12,6 +12,23 @@ type t 'a = {
   list: list 'a,
 };
 
+include (SequentialCollection.Make1 {
+  type nonrec t 'a = t 'a;
+
+  let count ({ count }: t 'a): int => count;
+
+  let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
+
+  let reduce
+      while_::(predicate: 'acc => 'a => bool)
+      (f: 'acc => 'a => 'acc )
+      (acc: 'acc)
+      ({ list }: t 'a): 'acc =>
+    list |> ImmList.reduce while_::predicate f acc;
+
+  let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
+}: SequentialCollection.S1 with type t 'a := t 'a);
+
 let addFirst (value: 'a) ({ count, list }: t 'a): (t 'a) => ({
   count: count + 1,
   list: [value, ...list],
@@ -40,24 +57,6 @@ let fromList (list: list 'a): (t 'a) =>
 
 let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
-
-
-include (SequentialCollection.Make1 {
-  type nonrec t 'a = t 'a;
-
-  let count ({ count }: t 'a): int => count;
-
-  let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc )
-      (acc: 'acc)
-      ({ list }: t 'a): 'acc =>
-    list |> ImmList.reduce while_::predicate f acc;
-
-  let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
-}: SequentialCollection.S1 with type t 'a := t 'a);
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 

@@ -11,44 +11,6 @@ type t 'a =
   | Ascending (Vector.t 'a)
   | Descending (Vector.t 'a);
 
-let empty (): (t 'a) => Ascending (Vector.empty ());
-
-let addFirst (value: 'a) (deque: t 'a): (t 'a) => switch deque {
-  | Ascending vector =>
-      Ascending (vector |> Vector.addFirst value)
-  | Descending vector =>
-      Descending (vector |> Vector.addLast value);
-};
-
-let addLast (value: 'a) (deque: t 'a): (t 'a) => switch deque {
-  | Ascending vector =>
-      Ascending (vector |> Vector.addLast value)
-  | Descending vector =>
-      Descending (vector |> Vector.addFirst value);
-};
-
-let removeFirstOrRaise (deque: t 'a): (t 'a) => switch deque {
-  | Ascending vector =>
-      Ascending (Vector.removeFirstOrRaise vector)
-  | Descending vector =>
-      Descending (Vector.removeLastOrRaise vector)
-};
-
-let removeLastOrRaise (deque: t 'a): (t 'a) => switch deque {
-  | Ascending vector =>
-      Ascending (Vector.removeLastOrRaise vector)
-  | Descending vector =>
-      Descending (Vector.removeFirstOrRaise vector)
-};
-
-let return (value: 'a): (t 'a) =>
-  Ascending (Vector.return value);
-
-let reverse (deque: t 'a): (t 'a) => switch deque {
-  | Ascending vector => Descending vector
-  | Descending vector => Ascending vector
-};
-
 include (NavigableCollection.Make1 {
   type nonrec t 'a = t 'a;
 
@@ -95,6 +57,45 @@ include (NavigableCollection.Make1 {
     | Descending vector => vector |> Vector.toSequence;
   };
 }: NavigableCollection.S1 with type t 'a := t 'a);
+
+
+let addFirst (value: 'a) (deque: t 'a): (t 'a) => switch deque {
+  | Ascending vector =>
+      Ascending (vector |> Vector.addFirst value)
+  | Descending vector =>
+      Descending (vector |> Vector.addLast value);
+};
+
+let addLast (value: 'a) (deque: t 'a): (t 'a) => switch deque {
+  | Ascending vector =>
+      Ascending (vector |> Vector.addLast value)
+  | Descending vector =>
+      Descending (vector |> Vector.addFirst value);
+};
+
+let empty (): (t 'a) => Ascending (Vector.empty ());
+
+let removeFirstOrRaise (deque: t 'a): (t 'a) => switch deque {
+  | Ascending vector =>
+      Ascending (Vector.removeFirstOrRaise vector)
+  | Descending vector =>
+      Descending (Vector.removeLastOrRaise vector)
+};
+
+let removeLastOrRaise (deque: t 'a): (t 'a) => switch deque {
+  | Ascending vector =>
+      Ascending (Vector.removeLastOrRaise vector)
+  | Descending vector =>
+      Descending (Vector.removeFirstOrRaise vector)
+};
+
+let return (value: 'a): (t 'a) =>
+  Ascending (Vector.return value);
+
+let reverse (deque: t 'a): (t 'a) => switch deque {
+  | Ascending vector => Descending vector
+  | Descending vector => Ascending vector
+};
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
