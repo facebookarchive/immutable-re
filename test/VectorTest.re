@@ -475,7 +475,7 @@ let test = [
   Tester2000.tests,
   [testVector 2000],
   Tester50000.tests,
-  [testVector 50000],
+  /*[testVector 50000],*/
 ] |> List.toIterable
   |> Iterable.flatMap List.toIterable
   |> List.fromReverse
