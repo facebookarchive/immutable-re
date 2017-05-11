@@ -1,6 +1,6 @@
 {
   "name": "immutable-re",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Persistent immutable collections for Reason",
   "main": "lib/js/src/immutable.js",
   "url" : "https://facebookincubator.github.io/immutable-re/",
