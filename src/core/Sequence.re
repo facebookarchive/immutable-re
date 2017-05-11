@@ -235,21 +235,21 @@ let rec zip (seqs: list (t 'a)): (t (list 'a)) => fun () => {
 };
 
 let rec zip2With
-    (f: 'a => 'b => 'c)
+    zipper::(zipper: 'a => 'b => 'c)
     (a: t 'a)
     (b: t 'b): (t 'c) => fun () => switch (a (), b ()) {
   | (Next aValue aNext, Next bValue bNext) =>
-      Next (f aValue bValue) (zip2With f aNext bNext)
+      Next (zipper aValue bValue) (zip2With ::zipper aNext bNext)
   | _ => Completed
 };
 
 let rec zip3With
-    (f: 'a => 'b => 'c => 'd)
+    zipper::(zipper: 'a => 'b => 'c => 'd)
     (a: t 'a)
     (b: t 'b)
     (c: t 'c): (t 'd) => fun () => switch (a (), b (), c ()) {
   | (Next aValue aNext, Next bValue bNext, Next cValue cNext) =>
-      Next (f aValue bValue cValue) (zip3With f aNext bNext cNext)
+      Next (zipper aValue bValue cValue) (zip3With ::zipper aNext bNext cNext)
   | _ => Completed
 };
 
@@ -268,37 +268,37 @@ let zipLongest (seqs: list (t 'a)): (t (list (option 'a))) => seqs
   |> takeWhile (ImmList.some Option.isNotEmpty);
 
 let rec zipLongest2With
-    (f: option 'a => option 'b => 'c)
+    zipper::(zipper: option 'a => option 'b => 'c)
     (a: t 'a) (b: t 'b): (t 'c) => fun () => switch (a (), b ()) {
   | (Next aValue aNext, Next bValue bNext) =>
-      Next (f (Some aValue) (Some bValue)) (zipLongest2With f aNext bNext)
+      Next (zipper (Some aValue) (Some bValue)) (zipLongest2With ::zipper aNext bNext)
   | (Next aValue aNext, Completed) =>
-      Next (f (Some aValue) None) (zipLongest2With f aNext (empty ()))
+      Next (zipper (Some aValue) None) (zipLongest2With ::zipper aNext (empty ()))
   | (Completed, Next bValue bNext) =>
-      Next (f None (Some bValue)) (zipLongest2With f (empty ()) bNext)
+      Next (zipper None (Some bValue)) (zipLongest2With ::zipper (empty ()) bNext)
   | _ => Completed
 };
 
 let rec zipLongest3With
-    (f: option 'a => option 'b => option 'c => 'd)
+    zipper::(zipper: option 'a => option 'b => option 'c => 'd)
     (a: t 'a)
     (b: t 'b)
     (c: t 'c): (t 'd) => fun () => switch (a (), b (), c ()) {
   | (Next aValue aNext, Next bValue bNext, Next cValue cNext) =>
-      Next (f (Some aValue) (Some bValue) (Some cValue)) (zipLongest3With f aNext bNext cNext)
+      Next (zipper (Some aValue) (Some bValue) (Some cValue)) (zipLongest3With ::zipper aNext bNext cNext)
 
   | (Next aValue aNext, Next bValue bNext, Completed) =>
-      Next (f (Some aValue) (Some bValue) None) (zipLongest3With f aNext bNext (empty ()))
+      Next (zipper (Some aValue) (Some bValue) None) (zipLongest3With ::zipper aNext bNext (empty ()))
   | (Next aValue aNext, Completed, Next cValue cNext) =>
-      Next (f (Some aValue) None (Some cValue)) (zipLongest3With f aNext (empty ()) cNext)
+      Next (zipper (Some aValue) None (Some cValue)) (zipLongest3With ::zipper aNext (empty ()) cNext)
   | (Completed, Next bValue bNext, Next cValue cNext) =>
-      Next (f None (Some bValue) (Some cValue)) (zipLongest3With f (empty ()) bNext cNext)
+      Next (zipper None (Some bValue) (Some cValue)) (zipLongest3With ::zipper (empty ()) bNext cNext)
 
   | (Completed, Next bValue bNext, Completed) =>
-      Next (f None (Some bValue) None) (zipLongest3With f (empty ()) bNext (empty ()))
+      Next (zipper None (Some bValue) None) (zipLongest3With ::zipper (empty ()) bNext (empty ()))
   | (Next aValue aNext, Completed, Completed) =>
-      Next (f (Some aValue) None None) (zipLongest3With f aNext (empty ()) (empty ()))
+      Next (zipper (Some aValue) None None) (zipLongest3With ::zipper aNext (empty ()) (empty ()))
   | (Completed, Completed, Next cValue cNext) =>
-      Next (f None None (Some cValue)) (zipLongest3With f (empty ()) (empty ()) cNext)
+      Next (zipper None None (Some cValue)) (zipLongest3With ::zipper (empty ()) (empty ()) cNext)
   | _ => Completed
 };

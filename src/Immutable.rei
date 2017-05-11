@@ -395,13 +395,13 @@ let module rec Sequence: {
    *  in [seqs] completes.
    */
 
-  let zip2With: ('a => 'b => 'c) => (Sequence.t 'a) => (Sequence.t 'b) => (Sequence.t 'c);
-  /** [zip2With zipper first second] returns a Sequence which lazily zips two Sequences,
+  let zip2With: zipper::('a => 'b => 'c) => (Sequence.t 'a) => (Sequence.t 'b) => (Sequence.t 'c);
+  /** [zip2 zipper first second] returns a Sequence which lazily zips two Sequences,
    *  combining their values using [zipper]. Values are produce until either [first]
    *  or [second] completes.
    */
 
-  let zip3With: ('a => 'b => 'c => 'd) => (Sequence.t 'a) => (Sequence.t 'b) => (Sequence.t 'c) => (Sequence.t 'd);
+  let zip3With: zipper::('a => 'b => 'c => 'd) => (Sequence.t 'a) => (Sequence.t 'b) => (Sequence.t 'c) => (Sequence.t 'd);
   /** [zip3With zipper first second third] returns a Sequence which lazily zips three Sequences,
    *  combining their values using [zipper]. Values are produce until either [first], [second]
    *  or [third] complete.
@@ -414,7 +414,7 @@ let module rec Sequence: {
    */
 
   let zipLongest2With:
-    (option 'a => option 'b => 'c) =>
+    zipper::(option 'a => option 'b => 'c) =>
     (Sequence.t 'a) =>
     (Sequence.t 'b) =>
     (Sequence.t 'c);
@@ -424,7 +424,7 @@ let module rec Sequence: {
    */
 
   let zipLongest3With:
-    (option 'a => option 'b => option 'c => 'd) =>
+    zipper::(option 'a => option 'b => option 'c => 'd) =>
     (Sequence.t 'a) =>
     (Sequence.t 'b) =>
     (Sequence.t 'c) =>
@@ -1212,12 +1212,12 @@ let module rec KeyedIterable: {
      *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
      */
 
-    let find: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => (option 'c);
+    let find: selector::(k => 'v => 'c) => (k => 'v => bool) => (t 'v) => (option 'c);
     /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise None.
      */
 
-    let findOrRaise: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => 'c;
+    let findOrRaise: selector::(k => 'v => 'c) => (k => 'v => bool) => (t 'v) => 'c;
     /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise raises an exception.
      */
@@ -1274,12 +1274,12 @@ let module rec KeyedIterable: {
      *  key/value pairs in [keyedIterable]. If [keyedIterable] is empty, returns [true].
      */
 
-    let find: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => (option 'c);
+    let find: selector::('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => (option 'c);
     /** [find f keyedIterable] return the Some of the first key/value pair in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise None.
      */
 
-    let findOrRaise: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => 'c;
+    let findOrRaise: selector::('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => 'c;
     /** [findOrRaise f keyedIterable] return the the first key/value pair in [keyedIterable]
      *  for which the the predicate f returns [true]. Otherwise raises an exception.
      */

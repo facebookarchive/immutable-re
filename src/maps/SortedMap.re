@@ -54,8 +54,8 @@ module type S1 = {
   let remove: k => t 'v => t 'v;
   let removeAll: t 'v => t 'v;
   let every: (k => 'v => bool) => t 'v => bool;
-  let find: (k => 'v => 'c) => (k => 'v => bool) => t 'v => option 'c;
-  let findOrRaise: (k => 'v => 'c) => (k => 'v => bool) => t 'v => 'c;
+  let find: selector::(k => 'v => 'c) => (k => 'v => bool) => t 'v => option 'c;
+  let findOrRaise: selector::(k => 'v => 'c) => (k => 'v => bool) => t 'v => 'c;
   let forEach:
     while_::(k => 'v => bool)? => (k => 'v => unit) => t 'v => unit;
   let keys: t 'v => Iterable.t k;

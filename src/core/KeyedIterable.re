@@ -21,8 +21,8 @@ module type S1 = {
   type t 'v;
 
   let every: (k => 'v => bool) => (t 'v) => bool;
-  let find: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => (option 'c);
-  let findOrRaise: (k => 'v => 'c) => (k => 'v => bool) => (t 'v) => 'c;
+  let find: selector::(k => 'v => 'c) => (k => 'v => bool) => (t 'v) => (option 'c);
+  let findOrRaise: selector::(k => 'v => 'c) => (k => 'v => bool) => (t 'v) => 'c;
   let forEach: while_::(k => 'v => bool)? => (k => 'v => unit) => (t 'v) => unit;
   let keys: (t 'v) => (Iterable.t k);
   let none: (k => 'v => bool) => (t 'v) => bool;
@@ -39,8 +39,8 @@ module type S2 = {
   type t 'k 'v;
 
   let every: ('k => 'v => bool) => (t 'k 'v) => bool;
-  let find: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => (option 'c);
-  let findOrRaise: ('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => 'c;
+  let find: selector::('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => (option 'c);
+  let findOrRaise: selector::('k => 'v => 'c) => ('k => 'v => bool) => (t 'k 'v) => 'c;
   let forEach: while_::('k => 'v => bool)? => ('k => 'v => unit) => (t 'k 'v) => unit;
   let keys: (t 'k 'v) => (Iterable.t 'k);
   let none: ('k => 'v => bool) => (t 'k 'v) => bool;
@@ -72,14 +72,14 @@ let module Make1 = fun (Base: {
   let every (f: k => 'v => bool) (iter: t 'v): bool =>
     iter |> reduce while_::everyPredicate (fun _ => f) true;
 
-  let find (selector: k => 'v => 'c) (f: k => 'v => bool) (iter: t 'v): (option 'c) =>
+  let find selector::(selector: k => 'v => 'c) (f: k => 'v => bool) (iter: t 'v): (option 'c) =>
     iter |> reduce
       while_::findPredicate
       (fun _ k v => if (f k v) (Some (selector k v)) else None)
       None;
 
-  let findOrRaise (selector: k => 'v => 'c) (f: k => 'v => bool) (iter: t 'v): 'c =>
-    find selector f iter |> Option.firstOrRaise;
+  let findOrRaise selector::(selector: k => 'v => 'c) (f: k => 'v => bool) (iter: t 'v): 'c =>
+    find ::selector f iter |> Option.firstOrRaise;
 
   let forEach
       while_::(predicate: k => 'v => bool)=Functions.alwaysTrue2
@@ -174,14 +174,14 @@ let module Make2 = fun (Base: {
   let every (f: 'k => 'v => bool) (iter: t 'k 'v): bool =>
     iter |> reduce while_::everyPredicate (fun _ => f) true;
 
-  let find (selector: 'k => 'v => 'c) (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'c) =>
+  let find selector::(selector: 'k => 'v => 'c) (f: 'k => 'v => bool) (iter: t 'k 'v): (option 'c) =>
     iter |> reduce
       while_::findPredicate
       (fun _ k v => if (f k v) (Some (selector k v)) else None)
       None;
 
-  let findOrRaise (selector: 'k => 'v => 'c) (f: 'k => 'v => bool) (iter: t 'k 'v): 'c =>
-    find selector f iter |> Option.firstOrRaise;
+  let findOrRaise selector::(selector: 'k => 'v => 'c) (f: 'k => 'v => bool) (iter: t 'k 'v): 'c =>
+    find ::selector f iter |> Option.firstOrRaise;
 
   let forEach
       while_::(predicate: 'k => 'v => bool)=Functions.alwaysTrue2

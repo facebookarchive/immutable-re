@@ -160,13 +160,13 @@ let module Make1 = fun (Base: {
 
     let toSequence (selector: int => 'v => 'c) (indexed: t 'v): (Sequence.t 'c) =>
       Sequence.zip2With
-        selector
+        zipper::selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequence)
         (Base.toSequence indexed);
 
     let toSequenceReversed (selector: int => 'v => 'c) (indexed: t 'v): (Sequence.t 'c) =>
       Sequence.zip2With
-        selector
+        zipper::selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequenceReversed)
         (Base.toSequenceReversed indexed);
   };
