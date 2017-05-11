@@ -1,0 +1,5 @@
+version = "0.0.10"
+description = "Persistent immutable collections for Reason"
+
+archive(byte) = "Immutable.cma"
+archive(native) = "Immutable.cmxa"
