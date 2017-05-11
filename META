@@ -1,4 +1,4 @@
-version = "0.0.13"
+version = "0.0.14"
 description = "Persistent immutable collections for Reason"
 
 archive(byte) = "Immutable.cma"
