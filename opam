@@ -1,16 +1,16 @@
 opam-version: "1.2"
 name: "immutable"
-version: "0.0.12"
+version: "0.0.13"
 license: "BSD-3-Clause"
 dev-repo: "https://facebookincubator.github.io/immutable-re/"
-bug-reports: "https://github.com/facebookincubator/immutable-re/issues"
-maintainer: "Dave Bordoley <bordoley@gmail.com>"
+bugs-reports: "https://github.com/facebookincubator/immutable-re/issues"
+maintainer: Dave Bordoley <bordoley@gmail.com>
 authors: [
   "Dave Bordoley <bordoley@gmail.com>"
 ]
 tags: [ "reason" "reasonml" "ocaml" "immutable" ]
 depends: [
-  "reason" { build >=  "1.13.3" }
+  "reason" { build & >=  "1.13.3" }
 ]
 build: [
   [ make "build" ]
