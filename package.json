@@ -36,7 +36,7 @@
   },
   "opam": {
     "dependencies": {
-      "reason": "build >=  \"1.13.3\""
+      "reason": "build & >=  \"1.13.3\""
     },
     "installPath": "_build/src",
     "libraryName": "immutable",
