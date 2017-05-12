@@ -3,7 +3,7 @@
   "version": "0.0.14",
   "description": "Persistent immutable collections for Reason",
   "main": "lib/js/src/immutable.js",
-  "url" : "https://facebookincubator.github.io/immutable-re/",
+  "homepage" : "https://facebookincubator.github.io/immutable-re/",
   "bugs": "https://github.com/facebookincubator/immutable-re/issues",
   "keywords": [
     "reason",
