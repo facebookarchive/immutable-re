@@ -1,0 +1,12 @@
+# immutable
+
+lib: [
+  "./META" {"META"}
+  "./opam" {"opam"}
+  "_build/src/Immutable.a" {"Immutable.a"}
+  "_build/src/Immutable.cma" {"Immutable.cma"}
+  "_build/src/Immutable.cmi" {"Immutable.cmi"}
+  "_build/src/Immutable.cmo" {"Immutable.cmo"}
+  "_build/src/Immutable.cmx" {"Immutable.cmx"}
+  "_build/src/Immutable.cmxa" {"Immutable.cmxa"}
+  "_build/src/Immutable.o" {"Immutable.o"} ]
