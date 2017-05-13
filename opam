@@ -15,5 +15,6 @@ depends: [
 ]
 build: [
   [ make "build" ]
+  [ make "install" ]
 ]
 available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
