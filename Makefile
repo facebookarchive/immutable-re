@@ -16,8 +16,5 @@ perf-native:
 	rebuild -Is $(SRC_DIRS) -Is reUnit/src,perf -ocamlopt 'ocamlopt -p -inline 100 -unsafe -noassert -nodynlink' ./perf/PerfTest.native
 	./PerfTest.native
 
-install:
-	node node_modules/opam_of_packagejson/opam_of_packagejson.js -gen-install -gen-meta package.json
-
 clean:
 	rebuild -clean
