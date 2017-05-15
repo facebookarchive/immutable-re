@@ -19,6 +19,9 @@ _build/**
 *.tgz
 node_modules
 
+# Ignore release directories
+immutable.[0-9]*
+
 # Ignore bsb generated merlin files
 /reUnit/.merlin
 
