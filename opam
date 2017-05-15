@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "immutable"
-version: "0.0.14"
+version: "0.0.15"
 license: "BSD-3-Clause"
 homepage: "https://facebookincubator.github.io/immutable-re/"
 bug-reports: "https://github.com/facebookincubator/immutable-re/issues"
