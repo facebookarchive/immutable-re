@@ -69,28 +69,3 @@ let module MakeGeneric = fun (Base: {
     };
   };
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
-
-let module Make1 = fun (Base: {
-  type k;
-  type t 'v;
-
-  let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-}) => ((MakeGeneric {
-  type t 'k 'v  = Base.t 'v;
-  type k 'k = Base.k;
-  type v 'v = 'v;
-
-  let reduce = Base.reduce;
-}): S1 with type t 'v := Base.t 'v and type k := Base.k);
-
-let module Make2 = fun (Base: {
-  type t 'k 'v;
-
-  let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-}) => ((MakeGeneric {
-  type t 'k 'v  = Base.t 'k 'v;
-  type k 'k = 'k;
-  type v 'v = 'v;
-
-  let reduce = Base.reduce;
-}): S2 with type t 'k 'v := Base.t 'k 'v);

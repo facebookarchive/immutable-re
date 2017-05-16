@@ -12,8 +12,9 @@ type t 'a = {
   list: list 'a,
 };
 
-include (SequentialCollection.Make1 {
+include (SequentialCollection.MakeGeneric {
   type nonrec t 'a = t 'a;
+  type elt 'a = 'a;
 
   let count ({ count }: t 'a): int => count;
 

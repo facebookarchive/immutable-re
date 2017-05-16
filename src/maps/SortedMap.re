@@ -112,62 +112,68 @@ let module Make1 = fun (Comparable: Comparable.S) => {
     tree: AVLTreeMap.t k 'v,
   };
 
-  include (NavigableMap.Make1 {
-    type nonrec k = k;
-    type nonrec t 'v = t 'v;
+  type tinternal 'v = t 'v;
+  type kinternal = k;
 
-    let containsKey (key: k) ({ tree }: t 'v): bool =>
+  include (NavigableMap.MakeGeneric {
+    type nonrec t 'k 'v = t 'v;
+    type nonrec k 'k = k;
+    type v 'v = 'v;
+
+    let containsKey (key: 'k) ({ tree }: t 'k 'v): bool =>
       tree |> AVLTreeMap.containsKey comparator key;
 
-    let count ({ count }: t 'v): int => count;
+    let count ({ count }: t 'k 'v): int => count;
 
-    let firstOrRaise (selector: k => 'v => 'c) ({ tree }: t 'v): 'c =>
+    let firstOrRaise (selector: 'k => 'v => 'c) ({ tree }: t 'k 'v): 'c =>
       tree |> AVLTreeMap.firstOrRaise selector;
 
-    let get (key: k) ({ tree }: t 'v): (option 'v) =>
+    let get (key: 'k) ({ tree }: t 'k 'v): (option 'v) =>
       tree |> AVLTreeMap.get comparator key;
 
-    let getOrDefault default::(default: 'v) (key: k) ({ tree }: t 'v): 'v =>
+    let getOrDefault default::(default: 'v) (key: 'k) ({ tree }: t 'k 'v): 'v =>
       tree |> AVLTreeMap.getOrDefault comparator ::default key;
 
-    let getOrRaise (key: k) ({ tree }: t 'v): 'v =>
+    let getOrRaise (key: 'k) ({ tree }: t 'k 'v): 'v =>
       tree |> AVLTreeMap.getOrRaise comparator key;
 
-    let lastOrRaise (selector: k => 'v => 'c) ({ tree }: t 'v): 'c =>
+    let lastOrRaise (selector: 'k => 'v => 'c) ({ tree }: t 'k 'v): 'c =>
       tree |> AVLTreeMap.lastOrRaise selector;
 
-    include (KeyedReducer.Make1 {
-      type nonrec k = k;
-      type nonrec t 'v = t 'v;
+    include (KeyedReducer.MakeGeneric {
+      type nonrec t 'k 'v = t 'k 'v;
+      type nonrec k 'k = kinternal;
+      type nonrec v 'v = 'v;
 
       let reduce
-          while_::(predicate: 'acc => k => 'v => bool)
-          (f: 'acc => k => 'v => 'acc)
+          while_::(predicate: 'acc => k 'k => v 'v => bool)
+          (f: 'acc => k 'k => v 'v => 'acc)
           (acc: 'acc)
-          ({ tree }: t 'v): 'acc =>
+          ({ tree }: t 'k 'v): 'acc =>
         AVLTreeMap.reduce while_::predicate f acc tree;
-    }: KeyedReducer.S1 with type t 'v:= t 'v and type k:= k);
+    }: KeyedReducer.S1 with type t 'v := tinternal 'v and type k := kinternal);
 
-    let module KeyedReducerReversed = (KeyedReducer.Make1 {
-      type nonrec k = k;
-      type nonrec t 'v = t 'v;
+    let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
+      type nonrec t 'k 'v = t 'k 'v;
+      type nonrec k 'k = kinternal;
+      type nonrec v 'v = 'v;
 
       let reduce
-          while_::(predicate: 'acc => k => 'v => bool)
-          (f: 'acc => k => 'v => 'acc)
+          while_::(predicate: 'acc => 'k => 'v => bool)
+          (f: 'acc => 'k => 'v => 'acc)
           (acc: 'acc)
-          ({ tree }: t 'v): 'acc =>
+          ({ tree }: t 'k 'v): 'acc =>
         AVLTreeMap.reduceReversed while_::predicate f acc tree;
-    }: KeyedReducer.S1 with type t 'v:= t 'v and type k:= k);
+    }: KeyedReducer.S1 with type t 'v := tinternal 'v and type k := kinternal);
 
     let reduceReversed = KeyedReducerReversed.reduce;
     let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
     let reduceValuesReversed = KeyedReducerReversed.reduceValues;
 
-    let toSequence (selector: k => 'v => 'c) ({ tree }: t 'v): (Sequence.t 'c) =>
+    let toSequence (selector: 'k => 'v => 'c) ({ tree }: t 'k 'v): (Sequence.t 'c) =>
       tree |> AVLTreeMap.toSequence selector;
 
-    let toSequenceReversed (selector: k => 'v => 'c) ({ tree }: t 'v): (Sequence.t 'c) =>
+    let toSequenceReversed (selector: 'k => 'v => 'c) ({ tree }: t 'k 'v): (Sequence.t 'c) =>
       tree |> AVLTreeMap.toSequenceReversed selector;
   }: NavigableMap.S1 with type t 'v:= t 'v and type k:= k);
 

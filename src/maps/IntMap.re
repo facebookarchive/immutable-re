@@ -14,37 +14,41 @@ type t 'v = {
   root: (BitmapTrieIntMap.t 'v),
 };
 
-include (ImmMap.Make1 {
-  type nonrec k = k;
-  type nonrec t 'v = t 'v;
+include (ImmMap.MakeGeneric {
+  type tinternal 'v = t 'v;
+  type nonrec t 'k 'v = t 'v;
+  type nonrec k 'k = k;
+  type v 'v = 'v;
 
-  let containsKey (key: int) ({ root }: t 'v): bool =>
+  let containsKey (key: int) ({ root }: t 'k 'v): bool =>
     root |> BitmapTrieIntMap.containsKey 0 key;
 
-  let count ({ count }: t 'v): int => count;
+  let count ({ count }: t 'k 'v): int => count;
 
-  let get (key: int) ({ root }: t 'v): (option 'v) =>
+  let get (key: int) ({ root }: t 'k 'v): (option 'v) =>
     root |> BitmapTrieIntMap.get 0 key;
 
-  let getOrDefault default::(default: 'v) (key: int) ({ root }: t 'v): 'v =>
+  let getOrDefault default::(default: 'v) (key: int) ({ root }: t 'k 'v): 'v =>
     root |> BitmapTrieIntMap.getOrDefault 0 default key;
 
-  let getOrRaise (key: int) ({ root }: t 'v): 'v =>
+  let getOrRaise (key: int) ({ root }: t 'k 'v): 'v =>
     root |> BitmapTrieIntMap.getOrRaise 0 key;
 
-  include (KeyedReducer.Make1 {
-    type k = int;
-    type nonrec t 'v = t 'v;
+
+  include (KeyedReducer.MakeGeneric {
+    type nonrec t 'k 'v = t 'k 'v;
+    type k 'k  = int;
+    type v 'v = 'v;
 
     let reduce
         while_::(predicate: 'acc => int => 'v => bool)
         (f: 'acc => int => 'v => 'acc)
         (acc: 'acc)
-        ({ root }: t 'v): 'acc =>
+        ({ root }: t 'k 'v): 'acc =>
       BitmapTrieIntMap.reduce while_::predicate f acc root;
-  }: KeyedReducer.S1 with type t 'v:= t 'v and type k := int);
+  }: KeyedReducer.S1 with type t 'v:= tinternal 'v and type k := int);
 
-  let toSequence (selector: int => 'v => 'c) ({ root }: t 'v): (Sequence.t 'c) =>
+  let toSequence (selector: int => 'v => 'c) ({ root }: t 'k 'v): (Sequence.t 'c) =>
     root |> BitmapTrieIntMap.toSequence selector;
 }: ImmMap.S1 with type t 'v := t 'v and type k := k);
 

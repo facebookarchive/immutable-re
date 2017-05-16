@@ -11,8 +11,9 @@ type t 'a =
   | Ascending (Vector.t 'a)
   | Descending (Vector.t 'a);
 
-include (NavigableCollection.Make1 {
+include (NavigableCollection.MakeGeneric {
   type nonrec t 'a = t 'a;
+  type elt 'a = 'a;
 
   let count (deque: t 'a): int => switch deque {
     | Ascending vector

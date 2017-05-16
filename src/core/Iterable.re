@@ -111,35 +111,9 @@ let module MakeGeneric = fun (Base: {
     else Instance iterable iterableBase;
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-let module Make = fun (Base: {
-  type a;
-  type t;
-
-  let isEmpty: t => bool;
-  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t;
-  type elt 'a = Base.a;
-
-  let isEmpty = Base.isEmpty;
-  let reduce = Base.reduce;
-}): S with type t := Base.t and type a := Base.a);
-
-let module Make1 = fun (Base: {
-  type t 'a;
-
-  let isEmpty: (t 'a) => bool;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t 'a;
-  type elt 'a = 'a;
-
-  let isEmpty = Base.isEmpty;
-  let reduce = Base.reduce;
-}): S1 with type t 'a := Base.t 'a);
-
-include (Make1 {
+include (MakeGeneric {
   type nonrec t 'a = t 'a;
+  type elt 'a = 'a;
 
   let isEmpty (iterable: t 'a): bool =>
     iterable === Empty;

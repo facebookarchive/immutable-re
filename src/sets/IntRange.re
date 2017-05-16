@@ -14,20 +14,20 @@ type t = {
   start: int,
 };
 
-include (NavigableSet.Make {
-  type nonrec a = int;
-  type nonrec t = t;
+include (NavigableSet.MakeGeneric {
+  type nonrec elt 'a = int;
+  type nonrec t 'a = t;
 
-  let contains (value: int) ({ count, start }: t): bool =>
+  let contains (value: int) ({ count, start }: t 'a): bool =>
     value >= start && value < (start + count);
 
-  let count ({ count }: t): int => count;
+  let count ({ count }: t 'a): int => count;
 
-  let firstOrRaise ({ count, start }: t): int =>
+  let firstOrRaise ({ count, start }: t 'a): int =>
     if (count === 0) (failwith "empty")
     else start;
 
-  let lastOrRaise ({ count, start }: t): int =>
+  let lastOrRaise ({ count, start }: t 'a): int =>
     if (count === 0) (failwith "empty")
     else start + count - 1;
 
@@ -35,7 +35,7 @@ include (NavigableSet.Make {
       while_::(predicate: 'acc => int => bool)
       (f: 'acc => int => 'acc)
       (acc: 'acc)
-      ({ count, start }: t): 'acc => {
+      ({ count, start }: t 'a): 'acc => {
     let rec recurse predicate f start count acc =>
       if (count === 0) acc
       else if (predicate acc start |> not) acc
@@ -50,7 +50,7 @@ include (NavigableSet.Make {
       while_::(predicate: 'acc => int => bool)
       (f: 'acc => int => 'acc)
       (acc: 'acc)
-      ({ count, start }: t): 'acc => {
+      ({ count, start }: t 'a): 'acc => {
     let rec recurse predicate f start count acc =>
       if (count === 0) acc
       else if (predicate acc start |> not) acc
@@ -61,14 +61,14 @@ include (NavigableSet.Make {
     recurse predicate f (start + count - 1) count acc;
   };
 
-  let toSequence ({ count, start }: t): (Sequence.t int) => {
+  let toSequence ({ count, start }: t 'a): (Sequence.t int) => {
     let rec recurse start count => fun () =>
       if (count === 0) Sequence.Completed
       else Sequence.Next start (recurse (start + 1) (count - 1));
     recurse start count
   };
 
-  let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
+  let toSequenceReversed ({ count, start }: t 'a): (Sequence.t int) => {
     let rec recurse start count => fun () =>
       if (count === 0) Sequence.Completed
       else Sequence.Next start (recurse (start - 1) (count - 1));

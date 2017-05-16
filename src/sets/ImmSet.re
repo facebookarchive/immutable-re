@@ -87,43 +87,9 @@ let module MakeGeneric = fun (Base: {
 
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-let module Make = fun (Base: {
-  type a;
-  type t;
-
-  let contains: a => t => bool;
-  let count: t => int;
-  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toSequence: t => Sequence.t a;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t;
-  type elt 'a = Base.a;
-
-  let contains = Base.contains;
-  let count = Base.count;
-  let reduce = Base.reduce;
-  let toSequence = Base.toSequence;
-}): S with type t := Base.t and type a := Base.a);
-
-let module Make1 = fun (Base: {
-  type t 'a;
-
-  let contains: 'a => t 'a => bool;
-  let count: t 'a => int;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t 'a;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t 'a;
-  type elt 'a = 'a;
-
-  let contains = Base.contains;
-  let count = Base.count;
-  let reduce = Base.reduce;
-  let toSequence = Base.toSequence;
-}): S1 with type t 'a := Base.t 'a);
-
-include(Make1 {
+include (MakeGeneric {
   type nonrec t 'a = t 'a;
+  type elt 'a = 'a;
 
   let contains (value: 'a) (set: t 'a): bool => switch set {
     | Empty => false

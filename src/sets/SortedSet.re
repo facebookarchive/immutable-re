@@ -67,39 +67,39 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let comparator = Comparable.compare;
 
-  include (NavigableSet.Make {
-    type nonrec a = a;
-    type nonrec t = t;
+  include (NavigableSet.MakeGeneric {
+    type nonrec elt 'a = a;
+    type nonrec t 'a = t;
 
-    let contains (x: a) ({ tree }: t): bool =>
+    let contains (x: a) ({ tree }: t 'a): bool =>
       AVLTreeSet.contains comparator x tree;
 
-    let count ({ count }: t): int => count;
+    let count ({ count }: t 'a): int => count;
 
-    let firstOrRaise ({ tree }: t): a =>
+    let firstOrRaise ({ tree }: t 'a): a =>
       AVLTreeSet.firstOrRaise tree;
 
-    let lastOrRaise ({ tree }: t): a =>
+    let lastOrRaise ({ tree }: t 'a): a =>
       AVLTreeSet.lastOrRaise tree;
 
     let reduce
         while_::(predicate: 'acc => a => bool)
         (f: 'acc => a => 'acc)
         (acc: 'acc)
-        ({ tree }: t): 'acc =>
+        ({ tree }: t 'a): 'acc =>
       AVLTreeSet.reduce while_::predicate f acc tree;
 
     let reduceReversed
         while_::(predicate: 'acc => a => bool)
         (f: 'acc => a => 'acc)
         (acc: 'acc)
-        ({ tree }: t): 'acc =>
+        ({ tree }: t 'a): 'acc =>
       AVLTreeSet.reduceReversed while_::predicate f acc tree;
 
-    let toSequence ({ tree }: t): (Sequence.t a) =>
+    let toSequence ({ tree }: t 'a ): (Sequence.t a) =>
       tree |> AVLTreeSet.toSequence;
 
-    let toSequenceReversed ({ tree }: t): (Sequence.t a) =>
+    let toSequenceReversed ({ tree }: t 'a): (Sequence.t a) =>
       tree |> AVLTreeSet.toSequenceReversed;
   }: NavigableSet.S with type t:= t and type a:= a);
 

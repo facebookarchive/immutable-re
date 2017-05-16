@@ -88,43 +88,9 @@ let module MakeGeneric = fun (Base: {
     else Instance collection sequentialCollectionBase;
 }): SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-let module Make = fun (Base: {
-  type a;
-  type t;
-
-  let count: t => int;
-  let firstOrRaise: t => a;
-  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toSequence: t => Sequence.t a;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t;
-  type elt 'a = Base.a;
-
-  let count = Base.count;
-  let firstOrRaise = Base.firstOrRaise;
-  let reduce = Base.reduce;
-  let toSequence = Base.toSequence;
-}): S with type t := Base.t and type a := Base.a);
-
-let module Make1 = fun (Base: {
-  type t 'a;
-
-  let count: t 'a => int;
-  let firstOrRaise: t 'a => 'a;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t 'a;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t 'a;
-  type elt 'a = 'a;
-
-  let count = Base.count;
-  let firstOrRaise = Base.firstOrRaise;
-  let reduce = Base.reduce;
-  let toSequence = Base.toSequence;
-}): S1 with type t 'a := Base.t 'a);
-
-include(Make1 {
+include (MakeGeneric {
   type nonrec t 'a = t 'a;
+  type elt 'a = 'a;
 
   let count (collection: t 'a): int => switch collection {
     | Empty => 0

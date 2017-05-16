@@ -115,59 +115,9 @@ let module MakeGeneric = fun (Base: {
 
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-let module Make = fun (Base: {
-  type a;
-  type t;
-
-  let contains: a => t => bool;
-  let count: t => int;
-  let firstOrRaise: t => a;
-  let lastOrRaise: t => a;
-  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let reduceReversed: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toSequence: t => Sequence.t a;
-  let toSequenceReversed: t => Sequence.t a;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t;
-  type elt 'a = Base.a;
-
-  let contains = Base.contains;
-  let count = Base.count;
-  let firstOrRaise = Base.firstOrRaise;
-  let lastOrRaise = Base.lastOrRaise;
-  let reduce = Base.reduce;
-  let reduceReversed = Base.reduceReversed;
-  let toSequence = Base.toSequence;
-  let toSequenceReversed = Base.toSequenceReversed;
-}): S with type t := Base.t and type a := Base.a);
-
-let module Make1 = fun (Base: {
-  type t 'a;
-
-  let contains: 'a => t 'a => bool;
-  let count: t 'a => int;
-  let firstOrRaise: t 'a => 'a;
-  let lastOrRaise: t 'a => 'a;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let reduceReversed: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t 'a;
-  let toSequenceReversed: t 'a => Sequence.t 'a;
-}) => ((MakeGeneric {
-  type t 'a   = Base.t 'a;
-  type elt 'a = 'a;
-
-  let contains = Base.contains;
-  let count = Base.count;
-  let firstOrRaise = Base.firstOrRaise;
-  let lastOrRaise = Base.lastOrRaise;
-  let reduce = Base.reduce;
-  let reduceReversed = Base.reduceReversed;
-  let toSequence = Base.toSequence;
-  let toSequenceReversed = Base.toSequenceReversed;
-}): S1 with type t 'a := Base.t 'a);
-
-include(Make1 {
+include(MakeGeneric {
   type nonrec t 'a = t 'a;
+  type elt 'a = 'a;
 
   let contains (value: 'a) (set: t 'a): bool => switch set {
     | Empty => false

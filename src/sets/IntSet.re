@@ -14,23 +14,23 @@ type t = {
   root: BitmapTrieIntSet.t,
 };
 
-include (ImmSet.Make {
-  type nonrec a = int;
-  type nonrec t = t;
+include (ImmSet.MakeGeneric {
+  type nonrec elt 'a = int;
+  type nonrec t 'a = t;
 
-  let contains (value: int) ({ root }: t): bool =>
+  let contains (value: int) ({ root }: t 'a): bool =>
     root |> BitmapTrieIntSet.contains 0 value;
 
-  let count ({ count }: t): int => count;
+  let count ({ count }: t 'a): int => count;
 
   let reduce
       while_::(predicate: 'acc => int => bool)
       (f: 'acc => int => 'acc)
       (acc: 'acc)
-      ({ root }: t): 'acc =>
+      ({ root }: t 'a): 'acc =>
     BitmapTrieIntSet.reduce while_::predicate f acc root;
 
-  let toSequence ({ root }: t): (Sequence.t int) =>
+  let toSequence ({ root }: t 'a): (Sequence.t int) =>
     root |> BitmapTrieIntSet.toSequence;
 }: ImmSet.S with type t := t and type a := a);
 

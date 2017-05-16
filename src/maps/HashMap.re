@@ -14,8 +14,10 @@ type t 'k 'v = {
   hash: Hash.t 'k,
 };
 
-include (ImmMap.Make2 {
+include (ImmMap.MakeGeneric {
   type nonrec t 'k 'v = t 'k 'v;
+  type k 'k = 'k;
+  type v 'v = 'v;
 
   let containsKey (key: 'k) ({ root, comparator, hash }: t 'k 'v): bool => {
     let hashKey = hash key;
@@ -39,8 +41,10 @@ include (ImmMap.Make2 {
     root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
   };
 
-  include (KeyedReducer.Make2 {
+  include (KeyedReducer.MakeGeneric {
     type nonrec t 'k 'v = t 'k 'v;
+    type k 'k = 'k;
+    type v 'v = 'v;
 
     let reduce
         while_::(predicate: 'acc => 'k => 'v => bool)

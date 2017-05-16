@@ -171,89 +171,10 @@ let module MakeGeneric = fun (Base: {
     else Instance map sequentialMapReversedImpl sequentialMapImpl;
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
 
-let module Make1 = fun (Base: {
-  type k;
-  type t 'v;
-
-  let containsKey: k => t 'v => bool;
-  let count: t 'v => int;
-  let firstOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
-  let get: k => (t 'v) => (option 'v);
-  let getOrDefault: default::'v => k => (t 'v) => 'v;
-  let getOrRaise: k => (t 'v) => 'v;
-  let lastOrRaise: (k => 'v => 'c) => (t 'v) => 'c;
-  let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let reduceReversed: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => t 'v => 'acc;
-  let reduceKeysReversed: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => t 'v => 'acc;
-  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let reduceValuesReversed: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let toSequence: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
-  let toSequenceReversed: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
-}) => ((MakeGeneric {
-  type t 'k 'v  = Base.t 'v;
-  type k 'k = Base.k;
-  type v 'v = 'v;
-
-  let containsKey = Base.containsKey;
-  let count = Base.count;
-  let firstOrRaise = Base.firstOrRaise;
-  let get = Base.get;
-  let getOrDefault = Base.getOrDefault;
-  let getOrRaise = Base.getOrRaise;
-  let lastOrRaise = Base.lastOrRaise;
-  let reduce = Base.reduce;
-  let reduceReversed = Base.reduceReversed;
-  let reduceKeys = Base.reduceKeys;
-  let reduceKeysReversed = Base.reduceKeysReversed;
-  let reduceValues = Base.reduceValues;
-  let reduceValuesReversed = Base.reduceValuesReversed;
-  let toSequence = Base.toSequence;
-  let toSequenceReversed = Base.toSequenceReversed;
-}): S1 with type t 'v := Base.t 'v and type k := Base.k);
-
-let module Make2 = fun (Base: {
-  type t 'k 'v;
-
-  let containsKey: 'k => t 'k 'v => bool;
-  let count: t 'k 'v => int;
-  let firstOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
-  let get: 'k => (t 'k 'v) => (option 'v);
-  let getOrDefault: default::'v => 'k => (t 'k 'v) => 'v;
-  let getOrRaise: 'k => (t 'k 'v) => 'v;
-  let lastOrRaise: ('k => 'v => 'c) => (t 'k 'v) => 'c;
-  let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
-  let reduceReversed: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
-  let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => t 'k 'v => 'acc;
-  let reduceKeysReversed: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => t 'k 'v => 'acc;
-  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
-  let reduceValuesReversed: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
-  let toSequence: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-  let toSequenceReversed: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ((MakeGeneric {
-  type t 'k 'v  = Base.t 'k 'v;
+include (MakeGeneric {
+  type nonrec t 'k 'v = t 'k 'v;
   type k 'k = 'k;
   type v 'v = 'v;
-
-  let containsKey = Base.containsKey;
-  let count = Base.count;
-  let firstOrRaise = Base.firstOrRaise;
-  let get = Base.get;
-  let getOrDefault = Base.getOrDefault;
-  let getOrRaise = Base.getOrRaise;
-  let lastOrRaise = Base.lastOrRaise;
-  let reduce = Base.reduce;
-  let reduceReversed = Base.reduceReversed;
-  let reduceKeys = Base.reduceKeys;
-  let reduceKeysReversed = Base.reduceKeysReversed;
-  let reduceValues = Base.reduceValues;
-  let reduceValuesReversed = Base.reduceValuesReversed;
-  let toSequence = Base.toSequence;
-  let toSequenceReversed = Base.toSequenceReversed;
-}): S2 with type t 'k 'v := Base.t 'k 'v);
-
-include (Make2 {
-  type nonrec t 'k 'v = t 'k 'v;
 
   let containsKey (key: 'k) (map: t 'k 'v): bool => switch map {
     | Empty => false
@@ -290,8 +211,10 @@ include (Make2 {
     | Instance map _ { firstOrRaise } => firstOrRaise selector map
   };
 
-  include (KeyedReducer.Make2 {
+  include (KeyedReducer.MakeGeneric {
     type nonrec t 'k 'v = t 'k 'v;
+    type k 'k = 'k;
+    type v 'v = 'v;
 
     let reduce
         while_::(predicate:'acc => 'k => 'v => bool)
@@ -303,8 +226,10 @@ include (Make2 {
     };
   }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
-  let module KeyedReducerReversed = (KeyedReducer.Make2 {
+  let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
     type nonrec t 'k 'v = t 'k 'v;
+    type k 'k = 'k;
+    type v 'v = 'v;
 
     let reduce
         while_::(predicate:'acc => 'k => 'v => bool)

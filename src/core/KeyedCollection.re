@@ -145,53 +145,10 @@ let module MakeGeneric = fun (Base: {
     else Instance keyed keyedCollectionBase;
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
 
-let module Make1 = fun (Base: {
-  type k;
-  type t 'v;
-
-  let containsKey: k => t 'v => bool;
-  let count: t 'v => int;
-  let reduce: while_::('acc => k => 'v => bool) => ('acc => k => 'v => 'acc) => 'acc => t 'v => 'acc;
-  let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
-  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
-  let toSequence: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
-}) => ((MakeGeneric {
-  type t 'k 'v  = Base.t 'v;
-  type k 'k = Base.k;
-  type v 'v = 'v;
-
-  let containsKey = Base.containsKey;
-  let count = Base.count;
-  let reduce = Base.reduce;
-  let reduceKeys = Base.reduceKeys;
-  let reduceValues = Base.reduceValues;
-  let toSequence = Base.toSequence;
-}): S1 with type t 'v := Base.t 'v and type k := Base.k);
-
-let module Make2 = fun (Base: {
-  type t 'k 'v;
-
-  let containsKey: 'k => t 'k 'v => bool;
-  let count: t 'k 'v => int;
-  let reduce: while_::('acc => 'k => 'v => bool) => ('acc => 'k => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
-  let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => t 'k 'v => 'acc;
-  let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
-  let toSequence: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ((MakeGeneric {
-  type t 'k 'v  = Base.t 'k 'v;
+include (MakeGeneric {
+  type nonrec t 'k 'v = t 'k 'v;
   type k 'k = 'k;
   type v 'v = 'v;
-
-  let containsKey = Base.containsKey;
-  let count = Base.count;
-  let reduce = Base.reduce;
-  let reduceKeys = Base.reduceKeys;
-  let reduceValues = Base.reduceValues;
-  let toSequence = Base.toSequence;
-}): S2 with type t 'k 'v := Base.t 'k 'v);
-
-include (Make2 {
-  type nonrec t 'k 'v = t 'k 'v;
 
   let containsKey (key: 'k) (keyed: t 'k 'v): bool => switch keyed {
     | Empty => false
@@ -203,8 +160,10 @@ include (Make2 {
     | Instance keyed { count } => count keyed
   };
 
-  include (KeyedReducer.Make2 {
+  include (KeyedReducer.MakeGeneric {
     type nonrec t 'k 'v = t 'k 'v;
+    type k 'k = 'k;
+    type v 'v = 'v;
 
     let reduce
         while_::(predicate:'acc => 'k => 'v => bool)

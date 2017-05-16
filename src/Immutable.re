@@ -450,8 +450,10 @@ let module IntSet = IntSet;
 let module List = {
   include ImmList;
 
-  include (Iterable.Make1 {
+  include (Iterable.MakeGeneric {
     type t 'a = ImmList.t 'a;
+    type elt 'a  = 'a;
+    
     let isEmpty = ImmList.isEmpty;
     let reduce = ImmList.reduceImpl;
   }: Iterable.S1 with type t 'a := ImmList.t 'a);

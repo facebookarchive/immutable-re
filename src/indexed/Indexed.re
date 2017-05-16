@@ -41,6 +41,7 @@ module type S1 = {
   let toNavigableMapReversed: (t 'a) => (NavigableMap.t int 'a);
 };
 
+/* FIXME: Make this generic. */
 let module Make1 = fun (Base: {
   type t 'a;
 
@@ -63,8 +64,9 @@ let module Make1 = fun (Base: {
     if (index < 0 || index >= (count indexed)) default
     else getOrRaise index indexed;
 
-  include (NavigableCollection.Make1 {
+  include (NavigableCollection.MakeGeneric {
     include Base;
+    type elt 'a = 'a;
 
     let firstOrRaise (indexed: t 'a): 'a => getOrRaise 0 indexed;
 
@@ -75,16 +77,17 @@ let module Make1 = fun (Base: {
 
   }: NavigableCollection.S1 with type t 'a := Base.t 'a);
 
-  let module NavigableMap = NavigableMap.Make1 {
-    type nonrec k = int;
-    type nonrec t 'v = t 'v;
+  let module NavigableMap = NavigableMap.MakeGeneric {
+    type nonrec t 'k 'v = t 'v;
+    type nonrec k 'k = int;
+    type v 'v = 'v;
 
-    let containsKey (index: int) (indexed: t 'v): bool =>
+    let containsKey (index: int) (indexed: t 'k 'v): bool =>
       index >= 0 && index < (count indexed);
 
     let count = count;
 
-    let firstOrRaise (selector: int => 'v => 'c) (indexed: t 'v): 'c =>
+    let firstOrRaise (selector: int => 'v => 'c) (indexed: t 'k 'v): 'c =>
       if (count indexed > 0) (selector 0 (getOrRaise 0 indexed))
       else failwith "empty";
 
@@ -94,7 +97,7 @@ let module Make1 = fun (Base: {
 
     let getOrRaise = getOrRaise;
 
-    let lastOrRaise (selector: int => 'v => 'c) (indexed: t 'v): 'c => {
+    let lastOrRaise (selector: int => 'v => 'c) (indexed: t 'k 'v): 'c => {
       let lastIndex = count indexed - 1;
       if (lastIndex >= 0) (selector lastIndex (getOrRaise lastIndex indexed))
       else failwith "empty";
@@ -108,7 +111,7 @@ let module Make1 = fun (Base: {
         while_::(predicate: 'acc => int => 'v => bool)
         (f: 'acc => int => 'v => 'acc)
         (acc: 'acc)
-        (indexed: t 'v): 'acc => {
+        (indexed: t 'k 'v): 'acc => {
       let index = ref 0;
 
       let predicate acc next =>
@@ -127,7 +130,7 @@ let module Make1 = fun (Base: {
         while_::(predicate: 'acc => int => 'v => bool)
         (f: 'acc => int => 'v => 'acc)
         (acc: 'acc)
-        (indexed: t 'v): 'acc => {
+        (indexed: t 'k 'v): 'acc => {
       let index = ref (count indexed - 1);
 
       let predicate acc next =>
@@ -146,7 +149,7 @@ let module Make1 = fun (Base: {
         while_::(predicate: 'acc => int => bool)
         (f: 'acc => int => 'acc)
         (acc: 'acc)
-        (indexed: t 'v): 'acc =>
+        (indexed: t 'k 'v): 'acc =>
       IntRange.create start::0 count::(count indexed)
         |> IntRange.reduce while_::predicate f acc;
 
@@ -154,17 +157,17 @@ let module Make1 = fun (Base: {
         while_::(predicate: 'acc => int => bool)
         (f: 'acc => int => 'acc)
         (acc: 'acc)
-        (indexed: t 'v): 'acc =>
+        (indexed: t 'k 'v): 'acc =>
       IntRange.create start::0 count::(count indexed)
         |> IntRange.reduceReversed while_::predicate f acc;
 
-    let toSequence (selector: int => 'v => 'c) (indexed: t 'v): (Sequence.t 'c) =>
+    let toSequence (selector: int => 'v => 'c) (indexed: t 'k 'v): (Sequence.t 'c) =>
       Sequence.zip2With
         zipper::selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequence)
         (Base.toSequence indexed);
 
-    let toSequenceReversed (selector: int => 'v => 'c) (indexed: t 'v): (Sequence.t 'c) =>
+    let toSequenceReversed (selector: int => 'v => 'c) (indexed: t 'k 'v): (Sequence.t 'c) =>
       Sequence.zip2With
         zipper::selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequenceReversed)

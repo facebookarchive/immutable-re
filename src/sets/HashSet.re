@@ -14,9 +14,10 @@ type t 'a = {
   hash: Hash.t 'a,
 };
 
-include (ImmSet.Make1 {
+include (ImmSet.MakeGeneric {
   type nonrec t 'a = t 'a;
-
+  type elt 'a = 'a;
+  
   let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
     let keyHash = hash value;
     root |> BitmapTrieSet.contains comparator 0 keyHash value;

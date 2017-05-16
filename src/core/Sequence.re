@@ -18,8 +18,9 @@ and t 'a = unit => iterator 'a;
 
 let emptySeq () => Completed;
 
-include (Iterable.Make1 {
+include (Iterable.MakeGeneric {
   type nonrec t 'a = t 'a;
+  type elt 'a = 'a;
 
   let isEmpty (seq: t 'a) =>
     seq === emptySeq;
