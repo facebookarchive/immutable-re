@@ -30,7 +30,7 @@ let module TransientVectorImpl = {
 
   let tailAddFirst (value: 'a) (arr: array 'a): (array 'a) => {
     let arr =
-      if (CopyOnWriteArray.isEmpty arr) (Array.make IndexedTrie.width value)
+      if (CopyOnWriteArray.count arr === 0) (Array.make IndexedTrie.width value)
       else arr;
 
     let rec loop index =>
@@ -59,7 +59,7 @@ let module TransientVectorImpl = {
 
   let tailUpdate (index: int) (value: 'a) (arr: array 'a): (array 'a) => {
     let arr =
-      if (CopyOnWriteArray.isEmpty arr) (Array.make IndexedTrie.width value)
+      if (CopyOnWriteArray.count arr === 0) (Array.make IndexedTrie.width value)
       else arr;
 
     arr.(index) = value;
@@ -113,6 +113,7 @@ let module TransientVectorImpl = {
 
   let addFirstAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
    |> Iterable.reduce
+     while_::Functions.alwaysTrue2
      (fun acc next => acc |> addFirst owner next)
      vector;
 
@@ -150,6 +151,7 @@ let module TransientVectorImpl = {
 
   let addLastAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
     |> Iterable.reduce
+      while_::Functions.alwaysTrue2
       (fun acc next => acc |> addLast owner next)
       vector;
 

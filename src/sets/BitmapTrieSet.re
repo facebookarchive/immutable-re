@@ -78,14 +78,14 @@ let rec contains
 };
 
 let reduceWhile
-    (levelPredicate: option ('acc => t 'a => bool))
+    (levelPredicate: 'acc => t 'a => bool)
     (levelReducer: 'acc => t 'a => 'acc)
     (predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (map: t 'a): 'acc => switch map {
   | Level _ nodes _ =>
-      nodes |> CopyOnWriteArray.reduce while_::?levelPredicate levelReducer acc
+      nodes |> CopyOnWriteArray.reduce while_::levelPredicate levelReducer acc
   | Collision _ entrySet =>
       entrySet |> AVLTreeSet.reduceWhile predicate f acc
   | Entry _ entryValue =>
@@ -100,7 +100,7 @@ let reduce
     (map: t 'a): 'acc =>
   if (predicate === Functions.alwaysTrue2) {
     let rec levelReducer acc node => node
-      |> reduceWhile None levelReducer Functions.alwaysTrue2 f acc;
+      |> reduceWhile Functions.alwaysTrue2 levelReducer Functions.alwaysTrue2 f acc;
     levelReducer acc map
   }
   else {
@@ -114,7 +114,7 @@ let reduce
       }
       else false;
 
-    let levelPredicate = Some (fun _ _ => !shouldContinue);
+    let levelPredicate _ _ => !shouldContinue;
     let rec levelReducer acc node => node
       |> reduceWhile levelPredicate levelReducer predicate f acc;
 

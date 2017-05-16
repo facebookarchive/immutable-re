@@ -17,7 +17,7 @@ type t 'a = {
 include (ImmSet.MakeGeneric {
   type nonrec t 'a = t 'a;
   type elt 'a = 'a;
-  
+
   let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
     let keyHash = hash value;
     root |> BitmapTrieSet.contains comparator 0 keyHash value;
@@ -115,7 +115,7 @@ let module Transient = {
       ({ count, root, hash, comparator } as set: hashSet 'a): (hashSet 'a) => {
     let newCount = ref count;
 
-    let newRoot = iter |> Iterable.reduce (fun acc value => {
+    let newRoot = iter |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc value => {
       let keyHash = hash value;
 
       if (acc |> BitmapTrieSet.contains comparator 0 keyHash value) acc

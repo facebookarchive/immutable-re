@@ -12,23 +12,18 @@ type t 'a = {
   list: list 'a,
 };
 
-include (SequentialCollection.MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
+let count ({ count }: t 'a): int => count;
 
-  let count ({ count }: t 'a): int => count;
+let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
 
-  let firstOrRaise ({ list }: t 'a): 'a => list |> ImmList.firstOrRaise;
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc )
+    (acc: 'acc)
+    ({ list }: t 'a): 'acc =>
+  list |> ImmList.reduce while_::predicate f acc;
 
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc )
-      (acc: 'acc)
-      ({ list }: t 'a): 'acc =>
-    list |> ImmList.reduce while_::predicate f acc;
-
-  let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
-}: SequentialCollection.S1 with type t 'a := t 'a);
+let toSequence ({ list }: t 'a): (Sequence.t 'a) => Sequence.ofList list;
 
 let addFirst (value: 'a) ({ count, list }: t 'a): (t 'a) => ({
   count: count + 1,
@@ -39,6 +34,7 @@ let addFirstAll (values: Iterable.t 'a) ({ count, list }: t 'a): (t 'a) => {
   let newCount = ref count;
 
   let newList = values |> Iterable.reduce
+    while_::Functions.alwaysTrue2
     (fun acc next => {
       newCount := !newCount + 1;
       [next, ...acc]

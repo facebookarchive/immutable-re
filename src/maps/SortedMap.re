@@ -208,10 +208,10 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   };
 
   let putAll (iter: KeyedIterable.t k 'v) (map: t 'v): (t 'v) =>
-    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
+    iter |> KeyedIterable.reduce while_::Functions.alwaysTrue3 (fun acc k v => acc |> put k v) map;
 
   let putAllEntries (iter: Iterable.t (k, 'v)) (map: t 'v): (t 'v) =>
-    iter |> Iterable.reduce (fun acc (k, v) => acc |> put k v) map;
+    iter |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc (k, v) => acc |> put k v) map;
 
   let from (iter: KeyedIterable.t k 'v): (t 'v) =>
     empty () |> putAll iter;
@@ -239,7 +239,7 @@ let module Make1 = fun (Comparable: Comparable.S) => {
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
       (acc: t 'vAcc)
       (next: t 'v): (t 'vAcc) =>  ImmSet.union (keysSet next) (keysSet acc)
-    |> Iterable.reduce (
+    |> Iterable.reduce while_::Functions.alwaysTrue2 (
         fun acc key => {
           let result = f key (acc |> get key) (next |> get key);
           switch result {

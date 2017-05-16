@@ -59,19 +59,15 @@ module type S1 = {
   let toSetReversed: (t 'a) => ImmSet.t 'a;
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type elt 'a;
   type t 'a;
 
-  let contains: elt 'a => t 'a => bool;
-  let count: t 'a => int;
-  let firstOrRaise: t 'a => elt 'a;
-  let lastOrRaise: t 'a => elt 'a;
-  let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
-  let reduceReversed: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t (elt 'a);
-  let toSequenceReversed: t 'a => Sequence.t (elt 'a);
-}) => ({
+  include NavigableCollection.Base with type t 'a := t 'a and type elt 'a := elt 'a;
+  include ImmSet.Base with type t 'a := t 'a and type elt 'a := elt 'a;
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   include (ImmSet.MakeGeneric Base: ImmSet.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);

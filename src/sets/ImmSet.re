@@ -55,7 +55,7 @@ module type S1 = {
   let toSet: (t 'a) => set 'a;
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type elt 'a;
   type t 'a;
 
@@ -63,7 +63,9 @@ let module MakeGeneric = fun (Base: {
   let count: t 'a => int;
   let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
   let toSequence: t 'a => Sequence.t (elt 'a);
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   include (Collection.MakeGeneric Base: Collection.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);

@@ -66,18 +66,18 @@ module type S1 = {
   let toSequentialCollectionReversed: t 'a => (SequentialCollection.t 'a);
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type elt 'a;
   type t 'a;
 
-  let count: t 'a => int;
-  let firstOrRaise: t 'a => elt 'a;
+  include SequentialCollection.Base with type t 'a := t 'a and type elt 'a := elt 'a;
+
   let lastOrRaise: t 'a => elt 'a;
-  let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
   let reduceReversed: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t (elt 'a);
   let toSequenceReversed: t 'a => Sequence.t (elt 'a);
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   include (SequentialCollection.MakeGeneric Base: SequentialCollection.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);
@@ -130,57 +130,49 @@ let module MakeGeneric = fun (Base: {
 
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-include(MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
-
-  let count (collection: t 'a): int => switch collection {
-    | Empty => 0
-    | Instance collection { count } _ => count collection
-  };
-
-  let firstOrRaise (collection: t 'a): 'a => switch collection {
-    | Empty => failwith "empty"
-    | Instance collection { firstOrRaise } _ => firstOrRaise collection
-  };
-
-  let lastOrRaise (collection: t 'a): 'a => switch collection {
-    | Empty => failwith "empty"
-    | Instance collection _ { firstOrRaise } => firstOrRaise collection
-  };
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (collection: t 'a): 'acc => switch collection {
-    | Empty => acc
-    | Instance collection { reduce } _ =>
-        collection |> reduce while_::predicate f acc;
-  };
-
-  let reduceReversed
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (collection: t 'a): 'acc => switch collection {
-    | Empty => acc
-    | Instance collection _ { reduce } =>
-        collection |> reduce while_::predicate f acc;
-  };
-
-  let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
-    | Empty => Sequence.empty ()
-    | Instance collection { toSequence } _ => toSequence collection
-  };
-
-  let toSequenceReversed (collection: t 'a): (Sequence.t 'a) => switch collection {
-    | Empty => Sequence.empty ()
-    | Instance collection _ { toSequence } => toSequence collection
-  };
-}: S1 with type t 'a := t 'a);
+let count (collection: t 'a): int => switch collection {
+  | Empty => 0
+  | Instance collection { count } _ => count collection
+};
 
 let empty (): (t 'a) => Empty;
 
-let toNavigableCollection (collection: t 'a): (t 'a) =>
-  collection;
+let firstOrRaise (collection: t 'a): 'a => switch collection {
+  | Empty => failwith "empty"
+  | Instance collection { firstOrRaise } _ => firstOrRaise collection
+};
+
+let lastOrRaise (collection: t 'a): 'a => switch collection {
+  | Empty => failwith "empty"
+  | Instance collection _ { firstOrRaise } => firstOrRaise collection
+};
+
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (collection: t 'a): 'acc => switch collection {
+  | Empty => acc
+  | Instance collection { reduce } _ =>
+      collection |> reduce while_::predicate f acc;
+};
+
+let reduceReversed
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (collection: t 'a): 'acc => switch collection {
+  | Empty => acc
+  | Instance collection _ { reduce } =>
+      collection |> reduce while_::predicate f acc;
+};
+
+let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
+  | Empty => Sequence.empty ()
+  | Instance collection { toSequence } _ => toSequence collection
+};
+
+let toSequenceReversed (collection: t 'a): (Sequence.t 'a) => switch collection {
+  | Empty => Sequence.empty ()
+  | Instance collection _ { toSequence } => toSequence collection
+};

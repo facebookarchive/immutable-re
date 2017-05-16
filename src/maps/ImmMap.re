@@ -62,7 +62,7 @@ module type S2 = {
   let toMap: (t 'k 'v) => map 'k 'v;
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type t 'k 'v;
   type k 'k;
   type v 'v;
@@ -76,7 +76,9 @@ let module MakeGeneric = fun (Base: {
   let reduceKeys: while_::('acc => k 'k => bool) => ('acc => k 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let reduceValues: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let toSequence: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   include (KeyedCollection.MakeGeneric Base: KeyedCollection.SGeneric with type t 'k 'v := t 'k 'v and type k 'k := k 'k and type v 'v := v 'v);
@@ -108,57 +110,49 @@ let module MakeGeneric = fun (Base: {
 
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
 
-include (MakeGeneric {
-  type nonrec t 'k 'v = t 'k 'v;
-  type k 'k  = 'k;
-  type v 'v = 'v;
+let containsKey (key: 'k) (map: t 'k 'v): bool => switch map {
+  | Empty => false
+  | Instance map { containsKey } => containsKey key map
+};
 
-  let containsKey (key: 'k) (map: t 'k 'v): bool => switch map {
-    | Empty => false
-    | Instance map { containsKey } => containsKey key map
-  };
-
-  let count (map: t 'k 'v): int => switch map {
-    | Empty => 0
-    | Instance map { count } => count map
-  };
-
-  let get (key: 'k) (map: t 'k 'v): (option 'v) => switch map {
-    | Empty => None
-    | Instance map { get } => get key map
-  };
-
-  let getOrDefault default::(default: 'v) (key: 'k) (map: t 'k 'v): 'v => switch map {
-    | Empty => default
-    | Instance map { getOrDefault } => getOrDefault ::default key map
-  };
-
-  let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {
-    | Empty => failwith "not found"
-    | Instance map { getOrRaise } => getOrRaise key map
-  };
-
-  include (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'k 'v;
-    type k 'k = 'k;
-    type v 'v = 'v;
-
-    let reduce
-        while_::(predicate: 'acc => 'k => 'v => bool)
-        (f: 'acc => 'k => 'v => 'acc)
-        (acc: 'acc)
-        (map: t 'k 'v): 'acc => switch map {
-      | Empty => acc
-      | Instance map { reduce } => reduce while_::predicate f acc map
-    };
-  }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
-
-  let toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
-    | Empty => Sequence.empty ()
-    | Instance map { toSequence } => toSequence selector map
-  };
-}: S2 with type t 'k 'v := t 'k 'v);
+let count (map: t 'k 'v): int => switch map {
+  | Empty => 0
+  | Instance map { count } => count map
+};
 
 let empty (): (t 'k 'v) => Empty;
 
-let toMap (map: t 'k 'v): (t 'k 'v) => map;
+let get (key: 'k) (map: t 'k 'v): (option 'v) => switch map {
+  | Empty => None
+  | Instance map { get } => get key map
+};
+
+let getOrDefault default::(default: 'v) (key: 'k) (map: t 'k 'v): 'v => switch map {
+  | Empty => default
+  | Instance map { getOrDefault } => getOrDefault ::default key map
+};
+
+let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {
+  | Empty => failwith "not found"
+  | Instance map { getOrRaise } => getOrRaise key map
+};
+
+include (KeyedReducer.MakeGeneric {
+  type nonrec t 'k 'v = t 'k 'v;
+  type k 'k = 'k;
+  type v 'v = 'v;
+
+  let reduce
+      while_::(predicate: 'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (map: t 'k 'v): 'acc => switch map {
+    | Empty => acc
+    | Instance map { reduce } => reduce while_::predicate f acc map
+  };
+}: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
+
+let toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
+  | Empty => Sequence.empty ()
+  | Instance map { toSequence } => toSequence selector map
+};

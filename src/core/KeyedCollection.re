@@ -74,7 +74,7 @@ module type S2 = {
   let valuesSequence: (t 'k 'v) => Sequence.t 'v;
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type t 'k 'v;
   type k 'k;
   type v 'v;
@@ -85,7 +85,9 @@ let module MakeGeneric = fun (Base: {
   let reduceKeys: while_::('acc => k  'k => bool) => ('acc => k 'k => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceValues: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let toSequence: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   let isEmpty (keyed: t 'k 'v): bool =>
@@ -145,42 +147,34 @@ let module MakeGeneric = fun (Base: {
     else Instance keyed keyedCollectionBase;
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
 
-include (MakeGeneric {
+let containsKey (key: 'k) (keyed: t 'k 'v): bool => switch keyed {
+  | Empty => false
+  | Instance keyed { containsKey } => containsKey key keyed
+};
+
+let count (keyed: t 'k 'v): int => switch keyed {
+  | Empty => 0
+  | Instance keyed { count } => count keyed
+};
+
+let empty (): (t 'k 'v) => Empty;
+
+include (KeyedReducer.MakeGeneric {
   type nonrec t 'k 'v = t 'k 'v;
   type k 'k = 'k;
   type v 'v = 'v;
 
-  let containsKey (key: 'k) (keyed: t 'k 'v): bool => switch keyed {
-    | Empty => false
-    | Instance keyed { containsKey } => containsKey key keyed
+  let reduce
+      while_::(predicate:'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
   };
+}: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
-  let count (keyed: t 'k 'v): int => switch keyed {
-    | Empty => 0
-    | Instance keyed { count } => count keyed
-  };
-
-  include (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'k 'v;
-    type k 'k = 'k;
-    type v 'v = 'v;
-
-    let reduce
-        while_::(predicate:'acc => 'k => 'v => bool)
-        (f: 'acc => 'k => 'v => 'acc)
-        (acc: 'acc)
-        (iter: t 'k 'v): 'acc => switch iter {
-      | Empty => acc
-      | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
-    };
-  }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
-
-  let toSequence (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
-    | Empty => Sequence.empty ()
-    | Instance keyed { toSequence } => toSequence selector keyed
-  };
-}: S2 with type t 'k 'v := t 'k 'v);
-
-let empty (): (t 'k 'v) => Empty;
-
-let toKeyedCollection (keyed: t 'k 'v): (t 'k 'v) => keyed;
+let toSequence (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
+  | Empty => Sequence.empty ()
+  | Instance keyed { toSequence } => toSequence selector keyed
+};

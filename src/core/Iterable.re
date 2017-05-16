@@ -60,13 +60,15 @@ module type S1 = {
   let toIterable: t 'a => (iterable 'a);
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type elt 'a;
   type t 'a;
 
   let isEmpty: t 'a => bool;
   let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   let everyPredicate acc _ => acc;
@@ -111,23 +113,15 @@ let module MakeGeneric = fun (Base: {
     else Instance iterable iterableBase;
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-include (MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
-
-  let isEmpty (iterable: t 'a): bool =>
-    iterable === Empty;
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (iter: t 'a): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter { reduce } =>
-        iter |> reduce while_::predicate f acc;
-  };
-}: S1 with type t 'a := t 'a);
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (iter: t 'a): 'acc => switch iter {
+  | Empty => acc
+  | Instance iter { reduce } =>
+      iter |> reduce while_::predicate f acc;
+};
 
 let concatImpl: s 'iterable 'a  = {
   reduce: fun while_::predicate f acc iters => {
@@ -258,8 +252,11 @@ let generateImpl: s ('acc => 'acc, 'acc) 'acc  = {
 let generate (gen: 'acc => 'acc) (initialValue: 'acc): (t 'acc) =>
   Instance (gen, initialValue) generateImpl;
 
+let isEmpty (iterable: t 'a): bool =>
+  iterable === Empty;
+
 let listAddFirstAll (iter: t 'a) (list: list 'a): (list 'a) =>
-  iter |> reduce (fun acc next => acc |> ImmList.addFirst next) list;
+  iter |> reduce while_::Functions.alwaysTrue2 (fun acc next => acc |> ImmList.addFirst next) list;
 
 let listFromReverse (iter: t 'a): (list 'a) =>
   [] |> listAddFirstAll iter;
@@ -415,5 +412,3 @@ let takeWhile (keepTaking: 'a => bool) (iter: t 'a): (t 'a) => switch iter {
       }
     }
 };
-
-let toIterable (iter: t 'a): (t 'a) => iter;

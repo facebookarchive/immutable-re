@@ -19,13 +19,37 @@ type t 'a =
   | Instance 'indexed (s 'indexed 'a) (s 'indexed 'a): t 'a;
 
 type indexed 'a = t 'a;
+
+module type SGeneric = {
+  type t 'a;
+  type elt 'a;
+
+  include NavigableCollection.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a;
+
+  let get: int => (t 'a) => (option (elt 'a));
+  let getOrDefault: default::(elt 'a) => int => (t 'a) => elt 'a;
+  let getOrRaise: int => (t 'a) => elt 'a;
+  let toIndexed: (t 'a) => (indexed (elt 'a));
+  let toIndexedReversed: (t 'a) => (indexed (elt 'a));
+  let toKeyedCollection: (t 'a) => (KeyedCollection.t int (elt 'a));
+  let toKeyedCollectionReversed: (t 'a) => (KeyedCollection.t int (elt 'a));
+  let toKeyedIterable: (t 'a) => (KeyedIterable.t int (elt 'a));
+  let toKeyedIterableReversed: (t 'a) => (KeyedIterable.t int (elt 'a));
+  let toMap: (t 'a) => (ImmMap.t int (elt 'a));
+  let toMapReversed: (t 'a) => (ImmMap.t int (elt 'a));
+  let toNavigableKeyedCollection: (t 'a) => (NavigableKeyedCollection.t int (elt 'a));
+  let toNavigableKeyedCollectionReversed: (t 'a) => (NavigableKeyedCollection.t int (elt 'a));
+  let toNavigableMap: (t 'a) => (NavigableMap.t int (elt 'a));
+  let toNavigableMapReversed: (t 'a) => (NavigableMap.t int (elt 'a));
+};
+
 module type S1 = {
   type t 'a;
 
   include NavigableCollection.S1 with type t 'a := t 'a;
 
   let get: int => (t 'a) => (option 'a);
-  let getOrDefault: default::'v => int => (t 'v) => 'v;
+  let getOrDefault: default::'a => int => (t 'a) => 'a;
   let getOrRaise: int => (t 'a) => 'a;
   let toIndexed: (t 'a) => (indexed 'a);
   let toIndexedReversed: (t 'a) => (indexed 'a);
@@ -41,53 +65,53 @@ module type S1 = {
   let toNavigableMapReversed: (t 'a) => (NavigableMap.t int 'a);
 };
 
-/* FIXME: Make this generic. */
-let module Make1 = fun (Base: {
+module type Base = {
   type t 'a;
+  type elt 'a;
 
-  let count: t 'a => int;
-  let getOrRaise: int => (t 'a) => 'a;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let reduceReversed: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t 'a;
-  let toSequenceReversed: t 'a => Sequence.t 'a;
-}) => ({
+  include Collection.Base with type t 'a := t 'a and type elt 'a := elt 'a;
+
+  let getOrRaise: int => (t 'a) => (elt 'a);
+  let reduceReversed: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequenceReversed: t 'a => Sequence.t (elt 'a);
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
-  let getOrRaiseFlipped (indexed: t 'a) (index: int): 'a =>
+  let getOrRaiseFlipped (indexed: t 'a) (index: int): (elt 'a) =>
     indexed |> getOrRaise index;
 
-  let get (index: int) (indexed: t 'a): (option 'a) =>
+  let get (index: int) (indexed: t 'a): (option (elt 'a)) =>
     Preconditions.noneIfIndexOutOfRange (count indexed) index (getOrRaiseFlipped indexed);
 
-  let getOrDefault default::(default: 'a) (index: int) (indexed: t 'a): 'a =>
+  let getOrDefault default::(default: elt 'a) (index: int) (indexed: t 'a): elt 'a =>
     if (index < 0 || index >= (count indexed)) default
     else getOrRaise index indexed;
 
   include (NavigableCollection.MakeGeneric {
     include Base;
-    type elt 'a = 'a;
 
-    let firstOrRaise (indexed: t 'a): 'a => getOrRaise 0 indexed;
+    let firstOrRaise (indexed: t 'a): elt 'a => getOrRaise 0 indexed;
 
-    let lastOrRaise (indexed: t 'a): 'a => {
+    let lastOrRaise (indexed: t 'a): elt 'a => {
       let lastIndex = (count indexed) - 1;
       getOrRaise lastIndex indexed;
     };
 
-  }: NavigableCollection.S1 with type t 'a := Base.t 'a);
+  }: NavigableCollection.SGeneric with type t 'a := Base.t 'a and type elt 'a := elt 'a);
 
   let module NavigableMap = NavigableMap.MakeGeneric {
-    type nonrec t 'k 'v = t 'v;
+    type nonrec t 'k 'a = t 'a;
     type nonrec k 'k = int;
-    type v 'v = 'v;
+    type v 'a = elt 'a;
 
-    let containsKey (index: int) (indexed: t 'k 'v): bool =>
+    let containsKey (index: int) (indexed: t 'k 'a): bool =>
       index >= 0 && index < (count indexed);
 
     let count = count;
 
-    let firstOrRaise (selector: int => 'v => 'c) (indexed: t 'k 'v): 'c =>
+    let firstOrRaise (selector: int => elt 'a => 'c) (indexed: t 'k 'a): 'c =>
       if (count indexed > 0) (selector 0 (getOrRaise 0 indexed))
       else failwith "empty";
 
@@ -97,7 +121,7 @@ let module Make1 = fun (Base: {
 
     let getOrRaise = getOrRaise;
 
-    let lastOrRaise (selector: int => 'v => 'c) (indexed: t 'k 'v): 'c => {
+    let lastOrRaise (selector: int => elt 'a => 'c) (indexed: t 'k 'a): 'c => {
       let lastIndex = count indexed - 1;
       if (lastIndex >= 0) (selector lastIndex (getOrRaise lastIndex indexed))
       else failwith "empty";
@@ -108,10 +132,10 @@ let module Make1 = fun (Base: {
     let reduceValuesReversed = Base.reduceReversed;
 
     let reduce
-        while_::(predicate: 'acc => int => 'v => bool)
-        (f: 'acc => int => 'v => 'acc)
+        while_::(predicate: 'acc => int => elt 'a => bool)
+        (f: 'acc => int => elt 'a => 'acc)
         (acc: 'acc)
-        (indexed: t 'k 'v): 'acc => {
+        (indexed: t 'k 'a): 'acc => {
       let index = ref 0;
 
       let predicate acc next =>
@@ -127,10 +151,10 @@ let module Make1 = fun (Base: {
     };
 
     let reduceReversed
-        while_::(predicate: 'acc => int => 'v => bool)
-        (f: 'acc => int => 'v => 'acc)
+        while_::(predicate: 'acc => int => elt 'a => bool)
+        (f: 'acc => int => elt 'a => 'acc)
         (acc: 'acc)
-        (indexed: t 'k 'v): 'acc => {
+        (indexed: t 'k 'a): 'acc => {
       let index = ref (count indexed - 1);
 
       let predicate acc next =>
@@ -149,7 +173,7 @@ let module Make1 = fun (Base: {
         while_::(predicate: 'acc => int => bool)
         (f: 'acc => int => 'acc)
         (acc: 'acc)
-        (indexed: t 'k 'v): 'acc =>
+        (indexed: t 'k 'a): 'acc =>
       IntRange.create start::0 count::(count indexed)
         |> IntRange.reduce while_::predicate f acc;
 
@@ -157,17 +181,17 @@ let module Make1 = fun (Base: {
         while_::(predicate: 'acc => int => bool)
         (f: 'acc => int => 'acc)
         (acc: 'acc)
-        (indexed: t 'k 'v): 'acc =>
+        (indexed: t 'k 'a): 'acc =>
       IntRange.create start::0 count::(count indexed)
         |> IntRange.reduceReversed while_::predicate f acc;
 
-    let toSequence (selector: int => 'v => 'c) (indexed: t 'k 'v): (Sequence.t 'c) =>
+    let toSequence (selector: int => elt 'a => 'c) (indexed: t 'k 'a): (Sequence.t 'c) =>
       Sequence.zip2With
         zipper::selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequence)
         (Base.toSequence indexed);
 
-    let toSequenceReversed (selector: int => 'v => 'c) (indexed: t 'k 'v): (Sequence.t 'c) =>
+    let toSequenceReversed (selector: int => elt 'a => 'c) (indexed: t 'k 'a): (Sequence.t 'c) =>
       Sequence.zip2With
         zipper::selector
         (IntRange.create start::0 count::(count indexed) |> IntRange.toSequenceReversed)
@@ -200,59 +224,53 @@ let module Make1 = fun (Base: {
     toSequence: toSequenceReversed,
   };
 
-  let toIndexed (indexed: t 'a): (indexed 'a) =>
+  let toIndexed (indexed: t 'a): (indexed (elt 'a)) =>
     if (isEmpty indexed) Empty
     else Instance indexed indexedBase indexedReversedBase;
 
-  let toIndexedReversed (indexed: t 'a): (indexed 'a) =>
+  let toIndexedReversed (indexed: t 'a): (indexed (elt 'a)) =>
     if (isEmpty indexed) Empty
     else Instance indexed indexedReversedBase indexedBase;
-}: S1 with type t 'a := Base.t 'a);
+}: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-include (Make1 {
-  type nonrec t 'a = t 'a;
-
-  let count (indexed: t 'a): int => switch indexed {
-    | Empty => 0
-    | Instance indexed { count } _ => count indexed
-  };
-
-  let getOrRaise (index: int) (indexed: t 'a): 'a => switch indexed {
-    | Empty => failwith "empty"
-    | Instance indexed { getOrRaise } _ => getOrRaise index indexed
-  };
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (collection: t 'a): 'acc => switch collection {
-    | Empty => acc
-    | Instance indexed { reduce } _ =>
-        indexed |> reduce while_::predicate f acc;
-  };
-
-  let reduceReversed
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (collection: t 'a): 'acc => switch collection {
-    | Empty => acc
-    | Instance indexed _ { reduce } =>
-        indexed |> reduce while_::predicate f acc;
-  };
-
-  let toSequence (indexed: t 'a): (Sequence.t 'a) => switch indexed {
-    | Empty => Sequence.empty ()
-    | Instance indexed { toSequence } _ => toSequence indexed
-  };
-
-  let toSequenceReversed (indexed: t 'a): (Sequence.t 'a) => switch indexed {
-    | Empty => Sequence.empty ()
-    | Instance indexed _ { toSequence } => toSequence indexed
-  };
-}: S1 with type t 'a := t 'a);
+let count (indexed: t 'a): int => switch indexed {
+  | Empty => 0
+  | Instance indexed { count } _ => count indexed
+};
 
 let empty (): (t 'a) => Empty;
 
-let toIndexed (indexed: t 'a): (t 'a) => indexed;
+let getOrRaise (index: int) (indexed: t 'a): 'a => switch indexed {
+  | Empty => failwith "empty"
+  | Instance indexed { getOrRaise } _ => getOrRaise index indexed
+};
+
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (collection: t 'a): 'acc => switch collection {
+  | Empty => acc
+  | Instance indexed { reduce } _ =>
+      indexed |> reduce while_::predicate f acc;
+};
+
+let reduceReversed
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (collection: t 'a): 'acc => switch collection {
+  | Empty => acc
+  | Instance indexed _ { reduce } =>
+      indexed |> reduce while_::predicate f acc;
+};
+
+let toSequence (indexed: t 'a): (Sequence.t 'a) => switch indexed {
+  | Empty => Sequence.empty ()
+  | Instance indexed { toSequence } _ => toSequence indexed
+};
+
+let toSequenceReversed (indexed: t 'a): (Sequence.t 'a) => switch indexed {
+  | Empty => Sequence.empty ()
+  | Instance indexed _ { toSequence } => toSequence indexed
+};

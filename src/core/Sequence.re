@@ -18,24 +18,19 @@ and t 'a = unit => iterator 'a;
 
 let emptySeq () => Completed;
 
-include (Iterable.MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
+let isEmpty (seq: t 'a) =>
+  seq === emptySeq;
 
-  let isEmpty (seq: t 'a) =>
-    seq === emptySeq;
-
-  let rec reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (reducer: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (seq: t 'a): 'acc => switch (seq ()) {
-    | Next value next when predicate acc value =>
-        let acc = reducer acc value;
-        reduce while_::predicate reducer acc next
-    | _ => acc
-  };
-}: Iterable.S1 with type t 'a := t 'a);
+let rec reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (reducer: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (seq: t 'a): 'acc => switch (seq ()) {
+  | Next value next when predicate acc value =>
+      let acc = reducer acc value;
+      reduce while_::predicate reducer acc next
+  | _ => acc
+};
 
 let empty (): (t 'a) => emptySeq;
 

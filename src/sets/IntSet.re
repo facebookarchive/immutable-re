@@ -101,7 +101,7 @@ let module Transient = {
       ({ count, root } as set: intSet): intSet => {
     let newCount = ref count;
 
-    let newRoot = iter |> Iterable.reduce (fun acc value => {
+    let newRoot = iter |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc value => {
       if (acc |> BitmapTrieIntSet.contains 0 value) acc
       else  {
         let newRoot = acc |> BitmapTrieIntSet.add

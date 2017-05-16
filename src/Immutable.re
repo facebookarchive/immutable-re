@@ -47,12 +47,34 @@ let module Streamable = {
   };
 };
 
-let module Iterable = Iterable;
+let module Iterable = {
+  include Iterable;
 
-let module Sequence = Sequence;
+  include (Iterable.MakeGeneric {
+    type elt 'a = 'a;
+
+    include Iterable;
+  }: Iterable.S1 with type t 'a := t 'a);
+};
+
+let module Sequence = {
+  include Sequence;
+
+  include (Iterable.MakeGeneric {
+    type elt 'a = 'a;
+
+    include Sequence;
+  }: Iterable.S1 with type t 'a := t 'a);
+};
 
 let module Collection = {
   include Collection;
+
+  include (Collection.MakeGeneric {
+    type elt 'a = 'a;
+
+    include Collection;
+  }: Collection.S1 with type t 'a := t 'a);
 
   let module Persistent = {
     module type S = {
@@ -99,6 +121,12 @@ let module Collection = {
 let module SequentialCollection = {
   include SequentialCollection;
 
+  include (SequentialCollection.MakeGeneric {
+    type elt 'a = 'a;
+
+    include SequentialCollection;
+  }: S1 with type t 'a := t 'a);
+
   let module Persistent = {
     module type S1 = {
       type t 'a;
@@ -129,6 +157,12 @@ let module SequentialCollection = {
 
 let module NavigableCollection = {
   include NavigableCollection;
+
+  include (NavigableCollection.MakeGeneric {
+    type elt 'a = 'a;
+
+    include NavigableCollection;
+  }: S1 with type t 'a := t 'a);
 
   let module Persistent = {
     module type S1 = {
@@ -255,10 +289,26 @@ let module KeyedStreamable = {
   };
 };
 
-let module KeyedIterable = KeyedIterable;
+let module KeyedIterable = {
+  include KeyedIterable;
+
+  include (KeyedIterable.MakeGeneric {
+    type k 'k = 'k;
+    type v 'v = 'v;
+
+    include KeyedIterable;
+  }: S2 with type t 'k 'v := t 'k 'v);
+};
 
 let module KeyedCollection = {
   include KeyedCollection;
+
+  include (KeyedCollection.MakeGeneric {
+    type k 'k = 'k;
+    type v 'v = 'v;
+
+    include KeyedCollection;
+  }: S2 with type t 'k 'v := t 'k 'v);
 
   let module Persistent = {
     module type S1 = {
@@ -311,10 +361,26 @@ let module KeyedCollection = {
   };
 };
 
-let module NavigableKeyedCollection = NavigableKeyedCollection;
+let module NavigableKeyedCollection = {
+  include NavigableKeyedCollection;
+
+  include (NavigableKeyedCollection.MakeGeneric {
+    type k 'k = 'k;
+    type v 'v = 'v;
+
+    include NavigableKeyedCollection;
+  }: S2 with type t 'k 'v := t 'k 'v);
+};
 
 let module Map = {
   include ImmMap;
+
+  include (ImmMap.MakeGeneric {
+    type k 'k = 'k;
+    type v 'v = 'v;
+
+    include ImmMap;
+  }: S2 with type t 'k 'v := t 'k 'v);
 
   let module Persistent = {
     module type S1 = {
@@ -381,6 +447,13 @@ let module Map = {
 let module NavigableMap = {
   include NavigableMap;
 
+  include (NavigableMap.MakeGeneric {
+    type k 'k = 'k;
+    type v 'v = 'v;
+
+    include NavigableMap;
+  }: S2 with type t 'k 'v := t 'k 'v);
+
   let module Persistent = {
     module type S1 = {
       type k;
@@ -397,6 +470,12 @@ let module NavigableMap = {
 
 let module Indexed = {
   include Indexed;
+
+  include (Indexed.MakeGeneric {
+    type elt 'a = 'a;
+
+    include Indexed;
+  }: Indexed.S1 with type t 'a := t 'a);
 
   let module Persistent = {
     module type S1 = {
@@ -435,7 +514,15 @@ let module Indexed = {
   };
 };
 
-let module Deque = Deque;
+let module Deque = {
+  include Deque;
+
+  include (NavigableCollection.MakeGeneric {
+    type elt 'a = 'a;
+
+    include Deque;
+  }: NavigableCollection.S1 with type t 'a := t 'a)
+};
 
 let module HashMap = HashMap;
 
@@ -453,7 +540,7 @@ let module List = {
   include (Iterable.MakeGeneric {
     type t 'a = ImmList.t 'a;
     type elt 'a  = 'a;
-    
+
     let isEmpty = ImmList.isEmpty;
     let reduce = ImmList.reduceImpl;
   }: Iterable.S1 with type t 'a := ImmList.t 'a);
@@ -464,12 +551,36 @@ let module List = {
   let toSequence = Sequence.ofList;
 };
 
-let module ReadOnlyArray = CopyOnWriteArray;
+let module ReadOnlyArray = {
+  include CopyOnWriteArray;
+
+  include (Indexed.MakeGeneric {
+    type elt 'a = 'a;
+
+    include CopyOnWriteArray;
+  }: Indexed.S1 with type t 'a := t 'a);
+};
 
 let module SortedMap = SortedMap;
 
 let module SortedSet = SortedSet;
 
-let module Stack = ImmStack;
+let module Stack = {
+  include ImmStack;
 
-let module Vector = Vector;
+  include (SequentialCollection.MakeGeneric {
+    type elt 'a = 'a;
+
+    include ImmStack;
+  }: SequentialCollection.S1 with type t 'a := ImmStack.t 'a);
+};
+
+let module Vector = {
+  include Vector;
+
+  include (Indexed.MakeGeneric {
+    type elt 'a = 'a;
+
+    include Vector;
+  }: Indexed.S1 with type t 'a := t 'a);
+};

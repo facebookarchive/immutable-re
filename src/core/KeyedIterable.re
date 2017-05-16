@@ -79,7 +79,7 @@ let findPredicate acc _ _ => Option.isEmpty acc;
 let nonePredicate = everyPredicate;
 let somePredicate acc _ _ => not acc;
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type t 'k 'v;
   type k 'k;
   type v 'v;
@@ -88,7 +88,9 @@ let module MakeGeneric = fun (Base: {
   let reduce: while_::('acc => k 'k => v 'v => bool) => ('acc => k 'k => v 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let reduceKeys: while_::('acc => k 'k => bool) => ('acc => k 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let reduceValues: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   let every (f: k 'k => v 'v => bool) (iter: t 'k 'v): bool =>
@@ -183,29 +185,20 @@ let module MakeGeneric = fun (Base: {
     else Iterable.Instance keyedIterable valuesIterableBase;
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
 
-include (MakeGeneric {
+include (KeyedReducer.MakeGeneric {
   type nonrec t 'k 'v = t 'k 'v;
   type k 'k = 'k;
   type v 'v = 'v;
 
-  let isEmpty (iter: t 'k 'v): bool =>
-    iter === Empty;
-
-  include (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'k 'v;
-    type k 'k = 'k;
-    type v 'v = 'v;
-
-    let reduce
-        while_::(predicate:'acc => 'k => 'v => bool)
-        (f: 'acc => 'k => 'v => 'acc)
-        (acc: 'acc)
-        (iter: t 'k 'v): 'acc => switch iter {
-      | Empty => acc
-      | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
-    };
-  }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
-}: S2 with type t 'k 'v := t 'k 'v);
+  let reduce
+      while_::(predicate:'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
+  };
+}: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
 
 let concatImpl: s 'keyedIterable 'k 'v = {
   reduce: fun while_::predicate f acc iters => {
@@ -358,6 +351,9 @@ let generate
     (initialKey: 'k)
     (initialValue: 'v): (t 'k 'v) =>
   Instance (genKey, genValue, initialKey, initialValue) generateImpl;
+
+let isEmpty (iter: t 'k 'v): bool =>
+  iter === Empty;
 
 let map
     keyMapper::(keyMapper: 'kA => 'vA => 'kB)
@@ -549,5 +545,3 @@ let takeWhile (keepTaking: 'k => 'v => bool) (iter: t 'k 'v): (t 'k 'v) => switc
       }
     }
 };
-
-let toKeyedIterable (iter: t 'k 'v): (t 'k 'v) => iter;

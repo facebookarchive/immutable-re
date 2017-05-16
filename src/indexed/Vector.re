@@ -131,9 +131,16 @@ let concat (vectors: list (t 'a)): (t 'a) => switch vectors {
    */
   | [] => empty ()
   | [ vector ] => vector
-  | [head, ...tail] => tail |> ImmList.reduce
-      (fun acc next => acc |> addLastAll (toIterable next))
-      head;
+  | [head, ...tail] =>
+    tail
+      |> ImmList.reduce
+        (fun acc next => reduce while_::Functions.alwaysTrue2
+          (fun acc next => acc |> Transient.addLast next)
+          acc
+          next
+        )
+        (mutate head)
+      |> Transient.persist;
 };
 
 let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) => {

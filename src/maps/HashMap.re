@@ -222,10 +222,10 @@ let module Transient = {
     transient |> Transient.update2 putImpl key value;
 
   let putAll (iter: KeyedIterable.t 'k 'v) (transient: t 'k 'v): (t 'k 'v) =>
-    iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) transient;
+    iter |> KeyedIterable.reduce while_::Functions.alwaysTrue3 (fun acc k v => acc |> put k v) transient;
 
   let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'k 'v): (t 'k 'v) => iter
-    |> Iterable.reduce (fun acc (k, v) => acc |> put k v) transient;
+    |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc (k, v) => acc |> put k v) transient;
 
   let remove (key: 'k) (transient: t 'k 'v): (t 'k 'v) =>
     transient |> alter key Functions.alwaysNone;
@@ -263,7 +263,7 @@ let merge
     (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (initialValue: t 'k 'vAcc)
     (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keysSet next) (keysSet initialValue)
-  |> Iterable.reduce (
+  |> Iterable.reduce while_::Functions.alwaysTrue2 (
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);
         switch result {

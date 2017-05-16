@@ -126,7 +126,7 @@ module type S2 = {
   let valuesSequenceReversed: (t 'k 'v) => (Sequence.t 'v);
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type t 'k 'v;
   type k 'k;
   type v 'v;
@@ -143,7 +143,9 @@ let module MakeGeneric = fun (Base: {
   let reduceValuesReversed: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let toSequence: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
   let toSequenceReversed: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   include (KeyedCollection.MakeGeneric Base: KeyedCollection.SGeneric with type t 'k 'v := t 'k 'v  and type k 'k := k 'k and type v 'v := v 'v);
@@ -274,78 +276,70 @@ let module MakeGeneric = fun (Base: {
 
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
 
-include (MakeGeneric {
+let containsKey (key: 'k) (keyed: t 'k 'v): bool => switch keyed {
+  | Empty => false
+  | Instance keyed { containsKey } _ => containsKey key keyed
+};
+
+let count (keyed: t 'k 'v): int => switch keyed {
+  | Empty => 0
+  | Instance keyed { count } _ => count keyed
+};
+
+let empty (): (t 'k 'v) => Empty;
+
+let firstOrRaise (selector: 'k => 'v => 'c) (keyed: t 'k 'v): 'c => switch keyed {
+  | Empty => failwith "empty"
+  | Instance keyed { firstOrRaise } _ => firstOrRaise selector keyed
+};
+
+let lastOrRaise (selector: 'k => 'v => 'c) (keyed: t 'k 'v): 'c => switch keyed {
+  | Empty => failwith "empty"
+  | Instance keyed _ { firstOrRaise } => firstOrRaise selector keyed
+};
+
+include (KeyedReducer.MakeGeneric {
   type nonrec t 'k 'v = t 'k 'v;
   type k 'k = 'k;
   type v 'v = 'v;
 
-  let containsKey (key: 'k) (keyed: t 'k 'v): bool => switch keyed {
-    | Empty => false
-    | Instance keyed { containsKey } _ => containsKey key keyed
+  let reduce
+      while_::(predicate:'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter { reduce } _ => iter |> reduce while_::predicate f acc;
   };
+}: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
-  let count (keyed: t 'k 'v): int => switch keyed {
-    | Empty => 0
-    | Instance keyed { count } _ => count keyed
+let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
+  type nonrec t 'k 'v = t 'k 'v;
+  type k 'k = 'k;
+  type v 'v = 'v;
+
+  let reduce
+      while_::(predicate:'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      (iter: t 'k 'v): 'acc => switch iter {
+    | Empty => acc
+    | Instance iter _ { reduce } => iter |> reduce while_::predicate f acc;
   };
+}: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
-  let firstOrRaise (selector: 'k => 'v => 'c) (keyed: t 'k 'v): 'c => switch keyed {
-    | Empty => failwith "empty"
-    | Instance keyed { firstOrRaise } _ => firstOrRaise selector keyed
-  };
+let reduceReversed = KeyedReducerReversed.reduce;
 
-  let lastOrRaise (selector: 'k => 'v => 'c) (keyed: t 'k 'v): 'c => switch keyed {
-    | Empty => failwith "empty"
-    | Instance keyed _ { firstOrRaise } => firstOrRaise selector keyed
-  };
+let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
 
-  include (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'k 'v;
-    type k 'k = 'k;
-    type v 'v = 'v;
+let reduceValuesReversed = KeyedReducerReversed.reduceValues;
 
-    let reduce
-        while_::(predicate:'acc => 'k => 'v => bool)
-        (f: 'acc => 'k => 'v => 'acc)
-        (acc: 'acc)
-        (iter: t 'k 'v): 'acc => switch iter {
-      | Empty => acc
-      | Instance iter { reduce } _ => iter |> reduce while_::predicate f acc;
-    };
-  }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
+let toSequence (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
+  | Empty => Sequence.empty ()
+  | Instance keyed { toSequence } _ => toSequence selector keyed
+};
 
-  let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'k 'v;
-    type k 'k = 'k;
-    type v 'v = 'v;
-
-    let reduce
-        while_::(predicate:'acc => 'k => 'v => bool)
-        (f: 'acc => 'k => 'v => 'acc)
-        (acc: 'acc)
-        (iter: t 'k 'v): 'acc => switch iter {
-      | Empty => acc
-      | Instance iter _ { reduce } => iter |> reduce while_::predicate f acc;
-    };
-  }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
-
-  let reduceReversed = KeyedReducerReversed.reduce;
-
-  let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
-
-  let reduceValuesReversed = KeyedReducerReversed.reduceValues;
-
-  let toSequence (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
-    | Empty => Sequence.empty ()
-    | Instance keyed { toSequence } _ => toSequence selector keyed
-  };
-
-  let toSequenceReversed (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
-    | Empty => Sequence.empty ()
-    | Instance keyed _ { toSequence } => toSequence selector keyed
-  };
-}: S2 with type t 'k 'v := t 'k 'v);
-
-let empty (): (t 'k 'v) => Empty;
-
-let toNavigableKeyedCollection (keyed: t 'k 'v): t 'k 'v => keyed;
+let toSequenceReversed (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
+  | Empty => Sequence.empty ()
+  | Instance keyed _ { toSequence } => toSequence selector keyed
+};

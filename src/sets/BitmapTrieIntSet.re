@@ -61,14 +61,14 @@ let rec contains
 };
 
 let reduceWhile
-    (levelPredicate: option ('acc => t => bool))
+    (levelPredicate: 'acc => t => bool)
     (levelReducer: 'acc => t => 'acc)
     (predicate: 'acc => int => bool)
     (f: 'acc => int => 'acc)
     (acc: 'acc)
     (map: t): 'acc => switch map {
   | Level _ nodes _ =>
-      nodes |> CopyOnWriteArray.reduce while_::?levelPredicate levelReducer acc
+      nodes |> CopyOnWriteArray.reduce while_::levelPredicate levelReducer acc
   | Entry entryValue =>
       if (predicate acc entryValue) (f acc entryValue) else acc
   | Empty => acc
@@ -81,7 +81,7 @@ let reduce
     (map: t): 'acc =>
   if (predicate === Functions.alwaysTrue2) {
     let rec levelReducer acc node => node
-      |> reduceWhile None levelReducer Functions.alwaysTrue2 f acc;
+      |> reduceWhile Functions.alwaysTrue2 levelReducer Functions.alwaysTrue2 f acc;
     levelReducer acc map
   }
   else {
@@ -95,7 +95,7 @@ let reduce
       }
       else false;
 
-    let levelPredicate = Some (fun _ _ => !shouldContinue);
+    let levelPredicate _ _ => !shouldContinue;
     let rec levelReducer acc node => node
       |> reduceWhile levelPredicate levelReducer predicate f acc;
 

@@ -9,70 +9,66 @@
 
 type t 'a = array 'a;
 
-include (Indexed.Make1 {
-  type nonrec t 'a = t 'a;
+let count (arr: t 'a): int => Array.length arr;
 
-  let count (arr: t 'a): int => Array.length arr;
+let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
 
-  let getOrRaise (index: int) (arr: t 'a): 'a => arr.(index);
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc => {
+  let arrCount = count arr;
+  let rec loop acc index =>
+    if (index < arrCount) {
+      let next = arr.(index);
 
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (arr: t 'a): 'acc => {
-    let arrCount = count arr;
-    let rec loop acc index =>
-      if (index < arrCount) {
-        let next = arr.(index);
-
-        if (predicate acc next) {
-          let acc = f acc arr.(index);
-          loop acc (index + 1);
-        }
-        else acc
+      if (predicate acc next) {
+        let acc = f acc arr.(index);
+        loop acc (index + 1);
       }
-      else acc;
+      else acc
+    }
+    else acc;
 
-    loop acc 0;
-  };
+  loop acc 0;
+};
 
-  let reduceReversed
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (arr: t 'a): 'acc => {
-    let arrCount = count arr;
-    let rec loop acc index =>
-      if (index >= 0) {
-        let next = arr.(index);
+let reduceReversed
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (arr: t 'a): 'acc => {
+  let arrCount = count arr;
+  let rec loop acc index =>
+    if (index >= 0) {
+      let next = arr.(index);
 
-        if (predicate acc next) {
-          let acc = f acc arr.(index);
-          loop acc (index - 1);
-        }
-        else acc
+      if (predicate acc next) {
+        let acc = f acc arr.(index);
+        loop acc (index - 1);
       }
-      else acc;
+      else acc
+    }
+    else acc;
 
-    loop acc (arrCount - 1);
-  };
+  loop acc (arrCount - 1);
+};
 
-  let toSequence (arr: t 'a): (Sequence.t 'a) => {
-    let arrCount = count arr;
-    let rec loop index => fun () =>
-      if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
-      else Sequence.Completed;
-    loop 0;
-  };
+let toSequence (arr: t 'a): (Sequence.t 'a) => {
+  let arrCount = count arr;
+  let rec loop index => fun () =>
+    if (index < arrCount) (Sequence.Next arr.(index) (loop (index + 1)))
+    else Sequence.Completed;
+  loop 0;
+};
 
-  let toSequenceReversed (arr: t 'a): (Sequence.t 'a) => {
-    let rec loop index => fun () =>
-      if (index < 0) Sequence.Completed
-      else Sequence.Next arr.(index) (loop (index - 1));
-    loop (count arr - 1);
-  };
-}: Indexed.S1 with type t 'a := t 'a);
+let toSequenceReversed (arr: t 'a): (Sequence.t 'a) => {
+  let rec loop index => fun () =>
+    if (index < 0) Sequence.Completed
+    else Sequence.Next arr.(index) (loop (index - 1));
+  loop (count arr - 1);
+};
 
 let lastIndexOrRaise (arr: t 'a): int => {
   let lastIndex = count arr - 1;

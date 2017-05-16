@@ -34,7 +34,6 @@ include (ImmMap.MakeGeneric {
   let getOrRaise (key: int) ({ root }: t 'k 'v): 'v =>
     root |> BitmapTrieIntMap.getOrRaise 0 key;
 
-
   include (KeyedReducer.MakeGeneric {
     type nonrec t 'k 'v = t 'k 'v;
     type k 'k  = int;
@@ -186,10 +185,10 @@ let module Transient = {
   let putAll
       (iter: KeyedIterable.t int 'v)
       (transient: t 'v): (t 'v) => iter
-    |> KeyedIterable.reduce (fun acc k v => acc |> put k v) transient;
+    |> KeyedIterable.reduce while_::Functions.alwaysTrue3 (fun acc k v => acc |> put k v) transient;
 
   let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'v): (t 'v) => iter
-    |> Iterable.reduce (fun acc (k, v) => acc |> put k v) transient;
+    |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc (k, v) => acc |> put k v) transient;
 
   let remove (key: int) (transient: t 'v): (t 'v) =>
     transient |> alter key Functions.alwaysNone;
@@ -224,7 +223,7 @@ let merge
     (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
     (initialValue: t 'vAcc)
     (next: t 'v): (t 'vAcc) => ImmSet.union (keysSet next) (keysSet initialValue)
-  |> Iterable.reduce (
+  |> Iterable.reduce while_::Functions.alwaysTrue2 (
       fun acc key => {
         let result = f key (initialValue |> get key) (next |> get key);
         switch result {

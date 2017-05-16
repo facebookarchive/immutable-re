@@ -57,14 +57,16 @@ module type S1 = {
   let toSequence: (t 'a) => (Sequence.t 'a);
 };
 
-let module MakeGeneric = fun (Base: {
+module type Base = {
   type elt 'a;
   type t 'a;
 
   let count: t 'a => int;
   let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
   let toSequence: t 'a => Sequence.t (elt 'a);
-}) => ({
+};
+
+let module MakeGeneric = fun (Base: Base) => ({
   include Base;
 
   let isEmpty (collection: t 'a): bool =>
@@ -92,33 +94,24 @@ let module MakeGeneric = fun (Base: {
     else Instance collection collectionBase;
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-
-include (MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
-
-  let count (collection: t 'a): int => switch collection {
-    | Empty => 0
-    | Instance collection { count } => count collection
-  };
-
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (collection: t 'a): 'acc => switch collection {
-    | Empty => acc
-    | Instance collection { reduce } =>
-        collection |> reduce while_::predicate f acc;
-  };
-
-  let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
-    | Empty => Sequence.empty ()
-    | Instance collection { toSequence } => toSequence collection
-  };
-}: S1 with type t 'a := t 'a);
+let count (collection: t 'a): int => switch collection {
+  | Empty => 0
+  | Instance collection { count } => count collection
+};
 
 let empty (): (t 'a) => Empty;
 
-let toCollection (collection: t 'a): (t 'a) =>
-  collection;
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (collection: t 'a): 'acc => switch collection {
+  | Empty => acc
+  | Instance collection { reduce } =>
+      collection |> reduce while_::predicate f acc;
+};
+
+let toSequence (collection: t 'a): (Sequence.t 'a) => switch collection {
+  | Empty => Sequence.empty ()
+  | Instance collection { toSequence } => toSequence collection
+};

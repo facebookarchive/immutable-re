@@ -109,7 +109,7 @@ let module Make = fun (Comparable: Comparable.S) => {
   };
 
   let addAll (iter: Iterable.t a) (sortedSet: t): t => iter
-    |> Iterable.reduce (fun acc next => acc |> add next) sortedSet;
+    |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc next => acc |> add next) sortedSet;
 
   let rec compareWith
       (valueCompare: Comparator.t 'a)
