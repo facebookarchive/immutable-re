@@ -16,6 +16,23 @@ type t 'a =
 
 type navigableCollection 'a = t 'a;
 
+module type SGeneric = {
+  type elt 'a;
+  type t 'a;
+
+  include SequentialCollection.SGeneric with type elt 'a := elt 'a and type t 'a := t 'a;
+
+  let last: t 'a => (option (elt 'a));
+  let lastOrRaise: t 'a => (elt 'a);
+  let reduceReversed: while_::('acc => elt 'a => bool)? => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toCollectionReversed: t 'a => (Collection.t (elt 'a));
+  let toIterableReversed: t 'a => (Iterable.t (elt 'a));
+  let toNavigableCollection: t 'a => (navigableCollection (elt 'a));
+  let toNavigableCollectionReversed: t 'a => (navigableCollection (elt 'a));
+  let toSequenceReversed: t 'a => (Sequence.t (elt 'a));
+  let toSequentialCollectionReversed: t 'a => (SequentialCollection.t (elt 'a));
+};
+
 module type S = {
   type a;
   type t;
@@ -49,6 +66,70 @@ module type S1 = {
   let toSequentialCollectionReversed: t 'a => (SequentialCollection.t 'a);
 };
 
+let module MakeGeneric = fun (Base: {
+  type elt 'a;
+  type t 'a;
+
+  let count: t 'a => int;
+  let firstOrRaise: t 'a => elt 'a;
+  let lastOrRaise: t 'a => elt 'a;
+  let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let reduceReversed: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t (elt 'a);
+  let toSequenceReversed: t 'a => Sequence.t (elt 'a);
+}) => ({
+  include Base;
+
+  include (SequentialCollection.MakeGeneric Base: SequentialCollection.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);
+
+  let last (collection: t 'a): (option (elt 'a)) =>
+    if (isEmpty collection) None
+    else Some (lastOrRaise collection);
+
+  let module ReversedSequentialCollection = SequentialCollection.MakeGeneric {
+    type nonrec t 'a = t 'a;
+    type nonrec elt 'a = elt 'a;
+
+    let count = count;
+    let firstOrRaise = lastOrRaise;
+    let reduce = Base.reduceReversed;
+    let toSequence = toSequenceReversed;
+  };
+
+  let reduceReversed = ReversedSequentialCollection.reduce;
+
+  let toIterableReversed = ReversedSequentialCollection.toIterable;
+
+  let toSequenceReversed = ReversedSequentialCollection.toSequence;
+
+  let toCollectionReversed = ReversedSequentialCollection.toCollection;
+
+  let toSequentialCollectionReversed = ReversedSequentialCollection.toSequentialCollection;
+
+  let navigableCollectionBase: SequentialCollection.s (t 'a) (elt 'a) = {
+    count,
+    firstOrRaise,
+    reduce: Base.reduce,
+    toSequence,
+  };
+
+  let navigableCollectionReversedBase: SequentialCollection.s (t 'a) (elt 'a) = {
+    count,
+    firstOrRaise: lastOrRaise,
+    reduce: Base.reduceReversed,
+    toSequence: toSequenceReversed,
+  };
+
+  let toNavigableCollection (collection: t 'a): (navigableCollection (elt 'a)) =>
+    if (isEmpty collection) Empty
+    else Instance collection navigableCollectionBase navigableCollectionReversedBase;
+
+  let toNavigableCollectionReversed (collection: t 'a): (navigableCollection (elt 'a)) =>
+    if (isEmpty collection) Empty
+    else Instance collection navigableCollectionReversedBase navigableCollectionBase;
+
+}: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
+
 let module Make = fun (Base: {
   type a;
   type t;
@@ -60,58 +141,18 @@ let module Make = fun (Base: {
   let reduceReversed: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toSequence: t => Sequence.t a;
   let toSequenceReversed: t => Sequence.t a;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t;
+  type elt 'a = Base.a;
 
-  include (SequentialCollection.Make Base: SequentialCollection.S with type t := t and type a := a);
-
-  let last (collection: t): (option a) =>
-    if (isEmpty collection) None
-    else Some (lastOrRaise collection);
-
-  let module ReversedSequentialCollection = SequentialCollection.Make {
-    type nonrec t = t;
-    type nonrec a = a;
-
-    let count = count;
-    let firstOrRaise = lastOrRaise;
-    let reduce = Base.reduceReversed;
-    let toSequence = toSequenceReversed;
-  };
-
-  let reduceReversed = ReversedSequentialCollection.reduce;
-
-  let toIterableReversed = ReversedSequentialCollection.toIterable;
-
-  let toSequenceReversed = ReversedSequentialCollection.toSequence;
-
-  let toCollectionReversed = ReversedSequentialCollection.toCollection;
-
-  let toSequentialCollectionReversed = ReversedSequentialCollection.toSequentialCollection;
-
-  let navigableCollectionBase: SequentialCollection.s t a = {
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let navigableCollectionReversedBase: SequentialCollection.s t a = {
-    count,
-    firstOrRaise: lastOrRaise,
-    reduce: Base.reduceReversed,
-    toSequence: toSequenceReversed,
-  };
-
-  let toNavigableCollection (collection: t): (navigableCollection a) =>
-    if (isEmpty collection) Empty
-    else Instance collection navigableCollectionBase navigableCollectionReversedBase;
-
-  let toNavigableCollectionReversed (collection: t): (navigableCollection a) =>
-    if (isEmpty collection) Empty
-    else Instance collection navigableCollectionReversedBase navigableCollectionBase;
-
-}: S with type t := Base.t and type a := Base.a);
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let lastOrRaise = Base.lastOrRaise;
+  let reduce = Base.reduce;
+  let reduceReversed = Base.reduceReversed;
+  let toSequence = Base.toSequence;
+  let toSequenceReversed = Base.toSequenceReversed;
+}): S with type t := Base.t and type a := Base.a);
 
 let module Make1 = fun (Base: {
   type t 'a;
@@ -123,57 +164,18 @@ let module Make1 = fun (Base: {
   let reduceReversed: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let toSequence: t 'a => Sequence.t 'a;
   let toSequenceReversed: t 'a => Sequence.t 'a;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t 'a;
+  type elt 'a = 'a;
 
-  include (SequentialCollection.Make1 Base: SequentialCollection.S1 with type t 'a := t 'a);
-
-  let last (collection: t 'a): (option 'a) =>
-    if (isEmpty collection) None
-    else Some (lastOrRaise collection);
-
-  let module ReversedSequentialCollection = SequentialCollection.Make1 {
-    type nonrec t 'a = t 'a;
-
-    let count = count;
-    let firstOrRaise = lastOrRaise;
-    let reduce = Base.reduceReversed;
-    let toSequence = toSequenceReversed;
-  };
-
-  let reduceReversed = ReversedSequentialCollection.reduce;
-
-  let toIterableReversed = ReversedSequentialCollection.toIterable;
-
-  let toSequenceReversed = ReversedSequentialCollection.toSequence;
-
-  let toCollectionReversed = ReversedSequentialCollection.toCollection;
-
-  let toSequentialCollectionReversed = ReversedSequentialCollection.toSequentialCollection;
-
-  let navigableCollectionBase: SequentialCollection.s (t 'a) 'a = {
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let navigableCollectionReversedBase: SequentialCollection.s (t 'a) 'a = {
-    count,
-    firstOrRaise: lastOrRaise,
-    reduce: Base.reduceReversed,
-    toSequence: toSequenceReversed,
-  };
-
-  let toNavigableCollection (collection: t 'a): (navigableCollection 'a) =>
-    if (isEmpty collection) Empty
-    else Instance collection navigableCollectionBase navigableCollectionReversedBase;
-
-  let toNavigableCollectionReversed (collection: t 'a): (navigableCollection 'a) =>
-    if (isEmpty collection) Empty
-    else Instance collection navigableCollectionReversedBase navigableCollectionBase;
-
-}: S1 with type t 'a := Base.t 'a);
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let lastOrRaise = Base.lastOrRaise;
+  let reduce = Base.reduce;
+  let reduceReversed = Base.reduceReversed;
+  let toSequence = Base.toSequence;
+  let toSequenceReversed = Base.toSequenceReversed;
+}): S1 with type t 'a := Base.t 'a);
 
 include(Make1 {
   type nonrec t 'a = t 'a;

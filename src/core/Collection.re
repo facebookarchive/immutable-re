@@ -19,6 +19,19 @@ type t 'a =
 
 type collection 'a = t 'a;
 
+module type SGeneric = {
+  type elt 'a;
+  type t 'a;
+
+  include Iterable.SGeneric with type elt 'a := elt 'a and type t 'a := t 'a;
+
+  let count: t 'a => int;
+  let isEmpty: t 'a => bool;
+  let isNotEmpty: t 'a => bool;
+  let toCollection: t 'a => collection (elt 'a);
+  let toSequence: t 'a => (Sequence.t (elt 'a));
+};
+
 module type S = {
   type a;
   type t;
@@ -44,48 +57,13 @@ module type S1 = {
   let toSequence: (t 'a) => (Sequence.t 'a);
 };
 
-let module Make = fun (Base: {
-  type a;
-  type t;
-
-  let count: t => int;
-  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toSequence: t => Sequence.t a;
-}) => ({
-  include Base;
-
-  let isEmpty (collection: t): bool =>
-    (count collection) === 0;
-
-  let isNotEmpty (collection: t): bool =>
-    (count collection) !== 0;
-
-  include (Iterable.Make {
-    type nonrec a = a;
-    type nonrec t = t;
-
-    let isEmpty = isEmpty;
-    let reduce = reduce;
-  }: Iterable.S with type t := t and type a := a);
-
-  let collectionBase: s t a = {
-    count,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let toCollection (collection: t): (collection a) =>
-    if (isEmpty collection) Empty
-    else Instance collection collectionBase;
-
-}: S with type t := Base.t and type a := Base.a);
-
-let module Make1 = fun (Base: {
+let module MakeGeneric = fun (Base: {
+  type elt 'a;
   type t 'a;
 
   let count: t 'a => int;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t 'a;
+  let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t (elt 'a);
 }) => ({
   include Base;
 
@@ -95,27 +73,55 @@ let module Make1 = fun (Base: {
   let isNotEmpty (collection: t 'a): bool =>
     (count collection) !== 0;
 
-  include (Iterable.Make1 {
+  include (Iterable.MakeGeneric {
+    type nonrec elt 'a = elt 'a;
     type nonrec t 'a = t 'a;
 
     let isEmpty = isEmpty;
     let reduce = reduce;
-  }: Iterable.S1 with type t 'a := t 'a);
+  }: Iterable.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);
 
-  let toSequence (collection: t 'a): (Sequence.t 'a) =>
-    if (isEmpty collection) (Sequence.empty ())
-    else (Base.toSequence collection);
-
-  let collectionBase: s (t 'a) 'a = {
+  let collectionBase: s (t 'a) (elt 'a) = {
     count,
     reduce: Base.reduce,
     toSequence,
   };
 
-  let toCollection (collection: t 'a): (collection 'a) =>
+  let toCollection (collection: t 'a): (collection (elt 'a)) =>
     if (isEmpty collection) Empty
     else Instance collection collectionBase;
-}: S1 with type t 'a := Base.t 'a);
+}: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
+
+let module Make = fun (Base: {
+  type a;
+  type t;
+
+  let count: t => int;
+  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toSequence: t => Sequence.t a;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t;
+  type elt 'a = Base.a;
+
+  let count = Base.count;
+  let reduce = Base.reduce;
+  let toSequence = Base.toSequence;
+}): S with type t := Base.t and type a := Base.a);
+
+let module Make1 = fun (Base: {
+  type t 'a;
+
+  let count: t 'a => int;
+  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t 'a;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t 'a;
+  type elt 'a = 'a;
+
+  let count = Base.count;
+  let reduce = Base.reduce;
+  let toSequence = Base.toSequence;
+}): S1 with type t 'a := Base.t 'a);
 
 include(Make1 {
   type nonrec t 'a = t 'a;

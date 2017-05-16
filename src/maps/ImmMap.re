@@ -22,6 +22,21 @@ type t 'k 'v =
   | Instance 'map (s 'map 'k 'v): t 'k 'v;
 
 type map 'k 'v = t 'k 'v;
+
+module type SGeneric = {
+  type t 'k 'v;
+  type k 'k;
+  type v 'v;
+
+  include KeyedCollection.SGeneric with type t 'k 'v := t 'k 'v and type k 'k := k 'k  and type v 'v := v 'v;
+
+  let get: k 'k => (t 'k 'v) => (option (v 'v));
+  let getOrDefault: default::(v 'v) => (k 'k) => (t 'k 'v) => (v 'v);
+  let getOrRaise: (k 'k) => (t 'k 'v) => (v 'v);
+  let keysSet: (t 'k 'v) => (ImmSet.t (k 'k));
+  let toMap: (t 'k 'v) => map (k 'k) (v 'v);
+};
+
 module type S1 = {
   type k;
   type t 'v;
@@ -47,6 +62,52 @@ module type S2 = {
   let toMap: (t 'k 'v) => map 'k 'v;
 };
 
+let module MakeGeneric = fun (Base: {
+  type t 'k 'v;
+  type k 'k;
+  type v 'v;
+
+  let containsKey: k 'k => t 'k 'v => bool;
+  let count: t 'k 'v => int;
+  let get: k 'k => (t 'k 'v) => (option (v 'v));
+  let getOrDefault: default::(v 'v) => k 'k => (t 'k 'v) => v 'v;
+  let getOrRaise: k 'k => (t 'k 'v) => v 'v;
+  let reduce: while_::('acc => k 'k => v 'v => bool) => ('acc => k 'k => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceKeys: while_::('acc => k 'k => bool) => ('acc => k 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceValues: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let toSequence: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
+}) => ({
+  include Base;
+
+  include (KeyedCollection.MakeGeneric Base: KeyedCollection.SGeneric with type t 'k 'v := t 'k 'v and type k 'k := k 'k and type v 'v := v 'v);
+
+  let keysSetBase: ImmSet.s (t 'k 'v) (k 'k) = {
+    contains: containsKey,
+    count,
+    reduce: Base.reduceKeys,
+    toSequence: keysSequence,
+  };
+
+  let keysSet (map: t 'k 'v): (ImmSet.t (k 'k)) =>
+    if (isEmpty map) (ImmSet.empty ())
+    else (ImmSet.Instance map keysSetBase);
+
+  let mapBase: s (t 'k 'v) (k 'k) (v 'v) = {
+    containsKey,
+    count,
+    get,
+    getOrDefault,
+    getOrRaise,
+    reduce: Base.reduce,
+    toSequence,
+  };
+
+  let toMap (map: t 'k 'v): (map (k 'k) (v 'v)) =>
+    if (isEmpty map) Empty
+    else Instance map mapBase;
+
+}: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
+
 let module Make1 = fun (Base: {
   type k;
   type t 'v;
@@ -60,37 +121,21 @@ let module Make1 = fun (Base: {
   let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   let toSequence: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'k 'v  = Base.t 'v;
+  type k 'k = Base.k;
+  type v 'v = 'v;
 
-  include (KeyedCollection.Make1 Base: KeyedCollection.S1 with type k := k and type t 'v := t 'v);
-
-  let keysSetBase: ImmSet.s (t 'v) k = {
-    contains: containsKey,
-    count,
-    reduce: Base.reduceKeys,
-    toSequence: keysSequence,
-  };
-
-  let keysSet (map: t 'v): (ImmSet.t k) =>
-    if (isEmpty map) (ImmSet.empty ())
-    else (ImmSet.Instance map keysSetBase);
-
-  let mapBase: s (t 'v) k 'v = {
-    containsKey,
-    count,
-    get,
-    getOrDefault,
-    getOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let toMap (map: t 'v): (map k 'v) =>
-    if (isEmpty map) Empty
-    else Instance map mapBase;
-
-}: S1 with type k := Base.k and type t 'v := Base.t 'v);
+  let containsKey = Base.containsKey;
+  let count = Base.count;
+  let get = Base.get;
+  let getOrDefault = Base.getOrDefault;
+  let getOrRaise = Base.getOrRaise;
+  let reduce = Base.reduce;
+  let reduceKeys = Base.reduceKeys;
+  let reduceValues = Base.reduceValues;
+  let toSequence = Base.toSequence;
+}): S1 with type t 'v := Base.t 'v and type k := Base.k);
 
 let module Make2 = fun (Base: {
   type t 'k 'v;
@@ -104,37 +149,21 @@ let module Make2 = fun (Base: {
   let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
   let toSequence: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'k 'v  = Base.t 'k 'v;
+  type k 'k = 'k;
+  type v 'v = 'v;
 
-  include (KeyedCollection.Make2 Base: KeyedCollection.S2 with type t 'k 'v := t 'k 'v);
-
-  let keysSetBase: ImmSet.s (t 'k 'v) 'k = {
-    contains: containsKey,
-    count,
-    reduce: Base.reduceKeys,
-    toSequence: keysSequence,
-  };
-
-  let keysSet (map: t 'k 'v): (ImmSet.t 'k) =>
-    if (isEmpty map) (ImmSet.empty ())
-    else (ImmSet.Instance map keysSetBase);
-
-  let mapBase: s (t 'k 'v) 'k 'v = {
-    containsKey,
-    count,
-    get,
-    getOrDefault,
-    getOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let toMap (map: t 'k 'v): (map 'k 'v) =>
-    if (isEmpty map) Empty
-    else Instance map mapBase;
-
-}: S2 with type t 'k 'v := Base.t 'k 'v);
+  let containsKey = Base.containsKey;
+  let count = Base.count;
+  let get = Base.get;
+  let getOrDefault = Base.getOrDefault;
+  let getOrRaise = Base.getOrRaise;
+  let reduce = Base.reduce;
+  let reduceKeys = Base.reduceKeys;
+  let reduceValues = Base.reduceValues;
+  let toSequence = Base.toSequence;
+}): S2 with type t 'k 'v := Base.t 'k 'v);
 
 include (Make2 {
   type nonrec t 'k 'v = t 'k 'v;

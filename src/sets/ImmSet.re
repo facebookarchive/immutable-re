@@ -23,6 +23,17 @@ type t 'a =
 
 type set 'a = t 'a;
 
+module type SGeneric = {
+  type elt 'a;
+  type t 'a;
+
+  include Collection.SGeneric with type elt 'a := elt 'a and type t 'a := t 'a;
+
+  let contains: (elt 'a) => t 'a => bool;
+  let equals: Equality.t (t 'a);
+  let toSet: t 'a => set (elt 'a);
+};
+
 module type S = {
   type a;
   type t;
@@ -44,51 +55,20 @@ module type S1 = {
   let toSet: (t 'a) => set 'a;
 };
 
-let module Make = fun (Base: {
-  type a;
-  type t;
-
-  let contains: a => t => bool;
-  let count: t => int;
-  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toSequence: t => Sequence.t a;
-}) => ({
-  include Base;
-
-  include (Collection.Make Base: Collection.S with type t := t and type a := a);
-
-  let setBase: s t a = {
-    contains,
-    count,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let equals (this: t) (that: t): bool =>
-    if (this === that) true
-    else if ((count this) !== (count that)) false
-    else this |> reduce
-      while_::(fun acc _ => acc) (fun _ => flip contains that) true;
-
-  let toSet (set: t): (set a) =>
-    if (isEmpty set) Empty
-    else Instance set setBase;
-
-}: S with type t := Base.t and type a := Base.a);
-
-let module Make1 = fun (Base: {
+let module MakeGeneric = fun (Base: {
+  type elt 'a;
   type t 'a;
 
-  let contains: 'a => t 'a => bool;
+  let contains: elt 'a => t 'a => bool;
   let count: t 'a => int;
-  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
-  let toSequence: t 'a => Sequence.t 'a;
+  let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t (elt 'a);
 }) => ({
   include Base;
 
-  include (Collection.Make1 Base: Collection.S1 with type t 'a := t 'a);
+  include (Collection.MakeGeneric Base: Collection.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);
 
-  let setBase: s (t 'a) 'a = {
+  let setBase: s (t 'a) (elt 'a) = {
     contains,
     count,
     reduce: Base.reduce,
@@ -101,11 +81,46 @@ let module Make1 = fun (Base: {
     else this |> reduce
       while_::(fun acc _ => acc) (fun _ => flip contains that) true;
 
-  let toSet (set: t 'a): (set 'a) =>
+  let toSet (set: t 'a): (set (elt 'a)) =>
     if (isEmpty set) Empty
     else Instance set setBase;
 
-}: S1 with type t 'a := Base.t 'a);
+}: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
+
+let module Make = fun (Base: {
+  type a;
+  type t;
+
+  let contains: a => t => bool;
+  let count: t => int;
+  let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
+  let toSequence: t => Sequence.t a;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t;
+  type elt 'a = Base.a;
+
+  let contains = Base.contains;
+  let count = Base.count;
+  let reduce = Base.reduce;
+  let toSequence = Base.toSequence;
+}): S with type t := Base.t and type a := Base.a);
+
+let module Make1 = fun (Base: {
+  type t 'a;
+
+  let contains: 'a => t 'a => bool;
+  let count: t 'a => int;
+  let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t 'a;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t 'a;
+  type elt 'a = 'a;
+
+  let contains = Base.contains;
+  let count = Base.count;
+  let reduce = Base.reduce;
+  let toSequence = Base.toSequence;
+}): S1 with type t 'a := Base.t 'a);
 
 include(Make1 {
   type nonrec t 'a = t 'a;

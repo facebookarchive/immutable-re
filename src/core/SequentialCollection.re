@@ -20,6 +20,17 @@ type t 'a =
 
 type sequentialCollection 'a = t 'a;
 
+module type SGeneric = {
+  type elt 'a;
+  type t 'a;
+
+  include Collection.SGeneric with type elt 'a := elt 'a and type t 'a := t 'a;
+
+  let first: t 'a => (option (elt 'a));
+  let firstOrRaise: t 'a => (elt 'a);
+  let toSequentialCollection: t 'a => (sequentialCollection (elt 'a));
+};
+
 module type S = {
   type a;
   type t;
@@ -41,6 +52,42 @@ module type S1 = {
   let toSequentialCollection: (t 'a) => (sequentialCollection 'a);
 };
 
+let module MakeGeneric = fun (Base: {
+  type elt 'a;
+  type t 'a;
+
+  let count: t 'a => int;
+  let firstOrRaise: t 'a => elt 'a;
+  let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t (elt 'a);
+}) => (({
+  include Base;
+
+  include (Collection.MakeGeneric {
+    type nonrec elt 'a = elt 'a;
+    type nonrec t 'a = t 'a;
+
+    let count = Base.count;
+    let reduce = Base.reduce;
+    let toSequence = Base.toSequence;
+  }: Collection.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);
+
+  let first (collection: t 'a): (option (elt 'a)) =>
+    if (isEmpty collection) None
+    else Some (firstOrRaise collection);
+
+  let sequentialCollectionBase: s (t 'a) (elt 'a) = {
+    count,
+    firstOrRaise,
+    reduce: Base.reduce,
+    toSequence,
+  };
+
+  let toSequentialCollection (collection: t 'a): (sequentialCollection (elt 'a)) =>
+    if (isEmpty collection) Empty
+    else Instance collection sequentialCollectionBase;
+}): SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
+
 let module Make = fun (Base: {
   type a;
   type t;
@@ -49,27 +96,15 @@ let module Make = fun (Base: {
   let firstOrRaise: t => a;
   let reduce: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toSequence: t => Sequence.t a;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t;
+  type elt 'a = Base.a;
 
-  include (Collection.Make Base: Collection.S with type t := t and type a := a);
-
-  let first (collection: t): (option a) =>
-    if (isEmpty collection) None
-    else Some (firstOrRaise collection);
-
-  let sequentialCollectionBase: s t a = {
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let toSequentialCollection (collection: t): (sequentialCollection a) =>
-    if (isEmpty collection) Empty
-    else Instance collection sequentialCollectionBase;
-
-}: S with type t := Base.t and type a := Base.a);
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let reduce = Base.reduce;
+  let toSequence = Base.toSequence;
+}): S with type t := Base.t and type a := Base.a);
 
 let module Make1 = fun (Base: {
   type t 'a;
@@ -78,27 +113,15 @@ let module Make1 = fun (Base: {
   let firstOrRaise: t 'a => 'a;
   let reduce: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let toSequence: t 'a => Sequence.t 'a;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t 'a;
+  type elt 'a = 'a;
 
-  include (Collection.Make1 Base: Collection.S1 with type t 'a := t 'a);
-
-  let first (collection: t 'a): (option 'a) =>
-    if (isEmpty collection) None
-    else Some (firstOrRaise collection);
-
-  let sequentialCollectionBase: s (t 'a) 'a = {
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let toSequentialCollection (collection: t 'a): (sequentialCollection 'a) =>
-    if (isEmpty collection) Empty
-    else Instance collection sequentialCollectionBase;
-
-}: S1 with type t 'a := Base.t 'a);
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let reduce = Base.reduce;
+  let toSequence = Base.toSequence;
+}): S1 with type t 'a := Base.t 'a);
 
 include(Make1 {
   type nonrec t 'a = t 'a;

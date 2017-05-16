@@ -21,6 +21,42 @@ type t 'k 'v =
 
 type navigableKeyedCollection 'k 'v = t 'k 'v;
 
+module type SGeneric = {
+  type t 'k 'v;
+  type k 'k;
+  type v 'v;
+
+  include KeyedCollection.SGeneric with type t 'k 'v := t 'k 'v and type k 'k := k 'k and type v 'v := v 'v;
+
+  let first: (k 'k => v 'v => 'c) => (t 'k 'v) => (option 'c);
+  let firstOrRaise: (k 'k => v 'v => 'c) => (t 'k 'v) => 'c;
+  let keysCollectionReversed: (t 'k 'v) => (Collection.t (k 'k));
+  let keysNavigableCollection: (t 'k 'v) => (NavigableCollection.t (k 'k));
+  let keysNavigableCollectionReversed: (t 'k 'v) => (NavigableCollection.t (k 'k));
+  let keysReversed: (t 'k 'v) => (Iterable.t (k 'k));
+  let keysSequentialCollection: (t 'k 'v) => (SequentialCollection.t (k 'k));
+  let keysSequentialCollectionReversed: (t 'k 'v) => (SequentialCollection.t (k 'k));
+  let keysSequenceReversed: (t 'k 'v) => Sequence.t (k 'k);
+  let last: (k 'k => v 'v => 'c) => (t 'k 'v) => (option 'c);
+  let lastOrRaise: (k 'k => v 'v => 'c) => (t 'k 'v) => 'c;
+  let reduceReversed: while_::('acc => k 'k => v 'v => bool)? => ('acc => k 'k => v 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceKeysReversed: while_::('acc => k 'k => bool)? => ('acc => k 'k => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let reduceValuesReversed: while_::('acc => v 'v => bool)? => ('acc => v 'v => 'acc) => 'acc => (t 'k 'v) => 'acc;
+  let toIterableReversed: (k 'k => v 'v => 'c) => t 'k 'v => Iterable.t 'c;
+  let toKeyedCollectionReversed: t 'k 'v => KeyedCollection.t (k 'k) (v 'v);
+  let toKeyedIterableReversed: t 'k 'v => KeyedIterable.t (k 'k) (v 'v);
+  let toNavigableKeyedCollection: t 'k 'v => navigableKeyedCollection (k 'k) (v 'v);
+  let toNavigableKeyedCollectionReversed: t 'k 'v => navigableKeyedCollection (k 'k) (v 'v);
+  let toSequenceReversed: (k 'k => v 'v => 'c) => (t 'k 'v) => (Sequence.t 'c);
+  let valuesCollectionReversed: (t 'k 'v) => (Collection.t (v 'v));
+  let valuesNavigableCollection: (t 'k 'v) => (NavigableCollection.t (v 'v));
+  let valuesNavigableCollectionReversed: (t 'k 'v) => (NavigableCollection.t (v 'v));
+  let valuesReversed: (t 'k 'v) => (Iterable.t (v 'v));
+  let valuesSequentialCollection: (t 'k 'v) => (SequentialCollection.t (v 'v));
+  let valuesSequentialCollectionReversed: (t 'k 'v) => (SequentialCollection.t (v 'v));
+  let valuesSequenceReversed: (t 'k 'v) => (Sequence.t (v 'v));
+};
+
 module type S1 = {
   type k;
   type t 'v;
@@ -90,6 +126,154 @@ module type S2 = {
   let valuesSequenceReversed: (t 'k 'v) => (Sequence.t 'v);
 };
 
+let module MakeGeneric = fun (Base: {
+  type t 'k 'v;
+  type k 'k;
+  type v 'v;
+
+  let containsKey: k 'k => t 'k 'v => bool;
+  let count: t 'k 'v => int;
+  let firstOrRaise: (k 'k => v 'v => 'c) => (t 'k 'v) => 'c;
+  let lastOrRaise: (k 'k => v 'v => 'c) => (t 'k 'v) => 'c;
+  let reduce: while_::('acc => k 'k => v 'v => bool) => ('acc => k 'k => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceReversed: while_::('acc => k 'k => v 'v => bool) => ('acc => k 'k => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceKeys: while_::('acc => k 'k => bool) => ('acc => k 'k => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceKeysReversed: while_::('acc => k 'k => bool) => ('acc => k 'k => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceValues: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceValuesReversed: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let toSequence: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
+  let toSequenceReversed: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
+}) => ({
+  include Base;
+
+  include (KeyedCollection.MakeGeneric Base: KeyedCollection.SGeneric with type t 'k 'v := t 'k 'v  and type k 'k := k 'k and type v 'v := v 'v);
+
+  let first (selector: k 'k => v 'v => 'c) (keyed: t 'k 'v): (option 'c) =>
+    if (isEmpty keyed) None
+    else Some (firstOrRaise selector keyed);
+
+  let last (selector: k 'k => v 'v => 'c) (keyed: t 'k 'v): (option 'c) =>
+    if (isEmpty keyed) None
+    else Some (lastOrRaise selector keyed);
+
+  let module ReversedKeyedCollection = KeyedCollection.MakeGeneric {
+    type nonrec t 'k 'v = t 'k 'v;
+    type nonrec k 'k = k 'k;
+    type nonrec v 'v = v 'v;
+
+    let containsKey = containsKey;
+    let count = count;
+    let reduce = Base.reduceReversed;
+    let reduceKeys = Base.reduceKeysReversed;
+    let reduceValues = Base.reduceValuesReversed;
+    let toSequence = toSequenceReversed;
+  };
+
+  let keysCollectionReversed = ReversedKeyedCollection.keysCollection;
+  let keysReversed = ReversedKeyedCollection.keys;
+  let keysSequenceReversed = ReversedKeyedCollection.keysSequence;
+  let reduceReversed = ReversedKeyedCollection.reduce;
+  let reduceKeysReversed = ReversedKeyedCollection.reduceKeys;
+  let reduceValuesReversed = ReversedKeyedCollection.reduceValues;
+  let toIterableReversed = ReversedKeyedCollection.toIterable;
+  let toKeyedCollectionReversed = ReversedKeyedCollection.toKeyedCollection;
+  let toKeyedIterableReversed = ReversedKeyedCollection.toKeyedIterable;
+  let toSequenceReversed = ReversedKeyedCollection.toSequence;
+  let valuesCollectionReversed = ReversedKeyedCollection.valuesCollection;
+  let valuesReversed = ReversedKeyedCollection.values;
+  let valuesSequenceReversed = ReversedKeyedCollection.valuesSequence;
+
+  let firstKeyOrRaise collection => firstOrRaise Functions.getKey collection;
+  let lastKeyOrRaise collection => lastOrRaise Functions.getKey collection;
+  let firstValueOrRaise collection => firstOrRaise Functions.getValue collection;
+  let lastValueOrRaise collection => lastOrRaise Functions.getValue collection;
+
+  let keysSequentialCollectionBase: SequentialCollection.s (t 'k 'v) (k 'k) = {
+    count,
+    firstOrRaise: firstKeyOrRaise,
+    reduce: Base.reduceKeys,
+    toSequence: keysSequence,
+  };
+
+  let keysSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) (k 'k) = {
+    count,
+    firstOrRaise: lastKeyOrRaise,
+    reduce: Base.reduceKeysReversed,
+    toSequence: keysSequenceReversed,
+  };
+
+  let keysSequentialCollection (collection: t 'k 'v): (SequentialCollection.t (k 'k)) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection keysSequentialCollectionBase;
+
+  let keysSequentialCollectionReversed (collection: t 'k 'v): (SequentialCollection.t (k 'k)) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection keysSequentialCollectionReversedBase;
+
+  let keysNavigableCollection (collection: t 'k 'v): (NavigableCollection.t (k 'k)) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection keysSequentialCollectionBase keysSequentialCollectionReversedBase;
+
+  let keysNavigableCollectionReversed (collection: t 'k 'v): (NavigableCollection.t (k 'k)) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection keysSequentialCollectionReversedBase keysSequentialCollectionBase;
+
+  let valuesSequentialCollectionBase: SequentialCollection.s (t 'k 'v) (v 'v) = {
+    count,
+    firstOrRaise: firstValueOrRaise,
+    reduce: Base.reduceValues,
+    toSequence: valuesSequence,
+  };
+
+  let valuesSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) (v 'v) = {
+    count,
+    firstOrRaise: lastValueOrRaise,
+    reduce: Base.reduceValuesReversed,
+    toSequence: valuesSequenceReversed,
+  };
+
+  let valuesSequentialCollection (collection: t 'k 'v): (SequentialCollection.t (v 'v)) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection valuesSequentialCollectionBase;
+
+  let valuesSequentialCollectionReversed (collection: t 'k 'v): (SequentialCollection.t (v 'v)) =>
+    if (isEmpty collection) (SequentialCollection.empty ())
+    else SequentialCollection.Instance collection valuesSequentialCollectionReversedBase;
+
+  let valuesNavigableCollection (collection: t 'k 'v): (NavigableCollection.t (v 'v)) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection valuesSequentialCollectionBase valuesSequentialCollectionReversedBase;
+
+  let valuesNavigableCollectionReversed (collection: t 'k 'v): (NavigableCollection.t (v 'v)) =>
+    if (isEmpty collection) (NavigableCollection.empty ())
+    else NavigableCollection.Instance collection valuesSequentialCollectionReversedBase valuesSequentialCollectionBase;
+
+  let sequentialKeyedCollectionBase: s (t 'k 'v) (k 'k) (v 'v)  = {
+    containsKey,
+    count,
+    firstOrRaise,
+    reduce: Base.reduce,
+    toSequence,
+  };
+
+  let sequentialKeyedCollectionReversedBase: s (t 'k 'v) (k 'k) (v 'v)  = {
+    containsKey,
+    count,
+    firstOrRaise: lastOrRaise,
+    reduce: Base.reduceReversed,
+    toSequence: toSequenceReversed,
+  };
+
+  let toNavigableKeyedCollection (keyed: t 'k 'v): navigableKeyedCollection (k 'k) (v 'v) =>
+    if (isEmpty keyed) Empty
+    else Instance keyed sequentialKeyedCollectionBase sequentialKeyedCollectionReversedBase;
+
+  let toNavigableKeyedCollectionReversed (keyed: t 'k 'v): navigableKeyedCollection (k 'k) (v 'v) =>
+    if (isEmpty keyed) Empty
+    else Instance keyed sequentialKeyedCollectionReversedBase sequentialKeyedCollectionBase;
+
+}: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
+
 let module Make1 = fun (Base: {
   type k;
   type t 'v;
@@ -106,135 +290,24 @@ let module Make1 = fun (Base: {
   let reduceValuesReversed: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'v => 'acc;
   let toSequence: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
   let toSequenceReversed: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
-}) => ({
-  include Base;
+}) =>  ((MakeGeneric {
+  type t 'k 'v  = Base.t 'v;
+  type k 'k = Base.k;
+  type v 'v = 'v;
 
-  include (KeyedCollection.Make1 Base: KeyedCollection.S1 with type k := k and type t 'v := t 'v);
-
-  let first (selector: k => 'v => 'c) (keyed: t 'v): (option 'c) =>
-    if (isEmpty keyed) None
-    else Some (firstOrRaise selector keyed);
-
-  let last (selector: k => 'v => 'c) (keyed: t 'v): (option 'c) =>
-    if (isEmpty keyed) None
-    else Some (lastOrRaise selector keyed);
-
-  let module ReversedKeyedCollection = KeyedCollection.Make1 {
-    type nonrec k = k;
-    type nonrec t 'v = t 'v;
-
-    let containsKey = containsKey;
-    let count = count;
-    let reduce = Base.reduceReversed;
-    let reduceKeys = Base.reduceKeysReversed;
-    let reduceValues = Base.reduceValuesReversed;
-    let toSequence = toSequenceReversed;
-  };
-
-  let keysCollectionReversed = ReversedKeyedCollection.keysCollection;
-  let keysReversed = ReversedKeyedCollection.keys;
-  let keysSequenceReversed = ReversedKeyedCollection.keysSequence;
-  let reduceReversed = ReversedKeyedCollection.reduce;
-  let reduceKeysReversed = ReversedKeyedCollection.reduceKeys;
-  let reduceValuesReversed = ReversedKeyedCollection.reduceValues;
-  let toIterableReversed = ReversedKeyedCollection.toIterable;
-  let toKeyedCollectionReversed = ReversedKeyedCollection.toKeyedCollection;
-  let toKeyedIterableReversed = ReversedKeyedCollection.toKeyedIterable;
-  let toSequenceReversed = ReversedKeyedCollection.toSequence;
-  let valuesCollectionReversed = ReversedKeyedCollection.valuesCollection;
-  let valuesReversed = ReversedKeyedCollection.values;
-  let valuesSequenceReversed = ReversedKeyedCollection.valuesSequence;
-
-  let firstKeyOrRaise collection => firstOrRaise Functions.getKey collection;
-  let lastKeyOrRaise collection => lastOrRaise Functions.getKey collection;
-  let firstValueOrRaise collection => firstOrRaise Functions.getValue collection;
-  let lastValueOrRaise collection => lastOrRaise Functions.getValue collection;
-
-  let keysSequentialCollectionBase: SequentialCollection.s (t 'v) k = {
-    count,
-    firstOrRaise: firstKeyOrRaise,
-    reduce: Base.reduceKeys,
-    toSequence: keysSequence,
-  };
-
-  let keysSequentialCollectionReversedBase: SequentialCollection.s (t 'v) k = {
-    count,
-    firstOrRaise: lastKeyOrRaise,
-    reduce: Base.reduceKeysReversed,
-    toSequence: keysSequenceReversed,
-  };
-
-  let keysSequentialCollection (collection: t 'v): (SequentialCollection.t k) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection keysSequentialCollectionBase;
-
-  let keysSequentialCollectionReversed (collection: t 'v): (SequentialCollection.t k) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection keysSequentialCollectionReversedBase;
-
-  let keysNavigableCollection (collection: t 'v): (NavigableCollection.t k) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection keysSequentialCollectionBase keysSequentialCollectionReversedBase;
-
-  let keysNavigableCollectionReversed (collection: t 'v): (NavigableCollection.t k) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection keysSequentialCollectionReversedBase keysSequentialCollectionBase;
-
-  let valuesSequentialCollectionBase: SequentialCollection.s (t 'v) 'v = {
-    count,
-    firstOrRaise: firstValueOrRaise,
-    reduce: Base.reduceValues,
-    toSequence: valuesSequence,
-  };
-
-  let valuesSequentialCollectionReversedBase: SequentialCollection.s (t 'v) 'v = {
-    count,
-    firstOrRaise: lastValueOrRaise,
-    reduce: Base.reduceValuesReversed,
-    toSequence: valuesSequenceReversed,
-  };
-
-  let valuesSequentialCollection (collection: t 'v): (SequentialCollection.t 'v) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection valuesSequentialCollectionBase;
-
-  let valuesSequentialCollectionReversed (collection: t 'v): (SequentialCollection.t 'v) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection valuesSequentialCollectionReversedBase;
-
-  let valuesNavigableCollection (collection: t 'v): (NavigableCollection.t 'v) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection valuesSequentialCollectionBase valuesSequentialCollectionReversedBase;
-
-  let valuesNavigableCollectionReversed (collection: t 'v): (NavigableCollection.t 'v) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection valuesSequentialCollectionReversedBase valuesSequentialCollectionBase;
-
-  let sequentialKeyedCollectionBase: s (t 'v) k 'v  = {
-    containsKey,
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let sequentialKeyedCollectionReversedBase: s (t 'v) k 'v  = {
-    containsKey,
-    count,
-    firstOrRaise: lastOrRaise,
-    reduce: Base.reduceReversed,
-    toSequence: toSequenceReversed,
-  };
-
-  let toNavigableKeyedCollection (keyed: t 'v): navigableKeyedCollection k 'v =>
-    if (isEmpty keyed) Empty
-    else Instance keyed sequentialKeyedCollectionBase sequentialKeyedCollectionReversedBase;
-
-  let toNavigableKeyedCollectionReversed (keyed: t 'v): navigableKeyedCollection k 'v =>
-    if (isEmpty keyed) Empty
-    else Instance keyed sequentialKeyedCollectionReversedBase sequentialKeyedCollectionBase;
-
-}: S1 with type k := Base.k and type t 'v := Base.t 'v);
+  let containsKey = Base.containsKey;
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let lastOrRaise = Base.lastOrRaise;
+  let reduce = Base.reduce;
+  let reduceReversed = Base.reduceReversed;
+  let reduceKeys = Base.reduceKeys;
+  let reduceKeysReversed = Base.reduceKeysReversed;
+  let reduceValues = Base.reduceValues;
+  let reduceValuesReversed = Base.reduceValuesReversed;
+  let toSequence = Base.toSequence;
+  let toSequenceReversed = Base.toSequenceReversed;
+}): S1 with type t 'v := Base.t 'v and type k := Base.k);
 
 let module Make2 = fun (Base: {
   type t 'k 'v;
@@ -251,134 +324,24 @@ let module Make2 = fun (Base: {
   let reduceValuesReversed: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let toSequence: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
   let toSequenceReversed: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ({
-  include Base;
+}) =>  ((MakeGeneric {
+  type t 'k 'v  = Base.t 'k 'v;
+  type k 'k = 'k;
+  type v 'v = 'v;
 
-  include (KeyedCollection.Make2 Base: KeyedCollection.S2 with type t 'k 'v := t 'k 'v);
-
-  let first (selector: 'k => 'v => 'c) (keyed: t 'k 'v): (option 'c) =>
-    if (isEmpty keyed) None
-    else Some (firstOrRaise selector keyed);
-
-  let last (selector: 'k => 'v => 'c) (keyed: t 'k 'v): (option 'c) =>
-    if (isEmpty keyed) None
-    else Some (lastOrRaise selector keyed);
-
-  let module ReversedKeyedCollection = KeyedCollection.Make2 {
-    type nonrec t 'k 'v = t 'k 'v;
-
-    let containsKey = containsKey;
-    let count = count;
-    let reduce = Base.reduceReversed;
-    let reduceKeys = Base.reduceKeysReversed;
-    let reduceValues = Base.reduceValuesReversed;
-    let toSequence = toSequenceReversed;
-  };
-
-  let keysCollectionReversed = ReversedKeyedCollection.keysCollection;
-  let keysReversed = ReversedKeyedCollection.keys;
-  let keysSequenceReversed = ReversedKeyedCollection.keysSequence;
-  let reduceReversed = ReversedKeyedCollection.reduce;
-  let reduceKeysReversed = ReversedKeyedCollection.reduceKeys;
-  let reduceValuesReversed = ReversedKeyedCollection.reduceValues;
-  let toIterableReversed = ReversedKeyedCollection.toIterable;
-  let toKeyedCollectionReversed = ReversedKeyedCollection.toKeyedCollection;
-  let toKeyedIterableReversed = ReversedKeyedCollection.toKeyedIterable;
-  let toSequenceReversed = ReversedKeyedCollection.toSequence;
-  let valuesCollectionReversed = ReversedKeyedCollection.valuesCollection;
-  let valuesReversed = ReversedKeyedCollection.values;
-  let valuesSequenceReversed = ReversedKeyedCollection.valuesSequence;
-
-  let firstKeyOrRaise collection => firstOrRaise Functions.getKey collection;
-  let lastKeyOrRaise collection => lastOrRaise Functions.getKey collection;
-  let firstValueOrRaise collection => firstOrRaise Functions.getValue collection;
-  let lastValueOrRaise collection => lastOrRaise Functions.getValue collection;
-
-  let keysSequentialCollectionBase: SequentialCollection.s (t 'k 'v) 'k = {
-    count,
-    firstOrRaise: firstKeyOrRaise,
-    reduce: Base.reduceKeys,
-    toSequence: keysSequence,
-  };
-
-  let keysSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) 'k = {
-    count,
-    firstOrRaise: lastKeyOrRaise,
-    reduce: Base.reduceKeysReversed,
-    toSequence: keysSequenceReversed,
-  };
-
-  let keysSequentialCollection (collection: t 'k 'v): (SequentialCollection.t 'k) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection keysSequentialCollectionBase;
-
-  let keysSequentialCollectionReversed (collection: t 'k 'v): (SequentialCollection.t 'k) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection keysSequentialCollectionReversedBase;
-
-  let keysNavigableCollection (collection: t 'k 'v): (NavigableCollection.t 'k) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection keysSequentialCollectionBase keysSequentialCollectionReversedBase;
-
-  let keysNavigableCollectionReversed (collection: t 'k 'v): (NavigableCollection.t 'k) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection keysSequentialCollectionReversedBase keysSequentialCollectionBase;
-
-  let valuesSequentialCollectionBase: SequentialCollection.s (t 'k 'v) 'v = {
-    count,
-    firstOrRaise: firstValueOrRaise,
-    reduce: Base.reduceValues,
-    toSequence: valuesSequence,
-  };
-
-  let valuesSequentialCollectionReversedBase: SequentialCollection.s (t 'k 'v) 'v = {
-    count,
-    firstOrRaise: lastValueOrRaise,
-    reduce: Base.reduceValuesReversed,
-    toSequence: valuesSequenceReversed,
-  };
-
-  let valuesSequentialCollection (collection: t 'k 'v): (SequentialCollection.t 'v) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection valuesSequentialCollectionBase;
-
-  let valuesSequentialCollectionReversed (collection: t 'k 'v): (SequentialCollection.t 'v) =>
-    if (isEmpty collection) (SequentialCollection.empty ())
-    else SequentialCollection.Instance collection valuesSequentialCollectionReversedBase;
-
-  let valuesNavigableCollection (collection: t 'k 'v): (NavigableCollection.t 'v) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection valuesSequentialCollectionBase valuesSequentialCollectionReversedBase;
-
-  let valuesNavigableCollectionReversed (collection: t 'k 'v): (NavigableCollection.t 'v) =>
-    if (isEmpty collection) (NavigableCollection.empty ())
-    else NavigableCollection.Instance collection valuesSequentialCollectionReversedBase valuesSequentialCollectionBase;
-
-  let sequentialKeyedCollectionBase: s (t 'k 'v) 'k 'v  = {
-    containsKey,
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let sequentialKeyedCollectionReversedBase: s (t 'k 'v) 'k 'v  = {
-    containsKey,
-    count,
-    firstOrRaise: lastOrRaise,
-    reduce: Base.reduceReversed,
-    toSequence: toSequenceReversed,
-  };
-
-  let toNavigableKeyedCollection (keyed: t 'k 'v): navigableKeyedCollection 'k 'v =>
-    if (isEmpty keyed) Empty
-    else Instance keyed sequentialKeyedCollectionBase sequentialKeyedCollectionReversedBase;
-
-  let toNavigableKeyedCollectionReversed (keyed: t 'k 'v): navigableKeyedCollection 'k 'v =>
-    if (isEmpty keyed) Empty
-    else Instance keyed sequentialKeyedCollectionReversedBase sequentialKeyedCollectionBase;
-
-}: S2 with type t 'k 'v := Base.t 'k 'v);
+  let containsKey = Base.containsKey;
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let lastOrRaise = Base.lastOrRaise;
+  let reduce = Base.reduce;
+  let reduceReversed = Base.reduceReversed;
+  let reduceKeys = Base.reduceKeys;
+  let reduceKeysReversed = Base.reduceKeysReversed;
+  let reduceValues = Base.reduceValues;
+  let reduceValuesReversed = Base.reduceValuesReversed;
+  let toSequence = Base.toSequence;
+  let toSequenceReversed = Base.toSequenceReversed;
+}): S2 with type t 'k 'v := Base.t 'k 'v);
 
 include (Make2 {
   type nonrec t 'k 'v = t 'k 'v;

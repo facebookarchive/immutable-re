@@ -20,6 +20,25 @@ type t 'k 'v =
 
 type keyedCollection 'k 'v = t 'k 'v;
 
+module type SGeneric = {
+  type t 'k 'v;
+  type k 'k;
+  type v 'v;
+
+  include KeyedIterable.SGeneric with type t 'k 'v := t 'k 'v and type k 'k := k 'k and type v 'v := v 'v;
+
+  let containsKey: k 'k => t 'k 'v => bool;
+  let count: t 'k 'v => int;
+  let isEmpty: (t 'k 'v) => bool;
+  let isNotEmpty: (t 'k 'v) => bool;
+  let keysCollection: (t 'k 'v) => Collection.t (k 'k);
+  let keysSequence: (t 'k 'v) => Sequence.t (k 'k);
+  let toKeyedCollection: (t 'k 'v) => (keyedCollection (k 'k) (v 'v));
+  let toSequence: (k 'k => v 'v => 'c) => (t 'k 'v) => (Sequence.t 'c);
+  let valuesCollection: (t 'k 'v) => Collection.t (v 'v);
+  let valuesSequence: (t 'k 'v) => Sequence.t (v 'v);
+};
+
 module type S1 = {
   type k;
   type t 'v;
@@ -55,6 +74,77 @@ module type S2 = {
   let valuesSequence: (t 'k 'v) => Sequence.t 'v;
 };
 
+let module MakeGeneric = fun (Base: {
+  type t 'k 'v;
+  type k 'k;
+  type v 'v;
+
+  let containsKey: (k 'k) => t 'k 'v => bool;
+  let count: t 'k 'v => int;
+  let reduce: while_::('acc => k 'k => v 'v => bool) => ('acc => k 'k => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceKeys: while_::('acc => k  'k => bool) => ('acc => k 'k => 'acc) => 'acc => t 'k 'v => 'acc;
+  let reduceValues: while_::('acc => v 'v => bool) => ('acc => v 'v => 'acc) => 'acc => t 'k 'v => 'acc;
+  let toSequence: (k 'k => v 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
+}) => ({
+  include Base;
+
+  let isEmpty (keyed: t 'k 'v): bool =>
+    count keyed === 0;
+
+  let isNotEmpty (keyed: t 'k 'v): bool =>
+    count keyed !== 0;
+
+  include (KeyedIterable.MakeGeneric {
+    type nonrec t 'k 'v = t 'k 'v;
+    type nonrec k 'k = k 'k;
+    type nonrec v 'v = v 'v;
+
+    let isEmpty = isEmpty;
+    let reduce = reduce;
+    let reduceKeys = reduceKeys;
+    let reduceValues = reduceValues;
+  }: KeyedIterable.SGeneric with type t 'k 'v := t 'k 'v and type k 'k := k 'k and type v 'v := v 'v);
+
+  let keysSequence (keyed: t 'k 'v): (Sequence.t (k 'k)) =>
+    if (isEmpty keyed) (Sequence.empty ())
+    else toSequence Functions.getKey keyed;
+
+  let keysCollectionImpl: Collection.s (t 'k 'v) (k 'k) = {
+    count,
+    reduce: Base.reduceKeys,
+    toSequence: keysSequence,
+  };
+
+  let keysCollection (keyed: t 'k 'v): (Collection.t (k 'k)) =>
+    if (isEmpty keyed) (Collection.empty ())
+    else Collection.Instance keyed keysCollectionImpl;
+
+  let valuesSequence (keyed: t 'k 'v): (Sequence.t (v 'v)) =>
+    if (isEmpty keyed) (Sequence.empty ())
+    else toSequence Functions.getValue keyed;
+
+  let valuesCollectionImpl: Collection.s (t 'k 'v) (v 'v) = {
+    count,
+    reduce: Base.reduceValues,
+    toSequence: valuesSequence,
+  };
+
+  let valuesCollection (keyed: t 'k 'v): (Collection.t (v 'v)) =>
+    if (isEmpty keyed) (Collection.empty ())
+    else Collection.Instance keyed valuesCollectionImpl;
+
+  let keyedCollectionBase: s (t 'k 'v) (k 'k) (v 'v) = {
+    containsKey,
+    count,
+    reduce: Base.reduce,
+    toSequence,
+  };
+
+  let toKeyedCollection (keyed: t 'k 'v): (keyedCollection (k 'k) (v 'v)) =>
+    if (isEmpty keyed) Empty
+    else Instance keyed keyedCollectionBase;
+}: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
+
 let module Make1 = fun (Base: {
   type k;
   type t 'v;
@@ -65,64 +155,18 @@ let module Make1 = fun (Base: {
   let reduceKeys: while_::('acc => k => bool) => ('acc => k => 'acc) => 'acc => (t 'v) => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => (t 'v) => 'acc;
   let toSequence: (k => 'v => 'c) => (t 'v) => Sequence.t 'c;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'k 'v  = Base.t 'v;
+  type k 'k = Base.k;
+  type v 'v = 'v;
 
-  let isEmpty (keyed: t 'v): bool =>
-    count keyed === 0;
-
-  let isNotEmpty (keyed: t 'v): bool =>
-    count keyed !== 0;
-
-  include (KeyedIterable.Make1 {
-    type nonrec k = k;
-    type nonrec t 'v = t 'v;
-
-    let isEmpty = isEmpty;
-    let reduce = reduce;
-    let reduceKeys = reduceKeys;
-    let reduceValues = reduceValues;
-  }: KeyedIterable.S1 with type t 'v := t 'v and type k := k);
-
-  let keysSequence (keyed: t 'v): (Sequence.t k) =>
-    if (isEmpty keyed) (Sequence.empty ())
-    else toSequence Functions.getKey keyed;
-
-  let keysCollectionImpl: Collection.s (t 'v) k = {
-    count,
-    reduce: Base.reduceKeys,
-    toSequence: keysSequence,
-  };
-
-  let keysCollection (keyed: t 'v): (Collection.t k) =>
-    if (isEmpty keyed) (Collection.empty ())
-    else Collection.Instance keyed keysCollectionImpl;
-
-  let valuesSequence (keyed: t 'v): (Sequence.t 'v) =>
-    if (isEmpty keyed) (Sequence.empty ())
-    else toSequence Functions.getValue keyed;
-
-  let valuesCollectionImpl: Collection.s (t 'v) 'v = {
-    count,
-    reduce: Base.reduceValues,
-    toSequence: valuesSequence,
-  };
-
-  let valuesCollection (keyed: t 'v): (Collection.t 'v) =>
-    if (isEmpty keyed) (Collection.empty ())
-    else Collection.Instance keyed valuesCollectionImpl;
-
-  let keyedCollectionBase: s (t 'v) k 'v = {
-    containsKey,
-    count,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let toKeyedCollection (keyed: t 'v): (keyedCollection k 'v) =>
-    if (isEmpty keyed) Empty
-    else Instance keyed keyedCollectionBase;
-}: S1 with type k := Base.k and type t 'v := Base.t 'v);
+  let containsKey = Base.containsKey;
+  let count = Base.count;
+  let reduce = Base.reduce;
+  let reduceKeys = Base.reduceKeys;
+  let reduceValues = Base.reduceValues;
+  let toSequence = Base.toSequence;
+}): S1 with type t 'v := Base.t 'v and type k := Base.k);
 
 let module Make2 = fun (Base: {
   type t 'k 'v;
@@ -133,63 +177,18 @@ let module Make2 = fun (Base: {
   let reduceKeys: while_::('acc => 'k => bool) => ('acc => 'k => 'acc) => 'acc => t 'k 'v => 'acc;
   let reduceValues: while_::('acc => 'v => bool) => ('acc => 'v => 'acc) => 'acc => t 'k 'v => 'acc;
   let toSequence: ('k => 'v => 'c) => (t 'k 'v) => Sequence.t 'c;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'k 'v  = Base.t 'k 'v;
+  type k 'k = 'k;
+  type v 'v = 'v;
 
-  let isEmpty (keyed: t 'k 'v): bool =>
-    count keyed === 0;
-
-  let isNotEmpty (keyed: t 'k 'v): bool =>
-    count keyed !== 0;
-
-  include (KeyedIterable.Make2 {
-    type nonrec t 'k 'v = t 'k 'v;
-
-    let isEmpty = isEmpty;
-    let reduce = reduce;
-    let reduceKeys = reduceKeys;
-    let reduceValues = reduceValues;
-  }: KeyedIterable.S2 with type t 'k 'v := t 'k 'v);
-
-  let keysSequence (keyed: t 'k 'v): (Sequence.t 'k) =>
-    if (isEmpty keyed) (Sequence.empty ())
-    else toSequence Functions.getKey keyed;
-
-  let keysCollectionImpl: Collection.s (t 'k 'v) 'k = {
-    count,
-    reduce: Base.reduceKeys,
-    toSequence: keysSequence,
-  };
-
-  let keysCollection (keyed: t 'k 'v): (Collection.t 'k) =>
-    if (isEmpty keyed) (Collection.empty ())
-    else Collection.Instance keyed keysCollectionImpl;
-
-  let valuesSequence (keyed: t 'k 'v): (Sequence.t 'v) =>
-    if (isEmpty keyed) (Sequence.empty ())
-    else toSequence Functions.getValue keyed;
-
-  let valuesCollectionImpl: Collection.s (t 'k 'v) 'v = {
-    count,
-    reduce: Base.reduceValues,
-    toSequence: valuesSequence,
-  };
-
-  let valuesCollection (keyed: t 'k 'v): (Collection.t 'v) =>
-    if (isEmpty keyed) (Collection.empty ())
-    else Collection.Instance keyed valuesCollectionImpl;
-
-  let keyedCollectionBase: s (t 'k 'v) 'k 'v = {
-    containsKey,
-    count,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let toKeyedCollection (keyed: t 'k 'v): (keyedCollection 'k 'v) =>
-    if (isEmpty keyed) Empty
-    else Instance keyed keyedCollectionBase;
-}: S2 with type t 'k 'v := Base.t 'k 'v);
+  let containsKey = Base.containsKey;
+  let count = Base.count;
+  let reduce = Base.reduce;
+  let reduceKeys = Base.reduceKeys;
+  let reduceValues = Base.reduceValues;
+  let toSequence = Base.toSequence;
+}): S2 with type t 'k 'v := Base.t 'k 'v);
 
 include (Make2 {
   type nonrec t 'k 'v = t 'k 'v;

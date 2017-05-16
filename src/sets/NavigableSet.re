@@ -24,6 +24,18 @@ type t 'a =
 
 type navigableSet 'a = t 'a;
 
+module type SGeneric = {
+  type elt 'a;
+  type t 'a;
+
+  include ImmSet.SGeneric with type elt 'a := elt 'a and type t 'a := t 'a;
+  include NavigableCollection.SGeneric with type elt 'a := elt 'a and type t 'a := t 'a;
+
+  let toNavigableSet: t 'a => navigableSet (elt 'a);
+  let toNavigableSetReversed: t 'a => navigableSet (elt 'a);
+  let toSetReversed: t 'a => ImmSet.t (elt 'a);
+};
+
 module type S = {
   type a;
   type t;
@@ -47,6 +59,62 @@ module type S1 = {
   let toSetReversed: (t 'a) => ImmSet.t 'a;
 };
 
+let module MakeGeneric = fun (Base: {
+  type elt 'a;
+  type t 'a;
+
+  let contains: elt 'a => t 'a => bool;
+  let count: t 'a => int;
+  let firstOrRaise: t 'a => elt 'a;
+  let lastOrRaise: t 'a => elt 'a;
+  let reduce: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let reduceReversed: while_::('acc => elt 'a => bool) => ('acc => elt 'a => 'acc) => 'acc => t 'a => 'acc;
+  let toSequence: t 'a => Sequence.t (elt 'a);
+  let toSequenceReversed: t 'a => Sequence.t (elt 'a);
+}) => ({
+  include Base;
+
+  include (ImmSet.MakeGeneric Base: ImmSet.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);
+  include (NavigableCollection.MakeGeneric Base: NavigableCollection.SGeneric with type t 'a := t 'a and type elt 'a := elt 'a);
+
+  let module ReversedImmSet = ImmSet.MakeGeneric {
+    type nonrec elt 'a = elt 'a;
+    type nonrec t 'a = t 'a;
+
+    let contains = contains;
+    let count = count;
+    let reduce = Base.reduceReversed;
+    let toSequence = toSequenceReversed;
+  };
+
+  let toSetReversed = ReversedImmSet.toSet;
+
+  let navigableSetBase: s (t 'a) (elt 'a) = {
+    contains,
+    count,
+    firstOrRaise,
+    reduce: Base.reduce,
+    toSequence,
+  };
+
+  let navigableSetReversedBase: s (t 'a) (elt 'a) = {
+    contains,
+    count,
+    firstOrRaise: lastOrRaise,
+    reduce: Base.reduceReversed,
+    toSequence: toSequenceReversed,
+  };
+
+  let toNavigableSet (set: t 'a): (navigableSet (elt 'a)) =>
+    if (isEmpty set) Empty
+    else Instance set navigableSetBase navigableSetReversedBase;
+
+  let toNavigableSetReversed (set: t 'a): (navigableSet (elt 'a)) =>
+    if (isEmpty set) Empty
+    else Instance set navigableSetReversedBase navigableSetBase;
+
+}: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
+
 let module Make = fun (Base: {
   type a;
   type t;
@@ -59,49 +127,19 @@ let module Make = fun (Base: {
   let reduceReversed: while_::('acc => a => bool) => ('acc => a => 'acc) => 'acc => t => 'acc;
   let toSequence: t => Sequence.t a;
   let toSequenceReversed: t => Sequence.t a;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t;
+  type elt 'a = Base.a;
 
-  include (ImmSet.Make Base: ImmSet.S with type t := t and type a := a);
-  include (NavigableCollection.Make Base: NavigableCollection.S with type t := t and type a := a);
-
-  let module ReversedImmSet = ImmSet.Make {
-    type nonrec a = a;
-    type nonrec t = t;
-
-    let contains = contains;
-    let count = count;
-    let reduce = Base.reduceReversed;
-    let toSequence = toSequenceReversed;
-  };
-
-  let toSetReversed = ReversedImmSet.toSet;
-
-  let navigableSetBase: s t a = {
-    contains,
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let navigableSetReversedBase: s t a = {
-    contains,
-    count,
-    firstOrRaise: lastOrRaise,
-    reduce: Base.reduceReversed,
-    toSequence: toSequenceReversed,
-  };
-
-  let toNavigableSet (set: t): (navigableSet a) =>
-    if (isEmpty set) Empty
-    else Instance set navigableSetBase navigableSetReversedBase;
-
-  let toNavigableSetReversed (set: t): (navigableSet a) =>
-    if (isEmpty set) Empty
-    else Instance set navigableSetReversedBase navigableSetBase;
-
-}: S with type t := Base.t and type a := Base.a);
+  let contains = Base.contains;
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let lastOrRaise = Base.lastOrRaise;
+  let reduce = Base.reduce;
+  let reduceReversed = Base.reduceReversed;
+  let toSequence = Base.toSequence;
+  let toSequenceReversed = Base.toSequenceReversed;
+}): S with type t := Base.t and type a := Base.a);
 
 let module Make1 = fun (Base: {
   type t 'a;
@@ -114,48 +152,19 @@ let module Make1 = fun (Base: {
   let reduceReversed: while_::('acc => 'a => bool) => ('acc => 'a => 'acc) => 'acc => t 'a => 'acc;
   let toSequence: t 'a => Sequence.t 'a;
   let toSequenceReversed: t 'a => Sequence.t 'a;
-}) => ({
-  include Base;
+}) => ((MakeGeneric {
+  type t 'a   = Base.t 'a;
+  type elt 'a = 'a;
 
-  include (ImmSet.Make1 Base: ImmSet.S1 with type t 'a := t 'a);
-  include (NavigableCollection.Make1 Base: NavigableCollection.S1 with type t 'a := t 'a);
-
-  let module ReversedImmSet = ImmSet.Make1 {
-    type nonrec t 'a = t 'a;
-
-    let contains = contains;
-    let count = count;
-    let reduce = Base.reduceReversed;
-    let toSequence = toSequenceReversed;
-  };
-
-  let toSetReversed = ReversedImmSet.toSet;
-
-  let navigableSetBase: s (t 'a) 'a = {
-    contains,
-    count,
-    firstOrRaise,
-    reduce: Base.reduce,
-    toSequence,
-  };
-
-  let navigableSetReversedBase: s (t 'a) 'a = {
-    contains,
-    count,
-    firstOrRaise: lastOrRaise,
-    reduce: Base.reduceReversed,
-    toSequence: toSequenceReversed,
-  };
-
-  let toNavigableSet (set: t 'a): (navigableSet 'a) =>
-    if (isEmpty set) Empty
-    else Instance set navigableSetBase navigableSetReversedBase;
-
-  let toNavigableSetReversed (set: t 'a): (navigableSet 'a) =>
-    if (isEmpty set) Empty
-    else Instance set navigableSetReversedBase navigableSetBase;
-
-}: S1 with type t 'a := Base.t 'a);
+  let contains = Base.contains;
+  let count = Base.count;
+  let firstOrRaise = Base.firstOrRaise;
+  let lastOrRaise = Base.lastOrRaise;
+  let reduce = Base.reduce;
+  let reduceReversed = Base.reduceReversed;
+  let toSequence = Base.toSequence;
+  let toSequenceReversed = Base.toSequenceReversed;
+}): S1 with type t 'a := Base.t 'a);
 
 include(Make1 {
   type nonrec t 'a = t 'a;
