@@ -111,12 +111,6 @@ let module TransientVectorImpl = {
     transientVec
   };
 
-  let addFirstAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
-   |> Iterable.reduce
-     while_::Functions.alwaysTrue2
-     (fun acc next => acc |> addFirst owner next)
-     vector;
-
   let addLast
       (owner: Transient.Owner.t)
       (value: 'a)
@@ -148,12 +142,6 @@ let module TransientVectorImpl = {
 
     transientVec
   };
-
-  let addLastAll (owner: Transient.Owner.t) (iter: Iterable.t 'a) (vector: t 'a): (t 'a) => iter
-    |> Iterable.reduce
-      while_::Functions.alwaysTrue2
-      (fun acc next => acc |> addLast owner next)
-      vector;
 
   let removeFirstOrRaise
       (owner: Transient.Owner.t)
@@ -350,25 +338,13 @@ let mutate ({ left, middle, right }: PersistentVector.t 'a): (t 'a) => Transient
 let addFirst (value: 'a) (transient: t 'a): (t 'a) =>
   transient |> Transient.update1 TransientVectorImpl.addFirst value;
 
-let addFirstAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
-  transient |> Transient.update1 TransientVectorImpl.addFirstAll iter;
-
 let addLast (value: 'a) (transient: t 'a): (t 'a) =>
   transient |> Transient.update1 TransientVectorImpl.addLast value;
-
-let addLastAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
-  transient |> Transient.update1 TransientVectorImpl.addLastAll iter;
 
 let count (transient: t 'a): int =>
   transient |> Transient.get |> TransientVectorImpl.count;
 
 let empty () => PersistentVector.empty () |> mutate;
-
-let isEmpty (transient: t 'a): bool =>
-  transient |> Transient.get |> TransientVectorImpl.count === 0;
-
-let isNotEmpty (transient: t 'a): bool =>
-  transient |> Transient.get |> TransientVectorImpl.count !== 0;
 
 let tailCompress (count: int) (arr: array 'a): (array 'a) => {
   let arrCount = CopyOnWriteArray.count arr;

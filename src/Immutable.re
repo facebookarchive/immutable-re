@@ -557,7 +557,39 @@ let module Deque = {
     type elt 'a = 'a;
 
     include Deque;
-  }: NavigableCollection.S1 with type t 'a := t 'a)
+  }: NavigableCollection.S1 with type t 'a := t 'a);
+
+  let module Transient = {
+    include TransientDeque;
+
+    let addFirstAll
+        (iter: Iterable.t 'a)
+        (transient: t 'a): (t 'a) =>
+      iter |> Iterable.reduce (fun acc next => acc |> addFirst next) transient;
+
+    let addLastAll
+        (iter: Iterable.t 'a)
+        (transient: t 'a): (t 'a) =>
+      iter |> Iterable.reduce (fun acc next => acc |> addLast next) transient;
+  };
+
+  let mutate = Transient.mutate;
+
+  let addFirstAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
+    |> mutate
+    |> Transient.addFirstAll iter
+    |> Transient.persist;
+
+  let addLastAll (iter: Iterable.t 'a) (deque: t 'a): (t 'a) => deque
+    |> mutate
+    |> Transient.addLastAll iter
+    |> Transient.persist;
+
+  let from (iter: Iterable.t 'a): (t 'a) =>
+    empty () |> addLastAll iter;
+
+  let fromReverse (iter: Iterable.t 'a): (t 'a) =>
+    empty () |> addFirstAll iter;
 };
 
 let module HashMap = {
@@ -569,6 +601,42 @@ let module HashMap = {
 
     include HashMap;
   }: ImmMap.S2 with type t 'k 'v := t 'k 'v);
+
+  let module Transient = {
+    include TransientHashMap;
+
+    let isEmpty (transient: t 'k 'v): bool =>
+      (count transient === 0);
+
+    let isNotEmpty (transient: t 'k 'v): bool =>
+      (count transient !== 0);
+
+    let putAll (iter: KeyedIterable.t 'k 'v) (transient: t 'k 'v): (t 'k 'v) =>
+      iter |> KeyedIterable.reduce while_::Functions.alwaysTrue3 (fun acc k v => acc |> put k v) transient;
+
+    let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'k 'v): (t 'k 'v) => iter
+      |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc (k, v) => acc |> put k v) transient;
+  };
+
+  let mutate = Transient.mutate;
+
+  let putAll (iter: KeyedIterable.t 'k 'v) (map: t 'k 'v): (t 'k 'v) =>
+    map |> mutate |> Transient.putAll iter |> Transient.persist;
+
+  let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'k 'v): (t 'k 'v) =>
+    map |> mutate |> Transient.putAllEntries iter |> Transient.persist;
+
+  let fromWith
+      hash::(hash: Hash.t 'k)
+      comparator::(comparator: Comparator.t 'k)
+      (iter: KeyedIterable.t 'k 'v): (t 'k 'v) =>
+    emptyWith hash::hash comparator::comparator |> putAll iter;
+
+  let fromEntriesWith
+      hash::(hash: Hash.t 'k)
+      comparator::(comparator: Comparator.t 'k)
+      (iter: Iterable.t ('k, 'v)): (t 'k 'v) =>
+    emptyWith hash::hash comparator::comparator |> putAllEntries iter;
 
   let merge
       (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
@@ -594,6 +662,23 @@ let module HashSet = {
 
     include HashSet;
   }: ImmSet.S1 with type t 'a := t 'a);
+
+  let module Transient = {
+    include TransientHashSet;
+
+    let addAll
+        (iter: Iterable.t 'a)
+        (transient: t 'a): t 'a =>
+      iter |> Iterable.reduce (fun acc next => acc |> add next) transient;
+
+    let isEmpty (transient: t 'a): bool =>
+      count transient === 0;
+
+    let isNotEmpty (transient: t 'a): bool =>
+      count transient !== 0;
+  };
+
+  let mutate = Transient.mutate;
 
   let addAll (iter: Iterable.t 'a) (set: t 'a): (t 'a) =>
     set |> mutate |> Transient.addAll iter |> Transient.persist;
@@ -635,6 +720,42 @@ let module IntMap = {
     let reduceValues = IntMap.reduceValues;
     let toSequence = IntMap.toSequence;
   }: ImmMap.S1 with type t 'v := t 'v and type k := k);
+
+  let module Transient = {
+    include TransientIntMap;
+
+    let isEmpty (transient: t 'v): bool =>
+      count transient === 0;
+
+    let isNotEmpty (transient: t 'v): bool =>
+      count transient !== 0;
+
+    let putAll
+        (iter: KeyedIterable.t int 'v)
+        (transient: t 'v): (t 'v) => iter
+      |> KeyedIterable.reduce while_::Functions.alwaysTrue3 (fun acc k v => acc |> put k v) transient;
+
+    let putAllEntries (iter: Iterable.t ('k, 'v)) (transient: t 'v): (t 'v) => iter
+      |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc (k, v) => acc |> put k v) transient;
+  };
+
+  let mutate = Transient.mutate;
+
+  let putAll (iter: KeyedIterable.t int 'v) (map: t 'v): (t 'v) => map
+    |> mutate
+    |> Transient.putAll iter
+    |> Transient.persist;
+
+  let putAllEntries (iter: Iterable.t ('k, 'v)) (map: t 'v): (t 'v) => map
+    |> mutate
+    |> Transient.putAllEntries iter
+    |> Transient.persist;
+
+  let from (iter: KeyedIterable.t int 'v): (t 'v) =>
+    empty () |> putAll iter;
+
+  let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
+    empty () |> putAllEntries iter;
 
   let merge
       (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
@@ -682,6 +803,23 @@ let module IntSet = {
     let reduce = IntSet.reduce;
     let toSequence = IntSet.toSequence;
   }: ImmSet.S with type t := IntSet.t and type a := int);
+
+  let module Transient = {
+    include TransientIntSet;
+
+    let addAll
+        (iter: Iterable.t 'a)
+        (transient: t): t =>
+      iter |> Iterable.reduce (fun acc next => acc |> add next) transient;
+
+    let isEmpty (transient: t): bool =>
+      count transient === 0;
+
+    let isNotEmpty (transient: t): bool =>
+      count transient !== 0;
+  };
+
+  let mutate = Transient.mutate;
 
   let addAll (iter: Iterable.t int) (set: t): t =>
     set |> mutate |> Transient.addAll iter |> Transient.persist;
@@ -857,14 +995,63 @@ let module Stack = {
 
     include ImmStack;
   }: SequentialCollection.S1 with type t 'a := ImmStack.t 'a);
+
+  let addFirstAll (values: Iterable.t 'a) ({ count, list }: t 'a): (t 'a) => {
+    let newCount = ref count;
+
+    let newList = values |> Iterable.reduce
+      while_::Functions.alwaysTrue2
+      (fun acc next => {
+        newCount := !newCount + 1;
+        [next, ...acc]
+      })
+      list;
+
+    { count: !newCount, list: newList }
+  };
+
+  let fromReverse (iter: Iterable.t 'a): (t 'a) =>
+    empty () |> addFirstAll iter;
 };
 
 let module Vector = {
   include Vector;
+
+  let module Transient = {
+    include TransientVector;
+
+    let addFirstAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+      iter |> Iterable.reduce (fun acc next => acc |> addFirst next) transient;
+
+    let addLastAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
+      iter |> Iterable.reduce (fun acc next => acc |> addLast next) transient;
+
+    let isEmpty (transient: t 'a): bool =>
+      count transient === 0;
+
+    let isNotEmpty (transient: t 'a): bool =>
+      count transient !== 0;
+  };
 
   include (Indexed.MakeGeneric {
     type elt 'a = 'a;
 
     include Vector;
   }: Indexed.S1 with type t 'a := t 'a);
+
+  let addFirstAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
+    |> mutate
+    |> Transient.addFirstAll iter
+    |> Transient.persist;
+
+  let addLastAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
+    |> mutate
+    |> Transient.addLastAll iter
+    |> Transient.persist;
+
+  let from (iter: Iterable.t 'a): (t 'a) =>
+    empty () |> addLastAll iter;
+
+  let fromReverse (iter: Iterable.t 'a): (t 'a) =>
+    empty () |> addFirstAll iter;
 };

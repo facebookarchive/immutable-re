@@ -9,31 +9,13 @@
 
 include PersistentVector;
 
-let module Transient = TransientVector;
-
-let mutate = Transient.mutate;
-
-let addFirstAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
-  |> mutate
-  |> Transient.addFirstAll iter
-  |> Transient.persist;
-
-let addLastAll (iter: Iterable.t 'a) (vec: t 'a): (t 'a) => vec
-  |> mutate
-  |> Transient.addLastAll iter
-  |> Transient.persist;
-
-let from (iter: Iterable.t 'a): (t 'a) =>
-  empty () |> addLastAll iter;
-
-let fromReverse (iter: Iterable.t 'a): (t 'a) =>
-  empty () |> addFirstAll iter;
+let mutate = TransientVector.mutate;
 
 let init (count: int) (f: int => 'a): (t 'a) => IntRange.create start::0 count::count
   |> IntRange.reduce while_::Functions.alwaysTrue2 (fun acc next =>
-      acc |> Transient.addLast (f next)) (mutate (empty ())
+      acc |> TransientVector.addLast (f next)) (mutate (empty ())
     )
-  |> Transient.persist;
+  |> TransientVector.persist;
 
 let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   let vectorCount = count vec;
@@ -121,8 +103,8 @@ let slice start::(start: int)=0 end_::(end_: option int)=? (vec: t 'a): (t 'a) =
 
 let updateAll (f: int => 'a => 'a) (vec: t 'a): (t 'a) => vec
   |> mutate
-  |> Transient.updateAll f
-  |> Transient.persist;
+  |> TransientVector.updateAll f
+  |> TransientVector.persist;
 
 let concat (vectors: list (t 'a)): (t 'a) => switch vectors {
   /* FIXME: This is a trivial O(N) implementation. The underlying vector
@@ -135,12 +117,12 @@ let concat (vectors: list (t 'a)): (t 'a) => switch vectors {
     tail
       |> ImmList.reduce
         (fun acc next => reduce while_::Functions.alwaysTrue2
-          (fun acc next => acc |> Transient.addLast next)
+          (fun acc next => acc |> TransientVector.addLast next)
           acc
           next
         )
         (mutate head)
-      |> Transient.persist;
+      |> TransientVector.persist;
 };
 
 let insertAt (index: int) (value: 'a) (vec: t 'a): (t 'a) => {

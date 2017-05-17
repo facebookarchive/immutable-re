@@ -30,20 +30,6 @@ let addFirst (value: 'a) ({ count, list }: t 'a): (t 'a) => ({
   list: [value, ...list],
 });
 
-let addFirstAll (values: Iterable.t 'a) ({ count, list }: t 'a): (t 'a) => {
-  let newCount = ref count;
-
-  let newList = values |> Iterable.reduce
-    while_::Functions.alwaysTrue2
-    (fun acc next => {
-      newCount := !newCount + 1;
-      [next, ...acc]
-    })
-    list;
-
-  { count: !newCount, list: newList }
-};
-
 let empty (): t 'a => {
   count: 0,
   list: [],
@@ -51,9 +37,6 @@ let empty (): t 'a => {
 
 let fromList (list: list 'a): (t 'a) =>
   { count: list |> ImmList.count, list };
-
-let fromReverse (iter: Iterable.t 'a): (t 'a) =>
-  empty () |> addFirstAll iter;
 
 let removeAll (_: t 'a): (t 'a) => empty ();
 
