@@ -38,35 +38,19 @@ let module Make1 = fun (Comparable: Comparable.S) => {
   let lastOrRaise (selector: 'k => 'v => 'c) ({ tree }: t 'v): 'c =>
     tree |> AVLTreeMap.lastOrRaise selector;
 
-  include (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'v;
-    type nonrec k 'k = k;
-    type nonrec v 'v = 'v;
+  let reduce
+      while_::(predicate: 'acc => k => 'v => bool)
+      (f: 'acc => k => 'v => 'acc)
+      (acc: 'acc)
+      ({ tree }: t 'v): 'acc =>
+    AVLTreeMap.reduce while_::predicate f acc tree;
 
-    let reduce
-        while_::(predicate: 'acc => k 'k => v 'v => bool)
-        (f: 'acc => k 'k => v 'v => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'k 'v): 'acc =>
-      AVLTreeMap.reduce while_::predicate f acc tree;
-  }: KeyedReducer.S1 with type t 'v := t 'v and type k := k);
-
-  let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'v;
-    type nonrec k 'k = k;
-    type nonrec v 'v = 'v;
-
-    let reduce
-        while_::(predicate: 'acc => 'k => 'v => bool)
-        (f: 'acc => 'k => 'v => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'k 'v): 'acc =>
-      AVLTreeMap.reduceReversed while_::predicate f acc tree;
-  }: KeyedReducer.S1 with type t 'v := t 'v and type k := k);
-
-  let reduceReversed = KeyedReducerReversed.reduce;
-  let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
-  let reduceValuesReversed = KeyedReducerReversed.reduceValues;
+  let reduceReversed
+      while_::(predicate: 'acc => k => 'v => bool)
+      (f: 'acc => k => 'v => 'acc)
+      (acc: 'acc)
+      ({ tree }: t 'v): 'acc =>
+    AVLTreeMap.reduceReversed while_::predicate f acc tree;
 
   let toSequence (selector: 'k => 'v => 'c) ({ tree }: t 'v): (Sequence.t 'c) =>
     tree |> AVLTreeMap.toSequence selector;

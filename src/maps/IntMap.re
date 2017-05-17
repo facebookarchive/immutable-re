@@ -28,18 +28,12 @@ let getOrDefault default::(default: 'v) (key: int) ({ root }: t 'v): 'v =>
 let getOrRaise (key: int) ({ root }: t 'v): 'v =>
   root |> BitmapTrieIntMap.getOrRaise 0 key;
 
-include (KeyedReducer.MakeGeneric {
-  type nonrec t 'k 'v = t 'v;
-  type k 'k  = int;
-  type v 'v = 'v;
-
-  let reduce
-      while_::(predicate: 'acc => int => 'v => bool)
-      (f: 'acc => int => 'v => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'k 'v): 'acc =>
-    BitmapTrieIntMap.reduce while_::predicate f acc root;
-}: KeyedReducer.S1 with type t 'v:= t 'v and type k := int);
+let reduce
+    while_::(predicate: 'acc => int => 'v => bool)
+    (f: 'acc => int => 'v => 'acc)
+    (acc: 'acc)
+    ({ root }: t 'v): 'acc =>
+  BitmapTrieIntMap.reduce while_::predicate f acc root;
 
 let toSequence (selector: int => 'v => 'c) ({ root }: t 'v): (Sequence.t 'c) =>
   root |> BitmapTrieIntMap.toSequence selector;

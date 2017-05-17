@@ -267,6 +267,13 @@ let module KeyedIterable = {
     type v 'v = 'v;
 
     include KeyedIterable;
+
+    include (KeyedReducer.MakeGeneric {
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      include KeyedIterable;
+    }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
   }: S2 with type t 'k 'v := t 'k 'v);
 };
 
@@ -278,6 +285,13 @@ let module KeyedCollection = {
     type v 'v = 'v;
 
     include KeyedCollection;
+
+    include (KeyedReducer.MakeGeneric {
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      include KeyedCollection;
+    }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
   }: S2 with type t 'k 'v := t 'k 'v);
 
   let module Persistent = {
@@ -339,6 +353,27 @@ let module NavigableKeyedCollection = {
     type v 'v = 'v;
 
     include NavigableKeyedCollection;
+
+    include (KeyedReducer.MakeGeneric {
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      include NavigableKeyedCollection;
+    }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
+
+    let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
+      type nonrec t 'k 'v = t 'k 'v;
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      let reduce = NavigableKeyedCollection.reduceReversed;
+    }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
+
+    let reduceReversed = KeyedReducerReversed.reduce;
+
+    let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
+
+    let reduceValuesReversed = KeyedReducerReversed.reduceValues;
   }: S2 with type t 'k 'v := t 'k 'v);
 };
 
@@ -350,6 +385,13 @@ let module Map = {
     type v 'v = 'v;
 
     include ImmMap;
+
+    include (KeyedReducer.MakeGeneric {
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      include ImmMap;
+    }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
   }: S2 with type t 'k 'v := t 'k 'v);
 
   let module Persistent = {
@@ -422,6 +464,25 @@ let module NavigableMap = {
     type v 'v = 'v;
 
     include NavigableMap;
+
+    include (KeyedReducer.MakeGeneric {
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      include NavigableMap;
+    }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
+
+    let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
+      type nonrec t 'k 'v = t 'k 'v;
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      let reduce = NavigableMap.reduceReversed;
+    }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
+
+    let reduceReversed = KeyedReducerReversed.reduce;
+    let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
+    let reduceValuesReversed = KeyedReducerReversed.reduceValues;
   }: S2 with type t 'k 'v := t 'k 'v);
 
   let module Persistent = {
@@ -530,6 +591,13 @@ let module HashMap = {
     type v 'v = 'v;
 
     include HashMap;
+
+    include (KeyedReducer.MakeGeneric {
+      type k 'k = 'k;
+      type v 'v = 'v;
+
+      include HashMap;
+    }: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
   }: ImmMap.S2 with type t 'k 'v := t 'k 'v);
 
   let module Transient = {
@@ -640,9 +708,15 @@ let module IntMap = {
     let get = IntMap.get;
     let getOrDefault = IntMap.getOrDefault;
     let getOrRaise = IntMap.getOrRaise;
-    let reduce = IntMap.reduce;
-    let reduceKeys = IntMap.reduceKeys;
-    let reduceValues = IntMap.reduceValues;
+
+    include (KeyedReducer.MakeGeneric {
+      type t 'k 'v = IntMap.t 'v;
+      type k 'k = IntMap.k;
+      type v 'v = 'v;
+
+      let reduce = IntMap.reduce;
+    }: KeyedReducer.S1 with type t 'v := IntMap.t 'v and type k := IntMap.k);
+
     let toSequence = IntMap.toSequence;
   }: ImmMap.S1 with type t 'v := t 'v and type k := k);
 
@@ -736,7 +810,6 @@ let module IntSet = {
       type elt 'a = int;
       type nonrec t 'a = TransientIntSet.t;
 
-
       let add = TransientIntSet.add;
       let contains = TransientIntSet.contains;
       let count = TransientIntSet.count;
@@ -796,9 +869,7 @@ let module ReadOnlyArray = {
 let module SortedMap = {
   module type S1 = {
     type k;
-
     type t +'v;
-    /** The SortedMap type. */
 
     include NavigableMap.Persistent.S1 with type k := k and type t 'v := t 'v;
 
@@ -824,12 +895,29 @@ let module SortedMap = {
       let getOrDefault = SortedMapImpl.getOrDefault;
       let getOrRaise = SortedMapImpl.getOrRaise;
       let lastOrRaise = SortedMapImpl.lastOrRaise;
-      let reduce = SortedMapImpl.reduce;
-      let reduceReversed = SortedMapImpl.reduceReversed;
-      let reduceKeys = SortedMapImpl.reduceKeys;
-      let reduceKeysReversed = SortedMapImpl.reduceKeysReversed;
-      let reduceValues = SortedMapImpl.reduceValues;
-      let reduceValuesReversed = SortedMapImpl.reduceValuesReversed;
+
+      include (KeyedReducer.MakeGeneric {
+        type t 'k 'v = SortedMapImpl.t 'v;
+        type k 'k = SortedMapImpl.k;
+        type v 'v = 'v;
+
+        let reduce = SortedMapImpl.reduce;
+      }: KeyedReducer.S1 with type t 'v := SortedMapImpl.t 'v and type k := SortedMapImpl.k);
+
+      let module KeyedReducerReversed = (KeyedReducer.MakeGeneric {
+        type nonrec t 'k 'v = t 'k 'v;
+        type k 'k = SortedMapImpl.k;
+        type v 'v = 'v;
+
+        let reduce = SortedMapImpl.reduceReversed;
+      }: KeyedReducer.S1 with type t 'v := SortedMapImpl.t 'v and type k := SortedMapImpl.k);
+
+      let reduceReversed = KeyedReducerReversed.reduce;
+
+      let reduceKeysReversed = KeyedReducerReversed.reduceKeys;
+
+      let reduceValuesReversed = KeyedReducerReversed.reduceValues;
+
       let toSequence = SortedMapImpl.toSequence;
       let toSequenceReversed = SortedMapImpl.toSequenceReversed;
     }: NavigableMap.S1 with type t 'v := t 'v and type k := k);

@@ -159,20 +159,14 @@ let count (keyed: t 'k 'v): int => switch keyed {
 
 let empty (): (t 'k 'v) => Empty;
 
-include (KeyedReducer.MakeGeneric {
-  type nonrec t 'k 'v = t 'k 'v;
-  type k 'k = 'k;
-  type v 'v = 'v;
-
-  let reduce
-      while_::(predicate:'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
-  };
-}: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
+let reduce
+    while_::(predicate:'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (iter: t 'k 'v): 'acc => switch iter {
+  | Empty => acc
+  | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
+};
 
 let toSequence (selector: 'k => 'v => 'c) (keyed: t 'k 'v): Sequence.t 'c => switch keyed {
   | Empty => Sequence.empty ()

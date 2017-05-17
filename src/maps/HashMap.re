@@ -36,18 +36,12 @@ let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
   root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
 };
 
-include (KeyedReducer.MakeGeneric {
-  type nonrec t 'k 'v = t 'k 'v;
-  type k 'k = 'k;
-  type v 'v = 'v;
-
-  let reduce
-      while_::(predicate: 'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'k 'v): 'acc =>
-    root |> BitmapTrieMap.reduce while_::predicate f acc;
-}: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
+let reduce
+    while_::(predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    ({ root }: t 'k 'v): 'acc =>
+  root |> BitmapTrieMap.reduce while_::predicate f acc;
 
 let toSequence (selector: 'k => 'v => 'c)({ root }: t 'k 'v): (Sequence.t 'c) =>
   root |> BitmapTrieMap.toSequence selector;

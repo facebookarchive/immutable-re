@@ -185,20 +185,14 @@ let module MakeGeneric = fun (Base: Base) => ({
     else Iterable.Instance keyedIterable valuesIterableBase;
 }: SGeneric with type t 'k 'v := Base.t 'k 'v and type k 'k := Base.k 'k and type v 'v := Base.v 'v);
 
-include (KeyedReducer.MakeGeneric {
-  type nonrec t 'k 'v = t 'k 'v;
-  type k 'k = 'k;
-  type v 'v = 'v;
-
-  let reduce
-      while_::(predicate:'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      (iter: t 'k 'v): 'acc => switch iter {
-    | Empty => acc
-    | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
-  };
-}: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
+let reduce
+    while_::(predicate:'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (iter: t 'k 'v): 'acc => switch iter {
+  | Empty => acc
+  | Instance iter { reduce } => iter |> reduce while_::predicate f acc;
+};
 
 let concatImpl: s 'keyedIterable 'k 'v = {
   reduce: fun while_::predicate f acc iters => {

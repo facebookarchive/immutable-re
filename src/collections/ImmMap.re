@@ -137,20 +137,14 @@ let getOrRaise (key: 'k) (map: t 'k 'v): 'v => switch map {
   | Instance map { getOrRaise } => getOrRaise key map
 };
 
-include (KeyedReducer.MakeGeneric {
-  type nonrec t 'k 'v = t 'k 'v;
-  type k 'k = 'k;
-  type v 'v = 'v;
-
-  let reduce
-      while_::(predicate: 'acc => 'k => 'v => bool)
-      (f: 'acc => 'k => 'v => 'acc)
-      (acc: 'acc)
-      (map: t 'k 'v): 'acc => switch map {
-    | Empty => acc
-    | Instance map { reduce } => reduce while_::predicate f acc map
-  };
-}: KeyedReducer.S2 with type t 'k 'v := t 'k 'v);
+let reduce
+    while_::(predicate: 'acc => 'k => 'v => bool)
+    (f: 'acc => 'k => 'v => 'acc)
+    (acc: 'acc)
+    (map: t 'k 'v): 'acc => switch map {
+  | Empty => acc
+  | Instance map { reduce } => reduce while_::predicate f acc map
+};
 
 let toSequence (selector: 'k => 'v => 'c) (map: t 'k 'v): (Sequence.t 'c) => switch map {
   | Empty => Sequence.empty ()
