@@ -30,7 +30,7 @@ let fromReverse (iter: Iterable.t 'a): (t 'a) =>
   empty () |> addFirstAll iter;
 
 let init (count: int) (f: int => 'a): (t 'a) => IntRange.create start::0 count::count
-  |> IntRange.reduce (fun acc next =>
+  |> IntRange.reduce while_::Functions.alwaysTrue2 (fun acc next =>
       acc |> Transient.addLast (f next)) (mutate (empty ())
     )
   |> Transient.persist;

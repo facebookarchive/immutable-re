@@ -14,42 +14,35 @@ type t 'v = {
   root: (BitmapTrieIntMap.t 'v),
 };
 
-include (ImmMap.MakeGeneric {
-  type tinternal 'v = t 'v;
+let containsKey (key: int) ({ root }: t 'v): bool =>
+  root |> BitmapTrieIntMap.containsKey 0 key;
+
+let count ({ count }: t 'v): int => count;
+
+let get (key: int) ({ root }: t 'v): (option 'v) =>
+  root |> BitmapTrieIntMap.get 0 key;
+
+let getOrDefault default::(default: 'v) (key: int) ({ root }: t 'v): 'v =>
+  root |> BitmapTrieIntMap.getOrDefault 0 default key;
+
+let getOrRaise (key: int) ({ root }: t 'v): 'v =>
+  root |> BitmapTrieIntMap.getOrRaise 0 key;
+
+include (KeyedReducer.MakeGeneric {
   type nonrec t 'k 'v = t 'v;
-  type nonrec k 'k = k;
+  type k 'k  = int;
   type v 'v = 'v;
 
-  let containsKey (key: int) ({ root }: t 'k 'v): bool =>
-    root |> BitmapTrieIntMap.containsKey 0 key;
+  let reduce
+      while_::(predicate: 'acc => int => 'v => bool)
+      (f: 'acc => int => 'v => 'acc)
+      (acc: 'acc)
+      ({ root }: t 'k 'v): 'acc =>
+    BitmapTrieIntMap.reduce while_::predicate f acc root;
+}: KeyedReducer.S1 with type t 'v:= t 'v and type k := int);
 
-  let count ({ count }: t 'k 'v): int => count;
-
-  let get (key: int) ({ root }: t 'k 'v): (option 'v) =>
-    root |> BitmapTrieIntMap.get 0 key;
-
-  let getOrDefault default::(default: 'v) (key: int) ({ root }: t 'k 'v): 'v =>
-    root |> BitmapTrieIntMap.getOrDefault 0 default key;
-
-  let getOrRaise (key: int) ({ root }: t 'k 'v): 'v =>
-    root |> BitmapTrieIntMap.getOrRaise 0 key;
-
-  include (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'k 'v;
-    type k 'k  = int;
-    type v 'v = 'v;
-
-    let reduce
-        while_::(predicate: 'acc => int => 'v => bool)
-        (f: 'acc => int => 'v => 'acc)
-        (acc: 'acc)
-        ({ root }: t 'k 'v): 'acc =>
-      BitmapTrieIntMap.reduce while_::predicate f acc root;
-  }: KeyedReducer.S1 with type t 'v:= tinternal 'v and type k := int);
-
-  let toSequence (selector: int => 'v => 'c) ({ root }: t 'k 'v): (Sequence.t 'c) =>
-    root |> BitmapTrieIntMap.toSequence selector;
-}: ImmMap.S1 with type t 'v := t 'v and type k := k);
+let toSequence (selector: int => 'v => 'c) ({ root }: t 'v): (Sequence.t 'c) =>
+  root |> BitmapTrieIntMap.toSequence selector;
 
 let alter (key: int) (f: option 'v => option 'v) ({ count, root } as map: t 'v): (t 'v) => {
   let alterResult = ref AlterResult.NoChange;
@@ -149,10 +142,10 @@ let module Transient = {
     transient |> Transient.get |> getOrRaise key;
 
   let isEmpty (transient: t 'v): bool =>
-    transient |> Transient.get |> isEmpty;
+    count transient === 0;
 
   let isNotEmpty (transient: t 'v): bool =>
-    transient |> Transient.get |> isNotEmpty;
+    count transient !== 0;
 
   let persist (transient: t 'v): (intMap 'v) =>
     transient |> Transient.persist;
@@ -218,18 +211,3 @@ let from (iter: KeyedIterable.t int 'v): (t 'v) =>
 
 let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
   empty () |> putAllEntries iter;
-
-let merge
-    (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (initialValue: t 'vAcc)
-    (next: t 'v): (t 'vAcc) => ImmSet.union (keysSet next) (keysSet initialValue)
-  |> Iterable.reduce while_::Functions.alwaysTrue2 (
-      fun acc key => {
-        let result = f key (initialValue |> get key) (next |> get key);
-        switch result {
-          | None => acc |> Transient.remove key
-          | Some value => acc |> Transient.put key value
-        }
-      }
-    ) (mutate initialValue)
-  |> Transient.persist;

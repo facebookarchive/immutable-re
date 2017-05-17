@@ -14,67 +14,62 @@ type t = {
   start: int,
 };
 
-include (NavigableSet.MakeGeneric {
-  type nonrec elt 'a = int;
-  type nonrec t 'a = t;
+let contains (value: int) ({ count, start }: t): bool =>
+  value >= start && value < (start + count);
 
-  let contains (value: int) ({ count, start }: t 'a): bool =>
-    value >= start && value < (start + count);
+let count ({ count }: t): int => count;
 
-  let count ({ count }: t 'a): int => count;
+let firstOrRaise ({ count, start }: t): int =>
+  if (count === 0) (failwith "empty")
+  else start;
 
-  let firstOrRaise ({ count, start }: t 'a): int =>
-    if (count === 0) (failwith "empty")
-    else start;
+let lastOrRaise ({ count, start }: t): int =>
+  if (count === 0) (failwith "empty")
+  else start + count - 1;
 
-  let lastOrRaise ({ count, start }: t 'a): int =>
-    if (count === 0) (failwith "empty")
-    else start + count - 1;
+let reduce
+    while_::(predicate: 'acc => int => bool)
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    ({ count, start }: t): 'acc => {
+  let rec recurse predicate f start count acc =>
+    if (count === 0) acc
+    else if (predicate acc start |> not) acc
+    else {
+      let acc = f acc start;
+      recurse predicate f (start + 1) (count - 1) acc;
+    };
+  recurse predicate f start count acc;
+};
 
-  let reduce
-      while_::(predicate: 'acc => int => bool)
-      (f: 'acc => int => 'acc)
-      (acc: 'acc)
-      ({ count, start }: t 'a): 'acc => {
-    let rec recurse predicate f start count acc =>
-      if (count === 0) acc
-      else if (predicate acc start |> not) acc
-      else {
-        let acc = f acc start;
-        recurse predicate f (start + 1) (count - 1) acc;
-      };
-    recurse predicate f start count acc;
-  };
+let reduceReversed
+    while_::(predicate: 'acc => int => bool)
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    ({ count, start }: t): 'acc => {
+  let rec recurse predicate f start count acc =>
+    if (count === 0) acc
+    else if (predicate acc start |> not) acc
+    else {
+      let acc = f acc start;
+      recurse predicate f (start - 1) (count - 1) acc;
+    };
+  recurse predicate f (start + count - 1) count acc;
+};
 
-  let reduceReversed
-      while_::(predicate: 'acc => int => bool)
-      (f: 'acc => int => 'acc)
-      (acc: 'acc)
-      ({ count, start }: t 'a): 'acc => {
-    let rec recurse predicate f start count acc =>
-      if (count === 0) acc
-      else if (predicate acc start |> not) acc
-      else {
-        let acc = f acc start;
-        recurse predicate f (start - 1) (count - 1) acc;
-      };
-    recurse predicate f (start + count - 1) count acc;
-  };
+let toSequence ({ count, start }: t): (Sequence.t int) => {
+  let rec recurse start count => fun () =>
+    if (count === 0) Sequence.Completed
+    else Sequence.Next start (recurse (start + 1) (count - 1));
+  recurse start count
+};
 
-  let toSequence ({ count, start }: t 'a): (Sequence.t int) => {
-    let rec recurse start count => fun () =>
-      if (count === 0) Sequence.Completed
-      else Sequence.Next start (recurse (start + 1) (count - 1));
-    recurse start count
-  };
-
-  let toSequenceReversed ({ count, start }: t 'a): (Sequence.t int) => {
-    let rec recurse start count => fun () =>
-      if (count === 0) Sequence.Completed
-      else Sequence.Next start (recurse (start - 1) (count - 1));
-    recurse (start + count - 1) count
-  };
-}: NavigableSet.S with type t := t and type a := a);
+let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
+  let rec recurse start count => fun () =>
+    if (count === 0) Sequence.Completed
+    else Sequence.Next start (recurse (start - 1) (count - 1));
+  recurse (start + count - 1) count
+};
 
 let emptyInstance: t = {
   start: 0,

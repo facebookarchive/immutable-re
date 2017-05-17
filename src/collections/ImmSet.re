@@ -7,9 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Functions;
-open Functions.Operators;
-
 type s 'set 'a = {
   contains: 'a => 'set => bool,
   count: 'set => int,
@@ -81,7 +78,7 @@ let module MakeGeneric = fun (Base: Base) => ({
     if (this === that) true
     else if ((count this) !== (count that)) false
     else this |> reduce
-      while_::(fun acc _ => acc) (fun _ => flip contains that) true;
+      while_::(fun acc _ => acc) (fun _ => Functions.flip contains that) true;
 
   let toSet (set: t 'a): (set (elt 'a)) =>
     if (isEmpty set) Empty
@@ -89,47 +86,29 @@ let module MakeGeneric = fun (Base: Base) => ({
 
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-include (MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
+let contains (value: 'a) (set: t 'a): bool => switch set {
+  | Empty => false
+  | Instance set { contains } => contains value set
+};
 
-  let contains (value: 'a) (set: t 'a): bool => switch set {
-    | Empty => false
-    | Instance set { contains } => contains value set
-  };
+let count (set: t 'a): int => switch set {
+  | Empty => 0
+  | Instance set { count } => count set
+};
 
-  let count (set: t 'a): int => switch set {
-    | Empty => 0
-    | Instance set { count } => count set
-  };
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (collection: t 'a): 'acc => switch collection {
+  | Empty => acc
+  | Instance collection { reduce } =>
+      collection |> reduce while_::predicate f acc;
+};
 
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (collection: t 'a): 'acc => switch collection {
-    | Empty => acc
-    | Instance collection { reduce } =>
-        collection |> reduce while_::predicate f acc;
-  };
-
-  let toSequence (set: t 'a): (Sequence.t 'a) => switch set {
-    | Empty => Sequence.empty ()
-    | Instance set { toSequence } => toSequence set
-  };
-}: S1 with type t 'a := t 'a);
+let toSequence (set: t 'a): (Sequence.t 'a) => switch set {
+  | Empty => Sequence.empty ()
+  | Instance set { toSequence } => toSequence set
+};
 
 let empty (): (t 'a) => Empty;
-
-let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (flip contains that);
-
-let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (flip contains that >> not);
-
-let toSet (set: t 'a): (t 'a) => set;
-
-let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
-  this |> toIterable,
-  subtract that this,
-];

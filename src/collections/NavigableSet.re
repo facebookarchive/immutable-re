@@ -7,9 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-open Functions;
-open Functions.Operators;
-
 type s 'set 'a = {
   contains: 'a => 'set => bool,
   count: 'set => int,
@@ -111,72 +108,54 @@ let module MakeGeneric = fun (Base: Base) => ({
 
 }: SGeneric with type t 'a := Base.t 'a and type elt 'a := Base.elt 'a);
 
-include(MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
+let contains (value: 'a) (set: t 'a): bool => switch set {
+  | Empty => false
+  | Instance set { contains } _ => contains value set
+};
 
-  let contains (value: 'a) (set: t 'a): bool => switch set {
-    | Empty => false
-    | Instance set { contains } _ => contains value set
-  };
+let count (set: t 'a): int => switch set {
+  | Empty => 0
+  | Instance set { count } _ => count set
+};
 
-  let count (set: t 'a): int => switch set {
-    | Empty => 0
-    | Instance set { count } _ => count set
-  };
+let firstOrRaise (set: t 'a): 'a => switch set {
+  | Empty => failwith "empty"
+  | Instance set { firstOrRaise } _ => firstOrRaise set
+};
 
-  let firstOrRaise (set: t 'a): 'a => switch set {
-    | Empty => failwith "empty"
-    | Instance set { firstOrRaise } _ => firstOrRaise set
-  };
+let lastOrRaise (set: t 'a): 'a => switch set {
+  | Empty => failwith "empty"
+  | Instance set _ { firstOrRaise } => firstOrRaise set
+};
 
-  let lastOrRaise (set: t 'a): 'a => switch set {
-    | Empty => failwith "empty"
-    | Instance set _ { firstOrRaise } => firstOrRaise set
-  };
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (set: t 'a): 'acc => switch set {
+  | Empty => acc
+  | Instance set { reduce } _ =>
+      set |> reduce while_::predicate f acc;
+};
 
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (set: t 'a): 'acc => switch set {
-    | Empty => acc
-    | Instance set { reduce } _ =>
-        set |> reduce while_::predicate f acc;
-  };
+let reduceReversed
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    (set: t 'a): 'acc => switch set {
+  | Empty => acc
+  | Instance set _ { reduce } =>
+      set |> reduce while_::predicate f acc;
+};
 
-  let reduceReversed
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      (set: t 'a): 'acc => switch set {
-    | Empty => acc
-    | Instance set _ { reduce } =>
-        set |> reduce while_::predicate f acc;
-  };
+let toSequence (set: t 'a): (Sequence.t 'a) => switch set {
+  | Empty => Sequence.empty ()
+  | Instance set { toSequence } _ => toSequence set
+};
 
-  let toSequence (set: t 'a): (Sequence.t 'a) => switch set {
-    | Empty => Sequence.empty ()
-    | Instance set { toSequence } _ => toSequence set
-  };
-
-  let toSequenceReversed (set: t 'a): (Sequence.t 'a) => switch set {
-    | Empty => Sequence.empty ()
-    | Instance set _ { toSequence } => toSequence set
-  };
-}: S1 with type t 'a := t 'a);
+let toSequenceReversed (set: t 'a): (Sequence.t 'a) => switch set {
+  | Empty => Sequence.empty ()
+  | Instance set _ { toSequence } => toSequence set
+};
 
 let empty (): (t 'a) => Empty;
-
-let toNavigableSet (set: t 'a): (t 'a) => set;
-
-let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (flip contains that);
-
-let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
-  this |> toIterable |> Iterable.filter (flip contains that >> not);
-
-let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
-  this |> toIterable,
-  subtract that this,
-];

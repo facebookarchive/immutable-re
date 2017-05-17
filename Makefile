@@ -1,4 +1,4 @@
-SRC_DIRS=src,src/sets,src/core,src/queues,src/indexed,src/maps,src/utils
+SRC_DIRS=src,src/collections,src/sets,src/core,src/queues,src/indexed,src/maps,src/utils
 build:
 	rebuild -use-ocamlfind -Is $(SRC_DIRS) src/Immutable.cma
 	rebuild -use-ocamlfind -Is $(SRC_DIRS) src/Immutable.cmxa

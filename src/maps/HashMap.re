@@ -14,49 +14,43 @@ type t 'k 'v = {
   hash: Hash.t 'k,
 };
 
-include (ImmMap.MakeGeneric {
+let containsKey (key: 'k) ({ root, comparator, hash }: t 'k 'v): bool => {
+  let hashKey = hash key;
+  root |> BitmapTrieMap.containsKey comparator 0 hashKey key;
+};
+
+let count ({ count }: t 'k 'v): int => count;
+
+let get (key: 'k) ({ root, comparator, hash }: t 'k 'v): (option 'v) => {
+  let hashKey = hash key;
+  root |> BitmapTrieMap.get comparator 0 hashKey key;
+};
+
+let getOrDefault default::(default: 'v) (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
+  let hashKey = hash key;
+  root |> BitmapTrieMap.getOrDefault comparator 0 default hashKey key;
+};
+
+let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
+  let hashKey = hash key;
+  root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
+};
+
+include (KeyedReducer.MakeGeneric {
   type nonrec t 'k 'v = t 'k 'v;
   type k 'k = 'k;
   type v 'v = 'v;
 
-  let containsKey (key: 'k) ({ root, comparator, hash }: t 'k 'v): bool => {
-    let hashKey = hash key;
-    root |> BitmapTrieMap.containsKey comparator 0 hashKey key;
-  };
+  let reduce
+      while_::(predicate: 'acc => 'k => 'v => bool)
+      (f: 'acc => 'k => 'v => 'acc)
+      (acc: 'acc)
+      ({ root }: t 'k 'v): 'acc =>
+    root |> BitmapTrieMap.reduce while_::predicate f acc;
+}: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
 
-  let count ({ count }: t 'k 'v): int => count;
-
-  let get (key: 'k) ({ root, comparator, hash }: t 'k 'v): (option 'v) => {
-    let hashKey = hash key;
-    root |> BitmapTrieMap.get comparator 0 hashKey key;
-  };
-
-  let getOrDefault default::(default: 'v) (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
-    let hashKey = hash key;
-    root |> BitmapTrieMap.getOrDefault comparator 0 default hashKey key;
-  };
-
-  let getOrRaise (key: 'k) ({ root, comparator, hash }: t 'k 'v): 'v => {
-    let hashKey = hash key;
-    root |> BitmapTrieMap.getOrRaise comparator 0 hashKey key;
-  };
-
-  include (KeyedReducer.MakeGeneric {
-    type nonrec t 'k 'v = t 'k 'v;
-    type k 'k = 'k;
-    type v 'v = 'v;
-
-    let reduce
-        while_::(predicate: 'acc => 'k => 'v => bool)
-        (f: 'acc => 'k => 'v => 'acc)
-        (acc: 'acc)
-        ({ root }: t 'k 'v): 'acc =>
-      root |> BitmapTrieMap.reduce while_::predicate f acc;
-  }: KeyedReducer.S2 with type t 'k 'v:= t 'k 'v);
-
-  let toSequence (selector: 'k => 'v => 'c)({ root }: t 'k 'v): (Sequence.t 'c) =>
-    root |> BitmapTrieMap.toSequence selector;
-}: ImmMap.S2 with type t 'k 'v := t 'k 'v);
+let toSequence (selector: 'k => 'v => 'c)({ root }: t 'k 'v): (Sequence.t 'c) =>
+  root |> BitmapTrieMap.toSequence selector;
 
 let alter
     (key: 'k)
@@ -183,10 +177,10 @@ let module Transient = {
     transient |> Transient.get |> getOrRaise key;
 
   let isEmpty (transient: t 'k 'v): bool =>
-    transient |> Transient.get |> isEmpty;
+    (count transient === 0);
 
   let isNotEmpty (transient: t 'k 'v): bool =>
-    transient |> Transient.get |> isNotEmpty;
+    (count transient !== 0);
 
   let persist (transient: t 'k 'v): (hashMap 'k 'v) =>
     transient |> Transient.persist;
@@ -258,18 +252,3 @@ let fromEntriesWith
     comparator::(comparator: Comparator.t 'k)
     (iter: Iterable.t ('k, 'v)): (t 'k 'v) =>
   emptyWith hash::hash comparator::comparator |> putAllEntries iter;
-
-let merge
-    (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
-    (initialValue: t 'k 'vAcc)
-    (next: t 'k 'v): (t 'k 'vAcc) => ImmSet.union (keysSet next) (keysSet initialValue)
-  |> Iterable.reduce while_::Functions.alwaysTrue2 (
-      fun acc key => {
-        let result = f key (initialValue |> get key) (next |> get key);
-        switch result {
-          | None => acc |> Transient.remove key
-          | Some value => acc |> Transient.put key value
-        }
-      }
-    ) (mutate initialValue)
-  |> Transient.persist;

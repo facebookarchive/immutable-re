@@ -14,27 +14,22 @@ type t 'a = {
   hash: Hash.t 'a,
 };
 
-include (ImmSet.MakeGeneric {
-  type nonrec t 'a = t 'a;
-  type elt 'a = 'a;
+let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
+  let keyHash = hash value;
+  root |> BitmapTrieSet.contains comparator 0 keyHash value;
+};
 
-  let contains (value: 'a) ({ root, hash, comparator }: t 'a): bool => {
-    let keyHash = hash value;
-    root |> BitmapTrieSet.contains comparator 0 keyHash value;
-  };
+let count ({ count }: t 'a): int => count;
 
-  let count ({ count }: t 'a): int => count;
+let reduce
+    while_::(predicate: 'acc => 'a => bool)
+    (f: 'acc => 'a => 'acc)
+    (acc: 'acc)
+    ({ root }: t 'a): 'acc =>
+  BitmapTrieSet.reduce while_::predicate f acc root;
 
-  let reduce
-      while_::(predicate: 'acc => 'a => bool)
-      (f: 'acc => 'a => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'a): 'acc =>
-    BitmapTrieSet.reduce while_::predicate f acc root;
-
-  let toSequence ({ root }: t 'a): (Sequence.t 'a) =>
-    root |> BitmapTrieSet.toSequence;
-}: ImmSet.S1 with type t 'a := t 'a);
+let toSequence ({ root }: t 'a): (Sequence.t 'a) =>
+  root |> BitmapTrieSet.toSequence;
 
 let add (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
   let keyHash = hash value;
@@ -60,7 +55,7 @@ let emptyWith
 };
 
 let hash ({ hash } as set: t 'a): int =>
-  set |> reduce (fun acc next => acc + hash next) 0;
+  set |> reduce while_::Functions.alwaysTrue2 (fun acc next => acc + hash next) 0;
 
 let remove (value: 'a) ({ count, root, hash, comparator } as set: t 'a): (t 'a) => {
   let keyHash = hash value;
@@ -155,10 +150,10 @@ let module Transient = {
     persistentEmptyWith hash::hash comparator::comparator |>  mutate;
 
   let isEmpty (transient: t 'a): bool =>
-    transient |> Transient.get |> isEmpty;
+    count transient === 0;
 
   let isNotEmpty (transient: t 'a): bool =>
-    transient |> Transient.get |> isNotEmpty;
+    count transient !== 0;
 
   let persist (transient: t 'a): (hashSet 'a) =>
     transient |> Transient.persist;
@@ -193,27 +188,3 @@ let module Transient = {
 };
 
 let mutate = Transient.mutate;
-
-let addAll (iter: Iterable.t 'a) (set: t 'a): (t 'a) =>
-  set |> mutate |> Transient.addAll iter |> Transient.persist;
-
-let fromWith
-    hash::(hash: Hash.t 'a)
-    comparator::(comparator: Comparator.t 'a)
-    (iterable: Iterable.t 'a): (t 'a) =>
-  emptyWith hash::hash comparator::comparator |> addAll iterable;
-
-let intersect ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
-  /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator
-    |> addAll (ImmSet.intersect (toSet this) (toSet that));
-
-let subtract ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
-  /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator
-    |> addAll (ImmSet.subtract (toSet this) (toSet that));
-
-let union ({ hash, comparator } as this: t 'a) (that: t 'a): (t 'a) =>
-  /* FIXME: Makes this more efficient */
-  emptyWith hash::hash comparator::comparator
-    |> addAll (ImmSet.union (toSet this) (toSet that));

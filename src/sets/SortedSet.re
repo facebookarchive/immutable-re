@@ -7,56 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-module type S = {
-  type a;
-  type t;
-
-  let compare: Comparator.t t;
-  let first: t => option a;
-  let firstOrRaise: t => a;
-  let toSequentialCollection: t => SequentialCollection.t a;
-  let last: t => option a;
-  let lastOrRaise: t => a;
-  let reduceReversed:
-    while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let toCollectionReversed: t => Collection.t a;
-  let toIterableReversed: t => Iterable.t a;
-  let toNavigableCollection: t => NavigableCollection.t a;
-  let toNavigableCollectionReversed: t => NavigableCollection.t a;
-  let toSequenceReversed: t => Sequence.t a;
-  let toSequentialCollectionReversed: t => SequentialCollection.t a;
-  let toNavigableSet: t => NavigableSet.t a;
-  let toNavigableSetReversed: t => NavigableSet.t a;
-  let toSetReversed: t => ImmSet.t a;
-  let equals: Equality.t t;
-  let contains: a => t => bool;
-  let toSet: t => ImmSet.t a;
-  let every: (a => bool) => t => bool;
-  let find: (a => bool) => t => (option a);
-  let findOrRaise: (a => bool) => t => a;
-  let forEach: while_::(a => bool)? => (a => unit) => t => unit;
-  let none: (a => bool) => t => bool;
-  let reduce: while_::('acc => a => bool)? => ('acc => a => 'acc) => 'acc => t => 'acc;
-  let some: (a => bool) => t => bool;
-  let toIterable: t => (Iterable.t a);
-  let count: t => int;
-  let isEmpty: t => bool;
-  let isNotEmpty: t => bool;
-  let toCollection: t => Collection.t a;
-  let toSequence: t => Sequence.t a;
-  let removeAll: t => t;
-  let add: a => t => t;
-  let addAll: Iterable.t a => t => t;
-  let intersect: t => t => t;
-  let remove: a => t => t;
-  let subtract: t => t => t;
-  let union: t => t => t;
-  let removeFirstOrRaise: t => t;
-  let removeLastOrRaise: t => t;
-  let empty: unit => t;
-  let from: Iterable.t a => t;
-};
-
 let module Make = fun (Comparable: Comparable.S) => {
   type a = Comparable.t;
 
@@ -67,49 +17,41 @@ let module Make = fun (Comparable: Comparable.S) => {
 
   let comparator = Comparable.compare;
 
-  include (NavigableSet.MakeGeneric {
-    type nonrec elt 'a = a;
-    type nonrec t 'a = t;
+  let contains (x: a) ({ tree }: t): bool =>
+    AVLTreeSet.contains comparator x tree;
 
-    let contains (x: a) ({ tree }: t 'a): bool =>
-      AVLTreeSet.contains comparator x tree;
+  let count ({ count }: t): int => count;
 
-    let count ({ count }: t 'a): int => count;
+  let firstOrRaise ({ tree }: t): a =>
+    AVLTreeSet.firstOrRaise tree;
 
-    let firstOrRaise ({ tree }: t 'a): a =>
-      AVLTreeSet.firstOrRaise tree;
+  let lastOrRaise ({ tree }: t): a =>
+    AVLTreeSet.lastOrRaise tree;
 
-    let lastOrRaise ({ tree }: t 'a): a =>
-      AVLTreeSet.lastOrRaise tree;
+  let reduce
+      while_::(predicate: 'acc => a => bool)
+      (f: 'acc => a => 'acc)
+      (acc: 'acc)
+      ({ tree }: t): 'acc =>
+    AVLTreeSet.reduce while_::predicate f acc tree;
 
-    let reduce
-        while_::(predicate: 'acc => a => bool)
-        (f: 'acc => a => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'a): 'acc =>
-      AVLTreeSet.reduce while_::predicate f acc tree;
+  let reduceReversed
+      while_::(predicate: 'acc => a => bool)
+      (f: 'acc => a => 'acc)
+      (acc: 'acc)
+      ({ tree }: t): 'acc =>
+    AVLTreeSet.reduceReversed while_::predicate f acc tree;
 
-    let reduceReversed
-        while_::(predicate: 'acc => a => bool)
-        (f: 'acc => a => 'acc)
-        (acc: 'acc)
-        ({ tree }: t 'a): 'acc =>
-      AVLTreeSet.reduceReversed while_::predicate f acc tree;
+  let toSequence ({ tree }: t): (Sequence.t a) =>
+    tree |> AVLTreeSet.toSequence;
 
-    let toSequence ({ tree }: t 'a ): (Sequence.t a) =>
-      tree |> AVLTreeSet.toSequence;
-
-    let toSequenceReversed ({ tree }: t 'a): (Sequence.t a) =>
-      tree |> AVLTreeSet.toSequenceReversed;
-  }: NavigableSet.S with type t:= t and type a:= a);
+  let toSequenceReversed ({ tree }: t): (Sequence.t a) =>
+    tree |> AVLTreeSet.toSequenceReversed;
 
   let add (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = tree |> AVLTreeSet.add comparator x;
     if (newTree === tree) sortedSet else { count: count + 1, tree: newTree }
   };
-
-  let addAll (iter: Iterable.t a) (sortedSet: t): t => iter
-    |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc next => acc |> add next) sortedSet;
 
   let rec compareWith
       (valueCompare: Comparator.t 'a)
@@ -150,9 +92,6 @@ let module Make = fun (Comparable: Comparable.S) => {
     (toSequence this)
     (toSequence that);
 
-  let from (iter: Iterable.t a): t =>
-    emptyInstance |> addAll iter;
-
   let remove (x: a) ({ count, tree } as sortedSet: t): t => {
     let newTree = AVLTreeSet.remove comparator x tree;
     if (newTree === tree) sortedSet else { count: count - 1, tree: newTree }
@@ -170,16 +109,4 @@ let module Make = fun (Comparable: Comparable.S) => {
     let newTree = AVLTreeSet.removeLastOrRaise tree;
     { count: count - 1, tree: newTree }
   };
-
-  let intersect (this: t) (that: t): t =>
-    /* FIXME: Improve this implementation */
-    ImmSet.intersect (toSet this) (toSet that) |> from;
-
-  let subtract (this: t) (that: t): t =>
-    /* FIXME: Improve this implementation */
-    ImmSet.subtract (toSet this) (toSet that) |> from;
-
-  let union (this: t) (that: t): t =>
-    /* FIXME: Improve this implementation */
-    ImmSet.union (toSet this) (toSet that) |> from;
 };

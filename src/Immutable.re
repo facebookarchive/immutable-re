@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+open Functions.Operators;
+
 let module Equality = Equality;
 
 let module Ordering = Ordering;
@@ -194,6 +196,23 @@ let module NavigableCollection = {
 let module Set = {
   include ImmSet;
 
+  include (ImmSet.MakeGeneric {
+    type elt 'a = 'a;
+
+    include ImmSet;
+  }: ImmSet.S1 with type t 'a := t 'a);
+
+  let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+    this |> toIterable |> Iterable.filter (Functions.flip contains that);
+
+  let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+    this |> toIterable |> Iterable.filter (Functions.flip contains that >> not);
+
+  let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
+    this |> toIterable,
+    subtract that this,
+  ];
+
   let module Persistent = {
     module type S = {
       type a;
@@ -253,6 +272,23 @@ let module Set = {
 
 let module NavigableSet = {
   include NavigableSet;
+
+  include(NavigableSet.MakeGeneric {
+    type elt 'a = 'a;
+
+    include NavigableSet;
+  }: NavigableSet.S1 with type t 'a := t 'a);
+
+  let intersect (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+    this |> toIterable |> Iterable.filter (Functions.flip contains that);
+
+  let subtract (this: t 'a) (that: t 'a): (Iterable.t 'a) =>
+    this |> toIterable |> Iterable.filter (Functions.flip contains that >> not);
+
+  let union (this: t 'a) (that: t 'a): (Iterable.t 'a) => Iterable.concat [
+    this |> toIterable,
+    subtract that this,
+  ];
 
   let module Persistent = {
     module type S = {
@@ -524,15 +560,147 @@ let module Deque = {
   }: NavigableCollection.S1 with type t 'a := t 'a)
 };
 
-let module HashMap = HashMap;
+let module HashMap = {
+  include HashMap;
 
-let module HashSet = HashSet;
+  include (ImmMap.MakeGeneric {
+    type k 'k = 'k;
+    type v 'v = 'v;
 
-let module IntMap = IntMap;
+    include HashMap;
+  }: ImmMap.S2 with type t 'k 'v := t 'k 'v);
 
-let module IntRange = IntRange;
+  let merge
+      (f: 'k => (option 'vAcc) => (option 'v) => (option 'vAcc))
+      (initialValue: t 'k 'vAcc)
+      (next: t 'k 'v): (t 'k 'vAcc) => Set.union (keysSet next) (keysSet initialValue)
+    |> Iterable.reduce while_::Functions.alwaysTrue2 (
+        fun acc key => {
+          let result = f key (initialValue |> get key) (next |> get key);
+          switch result {
+            | None => acc |> Transient.remove key
+            | Some value => acc |> Transient.put key value
+          }
+        }
+      ) (mutate initialValue)
+    |> Transient.persist;
+};
 
-let module IntSet = IntSet;
+let module HashSet = {
+  include HashSet;
+
+  include (ImmSet.MakeGeneric {
+    type elt 'a = 'a;
+
+    include HashSet;
+  }: ImmSet.S1 with type t 'a := t 'a);
+
+  let addAll (iter: Iterable.t 'a) (set: t 'a): (t 'a) =>
+    set |> mutate |> Transient.addAll iter |> Transient.persist;
+
+  let fromWith
+      hash::(hash: Hash.t 'a)
+      comparator::(comparator: Comparator.t 'a)
+      (iterable: Iterable.t 'a): (t 'a) =>
+    emptyWith hash::hash comparator::comparator |> addAll iterable;
+
+  let intersect (this: t 'a) (that: t 'a): (t 'a) =>
+    /* FIXME: Makes this more efficient */
+    this |> removeAll |> addAll (Set.intersect (toSet this) (toSet that));
+
+  let subtract (this: t 'a) (that: t 'a): (t 'a) =>
+    /* FIXME: Makes this more efficient */
+    this |> removeAll |> addAll (Set.subtract (toSet this) (toSet that));
+
+  let union (this: t 'a) (that: t 'a): (t 'a) =>
+    /* FIXME: Makes this more efficient */
+    this |> removeAll |> addAll (Set.union (toSet this) (toSet that));
+};
+
+let module IntMap = {
+  include IntMap;
+
+  include (ImmMap.MakeGeneric {
+    type k 'k = int;
+    type v 'v = 'v;
+    type t 'k 'v = IntMap.t 'v;
+
+    let containsKey = IntMap.containsKey;
+    let count = IntMap.count;
+    let get = IntMap.get;
+    let getOrDefault = IntMap.getOrDefault;
+    let getOrRaise = IntMap.getOrRaise;
+    let reduce = IntMap.reduce;
+    let reduceKeys = IntMap.reduceKeys;
+    let reduceValues = IntMap.reduceValues;
+    let toSequence = IntMap.toSequence;
+  }: ImmMap.S1 with type t 'v := t 'v and type k := k);
+
+  let merge
+      (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
+      (initialValue: t 'vAcc)
+      (next: t 'v): (t 'vAcc) => Set.union (keysSet next) (keysSet initialValue)
+    |> Iterable.reduce while_::Functions.alwaysTrue2 (
+        fun acc key => {
+          let result = f key (initialValue |> get key) (next |> get key);
+          switch result {
+            | None => acc |> Transient.remove key
+            | Some value => acc |> Transient.put key value
+          }
+        }
+      ) (mutate initialValue)
+    |> Transient.persist;
+};
+
+let module IntRange = {
+  include IntRange;
+
+  include (NavigableSet.MakeGeneric {
+    type elt 'a = int;
+    type t 'a = IntRange.t;
+
+    let contains = IntRange.contains;
+    let count = IntRange.count;
+    let firstOrRaise = IntRange.firstOrRaise;
+    let lastOrRaise = IntRange.lastOrRaise;
+    let reduce = IntRange.reduce;
+    let reduceReversed = IntRange.reduceReversed;
+    let toSequence = IntRange.toSequence;
+    let toSequenceReversed = IntRange.toSequenceReversed;
+  }: NavigableSet.S with type t := IntRange.t and type a := int);
+};
+
+let module IntSet = {
+  include IntSet;
+
+  include (ImmSet.MakeGeneric {
+    type elt 'a = int;
+    type nonrec t 'a = IntSet.t;
+
+    let contains = IntSet.contains;
+    let count = IntSet.count;
+    let reduce = IntSet.reduce;
+    let toSequence = IntSet.toSequence;
+  }: ImmSet.S with type t := IntSet.t and type a := int);
+
+  let addAll (iter: Iterable.t int) (set: t): t =>
+    set |> mutate |> Transient.addAll iter |> Transient.persist;
+
+  let from (iter: Iterable.t int): t =>
+    emptyInstance |> addAll iter;
+
+  let intersect (this: t) (that: t): t =>
+    /* FIXME: Improve this implementation */
+    Set.intersect (toSet this) (toSet that) |> from;
+
+  let subtract (this: t) (that: t): t =>
+    /* FIXME: Improve this implementation */
+    Set.subtract (toSet this) (toSet that) |> from;
+
+  let union (this: t) (that: t): t =>
+    /* FIXME: Improve this implementation */
+    Set.union (toSet this) (toSet that) |> from;
+};
 
 let module List = {
   include ImmList;
@@ -561,9 +729,125 @@ let module ReadOnlyArray = {
   }: Indexed.S1 with type t 'a := t 'a);
 };
 
-let module SortedMap = SortedMap;
+let module SortedMap = {
+  module type S1 = {
+    type k;
 
-let module SortedSet = SortedSet;
+    type t +'v;
+    /** The SortedMap type. */
+
+    include NavigableMap.Persistent.S1 with type k := k and type t 'v := t 'v;
+
+    let empty: unit => t 'v;
+    let from: KeyedIterable.t k 'v => t 'v;
+    let fromEntries: Iterable.t (k, 'v) => t 'v;
+  };
+
+  let module Make1 = fun (Comparable: Comparable.S) => {
+    let module SortedMapImpl = (SortedMap.Make1 Comparable);
+
+    include SortedMapImpl;
+
+    include (NavigableMap.MakeGeneric {
+      type k 'k = SortedMapImpl.k;
+      type v 'v = 'v;
+      type t 'k 'v = SortedMapImpl.t 'v;
+
+      let containsKey = SortedMapImpl.containsKey;
+      let count = SortedMapImpl.count;
+      let firstOrRaise = SortedMapImpl.firstOrRaise;
+      let get = SortedMapImpl.get;
+      let getOrDefault = SortedMapImpl.getOrDefault;
+      let getOrRaise = SortedMapImpl.getOrRaise;
+      let lastOrRaise = SortedMapImpl.lastOrRaise;
+      let reduce = SortedMapImpl.reduce;
+      let reduceReversed = SortedMapImpl.reduceReversed;
+      let reduceKeys = SortedMapImpl.reduceKeys;
+      let reduceKeysReversed = SortedMapImpl.reduceKeysReversed;
+      let reduceValues = SortedMapImpl.reduceValues;
+      let reduceValuesReversed = SortedMapImpl.reduceValuesReversed;
+      let toSequence = SortedMapImpl.toSequence;
+      let toSequenceReversed = SortedMapImpl.toSequenceReversed;
+    }: NavigableMap.S1 with type t 'v := t 'v and type k := k);
+
+    let putAll (iter: KeyedIterable.t k 'v) (map: t 'v): (t 'v) =>
+      iter |> KeyedIterable.reduce (fun acc k v => acc |> put k v) map;
+
+    let putAllEntries (iter: Iterable.t (k, 'v)) (map: t 'v): (t 'v) =>
+      iter |> Iterable.reduce (fun acc (k, v) => acc |> put k v) map;
+
+    let from (iter: KeyedIterable.t k 'v): (t 'v) =>
+      empty () |> putAll iter;
+
+    let fromEntries (iter: Iterable.t (k, 'v)): (t 'v) =>
+      empty () |> putAllEntries iter;
+
+    let merge
+        (f: k => (option 'vAcc) => (option 'v) => (option 'vAcc))
+        (acc: t 'vAcc)
+        (next: t 'v): (t 'vAcc) =>  Set.union (keysSet next) (keysSet acc)
+      |> Iterable.reduce while_::Functions.alwaysTrue2 (
+          fun acc key => {
+            let result = f key (acc |> get key) (next |> get key);
+            switch result {
+              | None => acc |> remove key
+              | Some value => acc |> put key value
+            }
+          }
+        ) acc;
+  };
+};
+
+let module SortedSet = {
+  module type S = {
+    type a;
+    type t;
+
+    include Comparable.S with type t := t;
+    include NavigableSet.Persistent.S with type a := a and type t := t;
+
+    let empty: unit => t;
+    let from: Iterable.t a => t;
+  };
+
+  let module Make = fun (Comparable: Comparable.S) => {
+    let module SortedSetImpl = (SortedSet.Make Comparable);
+
+    include SortedSetImpl;
+
+    include (NavigableSet.MakeGeneric {
+      type elt 'a = SortedSetImpl.a;
+      type t 'a = SortedSetImpl.t;
+
+      let contains = SortedSetImpl.contains;
+      let count = SortedSetImpl.count;
+      let firstOrRaise = SortedSetImpl.firstOrRaise;
+      let lastOrRaise = SortedSetImpl.lastOrRaise;
+      let reduce = SortedSetImpl.reduce;
+      let reduceReversed = SortedSetImpl.reduceReversed;
+      let toSequence = SortedSetImpl.toSequence;
+      let toSequenceReversed = SortedSetImpl.toSequenceReversed;
+    }: NavigableSet.S with type t:= SortedSetImpl.t and type a:= Comparable.t);
+
+    let addAll (iter: Iterable.t a) (sortedSet: t): t => iter
+      |> Iterable.reduce while_::Functions.alwaysTrue2 (fun acc next => acc |> add next) sortedSet;
+
+    let from (iter: Iterable.t a): t =>
+      emptyInstance |> addAll iter;
+
+    let intersect (this: t) (that: t): t =>
+      /* FIXME: Improve this implementation */
+      Set.intersect (toSet this) (toSet that) |> from;
+
+    let subtract (this: t) (that: t): t =>
+      /* FIXME: Improve this implementation */
+      Set.subtract (toSet this) (toSet that) |> from;
+
+    let union (this: t) (that: t): t =>
+      /* FIXME: Improve this implementation */
+      Set.union (toSet this) (toSet that) |> from;
+  };
+};
 
 let module Stack = {
   include ImmStack;

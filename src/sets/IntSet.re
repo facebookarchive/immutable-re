@@ -14,25 +14,20 @@ type t = {
   root: BitmapTrieIntSet.t,
 };
 
-include (ImmSet.MakeGeneric {
-  type nonrec elt 'a = int;
-  type nonrec t 'a = t;
+let contains (value: int) ({ root }: t): bool =>
+  root |> BitmapTrieIntSet.contains 0 value;
 
-  let contains (value: int) ({ root }: t 'a): bool =>
-    root |> BitmapTrieIntSet.contains 0 value;
+let count ({ count }: t): int => count;
 
-  let count ({ count }: t 'a): int => count;
+let reduce
+    while_::(predicate: 'acc => int => bool)
+    (f: 'acc => int => 'acc)
+    (acc: 'acc)
+    ({ root }: t): 'acc =>
+  BitmapTrieIntSet.reduce while_::predicate f acc root;
 
-  let reduce
-      while_::(predicate: 'acc => int => bool)
-      (f: 'acc => int => 'acc)
-      (acc: 'acc)
-      ({ root }: t 'a): 'acc =>
-    BitmapTrieIntSet.reduce while_::predicate f acc root;
-
-  let toSequence ({ root }: t 'a): (Sequence.t int) =>
-    root |> BitmapTrieIntSet.toSequence;
-}: ImmSet.S with type t := t and type a := a);
+let toSequence ({ root }: t): (Sequence.t int) =>
+  root |> BitmapTrieIntSet.toSequence;
 
 let add (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.add
@@ -50,7 +45,7 @@ let emptyInstance: t = { count: 0, root: BitmapTrieIntSet.Empty };
 let empty (): t => emptyInstance;
 
 let hash (set: t): int => set
-  |> reduce (fun acc next => acc + next) 0;
+  |> reduce while_::Functions.alwaysTrue2 (fun acc next => acc + next) 0;
 
 let remove (value: int) ({ count, root } as set: t): t => {
   let newRoot = root |> BitmapTrieIntSet.remove
@@ -132,10 +127,10 @@ let module Transient = {
     emptyInstance |> mutate;
 
   let isEmpty (transient: t): bool =>
-    transient |> Transient.get |> isEmpty;
+    count transient === 0;
 
   let isNotEmpty (transient: t): bool =>
-    transient |> Transient.get |> isNotEmpty;
+    count transient !== 0;
 
   let persist (transient: t): intSet =>
     transient |> Transient.persist;
@@ -166,21 +161,3 @@ let module Transient = {
 };
 
 let mutate = Transient.mutate;
-
-let addAll (iter: Iterable.t int) (set: t): t =>
-  set |> mutate |> Transient.addAll iter |> Transient.persist;
-
-let from (iter: Iterable.t int): t =>
-  emptyInstance |> addAll iter;
-
-let intersect (this: t) (that: t): t =>
-  /* FIXME: Improve this implementation */
-  ImmSet.intersect (toSet this) (toSet that) |> from;
-
-let subtract (this: t) (that: t): t =>
-  /* FIXME: Improve this implementation */
-  ImmSet.subtract (toSet this) (toSet that) |> from;
-
-let union (this: t) (that: t): t =>
-  /* FIXME: Improve this implementation */
-  ImmSet.union (toSet this) (toSet that) |> from;

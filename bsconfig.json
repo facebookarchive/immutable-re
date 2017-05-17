@@ -5,6 +5,7 @@
     {
       "dir": "src",
       "subdirs": [
+        {"dir": "collections", "public": "none"},
         {"dir": "sets", "public": "none"},
         {"dir": "core", "public": "none"},
         {"dir": "queues", "public": "none"},
