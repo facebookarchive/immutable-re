@@ -97,27 +97,7 @@ let module Collection = {
     };
   };
 
-  let module Transient = {
-    module type S = {
-      type a;
-      type t;
-
-      let count: t => int;
-      let isEmpty: t => bool;
-      let isNotEmpty: t => bool;
-      let removeAll: t => t;
-    };
-
-    module type S1 = {
-      type t 'a;
-
-      let count: (t 'a) => int;
-      let isEmpty: (t 'a) => bool;
-      let isNotEmpty: (t 'a) => bool;
-      let removeAll: (t 'a) => (t 'a);
-    };
-  };
-
+  let module Transient = TransientCollection;
 };
 
 let module SequentialCollection = {
@@ -142,19 +122,7 @@ let module SequentialCollection = {
     };
   };
 
-  let module Transient = {
-    module type S1 = {
-      type t 'a;
-
-      include Collection.Transient.S1 with type t 'a := t 'a;
-
-      let addFirst: 'a => (t 'a) => (t 'a);
-      let addFirstAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      let first: (t 'a) => option 'a;
-      let firstOrRaise: (t 'a) => 'a;
-      let removeFirstOrRaise: (t 'a) => (t 'a);
-    };
-  };
+  let module Transient = TransientSequentialCollection;
 };
 
 let module NavigableCollection = {
@@ -179,18 +147,7 @@ let module NavigableCollection = {
     };
   };
 
-  let module Transient = {
-    module type S1 = {
-      type t 'a;
-
-      include SequentialCollection.Transient.S1 with type t 'a := t 'a;
-
-      let addLast: 'a => (t 'a) => (t 'a);
-      let last: (t 'a) => option 'a;
-      let lastOrRaise: (t 'a) => 'a;
-      let removeLastOrRaise: (t 'a) => (t 'a);
-    };
-  };
+  let module Transient = TransientNavigableCollection;
 };
 
 let module Set = {
@@ -244,30 +201,7 @@ let module Set = {
     };
   };
 
-  let module Transient = {
-    module type S = {
-      type a;
-      type t;
-
-      include Collection.Transient.S with type a := a and type t := t;
-
-      let add: a => t => t;
-      let addAll: (Iterable.t a) => t => t;
-      let contains: a => t => bool;
-      let remove: a => t => t;
-    };
-
-    module type S1 = {
-      type t 'a;
-
-      include Collection.Transient.S1 with type t 'a := t 'a;
-
-      let add: 'a => (t 'a) => (t 'a);
-      let addAll: (Iterable.t 'a) => (t 'a) => (t 'a);
-      let contains: 'a => (t 'a) => bool;
-      let remove: 'a => (t 'a) => (t 'a);
-    };
-  };
+  let module Transient = TransientSet;
 };
 
 let module NavigableSet = {
@@ -562,15 +496,11 @@ let module Deque = {
   let module Transient = {
     include TransientDeque;
 
-    let addFirstAll
-        (iter: Iterable.t 'a)
-        (transient: t 'a): (t 'a) =>
-      iter |> Iterable.reduce (fun acc next => acc |> addFirst next) transient;
+    include (TransientNavigableCollection.MakeGeneric {
+      type elt 'a = 'a;
 
-    let addLastAll
-        (iter: Iterable.t 'a)
-        (transient: t 'a): (t 'a) =>
-      iter |> Iterable.reduce (fun acc next => acc |> addLast next) transient;
+      include TransientDeque;
+    }: TransientNavigableCollection.S1 with type t 'a := TransientDeque.t 'a);
   };
 
   let mutate = Transient.mutate;
@@ -666,16 +596,11 @@ let module HashSet = {
   let module Transient = {
     include TransientHashSet;
 
-    let addAll
-        (iter: Iterable.t 'a)
-        (transient: t 'a): t 'a =>
-      iter |> Iterable.reduce (fun acc next => acc |> add next) transient;
+    include (TransientSet.MakeGeneric {
+      type elt 'a = 'a;
 
-    let isEmpty (transient: t 'a): bool =>
-      count transient === 0;
-
-    let isNotEmpty (transient: t 'a): bool =>
-      count transient !== 0;
+      include TransientHashSet;
+    }: TransientSet.S1 with type t 'a := TransientHashSet.t 'a);
   };
 
   let mutate = Transient.mutate;
@@ -807,16 +732,17 @@ let module IntSet = {
   let module Transient = {
     include TransientIntSet;
 
-    let addAll
-        (iter: Iterable.t 'a)
-        (transient: t): t =>
-      iter |> Iterable.reduce (fun acc next => acc |> add next) transient;
+    include (TransientSet.MakeGeneric {
+      type elt 'a = int;
+      type nonrec t 'a = TransientIntSet.t;
 
-    let isEmpty (transient: t): bool =>
-      count transient === 0;
 
-    let isNotEmpty (transient: t): bool =>
-      count transient !== 0;
+      let add = TransientIntSet.add;
+      let contains = TransientIntSet.contains;
+      let count = TransientIntSet.count;
+      let remove = TransientIntSet.remove;
+      let removeAll = TransientIntSet.removeAll;
+    }: TransientSet.S with type t := TransientIntSet.t and type a := TransientIntSet.a);
   };
 
   let mutate = Transient.mutate;
@@ -1020,17 +946,11 @@ let module Vector = {
   let module Transient = {
     include TransientVector;
 
-    let addFirstAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
-      iter |> Iterable.reduce (fun acc next => acc |> addFirst next) transient;
+    include (TransientNavigableCollection.MakeGeneric {
+      type elt 'a = 'a;
 
-    let addLastAll (iter: Iterable.t 'a) (transient: t 'a): (t 'a) =>
-      iter |> Iterable.reduce (fun acc next => acc |> addLast next) transient;
-
-    let isEmpty (transient: t 'a): bool =>
-      count transient === 0;
-
-    let isNotEmpty (transient: t 'a): bool =>
-      count transient !== 0;
+      include TransientVector;
+    }: TransientNavigableCollection.S1 with type t 'a := TransientVector.t 'a);
   };
 
   include (Indexed.MakeGeneric {

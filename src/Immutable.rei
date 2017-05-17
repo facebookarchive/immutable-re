@@ -835,6 +835,8 @@ let module rec NavigableCollection: {
        *  Complexity: O(1)
        */
 
+      let addLastAll: (Iterable.t 'a) => (t 'a) => (t 'a);
+
       let last: (t 'a) => option 'a;
       /** [tryLast transient] returns the last value in [transient] or None. */
 

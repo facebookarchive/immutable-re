@@ -60,12 +60,6 @@ let firstOrRaise (transient: t 'a): 'a => switch (Transient.get transient) {
   | Descending vector => TransientVector.lastOrRaise vector
 };
 
-let isEmpty (transient: t 'a): bool =>
-  transient |> count === 0;
-
-let isNotEmpty (transient: t 'a): bool =>
-  transient |> count !== 0;
-
 let last (transient: t 'a): (option 'a) => switch (Transient.get transient) {
   | Ascending vector => vector |> TransientVector.last
   | Descending vector => vector |> TransientVector.first
