@@ -35,107 +35,77 @@ let getOrRaise (index: int) ({ left, middle, right }: t 'a): 'a => {
   }
 };
 
-let reduceImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
-  let acc = left |> CopyOnWriteArray.reduce while_::Functions.alwaysTrue2 f acc;
-  let acc = middle |> IndexedTrie.reduce f acc;
-  let acc = right |> CopyOnWriteArray.reduce while_::Functions.alwaysTrue2 f acc;
-  acc;
-};
-
-let reduceWhile
-    while_::(predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    ({ left, middle, right }: t 'a): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc next => {
-    let result = predicate acc next;
-    shouldContinue := result;
-    result;
-  };
-
-  let triePredicate _ _ => !shouldContinue;
-  let rec trieReducer acc =>
-    IndexedTrie.reduceWhileWithResult triePredicate trieReducer predicate f acc;
-
-  let acc = left |> CopyOnWriteArray.reduce while_::predicate f acc;
-
-  let acc =
-    if (!shouldContinue) (IndexedTrie.reduceWhileWithResult
-      triePredicate
-      trieReducer
-      predicate
-      f
-      acc
-      middle
-    )
-    else acc;
-
-  let acc =
-    if (!shouldContinue) (CopyOnWriteArray.reduce while_::predicate f acc right)
-    else acc;
-
-  acc;
-};
-
 let reduce
     while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    (vec: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue2) (reduceImpl f acc vec)
-  else (reduceWhile while_::predicate f acc vec);
-
-let reduceReversedImpl (f: 'acc => 'a => 'acc) (acc: 'acc) ({ left, middle, right }: t 'a): 'acc => {
-  let acc = right |> CopyOnWriteArray.reduceReversed while_::Functions.alwaysTrue2 f acc;
-  let acc = middle |> IndexedTrie.reduceReversed f acc;
-  let acc = left |> CopyOnWriteArray.reduceReversed while_::Functions.alwaysTrue2 f acc;
-  acc;
-};
-
-let reduceReversedWhile
-    while_::(predicate: 'acc => 'a => bool)
-    (f: 'acc => 'a => 'acc)
-    (acc: 'acc)
-    ({ left, middle, right }: t 'a): 'acc => {
-  let shouldContinue = ref true;
-  let predicate acc next => {
-    let result = predicate acc next;
-    shouldContinue := result;
-    result;
-  };
-
-  let triePredicate _ _ => !shouldContinue;
-  let rec trieReducer acc =>
-    IndexedTrie.reduceReversedWhileWithResult triePredicate trieReducer predicate f acc;
-
-  let acc = right |> CopyOnWriteArray.reduceReversed while_::predicate f acc;
-
-  let acc =
-    if (!shouldContinue) (IndexedTrie.reduceReversedWhileWithResult
-      triePredicate
-      trieReducer
-      predicate
+    ({ left, middle, right }: t 'a): 'acc => 
+  if (predicate === Functions.alwaysTrue2) {
+    let rec trieReducer acc node => node |> IndexedTrie.reduce
+      triePredicate::Functions.alwaysTrue2
+      ::trieReducer
+      while_::Functions.alwaysTrue2
       f
-      acc
-      middle
-    )
-    else acc;
+      acc;
 
-  let acc =
-    if (!shouldContinue) (CopyOnWriteArray.reduceReversed while_::predicate f acc left)
-    else acc;
+    let acc = left |> CopyOnWriteArray.reduce while_::Functions.alwaysTrue2 f acc;
+    let acc = trieReducer acc middle;
+    let acc = right |> CopyOnWriteArray.reduce while_::Functions.alwaysTrue2 f acc;
+    acc;
+  }
+  else {
+    let shouldContinue = ref true;
 
-  acc;
-};
+    let predicate acc next => {
+      let result = predicate acc next;
+      shouldContinue := result;
+      result;
+    };
+
+    let triePredicate _ _ => !shouldContinue;
+    let rec trieReducer acc =>
+      IndexedTrie.reduce ::triePredicate ::trieReducer while_::predicate f acc;
+
+    let acc = left |> CopyOnWriteArray.reduce while_::predicate f acc;
+    let acc = if (!shouldContinue) (trieReducer acc middle) else acc;
+    if (!shouldContinue) (CopyOnWriteArray.reduce while_::predicate f acc right) else acc;
+  };
 
 let reduceReversed
     while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    (vec: t 'a): 'acc =>
-  if (predicate === Functions.alwaysTrue2) (reduceReversedImpl f acc vec)
-  else (reduceReversedWhile while_::predicate f acc vec);
+    ({ left, middle, right }: t 'a): 'acc =>
+  if (predicate === Functions.alwaysTrue2) {
+    let rec trieReducer acc node => node |> IndexedTrie.reduceReversed
+      triePredicate::Functions.alwaysTrue2
+      ::trieReducer
+      while_::Functions.alwaysTrue2
+      f
+      acc;
+
+    let acc = right |> CopyOnWriteArray.reduceReversed while_::Functions.alwaysTrue2 f acc;
+    let acc = trieReducer acc middle;
+    let acc = left |> CopyOnWriteArray.reduceReversed while_::Functions.alwaysTrue2 f acc;
+    acc;
+  }
+  else {
+    let shouldContinue = ref true;
+
+    let predicate acc next => {
+      let result = predicate acc next;
+      shouldContinue := result;
+      result;
+    };
+
+    let triePredicate _ _ => !shouldContinue;
+    let rec trieReducer acc =>
+      IndexedTrie.reduceReversed ::triePredicate ::trieReducer while_::predicate f acc;
+
+    let acc = right |> CopyOnWriteArray.reduceReversed while_::predicate f acc;
+    let acc = if (!shouldContinue) (trieReducer acc middle) else acc;
+    if (!shouldContinue) (CopyOnWriteArray.reduceReversed while_::predicate f acc left) else acc;
+  };
 
 let toSequence ({ left, middle, right }: t 'a): (Sequence.t 'a) => Sequence.concat [
   CopyOnWriteArray.toSequence left,

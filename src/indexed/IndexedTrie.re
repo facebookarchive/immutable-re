@@ -21,42 +21,24 @@ let count (trie: t 'a): int => switch trie {
   | Level _ count _ _ => !count;
 };
 
-let rec reduce (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
-  | Empty => acc
-  | Leaf _ values => values |> CopyOnWriteArray.reduce while_::Functions.alwaysTrue2 f acc
-  | Level _ _ _ nodes =>
-      let reducer acc node => node |> reduce f acc;
-      nodes |> CopyOnWriteArray.reduce while_::Functions.alwaysTrue2 reducer acc
-};
-
-let reduceWhileWithResult
-    (triePredicate: 'acc => t 'a => bool)
-    (trieReducer: 'acc => t 'a => 'acc)
-    (predicate: 'acc => 'a => bool)
+let reduce
+    triePredicate::(triePredicate: 'acc => t 'a => bool)
+    trieReducer::(trieReducer: 'acc => t 'a => 'acc)
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (trie: t 'a): 'acc => switch trie {
   | Empty => acc
   | Leaf _ values =>
-      values |> CopyOnWriteArray.reduce
-        while_::predicate f acc
+      values |> CopyOnWriteArray.reduce while_::predicate f acc
   | Level _ _ _ nodes =>
-      nodes |> CopyOnWriteArray.reduce
-        while_::triePredicate trieReducer acc
+      nodes |> CopyOnWriteArray.reduce while_::triePredicate trieReducer acc
 };
 
-let rec reduceReversed (f: 'acc => 'a => 'acc) (acc: 'acc) (trie: t 'a): 'acc => switch trie {
-  | Empty => acc
-  | Leaf _ values => values |> CopyOnWriteArray.reduceReversed while_::Functions.alwaysTrue2 f acc
-  | Level _ _ _ nodes =>
-      let reducer acc node => node |> reduceReversed f acc;
-      nodes |> CopyOnWriteArray.reduceReversed while_::Functions.alwaysTrue2 reducer acc
-};
-
-let reduceReversedWhileWithResult
-    (triePredicate: 'acc => t 'a => bool)
-    (trieReducer: 'acc => t 'a => 'acc)
-    (predicate: 'acc => 'a => bool)
+let reduceReversed
+    triePredicate::(triePredicate: 'acc => t 'a => bool)
+    trieReducer::(trieReducer: 'acc => t 'a => 'acc)
+    while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
     (trie: t 'a): 'acc => switch trie {
@@ -64,8 +46,7 @@ let reduceReversedWhileWithResult
   | Leaf _ values =>
       values |> CopyOnWriteArray.reduceReversed while_::predicate f acc
   | Level _ _ _ nodes =>
-      nodes |> CopyOnWriteArray.reduceReversed
-        while_::triePredicate trieReducer acc
+      nodes |> CopyOnWriteArray.reduceReversed while_::triePredicate trieReducer acc
 };
 
 let rec toSequence (trie: t 'a): (Sequence.t 'a) => switch trie {
