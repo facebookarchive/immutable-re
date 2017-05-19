@@ -91,8 +91,8 @@ let module TransientVectorImpl = {
     if ((tailIsFull leftCount) && (tailIsNotEmpty rightCount)) {
       transientVec.left = Array.make IndexedTrie.width value;
       transientVec.leftCount = 1;
-      transientVec.middle = IndexedTrie.addFirstLeafUsingMutator
-        IndexedTrie.updateLevelTransient
+      transientVec.middle = IndexedTrie.Mutator.addFirstLeaf
+        IndexedTrie.Mutator.updateLevelTransient
         owner
         left
         middle;
@@ -131,8 +131,8 @@ let module TransientVectorImpl = {
       transientVec.rightCount = rightCount + 1;
     }
     else {
-      transientVec.middle = IndexedTrie.addLastLeafUsingMutator
-        IndexedTrie.updateLevelTransient
+      transientVec.middle = IndexedTrie.Mutator.addLastLeaf
+        IndexedTrie.Mutator.updateLevelTransient
         owner
         right
         middle;

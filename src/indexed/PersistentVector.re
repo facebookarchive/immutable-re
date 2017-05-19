@@ -39,7 +39,7 @@ let reduce
     while_::(predicate: 'acc => 'a => bool)
     (f: 'acc => 'a => 'acc)
     (acc: 'acc)
-    ({ left, middle, right }: t 'a): 'acc => 
+    ({ left, middle, right }: t 'a): 'acc =>
   if (predicate === Functions.alwaysTrue2) {
     let rec trieReducer acc node => node |> IndexedTrie.reduce
       triePredicate::Functions.alwaysTrue2
@@ -136,7 +136,11 @@ let tailIsNotFull (arr: array 'a): bool =>
 let addFirst (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   if ((tailIsFull left) && (CopyOnWriteArray.count right !== 0)) {
     left: [| value |],
-    middle: IndexedTrie.addFirstLeafUsingMutator IndexedTrie.updateLevelPersistent Transient.Owner.none left middle,
+    middle: IndexedTrie.Mutator.addFirstLeaf
+      IndexedTrie.Mutator.updateLevelPersistent
+      Transient.Owner.none
+      left
+      middle,
     right,
   }
   else if ((tailIsFull left) && (CopyOnWriteArray.count right === 0)) {
@@ -164,7 +168,11 @@ let addLast (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   }
   else {
     left,
-    middle: IndexedTrie.addLastLeafUsingMutator IndexedTrie.updateLevelPersistent Transient.Owner.none right middle,
+    middle: IndexedTrie.Mutator.addLastLeaf
+      IndexedTrie.Mutator.updateLevelPersistent
+      Transient.Owner.none
+      right
+      middle,
     right: [| value |],
   };
 

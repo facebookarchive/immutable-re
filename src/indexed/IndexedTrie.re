@@ -81,124 +81,184 @@ let empty = Empty;
 let isEmpty (trie: t 'a) =>
   (count trie) === 0;
 
-type levelMutator 'a = Transient.Owner.t => int => int => (t 'a) => (t 'a) => (t 'a);
-type leafMutator 'a = Transient.Owner.t => int => 'a => (t 'a) => (t 'a);
+let module Mutator = {
+  type leafMutator 'a =
+    owner::Transient.Owner.t =>
+    index::int =>
+    child::'a =>
+    (t 'a) =>
+    (t 'a);
 
-let rec tryAddFirstLeafToTrieUsingMutator
-    (updateLevel: levelMutator 'a)
-    (owner: Transient.Owner.t)
-    (values: array 'a)
-    (Level levelDepth levelCount _ tries as trie: t 'a): (option (t 'a)) => {
-  let firstIndex = 0;
-  let firstChild = tries |> CopyOnWriteArray.getOrRaise 0;
-  let firstChildCount = count firstChild;
-  let firstChildDepth = depth firstChild;
-  let triesWidth = CopyOnWriteArray.count tries;
-  let valuesCount = CopyOnWriteArray.count values;
+  type levelMutator 'a =
+    owner::Transient.Owner.t =>
+    levelCount::int =>
+    index::int =>
+    child::(t 'a) =>
+    (t 'a) =>
+    (t 'a);
 
-  switch firstChild {
-    | Leaf _ _ when firstChildDepth < (levelDepth - 1) =>
-        let newFirstChildLevelCount = firstChildCount + valuesCount;
-        let newFirstChild = Level 1 (ref newFirstChildLevelCount) owner [| Leaf owner values, firstChild |];
-        let newLevelCount = !levelCount - firstChildCount + newFirstChildLevelCount;
-        updateLevel owner newLevelCount firstIndex newFirstChild trie |> Option.return;
-    | Leaf _ _ when triesWidth < width =>
-        let newLevelCount = !levelCount + valuesCount;
-        Level levelDepth (ref newLevelCount) owner (tries |> CopyOnWriteArray.addFirst (Leaf owner values)) |> Option.return;
-    | Level childLevelDepth _ _ _ => switch (firstChild |> tryAddFirstLeafToTrieUsingMutator updateLevel owner values) {
-        | Some newFirstChild =>
-            let newLevelCount = !levelCount - firstChildCount + (count newFirstChild);
-            updateLevel owner newLevelCount firstIndex newFirstChild trie |> Option.return;
-        | None when firstChildDepth < (levelDepth - 1) =>
-            let newFirstChildLevelCount = ref (firstChildCount + valuesCount);
-            let newFirstChild = Level (childLevelDepth + 1) newFirstChildLevelCount owner [| Leaf owner values, firstChild |];
-            let newLevelCount = !levelCount + valuesCount;
-            updateLevel owner newLevelCount firstIndex newFirstChild trie |> Option.return;
-        | None when triesWidth < width =>
+  let rec addFirstLeafOrRaise
+      (updateLevel: levelMutator 'a)
+      (owner: Transient.Owner.t)
+      (values: array 'a)
+      (trie: t 'a): (t 'a) => {
+    let (Level levelDepth levelCount _ tries) = trie;
+
+    let index = 0;
+    let firstChild = tries |> CopyOnWriteArray.getOrRaise 0;
+    let firstChildCount = count firstChild;
+    let firstChildDepth = depth firstChild;
+    let triesWidth = CopyOnWriteArray.count tries;
+    let valuesCount = CopyOnWriteArray.count values;
+
+    switch firstChild {
+      | Leaf _ _ when firstChildDepth < (levelDepth - 1) =>
+          let childLevelCount = firstChildCount + valuesCount;
+          let child = Level 1 (ref childLevelCount) owner [| Leaf owner values, firstChild |];
+
+          let levelCount = !levelCount - firstChildCount + childLevelCount;
+          trie |> updateLevel ::owner ::levelCount ::index ::child;
+      | Leaf _ _ when triesWidth < width =>
+          let newLevelCount = !levelCount + valuesCount;
+          Level levelDepth (ref newLevelCount) owner (tries |> CopyOnWriteArray.addFirst (Leaf owner values));
+      | Level childLevelDepth _ _ _ =>
+          let firstChild = firstChild |> addFirstLeafOrRaise updateLevel owner values;
+          let newFirstChildCount = count firstChild;
+
+          if (firstChildCount !== newFirstChildCount) {
+            let levelCount = !levelCount - firstChildCount + newFirstChildCount;
+            trie |> updateLevel ::owner ::levelCount ::index child::firstChild;
+          } else if (firstChildDepth < (levelDepth - 1)) {
+              let newFirstChildLevelCount = ref (firstChildCount + valuesCount);
+              let child = Level (childLevelDepth + 1) newFirstChildLevelCount owner [| Leaf owner values, firstChild |];
+              let levelCount = !levelCount + valuesCount;
+              trie |> updateLevel ::owner ::levelCount ::index ::child;
+          } else if (triesWidth < width) {
+              let newLevelCount = !levelCount + valuesCount;
+              Level levelDepth (ref newLevelCount) owner (tries |> CopyOnWriteArray.addFirst (Leaf owner values));
+          } else trie
+      | _ => trie
+    }
+  };
+
+  let addFirstLeaf
+      (updateLevel: levelMutator 'a)
+      (owner: Transient.Owner.t)
+      (values: array 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Empty => Leaf owner values
+    | Leaf _ _ =>
+        let levelCount = count trie + CopyOnWriteArray.count values;
+        Level 1 (ref levelCount) owner [| Leaf owner values, trie |];
+    | Level levelDepth _ _ _ =>
+        let prevTrieCount = count trie;
+        let trie = trie |> addFirstLeafOrRaise updateLevel owner values;
+        let newTrieCount = count trie;
+
+        if (newTrieCount !== prevTrieCount) trie
+        else {
+          let levelCount = newTrieCount + CopyOnWriteArray.count values;
+          let levelDepth = levelDepth + 1;
+          Level levelDepth (ref levelCount) owner [| Leaf owner values, trie |];
+        }
+  };
+
+  let rec addLastLeafOrRaise
+      (updateLevel: levelMutator 'a)
+      (owner: Transient.Owner.t)
+      (values: array 'a)
+      (trie: t 'a): (t 'a) => {
+    let (Level levelDepth levelCount _ tries) = trie;
+
+    let index = tries |> CopyOnWriteArray.lastIndexOrRaise;
+    let lastChild = tries |> CopyOnWriteArray.getOrRaise index;
+    let lastChildCount = count lastChild;
+    let lastChildDepth = depth lastChild;
+    let triesWidth = CopyOnWriteArray.count tries;
+    let valuesCount = CopyOnWriteArray.count values;
+
+    switch lastChild {
+      | Leaf _ _ when lastChildDepth < (levelDepth - 1) =>
+          let newLastChildLevelCount = lastChildCount + valuesCount;
+          let child = Level 1 (ref newLastChildLevelCount) owner [| lastChild, Leaf owner values |];
+          let levelCount = !levelCount - lastChildCount + newLastChildLevelCount;
+
+          trie |> updateLevel ::owner ::levelCount ::index ::child;
+      | Leaf _ when triesWidth < width =>
+          let newLevelCount = ref (!levelCount + valuesCount);
+          Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addLast (Leaf owner values))
+      | Level childLevelDepth _ _ _ =>
+          let lastChild = lastChild |> addLastLeafOrRaise updateLevel owner values;
+          let newLastChildCount = count lastChild;
+
+          if (newLastChildCount !== lastChildCount) {
+            let levelCount = !levelCount - lastChildCount + newLastChildCount;
+            trie |> updateLevel ::owner ::levelCount ::index child::lastChild;
+          }
+          else if (lastChildDepth < (levelDepth - 1)) {
+            let newLastChildLevelCount = ref (lastChildCount + valuesCount);
+            let child = Level (childLevelDepth + 1) newLastChildLevelCount owner [| lastChild, Leaf owner values |];
+            let levelCount = !levelCount + valuesCount;
+            trie |> updateLevel ::owner ::levelCount ::index ::child;
+          }
+          else if (triesWidth < width) {
             let newLevelCount = ref (!levelCount + valuesCount);
-            Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addFirst (Leaf owner values)) |> Option.return;
-        | None => None
-      }
-    | _ => None
+            Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addLast (Leaf owner values));
+          }
+          else trie
+      | _ => trie
+    }
+  };
+
+  let addLastLeaf
+      (updateLevel: levelMutator 'a)
+      (owner: Transient.Owner.t)
+      (values: array 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Empty =>
+        Leaf owner values
+    | Leaf _ _ =>
+        let levelCount = count trie + CopyOnWriteArray.count values;
+        Level 1 (ref levelCount) owner [| trie, Leaf owner values |];
+    | Level levelDepth _ _ _  =>
+        let prevTrieCount = count trie;
+        let trie = trie |> addLastLeafOrRaise updateLevel owner values;
+        let newTrieCount = count trie;
+
+        if (newTrieCount !== prevTrieCount) trie
+        else {
+          let levelCount = newTrieCount + CopyOnWriteArray.count values;
+          let levelDepth = levelDepth + 1;
+          Level levelDepth (ref levelCount) owner [| trie, Leaf owner values |];
+        };
+  };
+
+  let updateLevelPersistent
+      owner::(_: Transient.Owner.t)
+      levelCount::(count: int)
+      index::(index: int)
+      child::(child: t 'a)
+      (Level depth _ _ tries: t 'a): (t 'a) =>
+    Level depth (ref count) Transient.Owner.none (CopyOnWriteArray.update index child tries);
+
+  let updateLevelTransient
+      owner::(owner: Transient.Owner.t)
+      levelCount::(count: int)
+      index::(index: int)
+      child::(child: t 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Level _ trieCount trieOwner tries when trieOwner === owner =>
+        tries.(index) = child;
+        trieCount := count;
+        trie
+    | Level depth _ _ tries =>
+        Level depth (ref count) owner (CopyOnWriteArray.update index child tries)
+    | _ => failwith "Invalid state"
   };
 };
 
-let addFirstLeafUsingMutator
-    (updateLevel: levelMutator 'a)
-    (owner: Transient.Owner.t)
-    (values: array 'a)
-    (trie: t 'a): (t 'a) => switch trie {
-  | Empty =>
-      Leaf owner values
-  | Leaf _ _ =>
-      let levelCount = count trie + CopyOnWriteArray.count values;
-      Level 1 (ref levelCount) owner [| Leaf owner values, trie |];
-  | Level levelDepth _ _ _ => switch (trie |> tryAddFirstLeafToTrieUsingMutator updateLevel owner values) {
-    | Some trie => trie
-    | None =>
-        let levelCount = count trie + CopyOnWriteArray.count values;
-        let levelDepth = levelDepth + 1;
-        Level levelDepth (ref levelCount) owner [| Leaf owner values, trie |];
-  }
-};
-
-let rec tryAddLastLeafToTrieUsingMutator
-    (updateLevel: levelMutator 'a)
-    (owner: Transient.Owner.t)
-    (values: array 'a)
-    (Level levelDepth levelCount _ tries as trie: t 'a): (option (t 'a)) => {
-  let lastIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
-  let lastChild = tries |> CopyOnWriteArray.getOrRaise lastIndex;
-  let lastChildCount = count lastChild;
-  let lastChildDepth = depth lastChild;
-  let triesWidth = CopyOnWriteArray.count tries;
-  let valuesCount = CopyOnWriteArray.count values;
-
-  switch lastChild {
-    | Leaf _ _ when lastChildDepth < (levelDepth - 1) =>
-        let newLastChildLevelCount = lastChildCount + valuesCount;
-        let newLastChild = Level 1 (ref newLastChildLevelCount) owner [| lastChild, Leaf owner values |];
-        let newLevelCount = !levelCount - lastChildCount + newLastChildLevelCount;
-        updateLevel owner newLevelCount lastIndex newLastChild trie |> Option.return;
-    | Leaf _ when triesWidth < width =>
-        let newLevelCount = ref (!levelCount + valuesCount);
-        Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addLast (Leaf owner values)) |> Option.return;
-    | Level childLevelDepth _ _ _ => switch (lastChild |> tryAddLastLeafToTrieUsingMutator updateLevel owner values) {
-        | Some newLastChild =>
-            let newLevelCount = !levelCount - lastChildCount + (count newLastChild);
-            updateLevel owner newLevelCount lastIndex newLastChild trie |> Option.return;
-        | None when lastChildDepth < (levelDepth - 1) =>
-            let newLastChildLevelCount = ref (lastChildCount + valuesCount);
-            let newLastChild = Level (childLevelDepth + 1) newLastChildLevelCount owner [| lastChild, Leaf owner values |];
-            let newLevelCount = !levelCount + valuesCount;
-            updateLevel owner newLevelCount lastIndex newLastChild trie |> Option.return;
-        | None when triesWidth < width =>
-            let newLevelCount = ref (!levelCount + valuesCount);
-            Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addLast (Leaf owner values)) |> Option.return;
-        | None => None
-      }
-    | _ => None
-  }
-};
-
-let addLastLeafUsingMutator
-    (updateLevel: levelMutator 'a)
-    (owner: Transient.Owner.t)
-    (values: array 'a)
-    (trie: t 'a): (t 'a) => switch trie {
-  | Empty =>
-      Leaf owner values
-  | Leaf _ _ =>
-      let levelCount = count trie + CopyOnWriteArray.count values;
-      Level 1 (ref levelCount) owner [| trie, Leaf owner values |];
-  | Level levelDepth _ _ _ => switch (trie |> tryAddLastLeafToTrieUsingMutator updateLevel owner values) {
-    | Some trie => trie
-    | None =>
-        let levelCount = count trie + CopyOnWriteArray.count values;
-        let levelDepth = levelDepth + 1;
-        Level levelDepth (ref levelCount) owner [| trie, Leaf owner values |];
-  }
-};
+type levelMutator 'a = Transient.Owner.t => int => int => (t 'a) => (t 'a) => (t 'a);
+type leafMutator 'a = Transient.Owner.t => int => 'a => (t 'a) => (t 'a);
 
 let rec removeFirstLeafUsingMutator
     (updateLevel: levelMutator 'a)
