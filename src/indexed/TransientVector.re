@@ -91,7 +91,7 @@ let module TransientVectorImpl = {
     if ((tailIsFull leftCount) && (tailIsNotEmpty rightCount)) {
       transientVec.left = Array.make IndexedTrie.width value;
       transientVec.leftCount = 1;
-      transientVec.middle = IndexedTrie.addFirstLeafUsingMutator
+      transientVec.middle = IndexedTrie.addFirstLeaf
         IndexedTrie.updateLevelTransient
         owner
         left
@@ -131,7 +131,7 @@ let module TransientVectorImpl = {
       transientVec.rightCount = rightCount + 1;
     }
     else {
-      transientVec.middle = IndexedTrie.addLastLeafUsingMutator
+      transientVec.middle = IndexedTrie.addLastLeaf
         IndexedTrie.updateLevelTransient
         owner
         right
@@ -157,8 +157,13 @@ let module TransientVectorImpl = {
       transientVec.leftCount = leftCount - 1;
     }
     else if ((IndexedTrie.count middle) > 0) {
-      let (IndexedTrie.Leaf leftOwner left, middle) = middle
-        |> IndexedTrie.removeFirstLeafUsingMutator IndexedTrie.updateLevelTransient owner;
+      let firstLeaf = ref IndexedTrie.Empty;
+      let middle = IndexedTrie.removeFirstLeaf
+        IndexedTrie.updateLevelTransient
+        owner
+        firstLeaf
+        middle;
+      let (IndexedTrie.Leaf leftOwner left) = !firstLeaf;
       let leftCount = CopyOnWriteArray.count left;
 
       let left =
@@ -194,8 +199,14 @@ let module TransientVectorImpl = {
       transientVec.rightCount = rightCount - 1;
     }
     else if ((IndexedTrie.count middle) > 0) {
-      let (middle, IndexedTrie.Leaf rightOwner right) = middle
-        |> IndexedTrie.removeLastLeafUsingMutator IndexedTrie.updateLevelTransient owner;
+      let lastLeaf = ref IndexedTrie.Empty;
+      let middle = IndexedTrie.removeLastLeaf
+        IndexedTrie.updateLevelTransient
+        owner
+        lastLeaf
+        middle;
+
+      let (IndexedTrie.Leaf rightOwner right) = !lastLeaf;
       let rightCount = CopyOnWriteArray.count right;
 
       let right =
@@ -275,7 +286,7 @@ let module TransientVectorImpl = {
     }
     else {
       let index = (index - leftCount);
-      let middle = middle |> IndexedTrie.updateUsingMutator
+      let middle = middle |> IndexedTrie.update
         IndexedTrie.updateLevelTransient
         IndexedTrie.updateLeafTransient
         owner
@@ -309,7 +320,7 @@ let module TransientVectorImpl = {
     }
     else {
       let index = (index - leftCount);
-      let middle = middle |> IndexedTrie.updateWithUsingMutator
+      let middle = middle |> IndexedTrie.updateWith
         IndexedTrie.updateLevelTransient
         IndexedTrie.updateLeafTransient
         owner
@@ -431,7 +442,7 @@ let updateAllImpl
 
   for i in 0 to (leftCount - 1) { left.(i) = updater left.(i) };
 
-  let middle = middle |> IndexedTrie.updateAllUsingMutator
+  let middle = middle |> IndexedTrie.updateAll
     IndexedTrie.updateLevelTransient
     IndexedTrie.updateLeafTransient
     owner
