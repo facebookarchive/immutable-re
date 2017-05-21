@@ -31,7 +31,7 @@ let getOrRaise (index: int) ({ left, middle, right }: t 'a): 'a => {
   else if (rightIndex >= 0) right.(rightIndex)
   else {
     let index = index - leftCount;
-    middle |> IndexedTrie.get index;
+    middle |> IndexedTrie.Impl.get index;
   }
 };
 
@@ -136,7 +136,7 @@ let tailIsNotFull (arr: array 'a): bool =>
 let addFirst (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   if ((tailIsFull left) && (CopyOnWriteArray.count right !== 0)) {
     left: [| value |],
-    middle: IndexedTrie.Mutator.addFirstLeaf
+    middle: IndexedTrie.Impl.addFirstLeaf
       IndexedTrie.Mutator.updateLevelPersistent
       Transient.Owner.none
       left
@@ -168,7 +168,7 @@ let addLast (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   }
   else {
     left,
-    middle: IndexedTrie.Mutator.addLastLeaf
+    middle: IndexedTrie.Impl.addLastLeaf
       IndexedTrie.Mutator.updateLevelPersistent
       Transient.Owner.none
       right
@@ -189,8 +189,14 @@ let removeFirstOrRaise ({ left, middle, right }: t 'a): (t 'a) => {
     right,
   }
   else if (middleCount > 0) {
-    let (IndexedTrie.Leaf _ left, middle) =
-      IndexedTrie.removeFirstLeafUsingMutator IndexedTrie.updateLevelPersistent Transient.Owner.none middle;
+    let firstLeaf = ref IndexedTrie.Empty;
+    let middle = IndexedTrie.Impl.removeFirstLeaf
+      IndexedTrie.Mutator.updateLevelPersistent
+      Transient.Owner.none
+      firstLeaf
+      middle;
+
+    let (IndexedTrie.Leaf _ left) = !firstLeaf;
     { left, middle, right };
   }
   else if (rightCount > 0) {
@@ -213,8 +219,14 @@ let removeLastOrRaise ({ left, middle, right }: t 'a): (t 'a) => {
       right: CopyOnWriteArray.removeLastOrRaise right,
     }
     else if (middleCount > 0) {
-      let (middle, IndexedTrie.Leaf _ right) =
-        IndexedTrie.removeLastLeafUsingMutator IndexedTrie.updateLevelPersistent Transient.Owner.none middle;
+      let lastLeaf = ref IndexedTrie.Empty;
+      let middle = IndexedTrie.Impl.removeLastLeaf
+          IndexedTrie.Mutator.updateLevelPersistent
+          Transient.Owner.none
+          lastLeaf
+          middle;
+
+      let (IndexedTrie.Leaf _ right) = !lastLeaf;
       { left, middle, right };
     }
     else if (rightCount === 1) {
@@ -256,9 +268,9 @@ let update
   }
   else {
     let index = (index - leftCount);
-    let middle = middle |> IndexedTrie.updateUsingMutator
-      IndexedTrie.updateLevelPersistent
-      IndexedTrie.updateLeafPersistent
+    let middle = middle |> IndexedTrie.Impl.update
+      IndexedTrie.Mutator.updateLevelPersistent
+      IndexedTrie.Mutator.updateLeafPersistent
       Transient.Owner.none
       index
       value;
@@ -290,9 +302,9 @@ let updateWith
   }
   else {
     let index = (index - leftCount);
-    let middle = middle |> IndexedTrie.updateWithUsingMutator
-      IndexedTrie.updateLevelPersistent
-      IndexedTrie.updateLeafPersistent
+    let middle = middle |> IndexedTrie.Impl.updateWith
+      IndexedTrie.Mutator.updateLevelPersistent
+      IndexedTrie.Mutator.updateLeafPersistent
       Transient.Owner.none
       index
       f;

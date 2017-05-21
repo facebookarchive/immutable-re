@@ -12,9 +12,6 @@ type t 'a =
   | Leaf Transient.Owner.t (array 'a)
   | Level int (ref int) Transient.Owner.t (array (t 'a));
 
-let bits = 5;
-let width = 1 lsl 5;
-
 let count (trie: t 'a): int => switch trie {
   | Empty => 0
   | Leaf _ values => CopyOnWriteArray.count values;
@@ -67,6 +64,9 @@ let depth (trie: t 'a): int => switch trie {
   | Level depth _ _ _ => depth
 };
 
+let bits = 5;
+let width = 1 lsl 5;
+
 let depthCapacity (depth: int): int =>
   width lsl (depth * bits);
 
@@ -82,14 +82,7 @@ let isEmpty (trie: t 'a) =>
   (count trie) === 0;
 
 let module Mutator = {
-  type leafMutator 'a =
-    owner::Transient.Owner.t =>
-    index::int =>
-    child::'a =>
-    (t 'a) =>
-    (t 'a);
-
-  type levelMutator 'a =
+  type level 'a =
     owner::Transient.Owner.t =>
     levelCount::int =>
     index::int =>
@@ -97,8 +90,72 @@ let module Mutator = {
     (t 'a) =>
     (t 'a);
 
-  let rec addFirstLeafOrRaise
-      (updateLevel: levelMutator 'a)
+  type leaf 'a =
+    owner::Transient.Owner.t =>
+    index::int =>
+    value::'a =>
+    (t 'a) =>
+    (t 'a);
+
+  let updateLeafPersistent
+      owner::(_: Transient.Owner.t)
+      index::(index: int)
+      value::(value: 'a)
+      (Leaf _ values as trie: t 'a): (t 'a) => {
+    let oldValue = values.(index);
+
+    if (oldValue === value) trie
+    else Leaf Transient.Owner.none (values |> CopyOnWriteArray.update index value);
+  };
+
+  let updateLeafTransient
+      owner::(owner: Transient.Owner.t)
+      index::(index: int)
+      value::(value: 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Leaf trieOwner values when trieOwner === owner =>
+        values.(index) = value;
+        trie
+    | Leaf _ values =>
+        let oldValue = values.(index);
+
+        if (oldValue === value) trie
+        else Leaf Transient.Owner.none (values |> CopyOnWriteArray.update index value);
+    | _ => failwith "Invalid state"
+  };
+
+  let updateLevelPersistent
+      owner::(_: Transient.Owner.t)
+      levelCount::(count: int)
+      index::(index: int)
+      child::(child: t 'a)
+      (Level depth _ _ tries as trie: t 'a): (t 'a) => {
+    let oldChild = tries.(index);
+    if (oldChild === child) trie
+    else Level depth (ref count) Transient.Owner.none (CopyOnWriteArray.update index child tries);
+  };
+
+  let updateLevelTransient
+      owner::(owner: Transient.Owner.t)
+      levelCount::(count: int)
+      index::(index: int)
+      child::(child: t 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Level _ trieCount trieOwner tries when trieOwner === owner =>
+        tries.(index) = child;
+        trieCount := count;
+        trie
+    | Level depth _ _ tries =>
+        let oldChild = tries.(index);
+        if (oldChild === child) trie
+        else Level depth (ref count) owner (CopyOnWriteArray.update index child tries);
+    | _ => failwith "Invalid state"
+  };
+};
+
+let module Impl = {
+  let rec addFirstLeafIfSpace
+      (updateLevel: Mutator.level 'a)
       (owner: Transient.Owner.t)
       (values: array 'a)
       (trie: t 'a): (t 'a) => {
@@ -122,7 +179,7 @@ let module Mutator = {
           let newLevelCount = !levelCount + valuesCount;
           Level levelDepth (ref newLevelCount) owner (tries |> CopyOnWriteArray.addFirst (Leaf owner values));
       | Level childLevelDepth _ _ _ =>
-          let firstChild = firstChild |> addFirstLeafOrRaise updateLevel owner values;
+          let firstChild = firstChild |> addFirstLeafIfSpace updateLevel owner values;
           let newFirstChildCount = count firstChild;
 
           if (firstChildCount !== newFirstChildCount) {
@@ -142,7 +199,7 @@ let module Mutator = {
   };
 
   let addFirstLeaf
-      (updateLevel: levelMutator 'a)
+      (updateLevel: Mutator.level 'a)
       (owner: Transient.Owner.t)
       (values: array 'a)
       (trie: t 'a): (t 'a) => switch trie {
@@ -152,7 +209,7 @@ let module Mutator = {
         Level 1 (ref levelCount) owner [| Leaf owner values, trie |];
     | Level levelDepth _ _ _ =>
         let prevTrieCount = count trie;
-        let trie = trie |> addFirstLeafOrRaise updateLevel owner values;
+        let trie = trie |> addFirstLeafIfSpace updateLevel owner values;
         let newTrieCount = count trie;
 
         if (newTrieCount !== prevTrieCount) trie
@@ -163,8 +220,8 @@ let module Mutator = {
         }
   };
 
-  let rec addLastLeafOrRaise
-      (updateLevel: levelMutator 'a)
+  let rec addLastLeafIfSpace
+      (updateLevel: Mutator.level 'a)
       (owner: Transient.Owner.t)
       (values: array 'a)
       (trie: t 'a): (t 'a) => {
@@ -188,7 +245,7 @@ let module Mutator = {
           let newLevelCount = ref (!levelCount + valuesCount);
           Level levelDepth newLevelCount owner (tries |> CopyOnWriteArray.addLast (Leaf owner values))
       | Level childLevelDepth _ _ _ =>
-          let lastChild = lastChild |> addLastLeafOrRaise updateLevel owner values;
+          let lastChild = lastChild |> addLastLeafIfSpace updateLevel owner values;
           let newLastChildCount = count lastChild;
 
           if (newLastChildCount !== lastChildCount) {
@@ -211,7 +268,7 @@ let module Mutator = {
   };
 
   let addLastLeaf
-      (updateLevel: levelMutator 'a)
+      (updateLevel: Mutator.level 'a)
       (owner: Transient.Owner.t)
       (values: array 'a)
       (trie: t 'a): (t 'a) => switch trie {
@@ -222,7 +279,7 @@ let module Mutator = {
         Level 1 (ref levelCount) owner [| trie, Leaf owner values |];
     | Level levelDepth _ _ _  =>
         let prevTrieCount = count trie;
-        let trie = trie |> addLastLeafOrRaise updateLevel owner values;
+        let trie = trie |> addLastLeafIfSpace updateLevel owner values;
         let newTrieCount = count trie;
 
         if (newTrieCount !== prevTrieCount) trie
@@ -233,103 +290,243 @@ let module Mutator = {
         };
   };
 
-  let updateLevelPersistent
-      owner::(_: Transient.Owner.t)
-      levelCount::(count: int)
-      index::(index: int)
-      child::(child: t 'a)
-      (Level depth _ _ tries: t 'a): (t 'a) =>
-    Level depth (ref count) Transient.Owner.none (CopyOnWriteArray.update index child tries);
+  let canRadixSearch (depth: int) (count: int) (tries: array (t 'a)): bool => {
+    let childCapacity = depthCapacity (depth - 1);
+    let triesCount = CopyOnWriteArray.count tries;
+    count === (triesCount * childCapacity)
+  };
 
-  let updateLevelTransient
-      owner::(owner: Transient.Owner.t)
-      levelCount::(count: int)
-      index::(index: int)
-      child::(child: t 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Level _ trieCount trieOwner tries when trieOwner === owner =>
-        tries.(index) = child;
-        trieCount := count;
-        trie
+  let computeIndexUsingRadixSearch (depth: int) (index: int): int => {
+    let mask = width - 1;
+    let level = depth * bits;
+    (index lsr level) land mask;
+  };
+
+  let rec getUsingRadixSearch (index: int) (trie: t 'a): 'a => switch trie {
+    | Empty => failwith "empty"
+    | Leaf _ values =>
+        let valuesIndex = computeIndexUsingRadixSearch 0 index;
+        values.(valuesIndex)
     | Level depth _ _ tries =>
-        Level depth (ref count) owner (CopyOnWriteArray.update index child tries)
-    | _ => failwith "Invalid state"
+        let triesIndex = computeIndexUsingRadixSearch depth index;
+        getUsingRadixSearch index (tries.(triesIndex));
+  };
+
+  let rec get (index: int) (trie: t 'a): 'a => switch trie {
+    | Level depth levelCount _ tries when (canRadixSearch depth !levelCount tries |> not) =>
+        let rec loop index childIndex => {
+          let childNode = tries.(childIndex);
+          let childCount = count childNode;
+
+          if (index >= childCount) (loop (index - childCount) (childIndex + 1))
+          else {
+            let trie = tries.(childIndex);
+            get index trie
+          };
+        };
+
+        loop index 0;
+    | _ => getUsingRadixSearch index trie
+  };
+
+  let rec removeFirstLeaf
+      (updateLevel: Mutator.level 'a)
+      (owner: Transient.Owner.t)
+      (firstLeaf: ref (t 'a))
+      (trie: t 'a): t 'a => switch trie {
+    | Leaf _ _ =>
+        firstLeaf := trie;
+        Empty;
+    | Level levelDepth levelCount _ tries when levelDepth > 1 =>
+        let triesWidth = CopyOnWriteArray.count tries;
+        let firstChildIndex = 0;
+        let lastIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
+        let firstChild = tries |> CopyOnWriteArray.getOrRaise 0;
+        let newFirstChild = firstChild |> removeFirstLeaf updateLevel owner firstLeaf;
+
+        switch newFirstChild {
+          | Empty when triesWidth > 2 =>
+              let newLevelCount = !levelCount - (count !firstLeaf);
+              Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeFirstOrRaise tries);
+          | Empty =>
+              CopyOnWriteArray.getOrRaise lastIndex tries
+          | _ =>
+              let newLevelCount = !levelCount - (count !firstLeaf);
+              updateLevel ::owner levelCount::newLevelCount index::firstChildIndex child::newFirstChild trie;
+        };
+    | Level 1 levelCount _ tries =>
+        let triesWidth = CopyOnWriteArray.count tries;
+        firstLeaf := tries |> CopyOnWriteArray.getOrRaise 0;
+        let lastIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
+
+        if (triesWidth > 2) {
+          let newLevelCount = !levelCount - (count !firstLeaf);
+          Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeFirstOrRaise tries)
+        }
+        else CopyOnWriteArray.getOrRaise lastIndex tries;
+    | _ => failwith "invalid state"
+  };
+
+  let rec removeLastLeaf
+      (updateLevel: Mutator.level 'a)
+      (owner: Transient.Owner.t)
+      (lastLeaf: ref (t 'a))
+      (trie: t 'a): t 'a => switch trie {
+    | Leaf _ _ =>
+        lastLeaf := trie;
+        Empty;
+    | Level levelDepth levelCount _ tries when levelDepth > 1 =>
+        let triesWidth = CopyOnWriteArray.count tries;
+        let lastChildIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
+        let lastChild = tries |> CopyOnWriteArray.getOrRaise lastChildIndex;
+        let newLastChild = lastChild |> removeLastLeaf updateLevel owner lastLeaf;
+
+        switch newLastChild {
+          | Empty when triesWidth > 2 =>
+              let newLevelCount = !levelCount - (count !lastLeaf);
+              Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeLastOrRaise tries);
+          | Empty =>
+              CopyOnWriteArray.getOrRaise 0 tries
+          | _ =>
+              let newLevelCount = !levelCount - (count !lastLeaf);
+              updateLevel ::owner levelCount::newLevelCount index::lastChildIndex child::newLastChild trie;
+        };
+    | Level 1 levelCount _ tries =>
+        let triesWidth = CopyOnWriteArray.count tries;
+        let lastChildIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
+        lastLeaf := tries |> CopyOnWriteArray.getOrRaise lastChildIndex;
+
+        if (triesWidth > 2) {
+          let newLevelCount = !levelCount - (count !lastLeaf);
+          Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLastOrRaise tries)
+        }
+        else CopyOnWriteArray.getOrRaise 0 tries;
+    | _ => failwith "invalid state"
+  };
+
+  let rec updateUsingRadixSearch
+      (updateLevel: Mutator.level 'a)
+      (updateLeaf: Mutator.leaf 'a)
+      (owner: Transient.Owner.t)
+      (index: int)
+      (value: 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Empty => failwith "empty"
+    | Leaf _ values =>
+        let valuesIndex = computeIndexUsingRadixSearch 0 index;
+        trie |> updateLeaf ::owner index::valuesIndex ::value;
+    | Level depth count _ tries =>
+        let childIndex = computeIndexUsingRadixSearch depth index;
+        let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
+        let newChildNode = childNode |> updateUsingRadixSearch updateLevel updateLeaf owner index value;
+        updateLevel ::owner levelCount::!count index::childIndex child::newChildNode trie;
+  };
+
+  let rec update
+      (updateLevel: Mutator.level 'a)
+      (updateLeaf: Mutator.leaf 'a)
+      (owner: Transient.Owner.t)
+      (index: int)
+      (value: 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Level depth levelCount _ tries when (canRadixSearch depth !levelCount tries |> not) =>
+        let rec loop index childIndex => {
+          let childNode = tries.(childIndex);
+          let childCount = count childNode;
+
+          if (index >= childCount) (loop (index - childCount) (childIndex + 1))
+          else {
+            let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
+            let newChildNode = childNode |> update updateLevel updateLeaf owner index value;
+            updateLevel ::owner levelCount::!levelCount index::childIndex child::newChildNode trie;
+          };
+        };
+
+        loop index 0;
+    | _ => updateUsingRadixSearch updateLevel updateLeaf owner index value trie
+  };
+
+  let rec updateAll
+      (updateLevel: Mutator.level 'a)
+      (updateLeaf: Mutator.leaf 'a)
+      (owner: Transient.Owner.t)
+      (f: 'a => 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Empty => Empty
+    | Leaf _ values =>
+        let valuesCount = CopyOnWriteArray.count values;
+        let rec loop index trie =>
+          if (index < valuesCount) {
+            let newValue = f values.(index);
+            let newTrie = trie |> updateLeaf ::owner ::index value::newValue;
+            loop (index + 1) newTrie;
+          }
+          else trie;
+
+        loop 0 trie;
+    | Level _ count _ tries =>
+        let triesCount = CopyOnWriteArray.count tries;
+
+        let rec loop index trie =>
+          if (index < triesCount) {
+            let childNode = tries.(index);
+            let newChildNode = childNode |> updateAll updateLevel updateLeaf owner f;
+            let newTrie =
+              if (childNode === newChildNode) trie
+              else (updateLevel ::owner levelCount::!count ::index child::newChildNode trie);
+            loop (index + 1) newTrie;
+          }
+          else trie;
+
+        loop 0 trie;
+  };
+
+  let rec updateWithUsingRadixSearch
+      (updateLevel: Mutator.level 'a)
+      (updateLeaf: Mutator.leaf 'a)
+      (owner: Transient.Owner.t)
+      (index: int)
+      (f: 'a => 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Empty => failwith "empty"
+    | Leaf _ values =>
+        let valuesIndex = computeIndexUsingRadixSearch 0 index;
+        let newValue = f values.(valuesIndex);
+        trie |> updateLeaf ::owner index::valuesIndex value::newValue;
+    | Level depth count _ tries =>
+        let childIndex = computeIndexUsingRadixSearch depth index;
+        let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
+        let newChildNode = childNode |> updateWithUsingRadixSearch updateLevel updateLeaf owner index f;
+        updateLevel ::owner levelCount::!count index::childIndex child::newChildNode trie;
+  };
+
+  let rec updateWith
+      (updateLevel: Mutator.level 'a)
+      (updateLeaf: Mutator.leaf 'a)
+      (owner: Transient.Owner.t)
+      (index: int)
+      (f: 'a => 'a)
+      (trie: t 'a): (t 'a) => switch trie {
+    | Level depth levelCount _ tries when (canRadixSearch depth !levelCount tries |> not) =>
+        let rec loop index childIndex => {
+          let childNode = tries.(childIndex);
+          let childCount = count childNode;
+
+          if (index >= childCount) (loop (index - childCount) (childIndex + 1))
+          else {
+            let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
+            let newChildNode = childNode |> updateWith updateLevel updateLeaf owner index f;
+            updateLevel ::owner levelCount::!levelCount index::childIndex child::newChildNode trie;
+          };
+        };
+
+        loop index 0;
+    | _ => updateWithUsingRadixSearch updateLevel updateLeaf owner index f trie
   };
 };
 
 type levelMutator 'a = Transient.Owner.t => int => int => (t 'a) => (t 'a) => (t 'a);
 type leafMutator 'a = Transient.Owner.t => int => 'a => (t 'a) => (t 'a);
-
-let rec removeFirstLeafUsingMutator
-    (updateLevel: levelMutator 'a)
-    (owner: Transient.Owner.t)
-    (trie: t 'a): (t 'a, t 'a) => switch trie {
-  | Leaf _ _ => (trie, Empty);
-  | Level levelDepth levelCount _ tries when levelDepth > 1 =>
-      let triesWidth = CopyOnWriteArray.count tries;
-      let firstChildIndex = 0;
-      let lastIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
-      let firstChild = tries |> CopyOnWriteArray.getOrRaise 0;
-      let (firstLeaf, newFirstChild) = firstChild |> removeFirstLeafUsingMutator updateLevel owner;
-
-      switch newFirstChild {
-        | Empty when triesWidth > 2 =>
-            let newLevelCount = !levelCount - (count firstLeaf);
-            let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeFirstOrRaise tries);
-            (firstLeaf, newTrie)
-        | Empty =>
-            (firstLeaf, CopyOnWriteArray.getOrRaise lastIndex tries)
-        | _ =>
-            let newLevelCount = !levelCount - (count firstLeaf);
-            (firstLeaf, updateLevel owner newLevelCount firstChildIndex newFirstChild trie)
-      };
-  | Level 1 levelCount _ tries =>
-      let triesWidth = CopyOnWriteArray.count tries;
-      let firstChild = tries |> CopyOnWriteArray.getOrRaise 0;
-      let lastIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
-
-      if (triesWidth > 2) {
-        let newLevelCount = !levelCount - (count firstChild);
-        (firstChild, Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeFirstOrRaise tries))
-      }
-      else (firstChild, CopyOnWriteArray.getOrRaise lastIndex tries);
-  | _ => failwith "invalid state"
-};
-
-let rec removeLastLeafUsingMutator
-    (updateLevel: levelMutator 'a)
-    (owner: Transient.Owner.t)
-    (trie: t 'a): (t 'a, t 'a) => switch trie {
-  | Leaf _ _ => (Empty, trie);
-  | Level levelDepth levelCount _ tries when levelDepth > 1 =>
-      let triesWidth = CopyOnWriteArray.count tries;
-      let lastChildIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
-      let lastChild = tries |> CopyOnWriteArray.getOrRaise lastChildIndex;
-      let (newLastChild, lastLeaf) = lastChild |> removeLastLeafUsingMutator updateLevel owner;
-
-      switch newLastChild {
-        | Empty when triesWidth > 2 =>
-            let newLevelCount = !levelCount - (count lastLeaf);
-            let newTrie = Level levelDepth (ref newLevelCount) owner (CopyOnWriteArray.removeLastOrRaise tries);
-            (newTrie, lastLeaf)
-        | Empty =>
-            (CopyOnWriteArray.getOrRaise 0 tries, lastLeaf)
-        | _ =>
-            let newLevelCount = !levelCount - (count lastLeaf);
-            (updateLevel owner newLevelCount lastChildIndex newLastChild trie, lastLeaf)
-      };
-  | Level 1 levelCount _ tries =>
-      let triesWidth = CopyOnWriteArray.count tries;
-      let lastChildIndex = tries |> CopyOnWriteArray.lastIndexOrRaise;
-      let lastChild = tries |> CopyOnWriteArray.getOrRaise lastChildIndex;
-
-      if (triesWidth > 2) {
-        let newLevelCount = !levelCount - (count lastChild);
-        (Level 1 (ref newLevelCount) owner (CopyOnWriteArray.removeLastOrRaise tries), lastChild)
-      }
-      else (CopyOnWriteArray.getOrRaise 0 tries, lastChild);
-  | _ => failwith "invalid state"
-};
 
 let computeIndexUsingRadixSearch (depth: int) (index: int): int => {
   let mask = width - 1;
@@ -372,44 +569,6 @@ let computeLevelIndexUsingCountSearch
   };
 
   loop index 0;
-};
-
-let getImplLevelContinuation
-    (get: int => (t 'a) => 'a)
-    (Level _ _ _ tries: t 'a)
-    (effectiveIndex: int)
-    (childIndex: int): 'a => {
-  let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
-  childNode |> get effectiveIndex;
-};
-
-type get 'a = int => (t 'a) => 'a;
-
-let getImpl
-    (computeLevelIndex: computeLevelIndex 'a 'a)
-    (get: get 'a)
-    (index: int)
-    (trie: t 'a): 'a => switch trie {
-  | Leaf _ values =>
-      values.(computeIndexUsingRadixSearch 0 index)
-  | Level _ _ _ _ =>
-      trie |> computeLevelIndex index (getImplLevelContinuation get);
-  | Empty => failwith "invalid state"
-};
-
-let rec getUsingRadixSearch (index: int) (trie: t 'a): 'a => getImpl
-  computeLevelIndexUsingRadixSearch
-  getUsingRadixSearch
-  index
-  trie;
-
-let rec get (index: int) (trie: t 'a): 'a => switch trie {
-  | Level _ _ _ _ when not @@ canRadixSearch @@ trie => getImpl
-      computeLevelIndexUsingCountSearch
-      get
-      index
-      trie
-  | _ => trie |> getUsingRadixSearch index
 };
 
 type skip 'a = Transient.Owner.t => int => (t 'a) => (array 'a, t 'a);
@@ -540,186 +699,6 @@ let rec take
      owner
      count
      trie
-};
-
-type updateUsingMutator 'a =
-  (levelMutator 'a) =>
-  (leafMutator 'a) =>
-  Transient.Owner.t =>
-  int =>
-  'a =>
-  (t 'a) =>
-  (t 'a);
-
-let updateUsingMutatorImpl
-    (computeLevelIndex: computeLevelIndex 'a (t 'a))
-    (updateUsingMutator: updateUsingMutator 'a)
-    (updateLevel: levelMutator 'a)
-    (updateLeaf: leafMutator 'a)
-    (owner: Transient.Owner.t)
-    (index: int)
-    (value: 'a)
-    (trie: t 'a): (t 'a) => switch trie {
-  | Empty => failwith "invalid state"
-  | Leaf _ _ => trie |> updateLeaf owner (computeIndexUsingRadixSearch 0 index) value;
-  | Level _ _ _ _ =>
-      trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
-        let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
-        let newChildNode = childNode |> updateUsingMutator updateLevel updateLeaf owner index value;
-
-        if (childNode === newChildNode) trie
-        else (updateLevel owner !count childIndex newChildNode trie);
-      });
-};
-
-let rec updateUsingRadixSearchUsingMutator
-    (updateLevel: levelMutator 'a)
-    (updateLeaf: leafMutator 'a)
-    (owner: Transient.Owner.t)
-    (index: int)
-    (value: 'a)
-    (trie: t 'a): (t 'a) => updateUsingMutatorImpl
-  computeLevelIndexUsingRadixSearch
-  updateUsingRadixSearchUsingMutator
-  updateLevel
-  updateLeaf
-  owner
-  index
-  value
-  trie;
-
-let rec updateUsingMutator
-    (updateLevel: levelMutator 'a)
-    (updateLeaf: leafMutator 'a)
-    (owner: Transient.Owner.t)
-    (index: int)
-    (value: 'a)
-    (trie: t 'a): (t 'a) => switch trie {
-  | Level _ _ _ _ when not @@ canRadixSearch @@ trie => updateUsingMutatorImpl
-     computeLevelIndexUsingCountSearch
-     updateUsingMutator
-     updateLevel
-     updateLeaf
-     owner
-     index
-     value
-     trie;
-  | _ => updateUsingRadixSearchUsingMutator
-      updateLevel
-      updateLeaf
-      owner
-      index
-      value
-      trie;
-};
-
-let rec updateAllUsingMutator
-    (updateLevel: levelMutator 'a)
-    (updateLeaf: leafMutator 'a)
-    (owner: Transient.Owner.t)
-    (f: 'a => 'a)
-    (trie: t 'a): (t 'a) => switch trie {
-  | Empty => Empty
-  | Leaf _ values =>
-      let valuesCount = CopyOnWriteArray.count values;
-      let rec loop index trie =>
-        if (index < valuesCount) {
-          let newValue = f values.(index);
-          let newTrie = trie |> updateLeaf owner index newValue;
-          loop (index + 1) newTrie;
-        }
-        else trie;
-
-      loop 0 trie;
-  | Level _ count _ tries =>
-      let triesCount = CopyOnWriteArray.count tries;
-
-      let rec loop index trie =>
-        if (index < triesCount) {
-          let childNode = tries.(index);
-          let newChildNode = childNode |> updateAllUsingMutator updateLevel updateLeaf owner f;
-          let newTrie =
-            if (childNode === newChildNode) trie
-            else (updateLevel owner !count index newChildNode trie);
-          loop (index + 1) newTrie;
-        }
-        else trie;
-
-      loop 0 trie;
-};
-
-type updateWithUsingMutator 'a =
-  (levelMutator 'a) =>
-  (leafMutator 'a) =>
-  Transient.Owner.t =>
-  int =>
-  ('a => 'a) =>
-  (t 'a) =>
-  (t 'a);
-
-let updateWithUsingMutatorImpl
-    (computeLevelIndex: computeLevelIndex 'a (t 'a))
-    (updateWithUsingMutator: updateWithUsingMutator 'a)
-    (updateLevel: levelMutator 'a)
-    (updateLeaf: leafMutator 'a)
-    (owner: Transient.Owner.t)
-    (index: int)
-    (f: 'a => 'a)
-    (trie: t 'a): (t 'a) => switch trie {
-  | Empty => failwith "invalid state"
-  | Leaf _ values =>
-      let arrIndex = (computeIndexUsingRadixSearch 0 index);
-      let newValue = f values.(arrIndex);
-      trie |> updateLeaf owner arrIndex newValue;
-  | Level _ _ _ _ =>
-      trie |> computeLevelIndex index (fun (Level _ count _ tries) index childIndex => {
-        let childNode = tries |> CopyOnWriteArray.getOrRaise childIndex;
-        let newChildNode = childNode |> updateWithUsingMutator updateLevel updateLeaf owner index f;
-
-        if (childNode === newChildNode) trie
-        else (updateLevel owner !count childIndex newChildNode trie);
-      });
-};
-
-let rec updateWithUsingRadixSearchUsingMutator
-    (updateLevel: levelMutator 'a)
-    (updateLeaf: leafMutator 'a)
-    (owner: Transient.Owner.t)
-    (index: int)
-    (f: 'a => 'a)
-    (trie: t 'a): (t 'a) => updateWithUsingMutatorImpl
-  computeLevelIndexUsingRadixSearch
-  updateWithUsingRadixSearchUsingMutator
-  updateLevel
-  updateLeaf
-  owner
-  index
-  f
-  trie;
-
-let rec updateWithUsingMutator
-    (updateLevel: levelMutator 'a)
-    (updateLeaf: leafMutator 'a)
-    (owner: Transient.Owner.t)
-    (index: int)
-    (f: 'a => 'a)
-    (trie: t 'a): (t 'a) => switch trie {
-  | Level _ _ _ _ when not @@ canRadixSearch @@ trie => updateWithUsingMutatorImpl
-     computeLevelIndexUsingCountSearch
-     updateWithUsingMutator
-     updateLevel
-     updateLeaf
-     owner
-     index
-     f
-     trie;
-  | _ => updateWithUsingRadixSearchUsingMutator
-      updateLevel
-      updateLeaf
-      owner
-      index
-      f
-      trie;
 };
 
 let updateLevelPersistent
