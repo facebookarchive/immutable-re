@@ -42,8 +42,9 @@ let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   }
   else if (skipCount - leftCount < middleCount) {
     let skipCount = skipCount - leftCount;
-    let (left, middle) = IndexedTrie.skip Transient.Owner.none skipCount middle;
-    { left, middle, right }
+    let left = ref [||];
+    let middle = IndexedTrie.Impl.skip Transient.Owner.none skipCount left middle;
+    { left: !left, middle, right }
   }
   else {
     let skipCount = skipCount - leftCount - middleCount;
@@ -68,8 +69,9 @@ let take (takeCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   }
   else if (takeCount - leftCount < middleCount) {
     let takeCount = takeCount - leftCount;
-    let (middle, right) = IndexedTrie.take Transient.Owner.none takeCount middle;
-    { left, middle, right }
+    let right = ref [||];
+    let middle = IndexedTrie.Impl.take Transient.Owner.none takeCount right middle;
+    { left, middle, right: !right }
   }
   else if (takeCount - leftCount === middleCount) {
     let lastLeaf = ref IndexedTrie.Empty;
