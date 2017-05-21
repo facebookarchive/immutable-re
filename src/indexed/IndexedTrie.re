@@ -192,23 +192,19 @@ let addLastLeaf
 
 let empty = Empty;
 
-let getLevelImpl
-    (get: int => t 'a => 'a)
-    (childIndex: int)
-    (index: int)
-    (tries: array (t 'a)): 'a => {
-  let trie = tries.(childIndex);
-  get index trie;
-};
+let getUsingRadixSearch (index: int) (trie: t 'a): 'a => {
+  let rec loop index trie => switch trie {
+    | Empty => failwith "empty"
+    | Leaf _ values =>
+        let valuesIndex = computeIndexUsingRadixSearch 0 index;
+        values.(valuesIndex)
+    | Level depth _ _ tries =>
+        let childIndex = computeIndexUsingRadixSearch depth index;
+        let trie = tries.(childIndex);
+        loop index trie;
+  };
 
-let rec getUsingRadixSearch (index: int) (trie: t 'a): 'a => switch trie {
-  | Empty => failwith "empty"
-  | Leaf _ values =>
-      let valuesIndex = computeIndexUsingRadixSearch 0 index;
-      values.(valuesIndex)
-  | Level depth _ _ tries =>
-      let childIndex = computeIndexUsingRadixSearch depth index;
-      getLevelImpl getUsingRadixSearch childIndex index tries;
+  loop index trie;
 };
 
 let rec get (index: int) (trie: t 'a): 'a => switch trie {
@@ -218,7 +214,10 @@ let rec get (index: int) (trie: t 'a): 'a => switch trie {
         let childCount = count childNode;
 
         if (index >= childCount) (loop (index - childCount) (childIndex + 1))
-        else getLevelImpl get childIndex index tries;
+        else {
+          let trie = tries.(childIndex);
+          get index trie;
+        };
       };
 
       loop index 0;
