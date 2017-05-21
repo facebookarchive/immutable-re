@@ -31,7 +31,7 @@ let getOrRaise (index: int) ({ left, middle, right }: t 'a): 'a => {
   else if (rightIndex >= 0) right.(rightIndex)
   else {
     let index = index - leftCount;
-    middle |> IndexedTrie.Impl.get index;
+    middle |> IndexedTrie.get index;
   }
 };
 
@@ -136,7 +136,7 @@ let tailIsNotFull (arr: array 'a): bool =>
 let addFirst (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   if ((tailIsFull left) && (CopyOnWriteArray.count right !== 0)) {
     left: [| value |],
-    middle: IndexedTrie.Impl.addFirstLeaf
+    middle: IndexedTrie.addFirstLeaf
       IndexedTrie.Mutator.updateLevelPersistent
       Transient.Owner.none
       left
@@ -168,7 +168,7 @@ let addLast (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   }
   else {
     left,
-    middle: IndexedTrie.Impl.addLastLeaf
+    middle: IndexedTrie.addLastLeaf
       IndexedTrie.Mutator.updateLevelPersistent
       Transient.Owner.none
       right
@@ -190,7 +190,7 @@ let removeFirstOrRaise ({ left, middle, right }: t 'a): (t 'a) => {
   }
   else if (middleCount > 0) {
     let firstLeaf = ref IndexedTrie.Empty;
-    let middle = IndexedTrie.Impl.removeFirstLeaf
+    let middle = IndexedTrie.removeFirstLeaf
       IndexedTrie.Mutator.updateLevelPersistent
       Transient.Owner.none
       firstLeaf
@@ -220,7 +220,7 @@ let removeLastOrRaise ({ left, middle, right }: t 'a): (t 'a) => {
     }
     else if (middleCount > 0) {
       let lastLeaf = ref IndexedTrie.Empty;
-      let middle = IndexedTrie.Impl.removeLastLeaf
+      let middle = IndexedTrie.removeLastLeaf
           IndexedTrie.Mutator.updateLevelPersistent
           Transient.Owner.none
           lastLeaf
@@ -268,7 +268,7 @@ let update
   }
   else {
     let index = (index - leftCount);
-    let middle = middle |> IndexedTrie.Impl.update
+    let middle = middle |> IndexedTrie.update
       IndexedTrie.Mutator.updateLevelPersistent
       IndexedTrie.Mutator.updateLeafPersistent
       Transient.Owner.none
@@ -302,7 +302,7 @@ let updateWith
   }
   else {
     let index = (index - leftCount);
-    let middle = middle |> IndexedTrie.Impl.updateWith
+    let middle = middle |> IndexedTrie.updateWith
       IndexedTrie.Mutator.updateLevelPersistent
       IndexedTrie.Mutator.updateLeafPersistent
       Transient.Owner.none
