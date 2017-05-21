@@ -16,6 +16,6 @@
       "public": ["Immutable"],
     },
     { "dir": "test", "subdirs": ["testers"], "type": "dev" },
-    { "dir": "perf", "type": "dev" },
+    { "dir": "perf-js", "type": "dev" },
   ],
 }

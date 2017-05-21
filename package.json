@@ -3,7 +3,7 @@
   "version": "0.0.15",
   "description": "Persistent immutable collections for Reason",
   "main": "lib/js/src/immutable.js",
-  "homepage" : "https://facebookincubator.github.io/immutable-re/",
+  "homepage": "https://facebookincubator.github.io/immutable-re/",
   "bugs": "https://github.com/facebookincubator/immutable-re/issues",
   "keywords": [
     "reason",
@@ -15,7 +15,12 @@
     "name": "Dave Bordoley",
     "email": "bordoley@gmail.com"
   },
-  "contributors": [{ "name": "Dave Bordoley", "email": "bordoley@gmail.com" }],
+  "contributors": [
+    {
+      "name": "Dave Bordoley",
+      "email": "bordoley@gmail.com"
+    }
+  ],
   "license": "BSD-3-Clause",
   "files": [
     "bsconfig.json",
@@ -26,13 +31,17 @@
     "README.md",
     "src"
   ],
-  "repository": { "type": "git", "url" : "https://github.com/facebookincubator/immutable-re.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebookincubator/immutable-re.git"
+  },
   "dependencies": {
     "bs-platform": "^1.7.1"
   },
   "devDependencies": {
-    "reunit": "./reUnit",
-    "opam_of_packagejson": "*"
+    "immutable": "^3.8.1",
+    "opam_of_packagejson": "*",
+    "reunit": "./reUnit"
   },
   "opam": {
     "dependencies": {
