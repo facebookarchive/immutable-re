@@ -32,7 +32,7 @@ let skip (skipCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   else if (skipCount === leftCount) {
     let firstLeaf = ref IndexedTrie.Empty;
     let middle = IndexedTrie.removeFirstLeaf
-      IndexedTrie.Mutator.updateLevelPersistent
+      IndexedTrie.updateLevelPersistent
       Transient.Owner.none
       firstLeaf
       middle;
@@ -76,7 +76,7 @@ let take (takeCount: int) ({ left, middle, right } as vec: t 'a): (t 'a) => {
   else if (takeCount - leftCount === middleCount) {
     let lastLeaf = ref IndexedTrie.Empty;
     let middle = IndexedTrie.removeLastLeaf
-      IndexedTrie.Mutator.updateLevelPersistent
+      IndexedTrie.updateLevelPersistent
       Transient.Owner.none
       lastLeaf
       middle;

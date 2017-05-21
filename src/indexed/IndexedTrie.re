@@ -612,59 +612,57 @@ let rec updateWith
   | _ => updateWithUsingRadixSearch updateLevel updateLeaf owner index f trie
 };
 
-let module Mutator = {
-  let updateLeafPersistent
-      owner::(_: Transient.Owner.t)
-      index::(index: int)
-      value::(value: 'a)
-      (trie: t 'a): (t 'a) => {
-    let (Leaf _ values) = trie;
-    let oldValue = values.(index);
+let updateLeafPersistent
+    owner::(_: Transient.Owner.t)
+    index::(index: int)
+    value::(value: 'a)
+    (trie: t 'a): (t 'a) => {
+  let (Leaf _ values) = trie;
+  let oldValue = values.(index);
 
-    if (oldValue === value) trie
-    else Leaf Transient.Owner.none (values |> CopyOnWriteArray.update index value);
-  };
+  if (oldValue === value) trie
+  else Leaf Transient.Owner.none (values |> CopyOnWriteArray.update index value);
+};
 
-  let updateLeafTransient
-      owner::(owner: Transient.Owner.t)
-      index::(index: int)
-      value::(value: 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Leaf trieOwner values when trieOwner === owner =>
-        values.(index) = value;
-        trie
-    | Leaf _ values =>
-        let oldValue = values.(index);
+let updateLeafTransient
+    owner::(owner: Transient.Owner.t)
+    index::(index: int)
+    value::(value: 'a)
+    (trie: t 'a): (t 'a) => switch trie {
+  | Leaf trieOwner values when trieOwner === owner =>
+      values.(index) = value;
+      trie
+  | Leaf _ values =>
+      let oldValue = values.(index);
 
-        if (oldValue === value) trie
-        else Leaf Transient.Owner.none (values |> CopyOnWriteArray.update index value);
-  };
+      if (oldValue === value) trie
+      else Leaf Transient.Owner.none (values |> CopyOnWriteArray.update index value);
+};
 
-  let updateLevelPersistent
-      owner::(_: Transient.Owner.t)
-      levelCount::(count: int)
-      index::(index: int)
-      child::(child: t 'a)
-      (trie: t 'a): (t 'a) => {
-    let (Level depth _ _ tries) = trie;
-    let oldChild = tries.(index);
-    if (oldChild === child) trie
-    else Level depth (ref count) Transient.Owner.none (CopyOnWriteArray.update index child tries);
-  };
+let updateLevelPersistent
+    owner::(_: Transient.Owner.t)
+    levelCount::(count: int)
+    index::(index: int)
+    child::(child: t 'a)
+    (trie: t 'a): (t 'a) => {
+  let (Level depth _ _ tries) = trie;
+  let oldChild = tries.(index);
+  if (oldChild === child) trie
+  else Level depth (ref count) Transient.Owner.none (CopyOnWriteArray.update index child tries);
+};
 
-  let updateLevelTransient
-      owner::(owner: Transient.Owner.t)
-      levelCount::(count: int)
-      index::(index: int)
-      child::(child: t 'a)
-      (trie: t 'a): (t 'a) => switch trie {
-    | Level _ trieCount trieOwner tries when trieOwner === owner =>
-        tries.(index) = child;
-        trieCount := count;
-        trie
-    | Level depth _ _ tries =>
-        let oldChild = tries.(index);
-        if (oldChild === child) trie
-        else Level depth (ref count) owner (CopyOnWriteArray.update index child tries);
-  };
+let updateLevelTransient
+    owner::(owner: Transient.Owner.t)
+    levelCount::(count: int)
+    index::(index: int)
+    child::(child: t 'a)
+    (trie: t 'a): (t 'a) => switch trie {
+  | Level _ trieCount trieOwner tries when trieOwner === owner =>
+      tries.(index) = child;
+      trieCount := count;
+      trie
+  | Level depth _ _ tries =>
+      let oldChild = tries.(index);
+      if (oldChild === child) trie
+      else Level depth (ref count) owner (CopyOnWriteArray.update index child tries);
 };

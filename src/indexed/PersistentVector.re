@@ -137,7 +137,7 @@ let addFirst (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   if ((tailIsFull left) && (CopyOnWriteArray.count right !== 0)) {
     left: [| value |],
     middle: IndexedTrie.addFirstLeaf
-      IndexedTrie.Mutator.updateLevelPersistent
+      IndexedTrie.updateLevelPersistent
       Transient.Owner.none
       left
       middle,
@@ -169,7 +169,7 @@ let addLast (value: 'a) ({ left, middle, right }: t 'a): (t 'a) =>
   else {
     left,
     middle: IndexedTrie.addLastLeaf
-      IndexedTrie.Mutator.updateLevelPersistent
+      IndexedTrie.updateLevelPersistent
       Transient.Owner.none
       right
       middle,
@@ -191,7 +191,7 @@ let removeFirstOrRaise ({ left, middle, right }: t 'a): (t 'a) => {
   else if (middleCount > 0) {
     let firstLeaf = ref IndexedTrie.Empty;
     let middle = IndexedTrie.removeFirstLeaf
-      IndexedTrie.Mutator.updateLevelPersistent
+      IndexedTrie.updateLevelPersistent
       Transient.Owner.none
       firstLeaf
       middle;
@@ -221,7 +221,7 @@ let removeLastOrRaise ({ left, middle, right }: t 'a): (t 'a) => {
     else if (middleCount > 0) {
       let lastLeaf = ref IndexedTrie.Empty;
       let middle = IndexedTrie.removeLastLeaf
-          IndexedTrie.Mutator.updateLevelPersistent
+          IndexedTrie.updateLevelPersistent
           Transient.Owner.none
           lastLeaf
           middle;
@@ -269,8 +269,8 @@ let update
   else {
     let index = (index - leftCount);
     let middle = middle |> IndexedTrie.update
-      IndexedTrie.Mutator.updateLevelPersistent
-      IndexedTrie.Mutator.updateLeafPersistent
+      IndexedTrie.updateLevelPersistent
+      IndexedTrie.updateLeafPersistent
       Transient.Owner.none
       index
       value;
@@ -303,8 +303,8 @@ let updateWith
   else {
     let index = (index - leftCount);
     let middle = middle |> IndexedTrie.updateWith
-      IndexedTrie.Mutator.updateLevelPersistent
-      IndexedTrie.Mutator.updateLeafPersistent
+      IndexedTrie.updateLevelPersistent
+      IndexedTrie.updateLeafPersistent
       Transient.Owner.none
       index
       f;
