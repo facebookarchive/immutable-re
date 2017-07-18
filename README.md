@@ -1,12 +1,12 @@
 ![Immutable Collections For Reason](https://github.com/facebookincubator/immutable-re/raw/master/docs/images/logo-800x215.png?raw=true)
 ===========================================================================
-Pure [Reason](https://facebook.github.io/reason) implementation of persistent immutable data structures.
+Pure [Reason](https://reasonml.github.io/) implementation of persistent immutable data structures.
 
 # Features
 Immutable-re provides a complete set of efficient persistent immutable data
-structures for [Reason](https://facebook.github.io/reason) and [OCaml](http://www.ocaml.org/),
+structures for [Reason](https://reasonml.github.io/) and [OCaml](http://www.ocaml.org/),
 targeting both OCaml native and byte code compilation modes, as well JavaScript using
- [BuckleScript](https://github.com/bloomberg/bucklescript).
+ [BuckleScript](https://github.com/bucklescript/bucklescript).
 
 The api includes concrete implementations of vectors, sets, and maps. Many
 implementations support [transient mutability](http://clojure.org/reference/transients)
