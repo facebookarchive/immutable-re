@@ -19,6 +19,6 @@
     { "dir": "perf-js", "type": "dev" },
   ],
   "warnings": {
-    "number": "a",
+    "number": "-8-27",
   },
 }
