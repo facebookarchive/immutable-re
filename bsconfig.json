@@ -18,4 +18,7 @@
     { "dir": "test", "subdirs": ["testers"], "type": "dev" },
     { "dir": "perf-js", "type": "dev" },
   ],
+  "warnings": {
+    "number": "a",
+  },
 }
