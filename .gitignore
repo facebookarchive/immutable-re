@@ -23,6 +23,7 @@ node_modules
 immutable.[0-9]*
 
 # Ignore bsb generated merlin files
+.merlin
 /reUnit/.merlin
 
 # Ignore bsb generate lib directories
