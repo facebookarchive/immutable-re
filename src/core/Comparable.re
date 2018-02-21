@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -6,11 +6,4 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
- 
-module type S = {
-  type t;
-
-  include Equatable.S with type t := t;
-
-  let compare: Comparator.t t;
-};
+module type S = {type t; include Equatable.S with type t := t; let compare: Comparator.t(t);};

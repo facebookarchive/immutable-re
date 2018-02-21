@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -6,11 +6,15 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
 open Immutable;
+
 open ReUnit.Test;
 
-let test = describe "IntSet" [
-  PersistentSetTester.test (module IntSet) 100,
-  PersistentSetTester.test (module IntSet) 10000,
-];
+let test =
+  describe(
+    "IntSet",
+    [
+      PersistentSetTester.test((module IntSet), 100),
+      PersistentSetTester.test((module IntSet), 10000)
+    ]
+  );

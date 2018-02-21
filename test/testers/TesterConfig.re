@@ -1,3 +1,1 @@
-module type S = {
-  let count: int;
-};
+module type S = {let count: int;};
