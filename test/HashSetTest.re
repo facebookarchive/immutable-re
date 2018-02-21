@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -6,29 +6,24 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
 open Immutable;
+
 open ReUnit.Test;
 
-let module HashIntSet: PersistentSetTester.S = {
+module HashIntSet: PersistentSetTester.S = {
   type a = int;
-  type t = HashSet.t a;
-
+  type t = HashSet.t(a);
   let add = HashSet.add;
   let addAll = HashSet.addAll;
   let contains = HashSet.contains;
   let count = HashSet.count;
-  let empty () => HashSet.emptyWith
-    hash::(fun i => i)
-    comparator::Comparator.int;
+  let empty = () => HashSet.emptyWith(~hash=(i) => i, ~comparator=Comparator.int);
   let equals = HashSet.equals;
   let every = HashSet.every;
   let find = HashSet.find;
   let findOrRaise = HashSet.findOrRaise;
   let forEach = HashSet.forEach;
-  let from = HashSet.fromWith
-    hash::(fun i => i)
-    comparator::Comparator.int;
+  let from = HashSet.fromWith(~hash=(i) => i, ~comparator=Comparator.int);
   let isEmpty = HashSet.isEmpty;
   let isNotEmpty = HashSet.isNotEmpty;
   let intersect = HashSet.intersect;
@@ -45,27 +40,22 @@ let module HashIntSet: PersistentSetTester.S = {
   let union = HashSet.union;
 };
 
-let badHashFunction i => i mod 100;
+let badHashFunction = (i) => i mod 100;
 
-let module BadHashIntSet: PersistentSetTester.S = {
+module BadHashIntSet: PersistentSetTester.S = {
   type a = int;
-  type t = HashSet.t a;
-
+  type t = HashSet.t(a);
   let add = HashSet.add;
   let addAll = HashSet.addAll;
   let contains = HashSet.contains;
   let count = HashSet.count;
-  let empty () => HashSet.emptyWith
-    hash::badHashFunction
-    comparator::Comparator.int;
+  let empty = () => HashSet.emptyWith(~hash=badHashFunction, ~comparator=Comparator.int);
   let equals = HashSet.equals;
   let every = HashSet.every;
   let find = HashSet.find;
   let findOrRaise = HashSet.findOrRaise;
   let forEach = HashSet.forEach;
-  let from = HashSet.fromWith
-    hash::badHashFunction
-    comparator::Comparator.int;
+  let from = HashSet.fromWith(~hash=badHashFunction, ~comparator=Comparator.int);
   let isEmpty = HashSet.isEmpty;
   let isNotEmpty = HashSet.isNotEmpty;
   let intersect = HashSet.intersect;
@@ -82,11 +72,18 @@ let module BadHashIntSet: PersistentSetTester.S = {
   let union = HashSet.union;
 };
 
-let test = describe "HashSet" [
-  PersistentSetTester.test (module HashIntSet) 100,
-  PersistentSetTester.test (module HashIntSet) 10000,
-  describe "with bad hash function" [
-    PersistentSetTester.test (module BadHashIntSet) 100,
-    PersistentSetTester.test (module BadHashIntSet) 10000,
-  ],
-];
+let test =
+  describe(
+    "HashSet",
+    [
+      PersistentSetTester.test((module HashIntSet), 100),
+      PersistentSetTester.test((module HashIntSet), 10000),
+      describe(
+        "with bad hash function",
+        [
+          PersistentSetTester.test((module BadHashIntSet), 100),
+          PersistentSetTester.test((module BadHashIntSet), 10000)
+        ]
+      )
+    ]
+  );

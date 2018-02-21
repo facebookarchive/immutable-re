@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -6,95 +6,119 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
 type a = int;
 
 type t = {
   count: int,
-  start: int,
+  start: int
 };
 
-let contains (value: int) ({ count, start }: t): bool =>
-  value >= start && value < (start + count);
+let contains = (value: int, {count, start}: t) : bool => value >= start && value < start + count;
 
-let count ({ count }: t): int => count;
+let count = ({count}: t) : int => count;
 
-let firstOrRaise ({ count, start }: t): int =>
-  if (count === 0) (failwith "empty")
-  else start;
+let firstOrRaise = ({count, start}: t) : int =>
+  if (count === 0) {
+    failwith("empty")
+  } else {
+    start
+  };
 
-let lastOrRaise ({ count, start }: t): int =>
-  if (count === 0) (failwith "empty")
-  else start + count - 1;
+let lastOrRaise = ({count, start}: t) : int =>
+  if (count === 0) {
+    failwith("empty")
+  } else {
+    start + count - 1
+  };
 
-let reduce
-    while_::(predicate: 'acc => int => bool)
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    ({ count, start }: t): 'acc => {
-  let rec recurse predicate f start count acc =>
-    if (count === 0) acc
-    else if (predicate acc start |> not) acc
-    else {
-      let acc = f acc start;
-      recurse predicate f (start + 1) (count - 1) acc;
+let reduce =
+    (
+      ~while_ as predicate: ('acc, int) => bool,
+      f: ('acc, int) => 'acc,
+      acc: 'acc,
+      {count, start}: t
+    )
+    : 'acc => {
+  let rec recurse = (predicate, f, start, count, acc) =>
+    if (count === 0) {
+      acc
+    } else if (predicate(acc, start) |> (!)) {
+      acc
+    } else {
+      let acc = f(acc, start);
+      recurse(predicate, f, start + 1, count - 1, acc)
     };
-  recurse predicate f start count acc;
+  recurse(predicate, f, start, count, acc)
 };
 
-let reduceReversed
-    while_::(predicate: 'acc => int => bool)
-    (f: 'acc => int => 'acc)
-    (acc: 'acc)
-    ({ count, start }: t): 'acc => {
-  let rec recurse predicate f start count acc =>
-    if (count === 0) acc
-    else if (predicate acc start |> not) acc
-    else {
-      let acc = f acc start;
-      recurse predicate f (start - 1) (count - 1) acc;
+let reduceReversed =
+    (
+      ~while_ as predicate: ('acc, int) => bool,
+      f: ('acc, int) => 'acc,
+      acc: 'acc,
+      {count, start}: t
+    )
+    : 'acc => {
+  let rec recurse = (predicate, f, start, count, acc) =>
+    if (count === 0) {
+      acc
+    } else if (predicate(acc, start) |> (!)) {
+      acc
+    } else {
+      let acc = f(acc, start);
+      recurse(predicate, f, start - 1, count - 1, acc)
     };
-  recurse predicate f (start + count - 1) count acc;
+  recurse(predicate, f, start + count - 1, count, acc)
 };
 
-let toSequence ({ count, start }: t): (Sequence.t int) => {
-  let rec recurse start count => fun () =>
-    if (count === 0) Sequence.Completed
-    else Sequence.Next start (recurse (start + 1) (count - 1));
-  recurse start count
+let toSequence = ({count, start}: t) : Sequence.t(int) => {
+  let rec recurse = (start, count, ()) =>
+    if (count === 0) {
+      Sequence.Completed
+    } else {
+      Sequence.Next(start, recurse(start + 1, count - 1))
+    };
+  recurse(start, count)
 };
 
-let toSequenceReversed ({ count, start }: t): (Sequence.t int) => {
-  let rec recurse start count => fun () =>
-    if (count === 0) Sequence.Completed
-    else Sequence.Next start (recurse (start - 1) (count - 1));
-  recurse (start + count - 1) count
+let toSequenceReversed = ({count, start}: t) : Sequence.t(int) => {
+  let rec recurse = (start, count, ()) =>
+    if (count === 0) {
+      Sequence.Completed
+    } else {
+      Sequence.Next(start, recurse(start - 1, count - 1))
+    };
+  recurse(start + count - 1, count)
 };
 
-let emptyInstance: t = {
-  start: 0,
-  count: 0,
+let emptyInstance: t = {start: 0, count: 0};
+
+let create = (~start: int, ~count: int) : t => {
+  Preconditions.failIf("count must be >= 0", count < 0);
+  if (count === 0) {
+    emptyInstance
+  } else {
+    {start, count}
+  }
 };
 
-let create start::(start: int) count::(count: int): t => {
-  Preconditions.failIf "count must be >= 0" (count < 0);
-  if (count === 0) emptyInstance
-  else { start, count };
-};
+let compare =
+    ({count: thisCount, start: thisStart}: t, {count: thatCount, start: thatStart}: t)
+    : Ordering.t =>
+  if (thisStart > thatStart) {
+    Ordering.greaterThan
+  } else if (thisStart < thatStart) {
+    Ordering.lessThan
+  } else if (thisCount > thatCount) {
+    Ordering.greaterThan
+  } else if (thisCount < thatCount) {
+    Ordering.lessThan
+  } else {
+    Ordering.equal
+  };
 
-let compare
-    ({ count: thisCount, start: thisStart }: t)
-    ({ count: thatCount, start: thatStart }: t): Ordering.t =>
-  if (thisStart > thatStart) Ordering.greaterThan
-  else if (thisStart < thatStart) Ordering.lessThan
-  else if (thisCount > thatCount) Ordering.greaterThan
-  else if (thisCount < thatCount) Ordering.lessThan
-  else Ordering.equal;
+let empty = () : t => emptyInstance;
 
-let empty (): t => emptyInstance;
+let equals = (this: t, that: t) : bool => this.start === that.start && this.count === that.count;
 
-let equals (this: t) (that: t): bool =>
-  this.start === that.start && this.count === that.count;
-
-let hash ({ start, count }: t): int =>
-  start + count;
+let hash = ({start, count}: t) : int => start + count;

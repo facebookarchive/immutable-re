@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -6,21 +6,31 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
+let failEmpty = () => failwith("empty");
 
-let failEmpty () =>
-  failwith "empty";
+let failIf = (msg: string, condition: bool) : unit =>
+  if (condition) {
+    failwith(msg)
+  } else {
+    ()
+  };
 
-let failIf (msg: string) (condition: bool): unit =>
-  if condition (failwith msg)
-  else ();
+let failIfOutOfRange = (count: int, index: int) =>
+  if (index < 0) {
+    failwith("Index must be greater than 0")
+  } else if
+    /* FIXME: When reason support string interpolation include the count */
+    (index >= count) {
+    failwith("Index must be less than count")
+  } else {
+    ()
+  };
 
-let failIfOutOfRange (count: int) (index: int) =>
-  if (index < 0) (failwith "Index must be greater than 0")
-  /* FIXME: When reason support string interpolation include the count */
-  else if (index >= count) (failwith "Index must be less than count")
-  else ();
-
-let noneIfIndexOutOfRange (count:int) (index: int) (f: int => 'a): (option 'a) =>
-  if (index < 0) None
-  else if (index >= count) None
-  else f index |> Option.return;
+let noneIfIndexOutOfRange = (count: int, index: int, f: int => 'a) : option('a) =>
+  if (index < 0) {
+    None
+  } else if (index >= count) {
+    None
+  } else {
+    f(index) |> Option.return
+  };

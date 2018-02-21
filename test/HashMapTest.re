@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -6,32 +6,24 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
 open Immutable;
+
 open ReUnit.Test;
 
-let module HashIntMap: PersistentMapTester.S = {
+module HashIntMap: PersistentMapTester.S = {
   type k = int;
-  type t 'v = HashMap.t k 'v;
-
+  type t('v) = HashMap.t(k, 'v);
   let alter = HashMap.alter;
   let containsKey = HashMap.containsKey;
   let count = HashMap.count;
-  let empty () => HashMap.emptyWith
-    hash::(fun i => i)
-    comparator::Comparator.int;
+  let empty = () => HashMap.emptyWith(~hash=(i) => i, ~comparator=Comparator.int);
   let every = HashMap.every;
   let find = HashMap.find;
   let findOrRaise = HashMap.findOrRaise;
   let forEach = HashMap.forEach;
-  let from iter => HashMap.fromWith
-    hash::(fun i => i)
-    comparator::Comparator.int
-    iter;
-  let fromEntries entries => HashMap.fromEntriesWith
-    hash::(fun i => i)
-    comparator::Comparator.int
-    entries;
+  let from = (iter) => HashMap.fromWith(~hash=(i) => i, ~comparator=Comparator.int, iter);
+  let fromEntries = (entries) =>
+    HashMap.fromEntriesWith(~hash=(i) => i, ~comparator=Comparator.int, entries);
   let isEmpty = HashMap.isEmpty;
   let isNotEmpty = HashMap.isNotEmpty;
   let get = HashMap.get;
@@ -62,30 +54,22 @@ let module HashIntMap: PersistentMapTester.S = {
   let valuesSequence = HashMap.valuesSequence;
 };
 
-let badHashFunction i => i mod 100;
+let badHashFunction = (i) => i mod 100;
 
-let module BadHashIntMap: PersistentMapTester.S with type k = int = {
+module BadHashIntMap: PersistentMapTester.S with type k = int = {
   type k = int;
-  type t 'v = HashMap.t k 'v;
-
+  type t('v) = HashMap.t(k, 'v);
   let alter = HashMap.alter;
   let containsKey = HashMap.containsKey;
   let count = HashMap.count;
-  let empty () => HashMap.emptyWith
-    hash::badHashFunction
-    comparator::Comparator.int;
+  let empty = () => HashMap.emptyWith(~hash=badHashFunction, ~comparator=Comparator.int);
   let every = HashMap.every;
   let find = HashMap.find;
   let findOrRaise = HashMap.findOrRaise;
   let forEach = HashMap.forEach;
-  let from iter => HashMap.fromWith
-    hash::badHashFunction
-    comparator::Comparator.int
-    iter;
-  let fromEntries entries => HashMap.fromEntriesWith
-    hash::badHashFunction
-    comparator::Comparator.int
-    entries;
+  let from = (iter) => HashMap.fromWith(~hash=badHashFunction, ~comparator=Comparator.int, iter);
+  let fromEntries = (entries) =>
+    HashMap.fromEntriesWith(~hash=badHashFunction, ~comparator=Comparator.int, entries);
   let isEmpty = HashMap.isEmpty;
   let isNotEmpty = HashMap.isNotEmpty;
   let get = HashMap.get;
@@ -116,12 +100,18 @@ let module BadHashIntMap: PersistentMapTester.S with type k = int = {
   let valuesSequence = HashMap.valuesSequence;
 };
 
-let test = describe "HashMap" [
-  PersistentMapTester.test (module HashIntMap) 100,
-  PersistentMapTester.test (module HashIntMap) 10000,
-
-  describe "with bad hash function" [
-    PersistentMapTester.test (module BadHashIntMap) 100,
-    PersistentMapTester.test (module BadHashIntMap) 10000,
-  ],
-];
+let test =
+  describe(
+    "HashMap",
+    [
+      PersistentMapTester.test((module HashIntMap), 100),
+      PersistentMapTester.test((module HashIntMap), 10000),
+      describe(
+        "with bad hash function",
+        [
+          PersistentMapTester.test((module BadHashIntMap), 100),
+          PersistentMapTester.test((module BadHashIntMap), 10000)
+        ]
+      )
+    ]
+  );

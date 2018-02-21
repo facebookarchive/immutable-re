@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 - present Facebook, Inc.
  * All rights reserved.
  *
@@ -6,12 +6,16 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
 open Immutable;
+
 open ReUnit.Test;
 
-let module Tester = DequeTester.Make (Deque: DequeTester.S1) ({
-  let count = 5000;
-});
+module Tester =
+  DequeTester.Make(
+    (Deque: DequeTester.S1),
+    {
+      let count = 5000;
+    }
+  );
 
-let test = describe "Deque" Tester.tests;
+let test = describe("Deque", Tester.tests);
