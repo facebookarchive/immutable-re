@@ -74,21 +74,21 @@ let reduceReversed =
 let toSequence = ({count, start}: t) : Sequence.t(int) => {
   let rec recurse = (start, count, ()) =>
     if (count === 0) {
-      Sequence.Completed
+      Sequence.empty()
     } else {
-      Sequence.Next(start, recurse(start + 1, count - 1))
+      Sequence.yield(start, recurse(start + 1, count - 1))
     };
-  recurse(start, count)
+  recurse(start, count, ())
 };
 
 let toSequenceReversed = ({count, start}: t) : Sequence.t(int) => {
   let rec recurse = (start, count, ()) =>
     if (count === 0) {
-      Sequence.Completed
+      Sequence.empty ()
     } else {
-      Sequence.Next(start, recurse(start - 1, count - 1))
+      Sequence.yield(start, recurse(start - 1, count - 1))
     };
-  recurse(start + count - 1, count)
+  recurse(start + count - 1, count, ())
 };
 
 let emptyInstance: t = {start: 0, count: 0};

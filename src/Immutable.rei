@@ -368,6 +368,11 @@ module rec Sequence: {
    */
   let seek: (int, Sequence.t('a)) => Sequence.t('a);
 
+  /*** [yield value continuation] returns a sequence whose next
+   * value is value and continues with the sequence produced by the continuation
+   */
+  let yield: ('a, unit => Sequence.t('a)) => Sequence.t('a);
+
   /*** [seekWhile f seq] scans forward through [seq] while application of
    *  the predicate function [f] returns true. It is the eagerly evaluated
    *  equivalent of [skipWhile f seq].

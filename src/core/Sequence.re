@@ -15,7 +15,40 @@ type iterator('a) =
   | Completed
 and t('a) = unit => iterator('a);
 
+let rec compareWith =
+        (comparator: Comparator.t('a), this: t('a), that: t('a))
+        : Ordering.t =>
+  switch (this(), that()) {
+  | (Next(thisValue, thisNext), Next(thatValue, thatNext)) =>
+    let cmp = comparator(thisValue, thatValue);
+    if (cmp === Ordering.equal) {
+      compareWith(comparator, thisNext, thatNext)
+    } else {
+      cmp
+    }
+  | (Completed, Completed) => Ordering.equal
+  | (Next(_, _), Completed) => Ordering.greaterThan
+  | (Completed, Next(_, _)) => Ordering.lessThan
+  };
+
 let emptySeq = () => Completed;
+
+let rec equalsWith =
+        (equality: Equality.t('a), this: t('a), that: t('a))
+        : bool =>
+  that === this
+  || (
+    switch (that(), this()) {
+    | (Next(thisValue, thisNext), Next(thatValue, thatNext)) =>
+      if (equality(thisValue, thatValue)) {
+        equalsWith(equality, thisNext, thatNext)
+      } else {
+        false
+      }
+    | (Completed, Completed) => true
+    | _ => false
+    }
+  );
 
 let isEmpty = (seq: t('a)) => seq === emptySeq;
 
@@ -36,7 +69,10 @@ let rec reduce =
 
 let empty = () : t('a) => emptySeq;
 
-let return = (value: 'a) : t('a) => () => Next(value, empty());
+let yield = (value: 'a, continuation: unit => t('a)): t('a) => () =>
+  Next(value, continuation());
+
+let return = (value: 'a) : t('a) => yield(value, empty);
 
 let rec ofList = (list: list('a)) : t('a) =>
   () =>

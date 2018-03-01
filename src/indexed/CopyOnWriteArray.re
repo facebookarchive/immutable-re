@@ -54,21 +54,21 @@ let toSequence = (arr: t('a)) : Sequence.t('a) => {
   let arrCount = count(arr);
   let rec loop = (index, ()) =>
     if (index < arrCount) {
-      Sequence.Next(arr[index], loop(index + 1))
+      Sequence.yield(arr[index], loop(index + 1))
     } else {
-      Sequence.Completed
+      Sequence.empty()
     };
-  loop(0)
+  loop(0, ())
 };
 
 let toSequenceReversed = (arr: t('a)) : Sequence.t('a) => {
   let rec loop = (index, ()) =>
     if (index < 0) {
-      Sequence.Completed
+      Sequence.empty()
     } else {
-      Sequence.Next(arr[index], loop(index - 1))
+      Sequence.yield(arr[index], loop(index - 1))
     };
-  loop(count(arr) - 1)
+  loop(count(arr) - 1, ())
 };
 
 let lastIndexOrRaise = (arr: t('a)) : int => {
