@@ -395,6 +395,6 @@ let updateWith = (index: int, f: 'a => 'a, transient: t('a)) : t('a) =>
   transient |> Transient.update2(TransientVectorImpl.updateWith, index, f);
 
 /* Unimplemented functions */
-let insertAt = (index: int, value: 'a, transient: t('a)) : t('a) => failwith("Not Implemented");
+let insertAt = (_/*index*/: int, _/*value*/: 'a, _/*transient*/: t('a)) : t('a) => failwith("Not Implemented");
 
-let removeAt = (index: int, transient: t('a)) : t('a) => failwith("Not Implemented");
+let removeAt = (_/*index*/: int, _/*transient*/: t('a)) : t('a) => failwith("Not Implemented");

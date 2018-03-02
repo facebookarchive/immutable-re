@@ -67,9 +67,6 @@ let test = (n: int, count: int) : Test.t => {
     indexes
     |> IntRange.reduce((acc, i) => acc |> Vector.Transient.addLast(i), Vector.Transient.empty())
     |> Vector.Transient.persist;
-  let mutableArray = Array.init(count, (i) => i);
-  let list = indexes |> IntRange.toIterable |> List.fromReverse;
-  let stack = indexes |> IntRange.toIterable |> Stack.fromReverse;
   let testGroup = [
     describe(
       "CamlMutableArray",

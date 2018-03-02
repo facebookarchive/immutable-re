@@ -67,43 +67,46 @@ let test = (n: int, count: int) : Test.t => {
     indexes
     |> IntRange.reduce((acc, i) => acc |> Vector.Transient.addLast(i), Vector.Transient.empty())
     |> Vector.Transient.persist;
-  let mutableArray = Array.init(count, (i) => i);
-  let list = indexes |> IntRange.toIterable |> List.fromReverse;
-  let stack = indexes |> IntRange.toIterable |> Stack.fromReverse;
   let immJSVectorEmpty = ImmJSRe.List.fromArray([||]);
   let immJSVector =
     indexes |> IntRange.reduce((acc, i) => acc |> ImmJSRe.List.push(i), immJSVectorEmpty);
   let testGroup = [
-    /*  describe "CamlMutableArray" (
-          generateTests
-            (fun () => mutableArray)
-            (fun () => mutableArray)
-            (fun a v => { v.(0) = a; v })
-            (fun i a v => { v.(i) = a; v })
-            (fun v => { v.(0) |> ignore; v })
-            (fun i v => { Some (v.(i)) })
-            count
-        ),
-        describe "List" (
-          generateTests
-            (fun () => list)
-            (fun () => [])
-            List.addFirst
-            (fun _ _ v => v)
-            List.removeFirstOrRaise
-            (fun _ _ => None)
-            count
-        ),
-        describe "Stack" (
-          generateTests
-            (fun () => stack)
-            Stack.empty
-            Stack.addFirst
-            (fun _ _ v => v)
-            Stack.removeFirstOrRaise
-            (fun _ _ => None)
-            count
-        ),*/
+    describe(
+      "CamlMutableArray",
+      generateTests(
+        () => mutableArray,
+        () => mutableArray,
+        (a, v) => { v[0] = a; v },
+        (i, a, v) => { v[i] = a; v },
+        (v) => { v[0] |> ignore; v },
+        (i, v) => v[i],
+        count
+      )
+    ),
+    describe(
+      "List",
+      generateTests(
+        () => list,
+        () => [],
+        List.addFirst,
+        (_, _, v) => v,
+        List.removeFirstOrRaise,
+        (_, _) => 0,
+        count
+      )
+    ),
+    describe(
+      "Stack",
+      generateTests(
+        () => stack,
+        Stack.empty,
+        Stack.addFirst,
+        (_, _, v) => v,
+        Stack.removeFirstOrRaise,
+        (_, _) => 0,
+        count
+      )
+    ),
     describe(
       "Vector",
       generateTests(

@@ -280,18 +280,26 @@ let test =
       it(
         "zip2With",
         () => {
-          Sequence.zip2With((a, b) => [a, b], List.toSequence([1, 2]), List.toSequence([4, 5, 6]))
-          |> Sequence.flatMap(List.toSequence)
-          |> Sequence.toIterable
-          |> List.fromReverse
-          |> Expect.toBeEqualToListOfInt([5, 2, 4, 1]);
-          Sequence.zip2With((a, b) => [a, b], List.toSequence([1, 2, 3]), List.toSequence([4, 5]))
+          Sequence.zip2With(
+            ~zipper=(a, b) => [a, b],
+            List.toSequence([1, 2]),
+            List.toSequence([4, 5, 6])
+          )
           |> Sequence.flatMap(List.toSequence)
           |> Sequence.toIterable
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([5, 2, 4, 1]);
           Sequence.zip2With(
-            (a, b) => [a, b],
+            ~zipper=(a, b) => [a, b],
+            List.toSequence([1, 2, 3]),
+            List.toSequence([4, 5])
+          )
+          |> Sequence.flatMap(List.toSequence)
+          |> Sequence.toIterable
+          |> List.fromReverse
+          |> Expect.toBeEqualToListOfInt([5, 2, 4, 1]);
+          Sequence.zip2With(
+            ~zipper=(a, b) => [a, b],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5, 6])
           )
@@ -305,7 +313,7 @@ let test =
         "zip3With",
         () => {
           Sequence.zip3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2]),
             List.toSequence([4, 5, 6]),
             List.toSequence([7, 8, 9])
@@ -315,7 +323,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([8, 5, 2, 7, 4, 1]);
           Sequence.zip3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5, 6]),
             List.toSequence([7, 8])
@@ -325,7 +333,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([8, 5, 2, 7, 4, 1]);
           Sequence.zip3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5, 6]),
             List.toSequence([7, 8, 9])
@@ -335,7 +343,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([9, 6, 3, 8, 5, 2, 7, 4, 1]);
           Sequence.zip3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5]),
             List.toSequence([7, 8, 9])
@@ -432,7 +440,7 @@ let test =
         "zipLongest2With",
         () => {
           Sequence.zipLongest2With(
-            (a, b) => [a, b],
+            ~zipper=(a, b) => [a, b],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5, 6])
           )
@@ -443,7 +451,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([6, 3, 5, 2, 4, 1]);
           Sequence.zipLongest2With(
-            (a, b) => [a, b],
+            ~zipper=(a, b) => [a, b],
             List.toSequence([1, 2]),
             List.toSequence([4, 5, 6])
           )
@@ -454,7 +462,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([6, 5, 2, 4, 1]);
           Sequence.zipLongest2With(
-            (a, b) => [a, b],
+            ~zipper=(a, b) => [a, b],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5])
           )
@@ -470,7 +478,7 @@ let test =
         "zipLongest3With",
         () => {
           Sequence.zipLongest3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5, 6]),
             List.toSequence([7, 8, 9])
@@ -482,7 +490,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([9, 6, 3, 8, 5, 2, 7, 4, 1]);
           Sequence.zipLongest3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2]),
             List.toSequence([4, 5, 6]),
             List.toSequence([7, 8, 9])
@@ -494,7 +502,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([9, 6, 8, 5, 2, 7, 4, 1]);
           Sequence.zipLongest3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5, 6]),
             List.toSequence([7, 8])
@@ -506,7 +514,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([6, 3, 8, 5, 2, 7, 4, 1]);
           Sequence.zipLongest3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5]),
             List.toSequence([7, 8, 9])
@@ -518,7 +526,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([9, 3, 8, 5, 2, 7, 4, 1]);
           Sequence.zipLongest3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2]),
             List.toSequence([4, 5]),
             List.toSequence([7, 8, 9])
@@ -530,7 +538,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([9, 8, 5, 2, 7, 4, 1]);
           Sequence.zipLongest3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2]),
             List.toSequence([4, 5, 6]),
             List.toSequence([7, 8])
@@ -542,7 +550,7 @@ let test =
           |> List.fromReverse
           |> Expect.toBeEqualToListOfInt([6, 8, 5, 2, 7, 4, 1]);
           Sequence.zipLongest3With(
-            (a, b, c) => [a, b, c],
+            ~zipper=(a, b, c) => [a, b, c],
             List.toSequence([1, 2, 3]),
             List.toSequence([4, 5]),
             List.toSequence([7, 8])
