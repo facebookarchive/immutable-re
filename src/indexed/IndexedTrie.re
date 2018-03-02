@@ -518,7 +518,7 @@ let updateLevelImpl =
       trie: t('a)
     )
     : t('a) => {
-  let Level(depth, count, _, tries) = trie;
+  let Level(_, count, _, tries) = trie;
   let childNode = tries |> CopyOnWriteArray.getOrRaise(childIndex);
   let newChildNode = childNode |> update(updateLevel, updateLeaf, owner, index, value);
   updateLevel(~owner, ~levelCount=count^, ~index=childIndex, ~child=newChildNode, trie)
@@ -632,7 +632,7 @@ let updateWithLevelImpl =
       trie: t('a)
     )
     : t('a) => {
-  let Level(depth, count, _, tries) = trie;
+  let Level(_, count, _, tries) = trie;
   let childNode = tries |> CopyOnWriteArray.getOrRaise(childIndex);
   let newChildNode = childNode |> updateWith(updateLevel, updateLeaf, owner, index, f);
   updateLevel(~owner, ~levelCount=count^, ~index=childIndex, ~child=newChildNode, trie)

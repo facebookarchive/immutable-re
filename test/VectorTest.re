@@ -207,7 +207,6 @@ let testVector = (count) =>
           |> Pervasives.(===)(vector)
           |> Expect.toBeEqualToTrue;
           vector |> Vector.slice |> Pervasives.(===)(vector) |> Expect.toBeEqualToTrue;
-          let countDiv2 = count / 2;
           let countDiv4 = count / 4;
           vector
           |> Vector.slice(~start=countDiv4)

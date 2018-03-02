@@ -200,12 +200,6 @@ module NavigableSet = {
     ):
       NavigableSet.S1 with type t('a) := t('a)
   );
-  let intersect = (this: t('a), that: t('a)) : Iterable.t('a) =>
-    this |> toIterable |> Iterable.filter(Functions.flip(contains, that));
-  let subtract = (this: t('a), that: t('a)) : Iterable.t('a) =>
-    this |> toIterable |> Iterable.filter(Functions.flip(contains, that) >> (!));
-  let union = (this: t('a), that: t('a)) : Iterable.t('a) =>
-    Iterable.concat([this |> toIterable, subtract(that, this)]);
   module Persistent = {
     module type S = {
       type a;
