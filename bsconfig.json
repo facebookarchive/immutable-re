@@ -19,4 +19,7 @@
     { "dir": "test", "subdirs": ["testers"], "type": "dev" },
     { "dir": "perf-js", "type": "dev" },
   ],
+  "warnings": {
+    "number": "-8-27",
+  },
 }
